@@ -114,30 +114,20 @@ __ss_int struct_time::__cmp__(pyobj *p) {
 
 /* like CPython's gettmarg(), which parses each field as a C int: raise
    OverflowError instead of silently truncating e.g. a year of 10**12 */
-static int __ss_tm_field(__ss_int v) {
-    if constexpr (sizeof(__ss_int) > sizeof(int)) {
-        if (v > INT_MAX)
-            throw new OverflowError(new str("signed integer is greater than maximum"));
-        if (v < INT_MIN)
-            throw new OverflowError(new str("signed integer is less than minimum"));
-    }
-    return (int)v;
-}
-
 /* by value: a plain 'new tm' is malloc memory that was never freed. value-
    initialized, so platform-specific fields (tm_zone, tm_gmtoff) are not garbage */
 tm tuple2tm(struct_time* tuple) {
     tm time_tuple = tm();
 
-    int year = __ss_tm_field(tuple->tm_year);
-    int mon = __ss_tm_field(tuple->tm_mon);
-    int mday = __ss_tm_field(tuple->tm_mday);
-    int hour = __ss_tm_field(tuple->tm_hour);
-    int min = __ss_tm_field(tuple->tm_min);
-    int sec = __ss_tm_field(tuple->tm_sec);
-    int wday = __ss_tm_field(tuple->tm_wday);
-    int yday = __ss_tm_field(tuple->tm_yday);
-    int isdst = __ss_tm_field(tuple->tm_isdst);
+    int year = __ss_cint_i(tuple->tm_year);
+    int mon = __ss_cint_i(tuple->tm_mon);
+    int mday = __ss_cint_i(tuple->tm_mday);
+    int hour = __ss_cint_i(tuple->tm_hour);
+    int min = __ss_cint_i(tuple->tm_min);
+    int sec = __ss_cint_i(tuple->tm_sec);
+    int wday = __ss_cint_i(tuple->tm_wday);
+    int yday = __ss_cint_i(tuple->tm_yday);
+    int isdst = __ss_cint_i(tuple->tm_isdst);
 
     if (year < INT_MIN + 1900)
         throw new OverflowError(new str("year out of range"));

@@ -603,6 +603,51 @@ def test_setsid():
     assert os.WEXITSTATUS(status) == 0
 
 
+def test_wait_status_macros():
+    assert os.WIFEXITED(256) and os.WEXITSTATUS(256) == 1
+    assert not os.WIFSIGNALED(256) and not os.WIFSTOPPED(256)
+    assert os.WIFSIGNALED(9) and os.WTERMSIG(9) == 9
+    assert os.WCOREDUMP(9 | 0x80) and not os.WCOREDUMP(9)
+    assert os.WIFSTOPPED((5 << 8) | 0x7f) and os.WSTOPSIG((5 << 8) | 0x7f) == 5
+    assert not os.WIFCONTINUED(256)
+    # C int argument: an OverflowError instead of truncation to 256
+    big = 2 ** 32 + 256
+    errors = []
+    try:
+        os.WEXITSTATUS(big)
+    except OverflowError as e:
+        errors.append(str(e))
+    try:
+        os.WSTOPSIG(big)
+    except OverflowError as e:
+        errors.append(str(e))
+    try:
+        os.WTERMSIG(big)
+    except OverflowError as e:
+        errors.append(str(e))
+    try:
+        os.WCOREDUMP(big)
+    except OverflowError as e:
+        errors.append(str(e))
+    try:
+        os.WIFCONTINUED(big)
+    except OverflowError as e:
+        errors.append(str(e))
+    try:
+        os.WIFEXITED(big)
+    except OverflowError as e:
+        errors.append(str(e))
+    try:
+        os.WIFSIGNALED(big)
+    except OverflowError as e:
+        errors.append(str(e))
+    try:
+        os.WIFSTOPPED(big)
+    except OverflowError as e:
+        errors.append(str(e))
+    assert errors == 8 * ['Python int too large to convert to C int']
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -627,6 +672,7 @@ def test_all():
     test_close_after_failed_flush()
     test_pathconf_errors()
     test_setsid()
+    test_wait_status_macros()
 
 
 if __name__ == '__main__':

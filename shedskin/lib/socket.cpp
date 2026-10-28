@@ -739,9 +739,10 @@ __ss_int socket::sendfile(file_binary *f, __ss_int offset, __ss_int count) {
 
 
 __ss_int socket::getsockopt(__ss_int level, __ss_int optname) {
+    int level_ = __ss_cint_i(level), optname_ = __ss_cint_i(optname);
     int v = 0;
     socklen_t buflen = sizeof(v);
-    if (::getsockopt(_fd, (int)level, (int)optname, SOCKOPT_CAST &v, &buflen) == SOCKET_ERROR)
+    if (::getsockopt(_fd, level_, optname_, SOCKOPT_CAST &v, &buflen) == SOCKET_ERROR)
         throw make_error("getsockopt");
     return (__ss_int)v;
 }
@@ -914,11 +915,12 @@ void *socket::bind(socket::inet_address address)
 }
 
 void *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
+    int level_ = __ss_cint_i(level), optname_ = __ss_cint_i(optname);
     /* pass a plain int, as CPython does: __ss_int is 64-bit by default, and
      * some option handlers (winsock TCP_*, big-endian kernels) do not accept
      * or misread a wider buffer */
     int v = (int)value;
-    if (::setsockopt(_fd, (int)level, (int)optname, SOCKOPT_CAST &v, sizeof(v)) == SOCKET_ERROR)
+    if (::setsockopt(_fd, level_, optname_, SOCKOPT_CAST &v, sizeof(v)) == SOCKET_ERROR)
         throw make_error("setsockopt");
 
     return NULL;
@@ -1129,7 +1131,7 @@ void *socket::settimeout(double val)
 
 void *socket::shutdown(__ss_int how)
 {
-    if (::shutdown(_fd, (int)how) == SOCKET_ERROR)
+    if (::shutdown(_fd, __ss_cint(how)) == SOCKET_ERROR)
         throw make_error("shutdown");
     return NULL;
 }
@@ -1161,21 +1163,23 @@ size_t socket::send(const char *s, size_t len, int flags)
 }
 
 __ss_int socket::send(bytes *string, __ss_int flags) {
-    return (__ss_int)send( string->unit.data(), string->unit.size(), (int)flags );
+    return (__ss_int)send( string->unit.data(), string->unit.size(), __ss_cint_i(flags) );
 }
 
 void *socket::sendall(bytes *string, __ss_int flags) {
+    int flags_ = __ss_cint_i(flags);
     const char *s = string->c_str();
     size_t offset = 0;
     size_t len = string->unit.size(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode?
 
     while (offset < len)
-        offset += send(s + offset, len - offset, (int)flags);
+        offset += send(s + offset, len - offset, flags_);
     return NULL;
 }
 
 __ss_int socket::sendto(bytes* msg, __ss_int flags, socket::inet_address addr)
 {
+    int flags_ = __ss_cint_i(flags);
     write_wait();
 
     const char *buf = msg->unit.data();
@@ -1191,7 +1195,7 @@ __ss_int socket::sendto(bytes* msg, __ss_int flags, socket::inet_address addr)
 
     tuple_to_sin_addr(&sin, addr, "sendto");
 
-    ssize_t len = ::sendto(_fd, buf, buflen, (int)flags, sa, salen);
+    ssize_t len = ::sendto(_fd, buf, buflen, flags_, sa, salen);
     if (len == SOCKET_ERROR)
         throw make_error("sendto");
 
@@ -1234,6 +1238,7 @@ void socket::read_wait()
 
 bytes *socket::recv(__ss_int bufsize, __ss_int flags)
 {
+    int flags_ = __ss_cint_i(flags);
     if (bufsize < 0)
         throw new ValueError(new str("negative buffersize in recv"));
     if (bufsize == 0) /* like CPython, don't wait */
@@ -1241,7 +1246,7 @@ bytes *socket::recv(__ss_int bufsize, __ss_int flags)
     read_wait();
 
     std::vector<char> buf((size_t)bufsize);
-    ssize_t len = ::recv(_fd, buf.data(), (size_t)bufsize, (int)flags);
+    ssize_t len = ::recv(_fd, buf.data(), (size_t)bufsize, flags_);
     if (len == SOCKET_ERROR)
         throw make_error("recv");
     return new bytes(buf.data(), (size_t)len);
@@ -1272,20 +1277,22 @@ size_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, sock
 
 tuple2<bytes *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_int flags)
 {
+    int flags_ = __ss_cint_i(flags);
     if (bufsize < 0)
         throw new ValueError(new str("negative buffersize in recvfrom"));
     std::vector<char> buf((size_t)bufsize);
     struct sockaddr_in sin;
     socklen_t salen = sizeof(sin);
-    size_t len = recvfrom(buf.data(), (size_t)bufsize, (int)flags, reinterpret_cast<sockaddr *>(&sin), &salen);
+    size_t len = recvfrom(buf.data(), (size_t)bufsize, flags_, reinterpret_cast<sockaddr *>(&sin), &salen);
     return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), sin_addr_to_tuple(&sin));
 }
 
-/* validate a recv_into()/recvfrom_into() buffer and nbytes (0: whole buffer) */
-static size_t check_into_buffer(bytes *buffer, __ss_int nbytes, const char *fn, const char *too_small)
+/* validate a recv_into()/recvfrom_into() buffer, flags and nbytes (0: whole buffer) */
+static size_t check_into_buffer(bytes *buffer, __ss_int nbytes, __ss_int flags, const char *fn, const char *too_small)
 {
     if (buffer->frozen)
         throw new TypeError(__add_strs(2, new str(fn), new str("() argument 1 must be read-write bytes-like object, not bytes")));
+    __ss_cint_i(flags);
     if (nbytes < 0)
         throw new ValueError(__add_strs(2, new str("negative buffersize in "), new str(fn)));
     size_t size = buffer->unit.size();
@@ -1298,7 +1305,7 @@ static size_t check_into_buffer(bytes *buffer, __ss_int nbytes, const char *fn, 
 
 __ss_int socket::recv_into(bytes *buffer, __ss_int nbytes, __ss_int flags)
 {
-    size_t n = check_into_buffer(buffer, nbytes, "recv_into", "buffer too small for requested bytes");
+    size_t n = check_into_buffer(buffer, nbytes, flags, "recv_into", "buffer too small for requested bytes");
     if (n == 0) /* like CPython, don't wait */
         return 0;
     read_wait();
@@ -1310,7 +1317,7 @@ __ss_int socket::recv_into(bytes *buffer, __ss_int nbytes, __ss_int flags)
 
 tuple2<__ss_int, socket::inet_address> *socket::recvfrom_into(bytes *buffer, __ss_int nbytes, __ss_int flags)
 {
-    size_t n = check_into_buffer(buffer, nbytes, "recvfrom_into", "nbytes is greater than the length of the buffer");
+    size_t n = check_into_buffer(buffer, nbytes, flags, "recvfrom_into", "nbytes is greater than the length of the buffer");
     struct sockaddr_in sin;
     socklen_t salen = sizeof(sin);
     size_t len = recvfrom(&buffer->unit[0], n, (int)flags, reinterpret_cast<sockaddr *>(&sin), &salen);
@@ -1319,6 +1326,9 @@ tuple2<__ss_int, socket::inet_address> *socket::recvfrom_into(bytes *buffer, __s
 
 socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int fileno) {
     this->__class__ = cl_socket;
+    __ss_cint(family_);
+    __ss_cint(type_);
+    __ss_cint(proto_);
     _timeout = __ss_default_timeout;
     _blocking = true;
 
@@ -1393,7 +1403,7 @@ socket::~socket()
 
 void *socket::listen(__ss_int backlog)
 {
-    if(::listen(_fd, (int)backlog) == SOCKET_ERROR)
+    if(::listen(_fd, __ss_cint_i(backlog)) == SOCKET_ERROR)
         throw make_error("listen");
     return NULL;
 }
@@ -1509,6 +1519,9 @@ socket *create_connection(socket::inet_address address, double timeout, socket::
 
 socket *fromfd(__ss_int fd, __ss_int family, __ss_int type, __ss_int proto)
 {
+    __ss_cint(family); /* (before the dup) */
+    __ss_cint(type);
+    __ss_cint(proto);
     return new socket(socket::wrap_fd_tag(), dup_socket_fd((socket_type)fd), family, type, proto);
 }
 
@@ -1516,6 +1529,7 @@ socket *create_server(socket::inet_address address, __ss_int family, __ss_int ba
 {
     if (dualstack_ipv6)
         throw new ValueError(new str("dualstack_ipv6 not supported"));
+    __ss_cint_i(backlog); /* (before binding) */
     socket *s = new socket(family, __ss_SOCK_STREAM, 0);
 #ifdef WIN32
     /* SO_REUSEADDR has different (unsafe) semantics on Windows; do what
@@ -1546,6 +1560,9 @@ tuple2<socket *, socket *> *socketpair(__ss_int family, __ss_int type, __ss_int 
 {
     /* Emulated on every platform the way CPython does it on Windows (no
      * AF_UNIX support here either): a connected TCP loopback pair. */
+    __ss_cint_i(family);
+    __ss_cint_i(type);
+    __ss_cint_i(proto);
     if (family != __ss_AF_INET)
         throw new ValueError(new str("Only AF_INET socket address family is supported"));
     if (type != __ss_SOCK_STREAM)
@@ -1735,11 +1752,12 @@ str *getfqdn(str *name)
 
 tuple2<str *, str *> *getnameinfo(socket::inet_address sockaddr_, __ss_int flags)
 {
+    int flags_ = __ss_cint_i(flags);
     check_nul(sockaddr_->first); /* (a ValueError here, unlike for bind/connect) */
     sockaddr_in sin;
     tuple_to_sin_addr(&sin, sockaddr_, NULL); /* no port check: CPython gives a gaierror here, via getaddrinfo() */
     char host[NI_MAXHOST], serv[NI_MAXSERV];
-    int r = ::getnameinfo(reinterpret_cast<sockaddr *>(&sin), sizeof(sin), host, sizeof(host), serv, sizeof(serv), (int)flags);
+    int r = ::getnameinfo(reinterpret_cast<sockaddr *>(&sin), sizeof(sin), host, sizeof(host), serv, sizeof(serv), flags_);
     if (r != 0) {
         gaierror *e = new gaierror(new str(gai_strerror(r)));
         e->__ss_errno = r;
@@ -1859,10 +1877,11 @@ str *inet_ntoa(bytes *packed_ip)
 
 bytes *inet_pton(__ss_int address_family, str *ip_string)
 {
+    int family = __ss_cint_i(address_family);
     check_nul(ip_string);
     unsigned char packed[sizeof(in6_addr)];
     /* like CPython, an unsupported family is left to inet_pton() (OSError) */
-    int r = ::inet_pton((int)address_family, ip_string->c_str(), packed);
+    int r = ::inet_pton(family, ip_string->c_str(), packed);
     if (r == 0)
         throw new error(new str("illegal IP address string passed to inet_pton"));
     if (r < 0)
@@ -1872,6 +1891,7 @@ bytes *inet_pton(__ss_int address_family, str *ip_string)
 
 str *inet_ntop(__ss_int address_family, bytes *packed_ip)
 {
+    int family = __ss_cint_i(address_family);
     size_t len;
     if (address_family == AF_INET)
         len = sizeof(in_addr);
@@ -1884,7 +1904,7 @@ str *inet_ntop(__ss_int address_family, bytes *packed_ip)
     unsigned char packed[sizeof(in6_addr)];
     std::copy_n(packed_ip->unit.data(), len, packed);
     char ip[INET6_ADDRSTRLEN];
-    if (!::inet_ntop((int)address_family, (void *)packed, ip, sizeof(ip)))
+    if (!::inet_ntop(family, (void *)packed, ip, sizeof(ip)))
         throw make_error("inet_ntop");
     return new str(ip);
 }

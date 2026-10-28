@@ -285,7 +285,7 @@ void *chdir(str *dir) {
 }
 
 str *strerror(__ss_int i) {
-    return new str(::strerror((int)i));
+    return new str(::strerror(__ss_cint(i)));
 }
 
 __ss_int system(str *c) {
@@ -419,16 +419,17 @@ void *removedirs(str *name_) {
 
 void *mkdir(str *path, __ss_int mode) {
 #ifdef WIN32
+    __ss_cint(mode); /* not used, but checked as in cpython */
     if (::_wmkdir(__to_wide(path, "mkdir").c_str()) == -1)
 #else
-    if (::mkdir(__ss_cpath(path, "mkdir"), (unsigned)mode) == -1)
+    if (::mkdir(__ss_cpath(path, "mkdir"), (mode_t)__ss_cint(mode)) == -1)
 #endif
         __throw_oserror(path);
     return NULL;
 }
 
 void _exit(__ss_int code) {
-    ::_exit((int)code); /* no atexit handlers or stdio flushing (matters after fork) */
+    ::_exit(__ss_cint(code)); /* no atexit handlers or stdio flushing (matters after fork) */
 }
 
 void *makedirs(str *name_, __ss_int mode, __ss_bool exist_ok, __ss_int parent_mode) {
@@ -577,7 +578,7 @@ __cstat::__cstat(__ss_int fd) {
     int r;
     {
         __suppress_iph guard;
-        r = ::fstat((int)fd, &sbuf);
+        r = ::fstat(__ss_cint(fd), &sbuf);
     }
     if(r == -1)
         __throw_oserror();
@@ -924,28 +925,29 @@ void *unsetenv(str* var) {
 }
 
 __ss_int umask(__ss_int newmask)  {
-    return (__ss_int)::umask((unsigned)newmask);
+    return (__ss_int)::umask((unsigned)__ss_cint(newmask));
 }
 
 void *chmod(str* path, __ss_int val) {
 #ifdef WIN32
     /* windows only honours the write permission bit (read-only attribute) */
-    if(::_wchmod(__to_wide(path, "chmod").c_str(), (int)val) == -1)
+    if(::_wchmod(__to_wide(path, "chmod").c_str(), __ss_cint(val)) == -1)
 #else
-    if(::chmod(__ss_cpath(path, "chmod"), (unsigned)val) == -1)
+    if(::chmod(__ss_cpath(path, "chmod"), (mode_t)__ss_cint(val)) == -1)
 #endif
         __throw_oserror(path);
     return NULL;
 }
 
-void *fchmod(__ss_int fd, __ss_int mode) {
+void *fchmod(__ss_int fd_, __ss_int mode_) {
+    int fd = __ss_cint(fd_), mode = __ss_cint(mode_);
 #ifdef WIN32
     /* like cpython (3.13+): only the write permission bit, as the read-only
        attribute of the open file */
     HANDLE h;
     {
         __suppress_iph guard;
-        h = (HANDLE)::_get_osfhandle((int)fd);
+        h = (HANDLE)::_get_osfhandle(fd);
     }
     if (h == INVALID_HANDLE_VALUE) {
         errno = EBADF;
@@ -961,7 +963,7 @@ void *fchmod(__ss_int fd, __ss_int mode) {
     if (!SetFileInformationByHandle(h, FileBasicInfo, &info, sizeof(info)))
         throw new OSError(new str("os.fchmod"));
 #else
-    if (::fchmod((int)fd, (mode_t)mode) == -1)
+    if (::fchmod(fd, (mode_t)mode) == -1)
         __throw_oserror();
 #endif
     return NULL;
@@ -1089,9 +1091,9 @@ __ss_int dup(__ss_int f1) {
     {
         __suppress_iph guard;
 #ifdef WIN32
-        f2 = ::dup((int)f1);
+        f2 = ::dup(__ss_cint(f1));
 #else
-        f2 = ::fcntl((int)f1, F_DUPFD_CLOEXEC, 0);
+        f2 = ::fcntl(__ss_cint(f1), F_DUPFD_CLOEXEC, 0);
 #endif
     }
     if (f2 == -1)
@@ -1103,10 +1105,12 @@ __ss_int dup(__ss_int f1) {
 }
 
 __ss_int dup2(__ss_int f1, __ss_int f2, __ss_bool inheritable) {
+    /* (2**32+1 must not become 1, replacing stdout) */
+    int fd1 = __ss_cint(f1), fd2 = __ss_cint(f2);
     int r;
     {
         __suppress_iph guard;
-        r = ::dup2((int)f1,(int)f2);
+        r = ::dup2(fd1, fd2);
     }
     if (r == -1)
         __throw_oserror();
@@ -1122,7 +1126,7 @@ __ss_int dup2(__ss_int f1, __ss_int f2, __ss_bool inheritable) {
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
 void *fdatasync(__ss_int f1) {
-    if (::fdatasync((int)f1) == -1)
+    if (::fdatasync(__ss_cint(f1)) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -1130,9 +1134,9 @@ void *fdatasync(__ss_int f1) {
 
 __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
 #ifdef WIN32
-    __ss_int fp = ::_wopen(__to_wide(name_, "open").c_str(), (int)flags | _O_NOINHERIT, (int)mode);
+    __ss_int fp = ::_wopen(__to_wide(name_, "open").c_str(), __ss_cint(flags) | _O_NOINHERIT, __ss_cint(mode));
 #else
-    __ss_int fp = ::open(__ss_cpath(name_, "open"), (int)flags | O_CLOEXEC, (int)mode);
+    __ss_int fp = ::open(__ss_cpath(name_, "open"), __ss_cint(flags) | O_CLOEXEC, __ss_cint(mode));
 #endif
     if(fp == -1)
         __throw_oserror(name_);
@@ -1169,6 +1173,7 @@ file_binary* fdopen_binary(__ss_int fd, str* mode, __ss_int) {
 bytes *read(__ss_int fd, __ss_int n) {
     /* like CPython: a single read(2), so we return whatever is available
        (e.g. on a pipe) instead of blocking until n bytes have arrived */
+    int fd_ = __ss_cint(fd);
     if(n < 0) {
         errno = EINVAL;
         __throw_oserror();
@@ -1180,7 +1185,7 @@ bytes *read(__ss_int fd, __ss_int n) {
     decltype(::read(0, 0, 0)) nr;
     {
         __suppress_iph guard;
-        nr = ::read((int)fd, &s->unit[0], (unsigned int)n);
+        nr = ::read(fd_, &s->unit[0], (unsigned int)n);
     }
     if(nr < 0)
         __throw_oserror();
@@ -1192,7 +1197,7 @@ __ss_int write(__ss_int fd, bytes *s) {
     size_t r;
     {
         __suppress_iph guard;
-        r = (size_t)::write((int)fd, s->c_str(), s->unit.size());
+        r = (size_t)::write(__ss_cint(fd), s->c_str(), s->unit.size());
     }
     if(r == std::string::npos)
         __throw_oserror();
@@ -1202,6 +1207,7 @@ __ss_int write(__ss_int fd, bytes *s) {
 
 /* like cpython: a single read(2) into a writable buffer (a bytearray) */
 __ss_int readinto(__ss_int fd, bytes *buffer) {
+    int fd_ = __ss_cint(fd);
     if(buffer->frozen)
         throw new TypeError(new str("readinto() argument 2 must be read-write bytes-like object, not bytes"));
     size_t n = buffer->unit.size();
@@ -1212,7 +1218,7 @@ __ss_int readinto(__ss_int fd, bytes *buffer) {
     decltype(::read(0, 0, 0)) nr;
     {
         __suppress_iph guard;
-        nr = ::read((int)fd, &buffer->unit[0], (unsigned int)n);
+        nr = ::read(fd_, &buffer->unit[0], (unsigned int)n);
     }
     if(nr < 0)
         __throw_oserror();
@@ -1223,7 +1229,7 @@ void *close(__ss_int fd) {
    int r;
    {
        __suppress_iph guard;
-       r = ::close((int)fd);
+       r = ::close(__ss_cint(fd));
    }
    if(r < 0)
        __throw_oserror();
@@ -1401,55 +1407,67 @@ bytes *urandom(__ss_int n) {
  * portable meaning. Rather than special-case a raw syscall() on Linux only,
  * we implement it on top of the same cross-platform source urandom() already
  * uses (/dev/urandom on POSIX, BCryptGenRandom on Windows), so
- * behavior is consistent across platforms; flags is accepted but ignored. */
+ * behavior is consistent across platforms; flags is accepted (and, like in
+ * CPython, must fit a C int) but ignored. */
 bytes *getrandom(__ss_int size, __ss_int flags) {
+    __ss_cint(flags);
     return urandom(size);
 }
 
 #ifdef WIN32
 __ss_bool isatty(__ss_int fd) {
     __suppress_iph guard;
-    return __mbool(::_isatty((int)fd));
+    return __mbool(::_isatty(__ss_cint(fd)));
 }
 #endif
 
 /* UNIX-only functionality */
 
 #ifndef WIN32
+/* the macOS W*() macros take the address of their argument */
+
 __ss_bool __ss_WCOREDUMP(__ss_int status) {
-    return __mbool(WCOREDUMP(status));
+    int st = __ss_cint(status);
+    return __mbool(WCOREDUMP(st));
 }
 
 __ss_int __ss_WEXITSTATUS(__ss_int status) {
-    return WEXITSTATUS(status);
+    int st = __ss_cint(status);
+    return WEXITSTATUS(st);
 }
 
 __ss_bool __ss_WIFCONTINUED(__ss_int status) {
-    return __mbool(WIFCONTINUED(status));
+    int st = __ss_cint(status);
+    return __mbool(WIFCONTINUED(st));
 }
 
 __ss_bool __ss_WIFEXITED(__ss_int status) {
-    return __mbool(WIFEXITED(status));
+    int st = __ss_cint(status);
+    return __mbool(WIFEXITED(st));
 }
 
 __ss_bool __ss_WIFSIGNALED(__ss_int status) {
-    return __mbool(WIFSIGNALED(status));
+    int st = __ss_cint(status);
+    return __mbool(WIFSIGNALED(st));
 }
 
 __ss_bool __ss_WIFSTOPPED(__ss_int status) {
-    return __mbool(WIFSTOPPED(status));
+    int st = __ss_cint(status);
+    return __mbool(WIFSTOPPED(st));
 }
 
 __ss_int __ss_WSTOPSIG(__ss_int status) {
-    return WSTOPSIG(status);
+    int st = __ss_cint(status);
+    return WSTOPSIG(st);
 }
 
 __ss_int __ss_WTERMSIG(__ss_int status) {
-    return WTERMSIG(status);
+    int st = __ss_cint(status);
+    return WTERMSIG(st);
 }
 
 void *fchdir(__ss_int f1) {
-    if (::fchdir((int)f1) == -1)
+    if (::fchdir(__ss_cint(f1)) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -1516,14 +1534,16 @@ void *setregid(__ss_int rgid, __ss_int egid) {
 
 __ss_int tcgetpgrp(__ss_int fd) {
     __ss_int nr;
-    nr = ::tcgetpgrp((int)fd);
+    nr = ::tcgetpgrp(__ss_cint(fd));
     if(nr == -1)
         __throw_oserror();
     return nr;
 }
 
 void *tcsetpgrp(__ss_int fd, __ss_int pg) {
-    if(::tcsetpgrp((int)fd, (pid_t)pg) == -1)
+    int fd_ = __ss_cint_i(fd);
+    pid_t pg_ = __ss_cint_i(pg);
+    if(::tcsetpgrp(fd_, pg_) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -1562,25 +1582,30 @@ tuple<__ss_int> *wait() {
 
 tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
     int status;
-    if((pid = ::waitpid((pid_t)pid, &status, (int)options)) == -1)
+    pid_t pid_ = __ss_cint_i(pid);
+    int options_ = __ss_cint_i(options);
+    if((pid = ::waitpid(pid_, &status, options_)) == -1)
         __throw_oserror();
     return new tuple<__ss_int>(2, pid, (__ss_int)status);
 }
 
 __ss_int nice(__ss_int n) {
     __ss_int m;
-    if((m = ::nice((int)n)) == -1)
+    if((m = ::nice(__ss_cint(n))) == -1)
         __throw_oserror();
     return m;
 }
 
 void *kill(__ss_int pid, __ss_int sig) {
-    if(::kill((pid_t)pid, (int)sig) == -1)
+    /* (like cpython, sig is truncated) */
+    if(::kill((pid_t)__ss_cint_i(pid), (int)sig) == -1)
         __throw_oserror();
     return NULL;
 }
 void *killpg(__ss_int pgid, __ss_int sig) {
-    if(::killpg((pid_t)pgid, (int)sig) == -1)
+    pid_t pgid_ = __ss_cint_i(pgid);
+    int sig_ = __ss_cint_i(sig);
+    if(::killpg(pgid_, sig_) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -1617,11 +1642,11 @@ str *ctermid() {
 }
 
 __ss_bool isatty(__ss_int fd) {
-    return __mbool(::isatty((int)fd));
+    return __mbool(::isatty(__ss_cint(fd)));
 }
 
 str *ttyname(__ss_int fd) {
-    char *name_ = ::ttyname((int)fd);
+    char *name_ = ::ttyname(__ss_cint(fd));
     if(!name_)
         __throw_oserror();
     return new str(name_);
@@ -1724,7 +1749,7 @@ void *setgroups(pyseq<__ss_int> *groups) {
 }
 
 __ss_int getsid(__ss_int pid) {
-    __ss_int nr = ::getsid((pid_t)pid);
+    __ss_int nr = ::getsid((pid_t)__ss_cint_i(pid));
     if(nr == -1)
         __throw_oserror();
     return nr;
@@ -1736,13 +1761,14 @@ void *setsid() {
 }
 
 __ss_int getpgid(__ss_int pid) {
-    __ss_int nr = ::getpgid((pid_t)pid);
+    __ss_int nr = ::getpgid((pid_t)__ss_cint_i(pid));
     if(nr == -1)
         __throw_oserror();
     return nr;
 }
 void *setpgid(__ss_int pid, __ss_int pgrp) {
-    if(::setpgid((pid_t)pid, (pid_t)pgrp) == -1)
+    pid_t pid_ = __ss_cint_i(pid), pgrp_ = __ss_cint_i(pgrp);
+    if(::setpgid(pid_, pgrp_) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -1771,7 +1797,7 @@ __ss_int pathconf(str *path, str *name_) {
 __ss_int pathconf(str *path, __ss_int name_) {
     /* -1 with errno unchanged means 'no limit' */
     errno = 0;
-    long result = ::pathconf(__ss_cpath(path, "pathconf"), (int)name_);
+    long result = ::pathconf(__ss_cpath(path, "pathconf"), __ss_cint(name_));
     if(result == -1 and errno != 0)
         __throw_oserror(path);
     return (__ss_int)result;
@@ -1783,8 +1809,9 @@ __ss_int fpathconf(__ss_int fd, str *name_) {
     return fpathconf(fd, pathconf_names->__getitem__(name_));
 }
 __ss_int fpathconf(__ss_int fd, __ss_int name_) {
+    int fd_ = __ss_cint(fd), name2 = __ss_cint(name_);
     errno = 0;
-    long result = ::fpathconf((int)fd, (int)name_);
+    long result = ::fpathconf(fd_, name2);
     if(result == -1 and errno != 0)
         __throw_oserror();
     return (__ss_int)result;
@@ -1797,8 +1824,9 @@ str *confstr(str *name_) {
 }
 str *confstr(__ss_int name_) {
     char buf[MAXENTRIES];
+    int name2 = __ss_cint(name_);
     errno = 0;
-    size_t size = ::confstr((int)name_, buf, MAXENTRIES);
+    size_t size = ::confstr(name2, buf, MAXENTRIES);
     if(size == 0 and errno != 0)
         __throw_oserror();
     if(size == 0)
@@ -1812,8 +1840,9 @@ __ss_int sysconf(str *name_) {
     return sysconf(sysconf_names->__getitem__(name_));
 }
 __ss_int sysconf(__ss_int name_) {
+    int name2 = __ss_cint(name_);
     errno = 0;
-    long result = ::sysconf((int)name_);
+    long result = ::sysconf(name2);
     if(result == -1 and errno != 0)
         __throw_oserror();
     return (__ss_int)result;
@@ -1831,7 +1860,7 @@ tuple<__ss_float> *getloadavg() {
 }
 
 void *mkfifo(str *path, __ss_int mode) {
-    if(::mkfifo(__ss_cpath(path, "mkfifo"), (unsigned)mode) == -1)
+    if(::mkfifo(__ss_cpath(path, "mkfifo"), (mode_t)__ss_cint(mode)) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -1849,7 +1878,7 @@ __vfsstat::__vfsstat(str *path) {
 
 __vfsstat::__vfsstat(__ss_int fd) {
     this->__class__ = cl___vfsstat;
-    if(fstatvfs((int)fd, &vbuf) == -1)
+    if(fstatvfs(__ss_cint(fd), &vbuf) == -1)
         __throw_oserror();
     fill_er_up();
 }
@@ -1931,7 +1960,7 @@ tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
     intptr_t res;
     {
         __suppress_iph guard;
-        res = ::_cwait(&status, (intptr_t)pid, (int)options);
+        res = ::_cwait(&status, (intptr_t)pid, __ss_cint_i(options));
     }
     if (res == -1)
         __throw_oserror();
@@ -2044,28 +2073,28 @@ __ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
     __check_exec_args(args, "spawnv()");
     __wide_vector argv(args);
     __suppress_iph guard;
-    return __spawn_result(::_wspawnv((int)mode, __to_wide(file).c_str(), argv.data()));
+    return __spawn_result(::_wspawnv(__ss_cint(mode), __to_wide(file).c_str(), argv.data()));
 }
 
 __ss_int spawnvp(__ss_int mode, str *file, list<str *> *args) {
     __check_exec_args(args, "spawnvp()");
     __wide_vector argv(args);
     __suppress_iph guard;
-    return __spawn_result(::_wspawnvp((int)mode, __to_wide(file).c_str(), argv.data()));
+    return __spawn_result(::_wspawnvp(__ss_cint(mode), __to_wide(file).c_str(), argv.data()));
 }
 
 __ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     __check_exec_args(args, "spawnve()");
     __wide_vector argv(args), envp(env);
     __suppress_iph guard;
-    return __spawn_result(::_wspawnve((int)mode, __to_wide(file).c_str(), argv.data(), envp.data()));
+    return __spawn_result(::_wspawnve(__ss_cint(mode), __to_wide(file).c_str(), argv.data(), envp.data()));
 }
 
 __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     __check_exec_args(args, "spawnvpe()");
     __wide_vector argv(args), envp(env);
     __suppress_iph guard;
-    return __spawn_result(::_wspawnvpe((int)mode, __to_wide(file).c_str(), argv.data(), envp.data()));
+    return __spawn_result(::_wspawnvpe(__ss_cint(mode), __to_wide(file).c_str(), argv.data(), envp.data()));
 }
 
 #endif /* WIN32 */
@@ -2078,17 +2107,17 @@ __ss_int getpid() { return (__ss_int)::getpid(); }
 __ss_int getppid() { return (__ss_int)::getppid(); }
 
 __ss_bool access(str *path, __ss_int mode) {
-    return __mbool(::access(__ss_cpath(path, "access"), (int)mode) == 0);
+    return __mbool(::access(__ss_cpath(path, "access"), __ss_cint(mode)) == 0);
 }
 
 void *fsync(__ss_int fd) {
-    if(::fsync((int)fd) == -1)
+    if(::fsync(__ss_cint(fd)) == -1)
         __throw_oserror();
     return NULL;
 }
 
 void *ftruncate(__ss_int fd, __ss_int n) {
-    if (::ftruncate((int)fd, n) == -1)
+    if (::ftruncate(__ss_cint(fd), n) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -2132,7 +2161,7 @@ __ss_int getppid() {
 /* _access() knows 0 (exists), 2 (write), 4 (read) and 6 (read+write); like
    cpython, treat X_OK as 'exists'. */
 __ss_bool access(str *path, __ss_int mode) {
-    int m = (int)mode & (__ss_R_OK | __ss_W_OK);
+    int m = __ss_cint(mode) & (__ss_R_OK | __ss_W_OK);
     return __mbool(::_waccess(__to_wide(path, "access").c_str(), m) == 0);
 }
 
@@ -2140,7 +2169,7 @@ void *fsync(__ss_int fd) {
     int r;
     {
         __suppress_iph guard;
-        r = ::_commit((int)fd);
+        r = ::_commit(__ss_cint(fd));
     }
     if(r == -1)
         __throw_oserror();
@@ -2151,7 +2180,7 @@ void *ftruncate(__ss_int fd, __ss_int n) {
     errno_t r;
     {
         __suppress_iph guard;
-        r = ::_chsize_s((int)fd, (__int64)n);
+        r = ::_chsize_s(__ss_cint(fd), (__int64)n);
     }
     if (r != 0)
         __throw_oserror();
@@ -2299,6 +2328,8 @@ void *truncate(str *path, __ss_int length) {
 }
 
 void *closerange(__ss_int fd_low, __ss_int fd_high) {
+    __ss_cint(fd_low);
+    __ss_cint(fd_high);
     /* descriptors can't be (much) above the open file limit, so don't loop
        all the way up to e.g. closerange(3, 2**31) */
     long max_fd = ::sysconf(_SC_OPEN_MAX);
@@ -2312,9 +2343,7 @@ void *closerange(__ss_int fd_low, __ss_int fd_high) {
 }
 
 __ss_int waitstatus_to_exitcode(__ss_int status) {
-    if (status < INT_MIN || status > INT_MAX)
-        throw new OverflowError(new str("signed integer is greater than maximum"));
-    int st = (int)status;
+    int st = __ss_cint(status);
     if (WIFEXITED(st))
         return (__ss_int)WEXITSTATUS(st);
     if (WIFSIGNALED(st))
@@ -2325,49 +2354,51 @@ __ss_int waitstatus_to_exitcode(__ss_int status) {
 }
 
 __ss_bool get_inheritable(__ss_int fd) {
-    int flags = ::fcntl((int)fd, F_GETFD);
+    int flags = ::fcntl(__ss_cint(fd), F_GETFD);
     if (flags == -1)
         __throw_oserror();
     return __mbool(!(flags & FD_CLOEXEC));
 }
 
 void *set_inheritable(__ss_int fd, __ss_bool inheritable) {
-    int flags = ::fcntl((int)fd, F_GETFD);
+    int fd_ = __ss_cint(fd);
+    int flags = ::fcntl(fd_, F_GETFD);
     if (flags == -1)
         __throw_oserror();
     int new_flags = inheritable ? (flags & ~FD_CLOEXEC) : (flags | FD_CLOEXEC);
-    if (new_flags != flags && ::fcntl((int)fd, F_SETFD, new_flags) == -1)
+    if (new_flags != flags && ::fcntl(fd_, F_SETFD, new_flags) == -1)
         __throw_oserror();
     return NULL;
 }
 
 __ss_bool get_blocking(__ss_int fd) {
-    int flags = ::fcntl((int)fd, F_GETFL);
+    int flags = ::fcntl(__ss_cint(fd), F_GETFL);
     if (flags == -1)
         __throw_oserror();
     return __mbool(!(flags & O_NONBLOCK));
 }
 
 void *set_blocking(__ss_int fd, __ss_bool blocking) {
-    int flags = ::fcntl((int)fd, F_GETFL);
+    int fd_ = __ss_cint(fd);
+    int flags = ::fcntl(fd_, F_GETFL);
     if (flags == -1)
         __throw_oserror();
     int new_flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
-    if (new_flags != flags && ::fcntl((int)fd, F_SETFL, new_flags) == -1)
+    if (new_flags != flags && ::fcntl(fd_, F_SETFL, new_flags) == -1)
         __throw_oserror();
     return NULL;
 }
 
 /* shedskin behaves like cpython in utf-8 mode (the default from 3.15 on) */
 str *device_encoding(__ss_int fd) {
-    if (!::isatty((int)fd))
+    if (!::isatty(__ss_cint(fd)))
         return NULL;
     return new str("utf-8");
 }
 
 terminal_size *get_terminal_size(__ss_int fd) {
     struct winsize w;
-    if (::ioctl((int)fd, TIOCGWINSZ, &w) != 0)
+    if (::ioctl(__ss_cint(fd), TIOCGWINSZ, &w) != 0)
         __throw_oserror();
     return new terminal_size((__ss_int)w.ws_col, (__ss_int)w.ws_row);
 }
@@ -2390,6 +2421,8 @@ void *truncate(str *path, __ss_int length) {
 }
 
 void *closerange(__ss_int fd_low, __ss_int fd_high) {
+    __ss_cint(fd_low);
+    __ss_cint(fd_high);
     /* the msvc crt supports at most 8192 low-level descriptors */
     if (fd_high > 8192)
         fd_high = 8192;
@@ -2415,7 +2448,7 @@ static HANDLE __fd_handle(__ss_int fd) {
     HANDLE h;
     {
         __suppress_iph guard;
-        h = (HANDLE)::_get_osfhandle((int)fd);
+        h = (HANDLE)::_get_osfhandle(__ss_cint(fd));
     }
     if (h == INVALID_HANDLE_VALUE) {
         errno = EBADF;
@@ -2457,7 +2490,7 @@ str *device_encoding(__ss_int fd) {
     int tty;
     {
         __suppress_iph guard;
-        tty = ::_isatty((int)fd);
+        tty = ::_isatty(__ss_cint(fd));
     }
     if (!tty)
         return NULL;
@@ -2475,7 +2508,7 @@ str *device_encoding(__ss_int fd) {
 
 terminal_size *get_terminal_size(__ss_int fd) {
     DWORD nhandle;
-    switch (fd) {
+    switch (__ss_cint(fd)) {
         case 0: nhandle = STD_INPUT_HANDLE; break;
         case 1: nhandle = STD_OUTPUT_HANDLE; break;
         case 2: nhandle = STD_ERROR_HANDLE; break;
@@ -2501,7 +2534,7 @@ __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
     __int64 r;
     {
         __suppress_iph guard;
-        r = ::_lseeki64((int)fd, (__int64)pos, (int)how);
+        r = ::_lseeki64(__ss_cint(fd), (__int64)pos, __ss_cint(how));
     }
     if(r == -1)
         __throw_oserror();
@@ -2509,7 +2542,7 @@ __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
 }
 #else
 __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how) {
-    off_t r = ::lseek((int)fd, pos, (int)how);
+    off_t r = ::lseek(__ss_cint(fd), pos, __ss_cint(how));
     if(r == -1)
         __throw_oserror();
     return (__ss_int)r;
@@ -2564,7 +2597,7 @@ __ss_int __ss_minor(__ss_int dev) {
 }
 
 void *mknod(str *filename, __ss_int mode, __ss_int device) {
-    if(::mknod(__ss_cpath(filename, "mknod"), (unsigned)mode, (unsigned)device) == -1)
+    if(::mknod(__ss_cpath(filename, "mknod"), (mode_t)__ss_cint(mode), (unsigned)device) == -1)
         __throw_oserror();
     return NULL;
 }
