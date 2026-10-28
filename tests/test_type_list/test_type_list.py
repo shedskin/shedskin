@@ -424,6 +424,45 @@ def test_list_iadd():
     assert t == [1, 2, 3, 4, 5]
 
 
+def iadd_into(acc, more):
+    acc += more
+
+
+class IAdd:
+    def __init__(self):
+        self.l = [1]
+        self.m = [2]
+
+
+def test_list_iadd_alias():
+    # 'list += list' (with pure right-hand sides) must also extend in place
+    x = [1]
+    y = x
+    z = [2, 3]
+    x += z
+    assert y == [1, 2, 3] and x is y
+    iadd_into(y, z)
+    assert x == [1, 2, 3, 2, 3]
+    x = [1, 2]
+    y = x
+    x += x
+    assert y == [1, 2, 1, 2] and x is y
+    x += z[1:]
+    assert y == [1, 2, 1, 2, 3]
+    x += z[:1] + z[1:]
+    assert y == [1, 2, 1, 2, 3, 2, 3] and x is y
+    o = IAdd()
+    p = o.l
+    o.l += o.m
+    assert p == [1, 2] and o.l is p
+    o.l += o.l
+    assert p == [1, 2, 1, 2]
+    s = ['a']
+    t = s
+    s += s[:]
+    assert t == ['a', 'a'] and s is t
+
+
 def test_list_index_error_message():
     error = ''
     try:
@@ -879,6 +918,7 @@ def test_all():
     test_list_eq_identity()
     test_list_imul()
     test_list_iadd()
+    test_list_iadd_alias()
     test_list_index_error_message()
     test_list_slice_assign_same_size()
     test_list_slice_assign_self_extended()
