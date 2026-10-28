@@ -73,6 +73,8 @@ public:
        so they dispatch on the dynamic type of an abstractly typed dict */
     virtual void *__update_dict__(dict<K,V> *other);
     virtual void *__ior_dict__(dict<K,V> *other);
+    virtual dict<K,V> *__or_dict__(dict<K,V> *other);
+    virtual dict<K,V> *__ror_dict__(dict<K,V> *other);
 
     __ss_bool __gt__(pyobj *p);
     __ss_bool __lt__(pyobj *p);
@@ -143,6 +145,7 @@ public:
     frozendict<K,V> *copy();
 
     frozendict<K,V> *__or__(dict<K,V> *s);
+    dict<K,V> *__or_dict__(dict<K,V> *s) { return __or__(s); }
     template <class U> frozendict<K,V> *__ior__(U *other);
 };
 
@@ -401,9 +404,22 @@ template<class K, class V> dict<K,V> *dict<K,V>::copy() {
 }
 
 template<class K, class V> dict<K,V> *dict<K,V>::__or__(dict<K,V> *other) {
+    return __or_dict__(other);
+}
+
+/* hooks behind |, dispatching on the dynamic types of both operands:
+   defaultdict, Counter and frozendict override __or_dict__, and as in CPython
+   a defaultdict on the right takes over via __ror_dict__ (NULL: not handled) */
+template<class K, class V> dict<K,V> *dict<K,V>::__or_dict__(dict<K,V> *other) {
+    if(dict<K,V> *result = other->__ror_dict__(this))
+        return result;
     dict<K,V> *result = copy();
-    result->__ior_dict__(other);
+    result->dict<K,V>::__update_dict__(other);
     return result;
+}
+
+template<class K, class V> dict<K,V> *dict<K,V>::__ror_dict__(dict<K,V> *) {
+    return NULL;
 }
 
 template <class K, class V> template<class U> dict<K,V> *dict<K,V>::__ior__(U *other) {

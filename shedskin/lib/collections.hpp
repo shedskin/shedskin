@@ -430,6 +430,17 @@ public:
         return result;
     }
 
+    /* hooks behind dict::__or__: our default factory wins on either side */
+    dict<K, V> *__or_dict__(dict<K, V> *other) {
+        return __or__(other);
+    }
+    dict<K, V> *__ror_dict__(dict<K, V> *other) {
+        defaultdict<K,V> *result = new defaultdict<K,V>(func);
+        result->gcd = other->gcd;
+        result->dict<K,V>::__update_dict__(this);
+        return result;
+    }
+
     /* same as dict::__ior__ (other can also be an iterable of pairs), but
        returning defaultdict, as 'x |= y' becomes 'x = x->__ior__(y)' */
     template <class U> defaultdict<K, V> *__ior__(U *other) {
@@ -804,6 +815,18 @@ public:
             o = new Counter<K, V>(other);
         this->gcd = __or__(o)->gcd;
         return NULL;
+    }
+    /* as in CPython, Counter | non-Counter falls back to the reflected
+       defaultdict | or to dict | dict, which gives a plain dict */
+    dict<K, V> *__or_dict__(dict<K, V> *other) {
+        if(other->__class__ == cl_counter)
+            return __or__((Counter<K, V> *)other);
+        if(dict<K, V> *result = other->__ror_dict__(this))
+            return result;
+        dict<K, V> *result = new dict<K, V>();
+        result->gcd = this->gcd;
+        result->dict<K, V>::__update_dict__(other);
+        return result;
     }
 
 private:

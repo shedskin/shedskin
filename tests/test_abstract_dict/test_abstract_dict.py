@@ -173,6 +173,21 @@ def test_or_on_abstract():
     assert kind(repr(r)) == 'defaultdict' and r == {'a': 0, 'b': 2}
     r = union(c, Counter({'a': 3, 'c': 1}))
     assert kind(repr(r)) == 'Counter' and sorted(r.items()) == [('a', 3), ('b', 2), ('c', 1)]
+    # Counter | non-Counter falls back to dict | dict: a plain dict update
+    r = union(c, {'a': 0, 'c': -1})
+    assert kind(repr(r)) == 'dict' and r == {'a': 0, 'b': 2, 'c': -1}
+
+    # a defaultdict on the right takes over via its __ror__ (except with a
+    # defaultdict on the left), with its own default factory
+    e = defaultdict(int, {'a': 0, 'c': -1})
+    for x in make_dicts():
+        r = union(x, e)
+        assert kind(repr(r)) == 'defaultdict' and r == {'a': 0, 'b': 2, 'c': -1}
+        assert r['zz'] == 0
+    r = union(defaultdict(lambda: 7, {'a': 1}), e)
+    assert r['zz'] == 7
+    r = {'a': 1} | defaultdict(int, {'b': 2})
+    assert kind(repr(r)) == 'defaultdict' and r['zz'] == 0
 
 
 def test_eq():
