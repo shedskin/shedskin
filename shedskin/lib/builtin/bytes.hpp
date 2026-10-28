@@ -196,16 +196,27 @@ template<class U> inline __ss_int __byte_int(U e) {
 template<class T, class = void> struct __ss_is_iterable : std::false_type {};
 template<class T> struct __ss_is_iterable<T, std::void_t<typename T::for_in_unit>> : std::is_base_of<pyiter<typename T::for_in_unit>, T> {};
 
+/* whether T exposes a raw byte buffer (CPython's buffer protocol), such as
+   array.array: bytes(), bytearray() and bytearray.extend() copy its bytes
+   instead of iterating over its elements */
+template<class T, class = void> struct __ss_has_buffer : std::false_type {};
+template<class T> struct __ss_has_buffer<T, std::void_t<decltype(std::declval<T *>()->__buffer_units__())>> : std::true_type {};
+
 /* append the values of an iterable to s, validating each. FOR_IN with the
    iterable's own type, so for lists for example without going through __iter__ */
 template<class T> inline void __bytes_fill(__GC_STRING &s, T *t, bool bytearray_) {
-    typename T::for_in_unit e;
-    typename T::for_in_loop __3;
-    int __2;
-    T *__1;
-    FOR_IN(e,t,1,2,3)
-        s += __byte_value(__byte_int(e), bytearray_);
-    END_FOR
+    if constexpr (__ss_has_buffer<T>::value) {
+        auto &u = t->__buffer_units__();
+        s.append(u.begin(), u.end());
+    } else {
+        typename T::for_in_unit e;
+        typename T::for_in_loop __3;
+        int __2;
+        T *__1;
+        FOR_IN(e,t,1,2,3)
+            s += __byte_value(__byte_int(e), bytearray_);
+        END_FOR
+    }
 }
 
 template<class T> void *bytes::extend(T *t) {
@@ -328,7 +339,7 @@ template<size_t N> bytes *__bytes_lit(const __ss_int (&elems)[N]) {
 }
 
 template<class T> bytes *__bytes(T *t) {
-    if constexpr (__ss_is_iterable<T>::value) {
+    if constexpr (__ss_is_iterable<T>::value || __ss_has_buffer<T>::value) {
         bytes *b = new bytes();
         __bytes_fill(b->unit, t, false);
         return b;
@@ -346,7 +357,7 @@ bytes *__bytes();
 bytes *__bytes(str *s, str *encoding=0, str *errors=0);
 
 template<class T> bytes *__bytearray(T *t) {
-    if constexpr (__ss_is_iterable<T>::value) {
+    if constexpr (__ss_is_iterable<T>::value || __ss_has_buffer<T>::value) {
         bytes *b = new bytes(0);
         __bytes_fill(b->unit, t, true);
         return b;

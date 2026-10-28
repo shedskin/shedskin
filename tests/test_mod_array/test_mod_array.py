@@ -834,6 +834,56 @@ def _overflow_msgs(b, v):
     return msgs
 
 
+def test_bytes_buffer():
+    # bytes()/bytearray()/bytearray.extend() copy an array's raw buffer
+    assert bytes(array.array('i', [7])) == b'\x07\x00\x00\x00'
+    assert bytes(array.array('h', [1, 256])) == b'\x01\x00\x00\x01'
+    assert bytes(array.array('B', [255, 0])) == b'\xff\x00'
+    assert bytes(array.array('i')) == b''
+    assert bytearray(array.array('d', [1.5])) == bytearray(b'\x00\x00\x00\x00\x00\x00\xf8?')
+    assert bytes(array.array('w', 'a')) == b'a\x00\x00\x00'
+    ba = bytearray(b'x')
+    ba.extend(array.array('h', [258]))
+    assert ba == bytearray(b'x\x02\x01')
+    a = array.array('q', [-1, 2**40])
+    assert bytes(a) == a.tobytes()
+
+
+def test_float_into_int_array():
+    # a float has no __index__, so it cannot be stored into an integer array
+    msgs = []
+    a = array.array('i', [1])
+    for i in range(6):
+        try:
+            if i == 0:
+                array.array('i', [1.5, 2.7])
+            elif i == 1:
+                a.append(-3.9)
+            elif i == 2:
+                a[0] = 9.99
+            elif i == 3:
+                a.extend([2.5])
+            elif i == 4:
+                a.fromlist([2.5])
+            else:
+                a.insert(0, 2.5)
+        except TypeError as e:
+            msgs.append(str(e))
+    assert msgs == ["'float' object cannot be interpreted as an integer"] * 6
+    assert a.tolist() == [1]
+    try:
+        a[5] = 1.5
+    except IndexError as e:
+        assert str(e) == 'array assignment index out of range'
+
+    # whereas an int into a float array is fine
+    d = array.array('d', [1, 2])
+    d.append(3)
+    d[0] = 4
+    d.insert(0, 5)
+    assert d.tolist() == [5.0, 4.0, 2.0, 3.0]
+
+
 def test_all():
     test_typecodes()
     test_buffer_info()
@@ -873,6 +923,8 @@ def test_all():
     test_inplace_return_value()
     test_inplace_aliasing()
     test_error_messages()
+    test_bytes_buffer()
+    test_float_into_int_array()
 
 
 if __name__ == '__main__':

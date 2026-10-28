@@ -21,6 +21,7 @@ inline char __typechar(str *typecode) {
     return c < 128 ? (char)c : '\0';
 }
 void __throw_no_char();
+void __throw_float_item();
 
 extern class_ *cl_array;
 template <class T> class array : public pyseq<T> {
@@ -46,6 +47,9 @@ public:
         __init__(typecode_, iter);
     }
 
+    /* raw buffer, for bytes(), bytearray() and bytearray.extend() */
+    __GC_VECTOR(char) &__buffer_units__() { return units; }
+
     template<class U> void *__init__(str *typecode_, U *iter);
     template<class X> void *__init__(str *typecode_, array<X> *iter);
     void *__init__(str *typecode_, bytes *b);
@@ -69,6 +73,20 @@ public:
 
     void *append(T t);
     void *insert(__ss_int i, T t);
+
+    /* a float has no __index__, so CPython raises TypeError when storing one
+     * into an integer array. without these overloads (exact matches, so they
+     * win over the T ones above) C++ would silently truncate it. */
+    template<class U> requires (std::is_same_v<T, __ss_int> && std::is_floating_point_v<U>)
+    void *append(U) { __throw_float_item(); return NULL; }
+    template<class U> requires (std::is_same_v<T, __ss_int> && std::is_floating_point_v<U>)
+    void *insert(__ss_int, U) { __throw_float_item(); return NULL; }
+    template<class U> requires (std::is_same_v<T, __ss_int> && std::is_floating_point_v<U>)
+    void *__setitem__(__ss_int i, U) {
+        __wrap(this, i, "array assignment index out of range");
+        __throw_float_item();
+        return NULL;
+    }
 
     __ss_bool __eq__(pyobj *p);
 

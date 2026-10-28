@@ -14,6 +14,10 @@ void __throw_no_char() {
     throw new TypeError(new str("array item must be unicode character"));
 }
 
+void __throw_float_item() {
+    throw new TypeError(new str("'float' object cannot be interpreted as an integer"));
+}
+
 __ss_int get_itemsize(char typechar) {
     switch(typechar) {
         case 'b': return sizeof(signed char);
