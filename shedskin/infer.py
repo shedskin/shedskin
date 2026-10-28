@@ -696,8 +696,9 @@ def redirect_func(
         nargs = len(
             [kwarg for kwarg in callfunc.args if not isinstance(kwarg, ast.keyword)]
         )
-        if func.ident == 'groupby':  # TODO avoid special case..
-            nargs += len([a for a in callfunc.keywords if a.arg == 'key'])
+        kwarg = {'groupby': 'key', 'reduce': 'initial'}.get(func.ident)  # TODO avoid special cases..
+        if kwarg:
+            nargs += len([a for a in callfunc.keywords if a.arg == kwarg])
         redir = "__%s%d" % (func.ident, nargs)
         func = funcs.get(redir, func)
     return func

@@ -1,9 +1,10 @@
 def reduce(func, iter1, initial):
-    elem = iter(iter1).__next__()
-    elem = initial
-    elem = func(elem, elem)
-    return elem
+    acc = initial
+    acc = func(acc, iter(iter1).__next__())
+    return acc
 
 def __reduce2(func, iter1):
     elem = iter(iter1).__next__()
-    return func(elem, elem)
+    acc = elem
+    acc = func(acc, elem)
+    return acc
