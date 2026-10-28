@@ -1697,6 +1697,24 @@ def test_popen_enter_exit_results():
     assert p.closed
 
 
+def test_c_int_overflow():
+    # C int arguments raise rather than being truncated (os.dup2(1, 2**32+1)
+    # would replace stdout)
+    errors = []
+    for v in [2 ** 32 + 100, -2 ** 31 - 1]:
+        try:
+            os.dup2(1, v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            os.strerror(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    assert errors == 4 * ['Python int too large to convert to C int']
+
+
 def test_all():
     test_unicode_names()
     test_undecodable_names()
@@ -1716,6 +1734,7 @@ def test_all():
     test_rename_renames()
     test_utime()
     test_strerror_error()
+    test_c_int_overflow()
     test_times()
     test_misc_constants()
     test_unsetenv()

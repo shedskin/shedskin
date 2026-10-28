@@ -1112,6 +1112,30 @@ def test_enter_exit_results():
     assert s.fileno() == -1
 
 
+def test_c_int_overflow():
+    # C int arguments raise rather than being truncated
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    errors = []
+    for v in [2 ** 32 + 100, -2 ** 31 - 1]:
+        try:
+            s.listen(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            socket.socket(socket.AF_INET, v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    s.close()
+    assert errors == [
+        'signed integer is greater than maximum',
+        'Python int too large to convert to C int',
+        'signed integer is less than minimum',
+        'Python int too large to convert to C int',
+    ]
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1122,6 +1146,7 @@ def test_all():
     test_sendfile()
     test_byteorder()
     test_port_range()
+    test_c_int_overflow()
     test_inet()
     test_names()
     test_embedded_nul()

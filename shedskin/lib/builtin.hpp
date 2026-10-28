@@ -606,6 +606,29 @@ void __adjust_indices(__ss_int &start, __ss_int &end, __ss_int len);
 __ss_int __extslice_size(__ss_int x, __ss_int l, __ss_int u, __ss_int s, __ss_int len);
 
 #include "builtin/exception.hpp"
+
+/* an int argument that cpython converts to a C int: an OverflowError instead
+   of silent truncation. __ss_cint has the message of the argument clinic
+   'int' converter (most of os), __ss_cint_i that of the 'i' format code (pids,
+   most socket methods) */
+inline int __ss_cint(__ss_int v) {
+    if constexpr (sizeof(__ss_int) > sizeof(int)) {
+        if (v < INT_MIN || v > INT_MAX)
+            throw new OverflowError(new str("Python int too large to convert to C int"));
+    }
+    return (int)v;
+}
+
+inline int __ss_cint_i(__ss_int v) {
+    if constexpr (sizeof(__ss_int) > sizeof(int)) {
+        if (v > INT_MAX)
+            throw new OverflowError(new str("signed integer is greater than maximum"));
+        if (v < INT_MIN)
+            throw new OverflowError(new str("signed integer is less than minimum"));
+    }
+    return (int)v;
+}
+
 #define SS_DECL
 #include "builtin/function.hpp"
 #undef SS_DECL
