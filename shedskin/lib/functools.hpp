@@ -13,7 +13,11 @@ void __init();
 
 /* reduce */
 
-template<class A, class B, class C> A reduce(A (*func)(A, A), B *iter, C initial) {
+/* the accumulator (A) and element (E) types may differ, as may the return
+   type of func (R); initial is converted to the accumulator type, so that
+   e.g. None (NULL) or an int can be used to start a str or float reduction */
+
+template<class R, class A, class E, class B> A reduce(R (*func)(A, E), B *iter, std::type_identity_t<A> initial) {
     A result = initial;
     typename B::for_in_loop __7 = iter->for_in_init();
     while(iter->for_in_has_next(__7))
@@ -21,7 +25,7 @@ template<class A, class B, class C> A reduce(A (*func)(A, A), B *iter, C initial
     return result;
 }
 
-template<class A, class B> A reduce(A (*func)(A, A), B *iter) {
+template<class R, class A, class E, class B> A reduce(R (*func)(A, E), B *iter) {
     A result;
     typename B::for_in_loop __7 = iter->for_in_init();
     int first = 1;

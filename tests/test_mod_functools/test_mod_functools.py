@@ -1,3 +1,4 @@
+import sys
 from functools import reduce
 
 
@@ -24,8 +25,30 @@ def test_reduce():
     assert error
 
 
+def add(a, b):
+    return a + b
+
+
+def test_reduce_mixed():
+    # initial of a different type than the elements/accumulator (issue 1014)
+    assert reduce(lambda a, b: a if a else b, ["", "x"], None) == "x"
+    assert reduce(lambda a, b: a if a else b, ["", ""], None) == ""
+    assert reduce(lambda a, b: a + b, [1, 2], 0.5) == 3.5
+    assert reduce(add, [1, 2], 0.5) == 3.5
+
+    # accumulator and element types differ
+    assert reduce(lambda acc, x: acc + [x], [1, 2, 3], [0]) == [0, 1, 2, 3]
+    assert reduce(lambda acc, x: acc + len(x), ["ab", "cde"], 0) == 5
+    assert reduce(lambda acc, k: acc + k, {"a": 1, "b": 2}, "") == "ab"
+
+    if (sys.version_info[0], sys.version_info[1]) >= (3, 14):
+        assert reduce(lambda a, b: a + b, [1, 2], initial=0.5) == 3.5
+        assert reduce(add, [1, 2], initial=0.5) == 3.5
+
+
 def test_all():
     test_reduce()
+    test_reduce_mixed()
 
 
 if __name__ == '__main__':
