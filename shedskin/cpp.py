@@ -3756,7 +3756,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif ident in ["min", "max", "iter", "round"]:
                 self.append("___" + ident + "(")
             elif ident == "bool":
-                self.bool_test(node.args[0], func, always_wrap=True)
+                if node.args and infer.nrargs(self.gx, node):
+                    self.bool_test(node.args[0], func, always_wrap=True)
+                else:
+                    self.append("False")
                 return
             elif ident == "pow" and direct_call.mv.module.ident == "builtin":
                 # pow(base, exp, mod) may also be called with keywords

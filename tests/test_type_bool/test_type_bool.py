@@ -1,3 +1,4 @@
+from collections import defaultdict
 
 
 def test_bool():
@@ -109,9 +110,28 @@ def test_attributes():
     assert f.as_integer_ratio() == (0, 1)
 
 
+def test_factory():
+    assert bool() == False
+    assert not bool()
+    b = bool()
+    assert b is False
+
+    seen = defaultdict(bool)
+    assert seen['q'] == False
+    seen['a'] = True
+    assert seen['a']
+    assert not seen['b']
+    assert sorted(seen.items()) == [('a', True), ('b', False), ('q', False)]
+
+    assert list(map(bool, [0, 1, 2])) == [False, True, True]
+    assert list(filter(bool, [0, 3, 0, 4])) == [3, 4]
+    assert sorted([2, 0, 1], key=bool) == [0, 2, 1]
+
+
 def test_all():
     test_bool()
     test_attributes()
+    test_factory()
     test_empty()
     test_custom()
     test_containers()
