@@ -1,4 +1,5 @@
 import os
+import sys
 
 
 if os.path.exists("testdata"):
@@ -203,6 +204,111 @@ def test_closed_is_bool():
     r.close()
     assert str(r.closed) == 'True'
     os.remove('ctest.txt')
+
+
+def test_use_after_close():
+    # reading or iterating a closed file used to read the freed FILE
+    with open('uctest.txt', 'w') as w:
+        w.write('a\nb\nc\n')
+
+    f = open('uctest.txt')
+    f.close()
+    try:
+        for line in f:
+            assert False
+        assert False
+    except ValueError as e:
+        assert str(e).startswith('I/O operation on closed file')
+    try:
+        next(f)
+        assert False
+    except ValueError:
+        pass
+
+    f = open('uctest.txt')
+    lines = []
+    try:
+        for line in f:
+            lines.append(line)
+            f.close()
+        assert False
+    except ValueError:
+        pass
+    assert lines == ['a\n']
+
+    g = open('uctest.txt', 'rb')
+    g.close()
+    try:
+        for bline in g:
+            assert False
+        assert False
+    except ValueError:
+        pass
+    try:
+        next(g)
+        assert False
+    except ValueError:
+        pass
+    os.remove('uctest.txt')
+
+
+def test_buffer_shares_file():
+    # .buffer is the same file: closing either one closes both (once)
+    with open('bftest.txt', 'w') as w:
+        w.write('hello\nworld\n')
+
+    g = open('bftest.txt')
+    assert g.buffer.read(5) == b'hello'
+    g.buffer.close()
+    assert g.closed and g.buffer.closed
+    try:
+        g.readline()
+        assert False
+    except ValueError:
+        pass
+    g.close()
+
+    f = open('bftest.txt')
+    f.close()
+    assert f.buffer.closed
+    try:
+        f.buffer.read(10)
+        assert False
+    except ValueError:
+        pass
+    f.buffer.close()
+
+    with open('bftest.txt') as h:
+        h.buffer.close()
+    assert h.closed
+
+    os.remove('bftest.txt')
+
+
+def test_std_buffers():
+    # the standard streams (and fdopen/popen files) used to have no .buffer
+    assert sys.stdout.buffer.write(b'') == 0
+    sys.stdout.buffer.flush()
+    assert not sys.stderr.buffer.closed
+    assert not sys.stdin.buffer.closed
+
+    p = os.popen('echo hi')
+    assert p.buffer.read() == b'hi\n'
+    p.close()
+    assert p.buffer.closed
+
+    p = os.popen('echo hi')
+    assert p.buffer.readline() == b'hi\n'
+    p.buffer.close()
+    assert p.closed
+
+    r, w = os.pipe()
+    os.write(w, b'piped')
+    os.close(w)
+    fr = os.fdopen(r)
+    assert fr.buffer.read(5) == b'piped'
+    fr.close()
+    assert fr.buffer.closed
 
 
 # helpers that close their files: on Windows an open file cannot be removed,
@@ -756,6 +862,10 @@ def test_all():
     test_lineendings()
     test_open_directory_raises_oserror()
     test_closed_is_bool()
+    test_use_after_close()
+    test_buffer_shares_file()
+    if sys.platform != 'win32':
+        test_std_buffers()
     test_open_mode_order()
     test_open_read_write_switch()
 

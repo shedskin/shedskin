@@ -918,9 +918,41 @@ def test_enter_exit_results():
     assert m.closed
 
 
+def test_iter_after_close():
+    # iterating a closed mmap used to read the unmapped memory (segfault)
+    m = mmap.mmap(-1, 16)
+    m.write(b'abcdefghijklmnop')
+    n = 0
+    try:
+        for c in m:
+            n += 1
+            if n == 3:
+                m.close()
+        assert False
+    except ValueError as e:
+        assert str(e) == 'mmap closed or invalid'
+    assert n == 3
+
+    m = mmap.mmap(-1, 16)
+    it = iter(m)
+    assert next(it) == b'\x00'
+    m.close()
+    try:
+        next(it)
+        assert False
+    except ValueError:
+        pass
+    try:
+        list(it)
+        assert False
+    except ValueError:
+        pass
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
+        test_iter_after_close()
         test_enter_exit_results()
         test_basic()
         test_readonly()
