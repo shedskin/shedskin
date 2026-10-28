@@ -104,7 +104,7 @@ SomeClass.class_attr # good
 SomeClass.some_static_method() # good
 ```
 
-* function references can be passed around, but not method references or class references, and they cannot be contained:
+* functions can be passed around, but not builtin functions or methods, or class or module references, and they cannot be contained:
 
 ```python
 var = lambda x, y: x+y # good
