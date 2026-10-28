@@ -143,9 +143,20 @@ def test_attributes():
     assert [z.imag for z in [1j, 2 + 3j]] == [1.0, 3.0]
 
 
+def test_keywords():
+    # imag= alone must not be passed as the real part
+    c = complex(imag=2.0)
+    assert c.real == 0.0
+    assert c.imag == 2.0
+    assert complex(imag=3) == 3j
+    assert complex(real=1.5) == 1.5
+    assert complex(1.0, imag=4.0) == 1 + 4j
+
+
 def test_all():
     test_complex()
     test_attributes()
+    test_keywords()
     test_from_string()
     test_from_class()
     test_from_number()

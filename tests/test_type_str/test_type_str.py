@@ -1130,6 +1130,14 @@ def test_eq_identity():
     assert n == m and not (n != m)
 
 
+def test_from_bytes_keywords():
+    # errors= without encoding must not be passed as the encoding
+    assert str(b'h\xffi', errors='ignore') == 'hi'
+    assert str(b'h\xffi', errors='replace') == 'h\ufffdi'
+    assert str(b'hi', encoding='ascii') == 'hi'
+    assert str(b'h\xffi', 'latin-1') == 'h\xffi'
+
+
 def test_all():
     test_unicode_case()
     test_str_cmp()
@@ -1210,6 +1218,7 @@ def test_all():
     test_char_index()
     test_mod_format()
     test_eq_identity()
+    test_from_bytes_keywords()
 
 
 if __name__ == "__main__":

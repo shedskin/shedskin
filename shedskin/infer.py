@@ -854,8 +854,21 @@ def analyze_args(
     actuals: list[Optional[ast.AST]] = []
     formals = []
     defaults: list[ast.AST] = []
+    skipped: list[tuple[str, ast.AST]] = []
     missing = False
     for i, formal in enumerate(formal_args):
+        # only trailing defaults can be skipped: e.g. complex(imag=..) must
+        # not pass 'imag' as the first argument
+        if skipped and (
+            formal in kwdict
+            or (argnr < len(args) and not formal.startswith("__kw_"))
+        ):
+            for skipped_formal, default in skipped:
+                actuals.append(default)
+                formals.append(skipped_formal)
+                defaults.append(default)
+            skipped = []
+
         if formal in kwdict:
             actuals.append(kwdict[formal])
             formals.append(formal)
@@ -876,6 +889,8 @@ def analyze_args(
                     actuals.append(default)
                     formals.append(formal)
                 defaults.append(default)
+            elif not formal.startswith("__kw_"):
+                skipped.append((formal, default))
         else:
             missing = True
 
