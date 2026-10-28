@@ -56,6 +56,7 @@ str *__str(__ss_bool b);
 str *__str(void *);
 str *__str();
 str *__str(bytes *b, str *encoding, str *errors=0); /* str(bytes, encoding[, errors]) */
+inline str *__str(bytes *b, void *, str *errors) { return __str(b, (str *)0, errors); } /* str(bytes, errors=..) */
 str *__str_abs(__ss_int t, __ss_int base); /* digits of |t|, no sign */
 
 /* abs */

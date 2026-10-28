@@ -1033,7 +1033,7 @@ class complex:
     def from_number(cls, i):
         return complex(i)
 
-    def __init__(self, real=None, imag=None):
+    def __init__(self, real=0.0, imag=None):
         real.__complex__()  # TODO to sep function like float, int?
         real.__float__()
         real.__index__()

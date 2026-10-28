@@ -654,6 +654,10 @@ def test_exception_attributes():
     # NameError.name
     assert NameError('x').name is None
     assert NameError('msg', name='y').name == 'y'
+    ne = NameError(name='bar')  # name= alone must not become the message
+    assert ne.name == 'bar'
+    assert str(ne) == ''
+    assert UnboundLocalError(name='u').name == 'u'
     ok = False
     try:
         raise UnboundLocalError('msg', name='z')
