@@ -1204,22 +1204,82 @@ __ss_int time::__hash__() {
 
 //class timedelta
 
+/* Bound on the whole days a single constructor argument may contribute. It is
+ * far beyond the C int range that the result has to fit in, and small enough
+ * that the seven contributions (and the carry from the microseconds) can be
+ * summed in 64 bits. */
+static const uint64_t TIMEDELTA_ACC_LIMIT = (uint64_t)1 << 56;
+
+/* floor(w / per_day) and the matching remainder in [0, per_day), computed
+ * exactly for an integer-valued double w. Scaling w to microseconds first does
+ * not fit in 64 bits (timedelta(minutes=2**62) wrapped to 0:00:00, and the
+ * valid range of timedelta goes up to about 8.64e19 microseconds), and casting
+ * a double of 2**63 or more to int64_t is undefined. cpython uses python ints
+ * here. Returns false if the quotient exceeds TIMEDELTA_ACC_LIMIT. */
+static bool timedelta_split_days(double w, uint64_t per_day, int64_t *days, int64_t *rem) {
+    double a = std::fabs(w);
+    int e;
+    std::frexp(a, &e); /* a < 2**e */
+    int shift = e > 64 ? e - 64 : 0;
+    /* a has a 53-bit mantissa, so a / 2**shift is still an integer, and it is
+       below 2**64 */
+    uint64_t m = (uint64_t)std::ldexp(a, -shift);
+    uint64_t q = m / per_day, r = m % per_day;
+    for(; shift > 0; shift--) { /* long division, one bit of a at a time */
+        if(q > TIMEDELTA_ACC_LIMIT)
+            return false;
+        q *= 2;
+        r *= 2;
+        if(r >= per_day) {
+            r -= per_day;
+            q += 1;
+        }
+    }
+    if(q > TIMEDELTA_ACC_LIMIT)
+        return false;
+    if(w < 0 && r != 0) { /* floor semantics */
+        q += 1;
+        r = per_day - r;
+    }
+    *days = w < 0 ? -(int64_t)q : (int64_t)q;
+    *rem = (int64_t)r;
+    return true;
+}
+
 /* Split one constructor argument into its whole and fractional parts, like
- * cpython's accum() in _datetimemodule.c: the whole part is scaled by factor
- * and added exactly to the integer accumulator, the fractional part is scaled
- * and carried along in a double (in microseconds), to be rounded once at the
- * very end. Handling every argument separately keeps e.g.
- * timedelta(hours=-55695256, seconds=-909.352) exact, where combining the
- * arguments into one double first would lose the microseconds. */
-static inline void timedelta_accum(double arg, int64_t factor, double factor_us, int64_t *whole_acc, int64_t *us_acc, double *leftover_us) {
+ * cpython's accum() in _datetimemodule.c: the whole part is added exactly to
+ * the integer accumulators (as whole days, plus the remainder in
+ * microseconds), the fractional part is scaled and carried along in a double
+ * (in microseconds), to be rounded once at the very end. Handling every
+ * argument separately keeps e.g. timedelta(hours=-55695256, seconds=-909.352)
+ * exact, where combining the arguments into one double first would lose the
+ * microseconds.
+ *
+ * per_day is the number of units in a day (1 for days and weeks), days_per_unit
+ * the number of days in a unit (7 for weeks, else 1) and us_per_unit the number
+ * of microseconds in a unit. *overflow is set if the argument alone is far too
+ * large; as in cpython the OverflowError only comes after all the arguments
+ * have been checked for NaN and infinity. (unlike cpython, two such arguments
+ * that cancel out still overflow) */
+static inline void timedelta_accum(double arg, uint64_t per_day, int64_t days_per_unit, int64_t us_per_unit, int64_t *days_acc, int64_t *us_acc, double *leftover_us, bool *overflow) {
+    if(std::isnan(arg))
+        throw new ValueError(new str("cannot convert float NaN to integer"));
+    if(std::isinf(arg))
+        throw new OverflowError(new str("cannot convert float infinity to integer"));
     double whole;
     double frac = modf(arg, &whole);
-    *whole_acc += (int64_t)whole * factor;
+    int64_t d, rem;
+    if(!timedelta_split_days(whole, per_day, &d, &rem)) {
+        *overflow = true;
+        return;
+    }
+    *days_acc += d * days_per_unit;
+    *us_acc += rem * us_per_unit; /* < one day */
     if (frac != 0.0) {
         /* scale the fraction to microseconds and again split off the whole
            microseconds, so that only the sub-microsecond remainder is carried
            in floating point (keeps it small, hence precise) */
-        frac = modf(frac * factor_us, &whole);
+        frac = modf(frac * (double)us_per_unit, &whole);
         *us_acc += (int64_t)whole;
         *leftover_us += frac;
     }
@@ -1237,43 +1297,50 @@ timedelta::timedelta(double days_, double seconds_, double microseconds_, double
     __class__ = cl_timedelta;
 
     /* Same algorithm as cpython: whole parts of the arguments are accumulated
-     * exactly in integer days/seconds/microseconds, fractional parts are
+     * exactly in integer days and microseconds, fractional parts are
      * carried as leftover microseconds and converted with a single
      * round-half-to-even (___round, the builtin round() implementation). The
      * old implementation derived the microseconds from one combined float
      * total and the seconds from a separately truncated total; for negative
      * totals the two disagreed by a second (timedelta(days=-1, seconds=1.5)
      * came out as -1 day, 0:00:00.5), and it rounded ties away from zero. */
-    int64_t d = 0, s = 0, us = 0;
+    const int64_t us_per_day = (int64_t)24 * 3600 * 1000000;
+    int64_t d = 0, us = 0;
     double leftover_us = 0.0;
+    bool overflow = false;
 
     /* same order as cpython's delta_new: the leftover is a floating point sum,
        so a different order can change the last bit and flip a tie */
-    timedelta_accum(microseconds_, 1, 1.0, &us, &us, &leftover_us);
-    timedelta_accum(milliseconds, 1000, 1000.0, &us, &us, &leftover_us);
-    timedelta_accum(seconds_, 1, 1e6, &s, &us, &leftover_us);
-    timedelta_accum(minutes, 60, 60 * 1e6, &s, &us, &leftover_us);
-    timedelta_accum(hours, 3600, 3600 * 1e6, &s, &us, &leftover_us);
-    timedelta_accum(days_, 1, 24 * 3600 * 1e6, &d, &us, &leftover_us);
-    timedelta_accum(weeks, 7, 7.0 * 24 * 3600 * 1e6, &d, &us, &leftover_us);
+    timedelta_accum(microseconds_, us_per_day, 1, 1, &d, &us, &leftover_us, &overflow);
+    timedelta_accum(milliseconds, us_per_day / 1000, 1, 1000, &d, &us, &leftover_us, &overflow);
+    timedelta_accum(seconds_, 24 * 3600, 1, 1000000, &d, &us, &leftover_us, &overflow);
+    timedelta_accum(minutes, 24 * 60, 1, 60 * 1000000, &d, &us, &leftover_us, &overflow);
+    timedelta_accum(hours, 24, 1, (int64_t)3600 * 1000000, &d, &us, &leftover_us, &overflow);
+    timedelta_accum(days_, 1, 1, us_per_day, &d, &us, &leftover_us, &overflow);
+    timedelta_accum(weeks, 1, 7, 7 * us_per_day, &d, &us, &leftover_us, &overflow);
+
+    if(overflow)
+        throw new OverflowError(new str("Python int too large to convert to C int"));
 
     if (leftover_us != 0.0) {
         /* round-half-to-even on the *total* number of microseconds (as
          * cpython does), not on the leftover alone: the parity of the total
-         * is the parity of us, since the day and second factors are even.
-         * Adding that parity before rounding and removing it afterwards makes
-         * ___round's tie-breaking land the total on an even value. */
+         * is the parity of us, since the number of microseconds in a day is
+         * even. Adding that parity before rounding and removing it afterwards
+         * makes ___round's tie-breaking land the total on an even value. */
         int64_t odd = us & 1;
         us += ___round(leftover_us + (double)odd) - odd;
     }
 
     /* normalize with floor semantics: 0 <= microseconds < 1e6, 0 <= seconds < 86400 */
     int64_t rem;
-    s += floordivmod(us, 1000000, &rem);
-    us = rem;
-    d += floordivmod(s, 24 * 3600, &rem);
-    s = rem;
+    d += floordivmod(us, us_per_day, &rem);
+    int64_t s = rem / 1000000;
+    us = rem % 1000000;
 
+    /* as cpython: days must fit a C int, and then the range is checked */
+    if(d > std::numeric_limits<int>::max() || d < std::numeric_limits<int>::min())
+        throw new OverflowError(new str("Python int too large to convert to C int"));
     timedelta_check_days(d);
 
     this->days = (__ss_int)d;

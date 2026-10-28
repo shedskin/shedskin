@@ -680,6 +680,69 @@ def test_timedelta_round_half_even():
     assert repr(datetime.timedelta(microseconds=0.7)) == 'datetime.timedelta(microseconds=1)'
     assert repr(datetime.timedelta(microseconds=-0.7)) == 'datetime.timedelta(days=-1, seconds=86399, microseconds=999999)'
 
+def test_timedelta_huge_args():
+    # the whole parts of the arguments used to be scaled in 64 bits, which
+    # wrapped (minutes=2**62 gave 0:00:00), and doubles of 2**63 or more were
+    # cast to int64 (undefined)
+    for k in range(10):
+        error = ''
+        try:
+            if k == 0:
+                datetime.timedelta(minutes=2**62)
+            elif k == 1:
+                datetime.timedelta(hours=2**62)
+            elif k == 2:
+                datetime.timedelta(milliseconds=2**62)
+            elif k == 3:
+                datetime.timedelta(weeks=2**62)
+            elif k == 4:
+                datetime.timedelta(seconds=1e17)
+            elif k == 5:
+                datetime.timedelta(days=2147483648)
+            elif k == 6:
+                datetime.timedelta(seconds=1e300)
+            elif k == 7:
+                datetime.timedelta(microseconds=1.9e20)
+            elif k == 8:
+                datetime.timedelta(days=2147483647)
+            else:
+                datetime.timedelta(microseconds=1e20)
+        except OverflowError as e:
+            error = str(e)
+        if k <= 7:
+            assert error == 'Python int too large to convert to C int'
+        elif k == 8:
+            assert error == 'days=2147483647; must have magnitude <= 999999999'
+        else:
+            assert error == 'days=1157407407; must have magnitude <= 999999999'
+
+    # valid results, although the microseconds do not fit in 64 bits
+    assert repr(datetime.timedelta(microseconds=2.0**63)) == 'datetime.timedelta(days=106751991, seconds=14454, microseconds=775808)'
+    assert repr(datetime.timedelta(microseconds=8e19)) == 'datetime.timedelta(days=925925925, seconds=80000)'
+    assert repr(datetime.timedelta(microseconds=-8e19)) == 'datetime.timedelta(days=-925925926, seconds=6400)'
+    assert repr(datetime.timedelta(microseconds=-2.0**63, days=1.5)) == 'datetime.timedelta(days=-106751990, seconds=28745, microseconds=224192)'
+    assert repr(datetime.timedelta(minutes=2**40, seconds=-60*2**40)) == 'datetime.timedelta(0)'
+    assert repr(datetime.timedelta(milliseconds=-2**62, days=53375995583, hours=10)) == 'datetime.timedelta(days=-1, seconds=66212, microseconds=96000)'
+
+    # nan and infinity, with cpython's errors
+    for k in range(3):
+        error = ''
+        try:
+            if k == 0:
+                datetime.timedelta(seconds=float('inf'))
+            elif k == 1:
+                datetime.timedelta(days=-float('inf'))
+            else:
+                datetime.timedelta(microseconds=float('nan'))
+        except OverflowError as e:
+            error = 'OverflowError: ' + str(e)
+        except ValueError as e:
+            error = 'ValueError: ' + str(e)
+        if k < 2:
+            assert error == 'OverflowError: cannot convert float infinity to integer'
+        else:
+            assert error == 'ValueError: cannot convert float NaN to integer'
+
 def test_datetime_fromtimestamp_round_half_even():
     # same rounding rule for the fractional part of a timestamp
     assert datetime.datetime.utcfromtimestamp(0.0000005).microsecond == 0
@@ -1335,6 +1398,7 @@ def test_all():
         test_timedelta_bool()
         test_timedelta_fractional_args()
         test_timedelta_round_half_even()
+        test_timedelta_huge_args()
         test_datetime_fromtimestamp_round_half_even()
         test_date_fromtimestamp_floor()
         test_fromisocalendar()
