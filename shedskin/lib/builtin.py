@@ -1393,7 +1393,7 @@ def __round1(number):
 def divmod(a, b):
     return a.__divmod__(b)
 
-def bool(x):
+def bool(x=None):
     x.__bool__()
     x.__len__()
     return True
