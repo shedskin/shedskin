@@ -376,6 +376,23 @@ def test_int_error_message():
         error = str(e)
     assert error == "invalid literal for int() with base 16: b'zz '"
 
+    # as CPython's %.200R: the argument is cut to 200 characters (bytes and
+    # bytearray to 200 bytes first, and both are shown as bytes)
+    prefix = "invalid literal for int() with base 10: "
+    for value, expected in [
+        ('x' * 300, "'" + 'x' * 199),
+        ('x' * 198, "'" + 'x' * 198 + "'"),
+        ('x' * 199, "'" + 'x' * 199),
+        ('\xe9' * 300, "'" + '\xe9' * 199),
+    ]:
+        assert int_error(value, 10) == 'VE: ' + prefix + expected
+    assert bytes_int_error(b'x' * 300, 10) == 'VE: ' + prefix + "b'" + 'x' * 198
+    assert bytes_int_error(b'\xff' * 300, 10) == 'VE: ' + prefix + "b'" + '\\xff' * 49 + '\\x'
+    assert bytes_int_error(bytearray(b'x' * 300), 10) == 'VE: ' + prefix + "b'" + 'x' * 198
+    assert bytes_int_error(bytearray(b'zz'), 10) == 'VE: ' + prefix + "b'zz'"
+    # the bytes are cut before the quote is chosen
+    assert bytes_int_error(b'x' * 250 + b"'", 10) == 'VE: ' + prefix + "b'" + 'x' * 198
+
 
 def int_error(value, base):
     try:
@@ -384,6 +401,14 @@ def int_error(value, base):
         return 'VE: ' + str(e)
     except OverflowError:
         return 'OE'
+    return ''
+
+
+def bytes_int_error(value, base):
+    try:
+        int(value, base)
+    except ValueError as e:
+        return 'VE: ' + str(e)
     return ''
 
 

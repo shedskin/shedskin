@@ -124,7 +124,7 @@ static str *__unicode_range(__ss_int start, __ss_int end) { /* "a-b" (end inclus
 UnicodeDecodeError::UnicodeDecodeError(str *encoding, bytes *object, __ss_int start, __ss_int end, str *reason) {
     this->__class__ = cl_unicodedecodeerror;
     this->encoding = encoding;
-    this->_object = object;
+    this->_object = object->frozen ? object : new bytes(object); /* as cpython: always a bytes copy */
     this->start = start;
     this->end = end;
     this->reason = reason;
