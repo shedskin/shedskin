@@ -509,6 +509,27 @@ def test_files():
     g.close()
     assert not f.closed
     f.close()
+
+    # the wrapped file closed underneath us
+    f = open(name, 'rb')
+    g = gzip.GzipFile(fileobj=f)
+    f.close()
+    try:
+        g.read()
+        assert False
+    except ValueError as e:
+        assert str(e) == 'read of closed file'
+    g.close()
+    f = open(name, 'wb')
+    g = gzip.GzipFile(fileobj=f, mode='wb')
+    g.write(b'abc' * 10)
+    f.close()
+    try:
+        g.close()
+        assert False
+    except ValueError as e:
+        assert str(e) == 'write to closed file'
+    assert g.closed
     os.remove(name)
 
 
