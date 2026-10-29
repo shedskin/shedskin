@@ -717,8 +717,6 @@ __ss_bool GzipFile::isatty() {
 
 enum { NL_UNIVERSAL, NL_ANY, NL_LF, NL_CR, NL_CRLF };
 
-static inline bool __is_utf8_cont(int c) { return (c & 0xc0) == 0x80; }
-
 _GzipTextFile::_GzipTextFile(GzipFile *gz, str *mode, str *encoding, str *errors, str *newline) : file() {
     __encoding = __lookup_encoding(encoding);
     __errors = __lookup_errors(errors);
@@ -770,17 +768,14 @@ str *_GzipTextFile::readline(__ss_int n) {
     if (bom_check)
         __skip_bom();
     __read_cache.clear();
-    size_t chars = 0;
+    __char_counter cc(__encoding, __errors);
     for (;;) {
         int c = gz->__getc();
         if (c == -1)
             break;
-        if (!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
-            if (chars == size_t(n)) { /* character n+1 starts: not ours */
-                gz->__ungetc();
-                break;
-            }
-            chars++;
+        if (cc.full(c, size_t(n))) { /* character n+1 starts: not ours */
+            gz->__ungetc();
+            break;
         }
         if (c == '\r' && nl != NL_LF) {
             if (nl == NL_CR) {
@@ -797,9 +792,9 @@ str *_GzipTextFile::readline(__ss_int n) {
             }
             __read_cache.push_back('\r');
             if (crlf) {
-                if (chars < size_t(n)) {
+                if (cc.chars < size_t(n)) {
                     __read_cache.push_back('\n');
-                    chars++;
+                    cc.chars++;
                 } else
                     gz->__ungetc();
                 break;
@@ -822,17 +817,14 @@ str *_GzipTextFile::read(__ss_int n) {
     if (bom_check)
         __skip_bom();
     __read_cache.clear();
-    size_t chars = 0;
+    __char_counter cc(__encoding, __errors);
     for (;;) {
         int c = gz->__getc();
         if (c == -1)
             break;
-        if (!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
-            if (chars == size_t(n)) {
-                gz->__ungetc();
-                break;
-            }
-            chars++;
+        if (cc.full(c, size_t(n))) {
+            gz->__ungetc();
+            break;
         }
         if (c == '\r' && nl == NL_UNIVERSAL) { /* '\r' and '\r\n' become '\n' */
             int d = gz->__getc();
