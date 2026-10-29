@@ -154,6 +154,9 @@ class mmap: public pyiter<bytes *>
     __ss_int __len__();
     char * data() { return m_begin; }
 
+    /* raw buffer, for bytes(), bytearray() and bytearray.extend() */
+    std::string_view __buffer_units__() { __raise_if_closed(); return std::string_view(m_begin, __size()); }
+
     // pyiter
     __ss_bool __contains__(bytes *s);
     __iter<bytes *> *__iter__();

@@ -870,6 +870,31 @@ def test_bytes_from_non_int_iterable():
     except TypeError as e:
         error = str(e)
     assert error == "'float' object cannot be interpreted as an integer"
+    # str and bytes elements were parsed as integers (1029-B6)
+    error = ''
+    try:
+        bytes(['1', '2'])
+    except TypeError as e:
+        error = str(e)
+    assert error == "'str' object cannot be interpreted as an integer"
+    error = ''
+    try:
+        bytes([b'a'])
+    except TypeError as e:
+        error = str(e)
+    assert error == "'bytes' object cannot be interpreted as an integer"
+    error = ''
+    try:
+        bytes(x for x in ['9'])
+    except TypeError as e:
+        error = str(e)
+    assert error == "'str' object cannot be interpreted as an integer"
+    error = ''
+    try:
+        bytes([bytearray(b'x')])
+    except TypeError as e:
+        error = str(e)
+    assert error == "'bytearray' object cannot be interpreted as an integer"
 
 
 def test_all():

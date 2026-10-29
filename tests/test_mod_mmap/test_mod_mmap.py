@@ -949,10 +949,32 @@ def test_iter_after_close():
         pass
 
 
+def test_bytes_from_mmap():
+    # bytes(), bytearray() and bytearray.extend() of an mmap parsed each
+    # byte as an integer (1029-B7)
+    m = mmap.mmap(-1, 4)
+    m.write(b'ab\x00\xff')
+    assert bytes(m) == b'ab\x00\xff'
+    assert bytearray(m) == bytearray(b'ab\x00\xff')
+    b = bytearray(b'x')
+    b.extend(m)
+    assert b == bytearray(b'xab\x00\xff')
+    b[0:1] = m
+    assert b == bytearray(b'ab\x00\xffab\x00\xff')
+    m.close()
+    error = ''
+    try:
+        bytes(m)
+    except ValueError as e:
+        error = str(e)
+    assert error == 'mmap closed or invalid'
+
+
 def test_all():
     if sys.platform != 'win32':
         test_anonymous()
         test_iter_after_close()
+        test_bytes_from_mmap()
         test_enter_exit_results()
         test_basic()
         test_readonly()
