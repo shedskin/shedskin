@@ -109,7 +109,7 @@ set<__ss_int> *__sigset_to_set(sigset_t *sigs) {
 
 set<__ss_int> *__pthread_sigmask(__ss_int how, sigset_t *mask) {
     sigset_t previous;
-    int err = ::pthread_sigmask((int)how, mask, &previous);
+    int err = ::pthread_sigmask(__ss_cint(how), mask, &previous);
     if(err) {
         errno = err;
         __throw_oserror();

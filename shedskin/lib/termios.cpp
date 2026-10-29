@@ -210,13 +210,13 @@ void *__tcsetattr(int fd, __ss_int when, tcattrs *attributes) {
         __throw_error();
     if(cfsetospeed(&mode, (speed_t)attributes->flags[5]) == -1)
         __throw_error();
-    if(::tcsetattr(fd, (int)when, &mode) == -1)
+    if(::tcsetattr(fd, __ss_cint(when), &mode) == -1)
         __throw_error();
     return NULL;
 }
 
 void *__tcsendbreak(int fd, __ss_int duration) {
-    if(::tcsendbreak(fd, (int)duration) == -1)
+    if(::tcsendbreak(fd, __ss_cint(duration)) == -1)
         __throw_error();
     return NULL;
 }
@@ -228,13 +228,13 @@ void *__tcdrain(int fd) {
 }
 
 void *__tcflush(int fd, __ss_int queue) {
-    if(::tcflush(fd, (int)queue) == -1)
+    if(::tcflush(fd, __ss_cint(queue)) == -1)
         __throw_error();
     return NULL;
 }
 
 void *__tcflow(int fd, __ss_int action) {
-    if(::tcflow(fd, (int)action) == -1)
+    if(::tcflow(fd, __ss_cint(action)) == -1)
         __throw_error();
     return NULL;
 }

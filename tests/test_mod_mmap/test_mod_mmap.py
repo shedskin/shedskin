@@ -970,8 +970,43 @@ def test_bytes_from_mmap():
     assert error == 'mmap closed or invalid'
 
 
+def test_c_int_overflow():
+    # fileno, flags, prot, access and madvise options are C ints
+    errors = []
+    for v in [2 ** 32, -2 ** 32]:
+        try:
+            mmap.mmap(v, 4096)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            mmap.mmap(-1, 4096, mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS, v + mmap.PROT_READ)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            mmap.mmap(-1, 4096, v + mmap.MAP_PRIVATE, mmap.PROT_READ)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            mmap.mmap(-1, 4096, access=v + mmap.ACCESS_READ)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    m = mmap.mmap(-1, 4096)
+    try:
+        m.madvise(2 ** 32 + mmap.MADV_NORMAL)
+        errors.append('none')
+    except OverflowError as e:
+        errors.append(str(e))
+    m.close()
+    assert errors == 4 * ['signed integer is greater than maximum'] + 4 * ['signed integer is less than minimum'] + ['signed integer is greater than maximum']
+
+
 def test_all():
     if sys.platform != 'win32':
+        test_c_int_overflow()
         test_anonymous()
         test_iter_after_close()
         test_bytes_from_mmap()

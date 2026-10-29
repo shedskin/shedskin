@@ -326,8 +326,13 @@ str *__name__;
 class_ *cl_mmap;
 
 #ifndef WIN32
-void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_int prot_, __ss_int access_, __ss_int offset_)
+void *mmap::__init__(__ss_int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_int prot_, __ss_int access_, __ss_int offset_)
 {
+    /* C int arguments: checked first, as CPython parses them */
+    __ss_cint_i(__ss_fileno_);
+    __ss_cint_i(flags_);
+    __ss_cint_i(prot_);
+    __ss_cint_i(access_);
     if (length_ < 0)
     {
         throw new OverflowError(const_2);
@@ -377,7 +382,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
     }
     else
     {
-        fd = dup(__ss_fileno_);
+        fd = dup((int)__ss_fileno_);
         if (fd == -1)
         {
             __throw_oserror();
@@ -542,8 +547,11 @@ void *mmap::resize(__ss_int new_size)
     return NULL;
 }
 #else /* WIN32*/
-void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int access_, __ss_int offset_)
+void *mmap::__init__(__ss_int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int access_, __ss_int offset_)
 {
+    /* C int arguments: checked first, as CPython parses them */
+    __ss_cint_i(__ss_fileno_);
+    __ss_cint_i(access_);
     if (length_ < 0)
     {
         throw new OverflowError(const_2);
@@ -583,13 +591,13 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
 
     if (__ss_fileno_ != -1 and __ss_fileno_ != 0)
     {
-        fh = HANDLE(_get_osfhandle(__ss_fileno_));
+        fh = HANDLE(_get_osfhandle((int)__ss_fileno_));
         if (fh == HANDLE(-1))
         {
             throw new ValueError(const_16);
         }
         /* Win9x appears to need us seeked to zero */
-        lseek(__ss_fileno_, 0, SEEK_SET);
+        lseek((int)__ss_fileno_, 0, SEEK_SET);
     }
 
     if (fh == 0)
@@ -921,6 +929,7 @@ void *mmap::madvise(__ss_int option, __ss_int start, __ss_int length_)
 {
     __raise_if_closed();
 #ifdef HAVE_MADVISE
+    __ss_cint_i(option);
     const __ss_int mapsize = (__ss_int)__size();
     /* CPython spells "the rest of the mapping" as a missing (or None)
        length argument; since Shed Skin has no such default, -1 is used as

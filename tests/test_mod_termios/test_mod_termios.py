@@ -243,6 +243,42 @@ def test_constants():
     assert termios.CS8 & termios.CSIZE == termios.CS8
 
 
+def test_c_int_overflow():
+    # fds and int arguments are C ints: no silent truncation
+    master, slave = os.openpty()
+    attrs = termios.tcgetattr(slave)
+    errors = []
+    for v in [2 ** 32, -2 ** 32]:
+        try:
+            termios.tcflush(slave, v + termios.TCIFLUSH)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            termios.tcflow(slave, v + termios.TCOON)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            termios.tcsendbreak(slave, v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            termios.tcsetattr(slave, v + termios.TCSANOW, attrs)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            termios.tcgetattr(v + slave)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    assert errors == 10 * ['Python int too large to convert to C int']
+    os.close(slave)
+    os.close(master)
+
+
 def test_all():
     test_cc_index()
     test_backup_restore()
@@ -256,6 +292,7 @@ def test_all():
     test_winsize()
     test_speed()
     test_constants()
+    test_c_int_overflow()
 
 
 if __name__ == '__main__':
