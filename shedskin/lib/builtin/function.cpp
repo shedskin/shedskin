@@ -17,8 +17,21 @@ str *input(str *msg) {
 
 /* int */
 
+/* as cpython, the argument is shown with %.200R; bytes and bytearray are
+ * first cut to 200 bytes and shown as bytes */
+static str *__int_error_repr(str *s) {
+    return repr(s);
+}
+
+static str *__int_error_repr(bytes *s) {
+    return repr(new bytes(s->unit.data(), std::min(s->unit.size(), (size_t)200)));
+}
+
 template<class T> static str *__int_error(T s, __ss_int base) {
-    return __add_strs(4, new str("invalid literal for int() with base "), __str(base), new str(": "), repr(s));
+    str *r = __int_error_repr(s);
+    if(r->unit.size() > 200)
+        r = new str(r->unit.data(), 200);
+    return __add_strs(4, new str("invalid literal for int() with base "), __str(base), new str(": "), r);
 }
 
 /* int() from a string, following CPython's PyLong_FromString: optional

@@ -240,6 +240,24 @@ def test_bytearray_decode():
     assert bytearray(b'caf\xc3\xa9').decode() == 'caf\xe9'
     assert bytearray(b'caf\xe9').decode('latin-1') == 'caf\xe9'
 
+    # the error's object is always a bytes copy, as in CPython
+    ba = bytearray(b'a\xff')
+    try:
+        ba.decode()
+        assert False
+    except UnicodeDecodeError as e:
+        assert repr(e.object) == "b'a\\xff'"
+        ba[0] = 0x41
+        assert e.object == b'a\xff'
+        assert repr(e) == "UnicodeDecodeError('utf-8', b'a\\xff', 1, 2, 'invalid start byte')"
+    try:
+        bytearray(b'\xff').decode('ascii')
+        assert False
+    except UnicodeDecodeError as e:
+        assert repr(e.object) == "b'\\xff'"
+    e2 = UnicodeDecodeError('utf-8', bytearray(b'\xff'), 0, 1, 'bad')
+    assert repr(e2.object) == "b'\\xff'"
+
 
 def test_unicode_error_hierarchy():
     # UnicodeError subclasses ValueError; the concrete errors subclass UnicodeError
