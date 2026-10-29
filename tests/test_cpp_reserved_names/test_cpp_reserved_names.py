@@ -59,6 +59,27 @@ def apply(f, x):
     return f(x)
 
 
+# classes whose names are renamed (1029-A1): class variables, __name__
+# and static methods are accessed via the renamed C++ class
+class template:
+    n = 3
+
+    def __init__(self):
+        self.x = 1
+
+    @staticmethod
+    def s():
+        return 7
+
+
+class new:
+    k = 'k'
+
+
+class B0:  # termios constant
+    pass
+
+
 def test_nullptr_as_identifier():
     assert use_nullptr(5) == 6
 
@@ -82,12 +103,26 @@ def test_reserved_function_names_as_values():
     assert apply(union, 4) == 5
 
 
+def test_reserved_class_names():
+    assert template().x == 1
+    assert template.n == 3
+    assert template.s() == 7
+    template.n = 4
+    assert template.n == 4
+    assert template.__name__ == 'template'
+    assert new.k == 'k'
+    assert new.__name__ == 'new'
+    assert B0.__name__ == 'B0'
+    assert B0().__class__.__name__ == 'B0'
+
+
 def test_all():
     test_nullptr_as_identifier()
     test_decltype_and_thread_local_as_identifiers()
     test_other_reserved_identifiers()
     test_windows_macros_as_identifiers()
     test_reserved_function_names_as_values()
+    test_reserved_class_names()
 
 
 if __name__ == '__main__':
