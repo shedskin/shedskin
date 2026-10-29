@@ -581,6 +581,38 @@ void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc
     }
 }
 
+bool __char_counter::__full(int c, size_t n) {
+    if (need) {
+        if (c >= lo && c <= hi) { /* continues the sequence */
+            pending++;
+            lo = 0x80;
+            hi = 0xbf;
+            need--;
+            return false;
+        }
+        /* ill-formed: one character so far, none with 'ignore', one per byte with surrogateescape */
+        if (err == __SS_ERR_IGNORE)
+            chars--;
+        else if (err == __SS_ERR_SURROGATEESCAPE)
+            chars += pending - 1;
+        need = 0;
+    }
+    if (chars >= n)
+        return true;
+    bool bad;
+    if (enc == __SS_ENC_UTF8) {
+        __ss_char bits;
+        pending = 1;
+        bad = c >= 0x80 && !__utf8_lead((unsigned char)c, &need, &bits, &lo, &hi);
+    } else if (__ss_charmap(enc))
+        bad = c && !__charmap_decode(__charmap_table(enc), (unsigned char)c);
+    else
+        bad = enc == __SS_ENC_ASCII && c >= 0x80;
+    if (!(bad && err == __SS_ERR_IGNORE))
+        chars++;
+    return false;
+}
+
 static inline void __utf8_append(__GC_BYTES &out, __ss_char cp) {
     char buf[4];
     out.append(buf, __utf8_put(buf, cp));

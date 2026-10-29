@@ -207,6 +207,29 @@ def test_read_chars_unicode():
     os.remove('utest.txt')
 
 
+def test_read_chars_invalid():
+    # read(n)/readline(n) count decoded characters, also for invalid bytes
+    with open('itest.txt', 'wb') as g:
+        g.write(b'\x80\x80\x80abc\n\xe2\x82a\xe2\x82\xacb')
+    with open('itest.txt', errors='replace') as f:
+        assert f.read(2) == '\ufffd\ufffd'
+        assert f.readline(3) == '\ufffdab'
+        assert f.readline() == 'c\n'
+        assert f.read(2) == '\ufffda'
+    with open('itest.txt', errors='ignore') as f:
+        assert f.read(2) == 'ab'
+        assert f.readline() == 'c\n'
+        assert f.read(2) == 'a\u20ac'
+    with open('itest.txt', errors='surrogateescape') as f:
+        assert f.read(2) == '\udc80\udc80'
+        assert f.readline(3) == '\udc80ab'
+        assert f.readline() == 'c\n'
+        assert f.read(3) == '\udce2\udc82a'
+    with open('itest.txt', encoding='ascii', errors='ignore') as f:
+        assert f.read(4) == 'abc\n'
+    os.remove('itest.txt')
+
+
 def test_closed_is_bool():
     # 'closed' used to be an __ss_int, printing as 1/0 instead of True/False
     w = open('ctest.txt', 'w')
@@ -866,6 +889,7 @@ def test_all():
     test_open_encoding_attributes()
     test_open_newline()
     test_read_chars_unicode()
+    test_read_chars_invalid()
     test_binary_read_negative()
     test_open_for()
     test_open_read()

@@ -181,6 +181,30 @@ void __unknown_errors(str *errors); /* raises LookupError or ValueError */
 void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc, __ss_errors err, str *errors);
 void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err, str *errors);
 
+/* text-mode read(n)/readline(n) take n *characters*: count what the bytes
+   read so far decode to (as __decode_into, so invalid bytes count as the
+   error handler expands them). full(c, n): byte c starts character n+1.
+   (with surrogateescape, a truncated sequence may still overshoot n) */
+struct __char_counter {
+    __ss_encoding enc;
+    __ss_errors err;
+    size_t chars = 0;
+    size_t pending = 0; /* bytes of an unfinished utf-8 sequence */
+    size_t need = 0; /* .. and its continuation bytes still missing */
+    unsigned char lo = 0, hi = 0; /* allowed range for its next byte */
+
+    __char_counter(__ss_encoding enc, __ss_errors err) : enc(enc == __SS_ENC_UTF8_SIG ? __SS_ENC_UTF8 : enc), err(err) {}
+    bool full(int c, size_t n) { /* inline: the common ascii case */
+        if (need || c >= 0x80)
+            return __full(c, n);
+        if (chars >= n)
+            return true;
+        chars++;
+        return false;
+    }
+    bool __full(int c, size_t n);
+};
+
 /* widen an ascii c-string / std::string to __GC_STR (repr building etc.) */
 __GC_STR __gcs(const char *s);
 __GC_STR __gcs(const std::string &s);

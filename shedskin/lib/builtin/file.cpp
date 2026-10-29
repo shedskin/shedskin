@@ -295,17 +295,14 @@ __ss_int file::tell() {
     return -1;
 }
 
-/* a utf-8 continuation byte never starts a character, so counting
-   non-continuation bytes counts code points; text-mode read(n) and readline(n) mean n
-   *characters* (as in CPython), so stop -- pushing the byte back -- when
-   character n+1 begins. */
-static inline bool __is_utf8_cont(int c) { return (c & 0xc0) == 0x80; }
-
+/* text-mode read(n) and readline(n) mean n *characters* (as in CPython), so
+   stop -- pushing the byte back -- when character n+1 begins (see
+   __char_counter). */
 str *file::readline(__ss_int n) {
     __check_closed();
     __switch_op(f, options, 'r');
     __read_cache.clear();
-    size_t chars = 0;
+    __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
         for(;;) {
             int c = GETC(f);
@@ -319,12 +316,9 @@ str *file::readline(__ss_int n) {
                         break;
                 }
             }
-            if(!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
-                if(chars == size_t(n)) { /* character n+1 starts: not ours */
-                    ungetc(c, f); /* raw byte, before any cr translation */
-                    break;
-                }
-                chars++;
+            if(cc.full(c, size_t(n))) { /* character n+1 starts: not ours */
+                ungetc(c, f); /* raw byte, before any cr translation */
+                break;
             }
             if(c == '\r') {
                 options.cr = true;
@@ -339,19 +333,16 @@ str *file::readline(__ss_int n) {
             const int c = GETC(f);
             if(c == EOF)
                 break;
-            if(!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
-                if(chars == size_t(n)) {
-                    ungetc(c, f);
-                    break;
-                }
-                chars++;
+            if(cc.full(c, size_t(n))) {
+                ungetc(c, f);
+                break;
             }
             __read_cache.push_back((char)c);
             if(c == '\n')
                 break;
             if(c == '\r' && options.split_cr) { /* '\r' or '\r\n' ends the line too */
                 const int d = GETC(f);
-                if(d == '\n' && chars < size_t(n))
+                if(d == '\n' && cc.chars < size_t(n))
                     __read_cache.push_back('\n');
                 else if(d != EOF)
                     ungetc(d, f);
@@ -372,7 +363,7 @@ static void __throw_io_error() {
 str *file::read(__ss_int n) {
     __check_closed();
     __switch_op(f, options, 'r');
-    size_t chars = 0;
+    __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
         __read_cache.clear();
         for(;;) {
@@ -387,12 +378,9 @@ str *file::read(__ss_int n) {
                         break;
                 }
             }
-            if(!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
-                if(chars == size_t(n)) { /* character n+1 starts: not ours */
-                    ungetc(c, f); /* raw byte, before any cr translation */
-                    break;
-                }
-                chars++;
+            if(cc.full(c, size_t(n))) { /* character n+1 starts: not ours */
+                ungetc(c, f); /* raw byte, before any cr translation */
+                break;
             }
             if(c == '\r') {
                 options.cr = true;
@@ -419,12 +407,9 @@ str *file::read(__ss_int n) {
         const int c = GETC(f);
         if(c == EOF)
             break;
-        if(!(__encoding == __SS_ENC_UTF8 && __is_utf8_cont(c))) {
-            if(chars == size_t(n)) {
-                ungetc(c, f);
-                break;
-            }
-            chars++;
+        if(cc.full(c, size_t(n))) {
+            ungetc(c, f);
+            break;
         }
         __read_cache.push_back((char)c);
     }

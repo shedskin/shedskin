@@ -696,6 +696,20 @@ def test_text_files():
     os.remove(name)
 
 
+def test_text_read_chars_invalid():
+    # read(n)/readline(n) count decoded characters, also for invalid bytes
+    blob = gzip.compress(b'\x80\x80\x80abc\n\xe2\x82a')
+    with gzip.open(io.BytesIO(blob), 'rt', errors='replace') as f:
+        assert f.read(2) == '\ufffd\ufffd'
+        assert f.readline(3) == '\ufffdab'
+        assert f.readline() == 'c\n'
+        assert f.read(2) == '\ufffda'
+    with gzip.open(io.BytesIO(blob), 'rt', errors='ignore') as f:
+        assert f.read(2) == 'ab'
+    with gzip.open(io.BytesIO(blob), 'rt', encoding='ascii', errors='ignore') as f:
+        assert f.read(4) == 'abc\n'
+
+
 def test_enter_exit_results():
     # __enter__ returns the file itself and __exit__ returns None
     name = tmpname('c.gz')
@@ -736,6 +750,7 @@ def test_all():
     test_text_encodings()
     test_text_newlines()
     test_text_files()
+    test_text_read_chars_invalid()
 
 
 if __name__ == '__main__':
