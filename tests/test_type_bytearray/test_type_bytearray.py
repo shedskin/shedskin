@@ -666,6 +666,35 @@ def test_bytearray_from_non_int_iterable():
     except ValueError as e:
         error = str(e)
     assert error == 'byte must be in range(0, 256)' and b == bytearray(b'abc')
+    # str and bytes elements were parsed as integers (1029-B6)
+    error = ''
+    try:
+        bytearray(['1'])
+    except TypeError as e:
+        error = str(e)
+    assert error == "'str' object cannot be interpreted as an integer"
+    b = bytearray(b'xyz')
+    error = ''
+    try:
+        b[0:1] = [b'5', b'6']
+    except TypeError as e:
+        error = str(e)
+    assert error == "'bytes' object cannot be interpreted as an integer"
+    assert b == bytearray(b'xyz')
+    b = bytearray(b'x')
+    error = ''
+    try:
+        b.extend([b'7'])
+    except TypeError as e:
+        error = str(e)
+    assert error == "'bytes' object cannot be interpreted as an integer"
+    assert b == bytearray(b'x')
+    error = ''
+    try:
+        b.extend(['7'])
+    except TypeError as e:
+        error = str(e)
+    assert error == "'str' object cannot be interpreted as an integer"
 
 
 def test_all():

@@ -182,12 +182,17 @@ inline char __byte_value(__ss_int e, bool bytearray_) {
 }
 
 /* an element of an iterable passed to bytes(), bytearray() etc. as an int:
-   directly for int, else via __int() (for bool for example) */
+   directly for int, else via __int() (for bool for example). str and bytes
+   are rejected, as __int() would parse them */
 template<class U> inline __ss_int __byte_int(U e) {
     if constexpr (std::is_same_v<U, __ss_int>)
         return e;
     else if constexpr (std::is_floating_point_v<U>)
         throw new TypeError(new str("'float' object cannot be interpreted as an integer"));
+    else if constexpr (std::is_same_v<U, str *>)
+        throw new TypeError(new str("'str' object cannot be interpreted as an integer"));
+    else if constexpr (std::is_same_v<U, bytes *>)
+        throw new TypeError(new str(e && !e->frozen ? "'bytearray' object cannot be interpreted as an integer" : "'bytes' object cannot be interpreted as an integer"));
     else
         return __int(e);
 }
@@ -197,7 +202,7 @@ template<class T, class = void> struct __ss_is_iterable : std::false_type {};
 template<class T> struct __ss_is_iterable<T, std::void_t<typename T::for_in_unit>> : std::is_base_of<pyiter<typename T::for_in_unit>, T> {};
 
 /* whether T exposes a raw byte buffer (CPython's buffer protocol), such as
-   array.array: bytes(), bytearray() and bytearray.extend() copy its bytes
+   array.array or mmap: bytes(), bytearray() and bytearray.extend() copy its bytes
    instead of iterating over its elements */
 template<class T, class = void> struct __ss_has_buffer : std::false_type {};
 template<class T> struct __ss_has_buffer<T, std::void_t<decltype(std::declval<T *>()->__buffer_units__())>> : std::true_type {};
@@ -206,7 +211,7 @@ template<class T> struct __ss_has_buffer<T, std::void_t<decltype(std::declval<T 
    iterable's own type, so for lists for example without going through __iter__ */
 template<class T> inline void __bytes_fill(__GC_STRING &s, T *t, bool bytearray_) {
     if constexpr (__ss_has_buffer<T>::value) {
-        auto &u = t->__buffer_units__();
+        auto &&u = t->__buffer_units__();
         s.append(u.begin(), u.end());
     } else {
         typename T::for_in_unit e;
