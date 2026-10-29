@@ -338,6 +338,8 @@ bool GzipFile::__read_input() {
     }
     size_t old = inbuf.size();
     if (direct) {
+        if (fileobj->closed) /* (f is fclosed) */
+            throw new ValueError(new str("read of closed file"));
         inbuf.resize(old + READ_BUFFER_SIZE);
         size_t n = fread(&inbuf[old], 1, READ_BUFFER_SIZE, fileobj->f);
         inbuf.resize(old + n);
@@ -578,6 +580,8 @@ void GzipFile::__flush_raw() {
     if (outbuf.empty())
         return;
     if (direct) {
+        if (fileobj->closed) /* (f is fclosed) */
+            throw new ValueError(new str("write to closed file"));
         if (fwrite(outbuf.data(), 1, outbuf.size(), fileobj->f) != outbuf.size())
             __throw_oserror();
     } else
