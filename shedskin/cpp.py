@@ -1159,7 +1159,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if var in self.gx.merged_inh and self.gx.merged_inh[var]:
                     self.start(
                         typestr.nodetypestr(self.gx, var, cl.parent, mv=self.mv)
-                        + cl.ident
+                        + self.cpp_name(cl)
                         + "::"
                         + self.cpp_name(var)
                     )
@@ -5380,7 +5380,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             # class.attr: staticmethod
             elif cl and (node.attr in cl.staticmethods or node.attr in cl.classmethods):
-                ident = cl.ident
+                ident = self.cpp_name(cl)
                 if cl.ident in [
                     "dict",
                     "frozendict",
@@ -5412,13 +5412,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             # class.attr
             elif cl:  # XXX merge above?
-                ident = cl.ident
+                ident = self.cpp_name(cl)
                 if isinstance(node.value, ast.Attribute):
                     submodule = python.lookup_module(
                         node.value.value, infer.inode(self.gx, node).mv
                     )
                     assert submodule
-                    self.append(submodule.full_path() + "::" + cl.ident + "::")
+                    self.append(submodule.full_path() + "::" + ident + "::")
                 else:
                     self.append(ident + "::")
 
@@ -5545,9 +5545,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         node.value.value, infer.inode(self.gx, node).mv
                     )
                     assert submodule
-                    self.append(submodule.full_path() + "::" + cl.ident + "::")
+                    self.append(submodule.full_path() + "::" + self.cpp_name(cl) + "::")
                 else:
-                    self.append(cl.ident + "::")
+                    self.append(self.cpp_name(cl) + "::")
 
             # obj.attr
             else:
