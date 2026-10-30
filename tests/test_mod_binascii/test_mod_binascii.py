@@ -98,6 +98,17 @@ def test_a2b_uu_short_input():
     # a bare newline is a length byte: (10 - 32) & 077 == 42 NULs
     assert binascii.a2b_uu(b'\n') == b'\x00' * 42
 
+    error = ''
+    try:
+        binascii.a2b_uu('')
+    except binascii.Error as e:
+        error = str(e)
+    assert error == 'Missing length byte'
+
+    # a lone length byte still decodes to that many NULs
+    assert binascii.a2b_uu(b' ') == b''
+    assert binascii.a2b_uu(b'!') == b'\x00'
+
     # length byte claims 45 bytes of output, but only one data
     # character follows before the line ends.
     assert binascii.a2b_uu(bytes.fromhex('4d4d0a')) == b'\xb4' + b'\x00' * 44

@@ -817,6 +817,9 @@ class bytes_(pyseq):
     def reverse(self):
         pass
 
+    def __setitem__(self, i, e):
+        pass
+
     def __delitem__(self, i):
         pass
 
