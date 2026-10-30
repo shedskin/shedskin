@@ -651,7 +651,10 @@ def test_wait_status_macros():
 def test_device_numbers():
     dev = os.makedev(8, 1)
     assert os.major(dev) == 8 and os.minor(dev) == 1
-    assert os.major(-1) == -1 and os.minor(-1) == -1
+    if sys.platform == 'darwin':  # 8-bit major, 24-bit minor: NODEV is no fixpoint
+        assert os.major(-1) == 255 and os.minor(-1) == 16777215
+    else:
+        assert os.major(-1) == -1 and os.minor(-1) == -1
     if sys.platform == 'linux':
         # dev_t is 64 bits: the major number is not truncated to 32 bits
         dev = os.makedev(5000, 70000)
