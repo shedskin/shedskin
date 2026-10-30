@@ -215,6 +215,29 @@ static void __settle_cr(FILE *f, __file_options &options) {
     }
 }
 
+/* universal newlines, after a '\r' (options.cr): whether byte c is the '\n'
+   of a '\r\n', to be skipped. with errors='ignore', bytes that decode to
+   nothing may come in between, as CPython translates newlines only after
+   decoding: so then keep options.cr, and drop those bytes at the '\n'.
+   (cr_at moves past bytes already known to decode to nothing) */
+bool file::__skip_lf(int c, size_t &cr_at, __char_counter &cc, size_t n) {
+    size_t len = __read_cache.size() - cr_at;
+    if(len) {
+        cr_at += __ignored_prefix(&__read_cache[cr_at], len, __encoding, false);
+        len = __read_cache.size() - cr_at;
+    }
+    bool ignored = !len || __ignored_prefix(&__read_cache[cr_at], len, __encoding, true) == len;
+    if(ignored && c == '\n') {
+        options.cr = false;
+        __read_cache.resize(cr_at);
+        cc.cut(n);
+        return true;
+    }
+    if(!ignored || c < 0x80 || __errors != __SS_ERR_IGNORE)
+        options.cr = false;
+    return false;
+}
+
 /* C stdio needs a file positioning call when switching between reading and
    writing the same stream (C11 7.21.5.3). glibc does not care, but macOS and
    windows lose or misplace the data otherwise */
@@ -315,18 +338,13 @@ str *file::readline(__ss_int n) {
     __read_cache.clear();
     __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
+        size_t cr_at = 0; /* __read_cache size after the latest '\r' */
         for(;;) {
             int c = GETC(f);
             if(c == EOF)
                 break;
-            if(options.cr) {
-                options.cr = false;
-                if(c == '\n') {
-                    c = GETC(f);
-                    if(c == EOF)
-                        break;
-                }
-            }
+            if(options.cr && __skip_lf(c, cr_at, cc, size_t(n)))
+                continue;
             if(cc.full(c, size_t(n))) { /* character n+1 starts: not ours */
                 ungetc(c, f); /* raw byte, before any cr translation */
                 break;
@@ -334,6 +352,7 @@ str *file::readline(__ss_int n) {
             if(c == '\r') {
                 options.cr = true;
                 c = '\n';
+                cr_at = __read_cache.size() + 1;
             }
             __read_cache.push_back((char)c);
             if(c == '\n')
@@ -352,7 +371,14 @@ str *file::readline(__ss_int n) {
             if(c == '\n')
                 break;
             if(c == '\r' && options.split_cr) { /* '\r' or '\r\n' ends the line too */
-                const int d = GETC(f);
+                int d = GETC(f);
+                if(__errors == __SS_ERR_IGNORE) { /* skip bytes that decode to nothing (see __skip_lf).
+                    XXX a cut-short utf-8 sequence would need more than one byte of ungetc */
+                    for(char b = (char)d; d != EOF && __ignored_prefix(&b, 1, __encoding, false); b = (char)d) {
+                        __read_cache.push_back(b);
+                        d = GETC(f);
+                    }
+                }
                 if(d == '\n' && cc.chars < size_t(n))
                     __read_cache.push_back('\n');
                 else if(d != EOF)
@@ -378,18 +404,13 @@ str *file::read(__ss_int n) {
     __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
         __read_cache.clear();
+        size_t cr_at = 0; /* __read_cache size after the latest '\r' */
         for(;;) {
             int c = GETC(f);
             if(c == EOF)
                 break;
-            if(options.cr) {
-                options.cr = false;
-                if(c == '\n') {
-                    c = GETC(f);
-                    if(c == EOF)
-                        break;
-                }
-            }
+            if(options.cr && __skip_lf(c, cr_at, cc, size_t(n)))
+                continue;
             if(cc.full(c, size_t(n))) { /* character n+1 starts: not ours */
                 ungetc(c, f); /* raw byte, before any cr translation */
                 break;
@@ -397,6 +418,7 @@ str *file::read(__ss_int n) {
             if(c == '\r') {
                 options.cr = true;
                 c = '\n';
+                cr_at = __read_cache.size() + 1;
             }
             __read_cache.push_back((char)c);
         }

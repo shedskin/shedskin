@@ -758,6 +758,7 @@ static unsigned short crctab_hqx[256] = {
 __ss_int crc_hqx(bytes *data, __ss_int crc) {
     __ss_int len = data->__len__();
     char * bin_data = &data->unit[0];
+    crc &= 0xffff; /* as cpython, also for empty data */
     while (len-- > 0) {
         crc=((crc<<8)&0xff00)^crctab_hqx[((crc>>8)&0xff)^(unsigned char)(*bin_data++)];
     }

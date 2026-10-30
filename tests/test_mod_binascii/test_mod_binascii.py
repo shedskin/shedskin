@@ -548,6 +548,13 @@ def test_crc_hqx_high_bit_bytes():
     assert binascii.crc_hqx(data2, 0xffff) == 24380
 
 
+def test_crc_hqx_mask():
+    # the initial crc is masked to 16 bits, also for empty data
+    assert binascii.crc_hqx(b'', 0x12345) == 0x2345
+    assert binascii.crc_hqx(b'', -1) == 0xffff
+    assert binascii.crc_hqx(b'abc', 0x12345) == binascii.crc_hqx(b'abc', 0x2345)
+
+
 def expect_error(f):
     ok = False
     try:
@@ -944,6 +951,7 @@ def test_all():
     test_hex_sep_validated_on_empty_data()
     test_crc()
     test_crc_hqx_high_bit_bytes()
+    test_crc_hqx_mask()
     test_alphabets()
     test_b2a_base64_wrapcol()
     test_base64_padded()

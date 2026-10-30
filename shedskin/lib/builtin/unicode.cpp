@@ -581,6 +581,32 @@ void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc
     }
 }
 
+size_t __ignored_prefix(const char *src, size_t len, __ss_encoding enc, bool final) {
+    if (enc == __SS_ENC_UTF8_SIG)
+        enc = __SS_ENC_UTF8;
+    size_t pos = 0;
+    while (pos < len) {
+        unsigned char b = (unsigned char)src[pos];
+        size_t n = 1;
+        if (enc == __SS_ENC_UTF8) {
+            __ss_char cp;
+            if (__utf8_decode_one(src, len, pos, &cp))
+                break;
+            n = __utf8_maximal_subpart(src, len, pos);
+            size_t nfollow;
+            unsigned char lo, hi;
+            if (!final && pos + n == len && __utf8_lead(b, &nfollow, &cp, &lo, &hi))
+                break; /* truncated by len: may still be completed */
+        } else if (__ss_charmap(enc)) {
+            if (!b || __charmap_decode(__charmap_table(enc), b))
+                break;
+        } else if (enc != __SS_ENC_ASCII || b < 0x80)
+            break;
+        pos += n;
+    }
+    return pos;
+}
+
 void __char_counter::__ill_formed(size_t n) {
     /* one character so far, none with 'ignore', one per byte with surrogateescape */
     if (err == __SS_ERR_IGNORE)

@@ -249,6 +249,26 @@ def test_read_chars_truncated():
     os.remove('ttest.txt')
 
 
+def test_crlf_ignore():
+    # with errors='ignore', bytes that decode to nothing between '\r' and
+    # '\n' do not split the line ending (newlines are translated after decoding)
+    with open('ctest.txt', 'wb') as g:
+        g.write(b'a\r\xff\nb\r\xe2\x82\n\xacc\r\xc3\xa9\nd\r\xff\xffe\r\xff')
+    with open('ctest.txt', errors='ignore') as f:
+        assert f.read() == 'a\nb\nc\n\xe9\nd\ne\n'
+    with open('ctest.txt', errors='ignore') as f:
+        assert f.readlines() == ['a\n', 'b\n', 'c\n', '\xe9\n', 'd\n', 'e\n']
+    with open('ctest.txt', errors='ignore') as f:
+        assert [f.read(1) for i in range(13)] == ['a', '\n', 'b', '\n', 'c', '\n', '\xe9', '\n', 'd', '\n', 'e', '\n', '']
+    with open('ctest.txt', errors='replace') as f:
+        assert f.read() == 'a\n\ufffd\nb\n\ufffd\n\ufffdc\n\xe9\nd\n\ufffd\ufffde\n\ufffd'
+    with open('ctest.txt', 'wb') as g:
+        g.write(b'a\r\xff\nb\r\xc3\xa9\nc\r\xffd')
+    with open('ctest.txt', errors='ignore', newline='') as f:
+        assert f.readlines() == ['a\r\n', 'b\r', '\xe9\n', 'c\r', 'd']
+    os.remove('ctest.txt')
+
+
 def test_closed_is_bool():
     # 'closed' used to be an __ss_int, printing as 1/0 instead of True/False
     w = open('ctest.txt', 'w')
@@ -910,6 +930,7 @@ def test_all():
     test_read_chars_unicode()
     test_read_chars_invalid()
     test_read_chars_truncated()
+    test_crlf_ignore()
     test_binary_read_negative()
     test_open_for()
     test_open_read()

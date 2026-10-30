@@ -67,6 +67,7 @@ public:
     }
 
     str *__decode_cache();
+    bool __skip_lf(int c, size_t &cr_at, __char_counter &cc, size_t n);
     void __make_buffer();
     void __close_buffer();
 };
