@@ -729,6 +729,16 @@ def test_text_read_chars_invalid():
         assert f.read(2) == 'ab'
     with gzip.open(io.BytesIO(blob), 'rt', encoding='ascii', errors='ignore') as f:
         assert f.read(4) == 'abc\n'
+    # surrogateescape: a truncated sequence is one character per byte
+    blob = gzip.compress(b'\xe2\x82abc\n\xf0\x9f\x98\n\xf0\x9f')
+    with gzip.open(io.BytesIO(blob), 'rt', errors='surrogateescape') as f:
+        assert f.read(1) == '\udce2'
+        assert f.read(1) == '\udc82'
+        assert f.readline() == 'abc\n'
+        assert f.readline(2) == '\udcf0\udc9f'
+        assert f.readline() == '\udc98\n'
+        assert f.read(1) == '\udcf0'
+        assert f.read() == '\udc9f'
 
 
 def test_enter_exit_results():

@@ -761,6 +761,15 @@ void _GzipTextFile::__skip_bom() {
     }
 }
 
+/* push back the trailing bytes of a truncated sequence that turned out not to
+   fit (see __char_counter) */
+static void __give_back(GzipFile *gz, __GC_VECTOR(char) &cache, size_t k) {
+    if (k) {
+        gz->__unget(cache.data() + cache.size() - k, k);
+        cache.resize(cache.size() - k);
+    }
+}
+
 str *_GzipTextFile::readline(__ss_int n) {
     __check_closed();
     if (gz->writing)
@@ -807,6 +816,7 @@ str *_GzipTextFile::readline(__ss_int n) {
         if (c == '\n' && nl != NL_CR && nl != NL_CRLF)
             break;
     }
+    __give_back(gz, __read_cache, cc.excess(size_t(n)));
     return __decode_cache();
 }
 
@@ -834,6 +844,7 @@ str *_GzipTextFile::read(__ss_int n) {
         }
         __read_cache.push_back((char)c);
     }
+    __give_back(gz, __read_cache, cc.excess(size_t(n)));
     return __decode_cache();
 }
 

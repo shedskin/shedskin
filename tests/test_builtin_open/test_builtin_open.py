@@ -230,6 +230,25 @@ def test_read_chars_invalid():
     os.remove('itest.txt')
 
 
+def test_read_chars_truncated():
+    # surrogateescape: a truncated sequence becomes one character per byte,
+    # so read(n)/readline(n) must not take all of its bytes
+    with open('ttest.txt', 'wb') as g:
+        g.write(b'\xe2\x82abc\n\xf0\x9f\x98\n\xf0\x9f')
+    with open('ttest.txt', errors='surrogateescape') as f:
+        assert f.read(1) == '\udce2'
+        assert f.read(1) == '\udc82'
+        assert f.readline() == 'abc\n'
+        assert f.readline(2) == '\udcf0\udc9f'
+        assert f.readline() == '\udc98\n'
+        assert f.read(1) == '\udcf0'  # (at eof)
+        assert f.read() == '\udc9f'
+    with open('ttest.txt', errors='surrogateescape', newline='') as f:
+        assert f.readline(1) == '\udce2'
+        assert f.read(2) == '\udc82a'
+    os.remove('ttest.txt')
+
+
 def test_closed_is_bool():
     # 'closed' used to be an __ss_int, printing as 1/0 instead of True/False
     w = open('ctest.txt', 'w')
@@ -890,6 +909,7 @@ def test_all():
     test_open_newline()
     test_read_chars_unicode()
     test_read_chars_invalid()
+    test_read_chars_truncated()
     test_binary_read_negative()
     test_open_for()
     test_open_read()
