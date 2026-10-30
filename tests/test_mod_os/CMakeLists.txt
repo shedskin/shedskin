@@ -3,5 +3,4 @@ add_shedskin_product(
         os
         os.path
         stat
-        sys
 )

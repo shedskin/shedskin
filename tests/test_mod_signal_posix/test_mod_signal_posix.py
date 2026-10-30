@@ -47,8 +47,20 @@ def test_sigmask():
         assert e.errno == 22  # EINVAL
 
 
+def test_pthread_sigmask_overflow():
+    # 'how' is a C int: no silent truncation to SIG_BLOCK
+    for how in [2 ** 32 + signal.SIG_BLOCK, -2 ** 31 - 1]:
+        try:
+            signal.pthread_sigmask(how, [signal.SIGUSR1])
+            assert False
+        except OverflowError as e:
+            assert str(e) == 'Python int too large to convert to C int'
+    assert signal.SIGUSR1 not in signal.pthread_sigmask(signal.SIG_BLOCK, [])
+
+
 def test_all():
     test_sigmask()
+    test_pthread_sigmask_overflow()
 
 
 if __name__ == '__main__':

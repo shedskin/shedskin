@@ -1,5 +1,4 @@
 add_shedskin_product(
     SYS_MODULES
         signal
-        sys
 )

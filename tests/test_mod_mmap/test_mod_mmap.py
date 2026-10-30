@@ -972,6 +972,7 @@ def test_bytes_from_mmap():
 
 def test_c_int_overflow():
     # fileno, flags, prot, access and madvise options are C ints
+    # (keyword args: on win32 the positional slots are (fileno, length, tagname, ..))
     errors = []
     for v in [2 ** 32, -2 ** 32]:
         try:
@@ -980,12 +981,12 @@ def test_c_int_overflow():
         except OverflowError as e:
             errors.append(str(e))
         try:
-            mmap.mmap(-1, 4096, mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS, v + mmap.PROT_READ)
+            mmap.mmap(-1, 4096, flags=mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS, prot=v + mmap.PROT_READ)
             errors.append('none')
         except OverflowError as e:
             errors.append(str(e))
         try:
-            mmap.mmap(-1, 4096, v + mmap.MAP_PRIVATE, mmap.PROT_READ)
+            mmap.mmap(-1, 4096, flags=v + mmap.MAP_PRIVATE, prot=mmap.PROT_READ)
             errors.append('none')
         except OverflowError as e:
             errors.append(str(e))

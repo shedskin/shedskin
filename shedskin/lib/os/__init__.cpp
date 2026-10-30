@@ -2616,17 +2616,20 @@ static dev_t __ss_dev(__ss_int v) {
         return (dev_t)-1;
     if(v < 0)
         throw new OverflowError(new str("can't convert negative int to unsigned"));
-    if constexpr (sizeof(__ss_int) > sizeof(dev_t)) {
-        if(v > (__ss_int)(dev_t)-1)
+    if constexpr (sizeof(__ss_int) > sizeof(unsigned long long)) {
+        if(v > (__ss_int)ULLONG_MAX)
             throw new OverflowError(new str("int too big to convert"));
     }
+    /* dev_t may be narrower, or signed (macOS: int32_t) */
+    if((__ss_int)(dev_t)v != v)
+        throw new OverflowError(new str("Python int too large to convert to C dev_t"));
     return (dev_t)v;
 }
 
 /* major and minor device numbers are unsigned ints, with NODEV as -1 */
 static unsigned int __ss_devnum(__ss_int v) {
     dev_t d = __ss_dev(v);
-    if(d != (dev_t)-1 && d > UINT_MAX)
+    if(d != (dev_t)-1 && (dev_t)(unsigned int)d != d)
         throw new OverflowError(new str("Python int too large to convert to C unsigned int"));
     return (unsigned int)d;
 }
