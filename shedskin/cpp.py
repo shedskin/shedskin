@@ -100,10 +100,12 @@ class CPPNamer:
     def namespace_class(self, cl: "python.Class", add_cl: str = "") -> str:
         """Add a namespace to a class name"""
         module = cl.mv.module
+        # class objects (cl_*) are declared using the unrenamed class name
+        name = add_cl + cl.ident if add_cl else self.name(cl)
         if module.ident != "builtin" and module != self.gv.module and module.name_list:
-            return module.full_path() + "::" + add_cl + self.name(cl)
+            return module.full_path() + "::" + name
         else:
-            return add_cl + self.name(cl)
+            return name
 
     def name(self, obj: Any) -> str:
         """Generate a C++ name for an object"""

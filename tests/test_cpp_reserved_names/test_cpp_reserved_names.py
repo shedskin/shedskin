@@ -114,6 +114,11 @@ def test_reserved_class_names():
     assert new.__name__ == 'new'
     assert B0.__name__ == 'B0'
     assert B0().__class__.__name__ == 'B0'
+    # used as values (1030-A1)
+    assert template().__class__ is template
+    t = template
+    assert t is template
+    assert new().__class__ is new
 
 
 def test_all():
