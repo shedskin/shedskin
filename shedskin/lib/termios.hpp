@@ -113,9 +113,10 @@ template<class T> inline int __tc_fd(T fd) {
         f = fd->__ss_fileno();
     else
         f = fd;
-    if(f < 0)
+    int c = __ss_cint(f);
+    if(c < 0)
         throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(f), new str(")")));
-    return (int)f;
+    return c;
 }
 
 tcattrs *__tcgetattr(int fd);

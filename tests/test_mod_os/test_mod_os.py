@@ -1715,6 +1715,18 @@ def test_c_int_overflow():
     assert errors == 4 * ['Python int too large to convert to C int']
 
 
+def test_fdopen_bad_fd():
+    # as io.open: an fd outside C int range is no fd at all
+    errors = []
+    for v in [2 ** 32 + 1, -2 ** 31 - 1, -1]:
+        try:
+            os.fdopen(v)
+            errors.append('none')
+        except (TypeError, ValueError) as e:
+            errors.append(str(e))
+    assert errors == 2 * ['expected str, bytes or os.PathLike object, not int'] + ['negative file descriptor']
+
+
 def test_all():
     test_unicode_names()
     test_undecodable_names()
@@ -1735,6 +1747,7 @@ def test_all():
     test_utime()
     test_strerror_error()
     test_c_int_overflow()
+    test_fdopen_bad_fd()
     test_times()
     test_misc_constants()
     test_unsetenv()

@@ -93,7 +93,7 @@ class mmap: public pyiter<bytes *>
       * Constructors.
       */
 #ifndef WIN32
-    mmap(int __ss_fileno,
+    mmap(__ss_int __ss_fileno,
          __ss_int length,
          __ss_int flags_ = MAP_SHARED,
          __ss_int prot_  = PROT_READ | PROT_WRITE,
@@ -104,11 +104,11 @@ class mmap: public pyiter<bytes *>
         __init__(__ss_fileno, length,
                  flags_, prot_, access_, offset);
     }
-    void *__init__(int __ss_fileno, __ss_int length,
+    void *__init__(__ss_int __ss_fileno, __ss_int length,
                    __ss_int flags_,  __ss_int prot_,
                    __ss_int access_, __ss_int offset);
 #else /* WIN32 */
-    mmap(int __ss_fileno,
+    mmap(__ss_int __ss_fileno,
          __ss_int length,
          str *tagname = 0,
          __ss_int access = 0,
@@ -118,7 +118,7 @@ class mmap: public pyiter<bytes *>
         __init__(__ss_fileno, length,
                  tagname, access, offset);
     }
-    void *__init__(int __ss_fileno, __ss_int length,
+    void *__init__(__ss_int __ss_fileno, __ss_int length,
                    str *tagname, __ss_int access,
                    __ss_int offset);
 #endif /* WIN32 */

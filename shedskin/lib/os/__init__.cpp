@@ -1145,6 +1145,11 @@ __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
 
 static FILE *__fdopen(__ss_int fd, str *mode) {
     __check_open_mode(mode);
+    /* like CPython (io.open), an fd out of C int range is no fd */
+    if(fd < INT_MIN || fd > INT_MAX)
+        throw new TypeError(new str("expected str, bytes or os.PathLike object, not int"));
+    if(fd < 0)
+        throw new ValueError(new str("negative file descriptor"));
     /* C fdopen() does not know 'x' (and never creates or truncates) */
     FILE* fp = ::fdopen((int)fd, __c_open_mode(mode, false)->c_str());
     if(fp == NULL)
@@ -1492,42 +1497,61 @@ str *readlink(str *path) {
       }
 }
 
+/* a uid_t/gid_t argument as cpython converts it: -1 means 'unchanged' (as
+   does its unsigned equivalent), anything else must fit */
+template<class T> static T __ss_id(__ss_int v, const char *what) {
+    if(v == -1)
+        return (T)-1;
+    if constexpr (sizeof(__ss_int) > sizeof(long)) {
+        if(v > LONG_MAX) {
+            if(v > (__ss_int)ULONG_MAX || (T)v == (T)-1 || (__ss_int)(T)v != v)
+                throw new OverflowError(__add_strs(2, new str(what), new str(" is greater than maximum")));
+            return (T)v;
+        }
+    }
+    if(v < 0 || (__ss_int)(T)v != v)
+        throw new OverflowError(__add_strs(2, new str(what), new str(" is less than minimum")));
+    return (T)v;
+}
+static uid_t __ss_uid(__ss_int v) { return __ss_id<uid_t>(v, "uid"); }
+static gid_t __ss_gid(__ss_int v) { return __ss_id<gid_t>(v, "gid"); }
+
 __ss_int getuid() { return (__ss_int)::getuid(); }
 void *setuid(__ss_int uid) {
-    if(::setuid((unsigned)uid) == -1)
+    if(::setuid(__ss_uid(uid)) == -1)
         __throw_oserror();
     return NULL;
 }
 
 __ss_int getgid() { return (__ss_int)::getgid(); }
 void *setgid(__ss_int gid) {
-    if(::setgid((unsigned)gid) == -1)
+    if(::setgid(__ss_gid(gid)) == -1)
         __throw_oserror();
     return NULL;
 }
 
 __ss_int geteuid() { return (__ss_int)::geteuid(); }
 void *seteuid(__ss_int euid) {
-    if(::seteuid((unsigned)euid) == -1)
+    if(::seteuid(__ss_uid(euid)) == -1)
         __throw_oserror();
     return NULL;
 }
 
 __ss_int getegid() { return (__ss_int)::getegid(); }
 void *setegid(__ss_int egid) {
-    if(::setegid((unsigned)egid) == -1)
+    if(::setegid(__ss_gid(egid)) == -1)
         __throw_oserror();
     return NULL;
 }
 
 void *setreuid(__ss_int ruid, __ss_int euid) {
-    if(::setreuid((unsigned)ruid, (unsigned)euid) == -1)
+    if(::setreuid(__ss_uid(ruid), __ss_uid(euid)) == -1)
         __throw_oserror();
     return NULL;
 }
 
 void *setregid(__ss_int rgid, __ss_int egid) {
-    if(::setregid((unsigned)rgid, (unsigned)egid) == -1)
+    if(::setregid(__ss_gid(rgid), __ss_gid(egid)) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -1618,13 +1642,13 @@ str *getlogin() {
 }
 
 void *chown(str *path, __ss_int uid, __ss_int gid) {
-    if (::chown(__ss_cpath(path, "chown"), (unsigned)uid, (unsigned)gid) == -1)
+    if (::chown(__ss_cpath(path, "chown"), __ss_uid(uid), __ss_gid(gid)) == -1)
         __throw_oserror(path);
     return NULL;
 }
 
 void *lchown(str *path, __ss_int uid, __ss_int gid) {
-    if (::lchown(__ss_cpath(path, "lchown"), (unsigned)uid, (unsigned)gid) == -1)
+    if (::lchown(__ss_cpath(path, "lchown"), __ss_uid(uid), __ss_gid(gid)) == -1)
         __throw_oserror(path);
     return NULL;
 }
@@ -1742,7 +1766,7 @@ void *setgroups(pyseq<__ss_int> *groups) {
         throw new ValueError(new str("too many groups"));
     gid_t l[MAXENTRIES];
     for(__ss_int i=0; i<len(groups); i++)
-        l[i] = (gid_t)groups->__getitem__(i);
+        l[i] = __ss_gid(groups->__getitem__(i));
     if(::setgroups((size_t)len(groups), l) == -1)
         __throw_oserror();
     return NULL;
@@ -2586,18 +2610,47 @@ list<str *> *get_exec_path(dict<str *, str *> *env) {
 
 #ifndef WIN32
 
+/* a dev_t argument as cpython converts it (-1 is NODEV) */
+static dev_t __ss_dev(__ss_int v) {
+    if(v == -1)
+        return (dev_t)-1;
+    if(v < 0)
+        throw new OverflowError(new str("can't convert negative int to unsigned"));
+    if constexpr (sizeof(__ss_int) > sizeof(unsigned long long)) {
+        if(v > (__ss_int)ULLONG_MAX)
+            throw new OverflowError(new str("int too big to convert"));
+    }
+    /* dev_t may be narrower, or signed (macOS: int32_t) */
+    if((__ss_int)(dev_t)v != v)
+        throw new OverflowError(new str("Python int too large to convert to C dev_t"));
+    return (dev_t)v;
+}
+
+/* major and minor device numbers are unsigned ints, with NODEV as -1 */
+static unsigned int __ss_devnum(__ss_int v) {
+    dev_t d = __ss_dev(v);
+    if(d != (dev_t)-1 && (dev_t)(unsigned int)d != d)
+        throw new OverflowError(new str("Python int too large to convert to C unsigned int"));
+    return (unsigned int)d;
+}
+static __ss_int __ss_from_devnum(unsigned int n) {
+    return n == UINT_MAX ? -1 : (__ss_int)n;
+}
+
 __ss_int __ss_makedev(__ss_int major, __ss_int minor) {
-    return (__ss_int)makedev((unsigned)major, (unsigned)minor);
+    unsigned int major_ = __ss_devnum(major);
+    unsigned int minor_ = __ss_devnum(minor);
+    return (__ss_int)makedev(major_, minor_);
 }
 __ss_int __ss_major(__ss_int dev) {
-    return (__ss_int)major((unsigned)dev);
+    return __ss_from_devnum(major(__ss_dev(dev)));
 }
 __ss_int __ss_minor(__ss_int dev) {
-    return (__ss_int)minor((unsigned)dev);
+    return __ss_from_devnum(minor(__ss_dev(dev)));
 }
 
 void *mknod(str *filename, __ss_int mode, __ss_int device) {
-    if(::mknod(__ss_cpath(filename, "mknod"), (mode_t)__ss_cint(mode), (unsigned)device) == -1)
+    if(::mknod(__ss_cpath(filename, "mknod"), (mode_t)__ss_cint(mode), __ss_dev(device)) == -1)
         __throw_oserror();
     return NULL;
 }

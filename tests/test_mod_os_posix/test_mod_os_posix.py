@@ -648,6 +648,102 @@ def test_wait_status_macros():
     assert errors == 8 * ['Python int too large to convert to C int']
 
 
+def test_device_numbers():
+    dev = os.makedev(8, 1)
+    assert os.major(dev) == 8 and os.minor(dev) == 1
+    if sys.platform == 'darwin':  # 8-bit major, 24-bit minor: NODEV is no fixpoint
+        assert os.major(-1) == 255 and os.minor(-1) == 16777215
+    else:
+        assert os.major(-1) == -1 and os.minor(-1) == -1
+    if sys.platform == 'linux':
+        # dev_t is 64 bits: the major number is not truncated to 32 bits
+        dev = os.makedev(5000, 70000)
+        assert dev == 17592472537200
+        assert os.major(dev) == 5000
+        assert os.minor(dev) == 70000
+        assert os.major(2 ** 32 + 1) == 0 and os.minor(2 ** 32 + 1) == 1048577
+    errors = []
+    for args in [(2 ** 32 + 1, 0), (0, 2 ** 32), (-2, 0)]:
+        try:
+            os.makedev(args[0], args[1])
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    for v in [-2, -2 ** 40]:
+        try:
+            os.major(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            os.minor(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    try:
+        os.mknod('shedskin_test_mknod', 0o600, -2)
+        errors.append('none')
+    except OverflowError as e:
+        errors.append(str(e))
+    if sys.platform == 'darwin':  # dev_t is a signed 32-bit int
+        too_large = 'Python int too large to convert to C dev_t'
+    else:
+        too_large = 'Python int too large to convert to C unsigned int'
+    assert errors == 2 * [too_large] + 6 * ["can't convert negative int to unsigned"]
+    assert not os.path.exists('shedskin_test_mknod')
+
+
+def test_uid_gid_overflow():
+    # uid/gid arguments are not truncated (chown would give the file to the
+    # wrong user); -1 and its unsigned equivalent mean 'unchanged'
+    path = 'shedskin_test_chown.txt'
+    open(path, 'w').close()
+    st = os.stat(path)
+    os.chown(path, -1, -1)
+    os.chown(path, 2 ** 32 - 1, 2 ** 32 - 1)
+    os.lchown(path, -1, 2 ** 32 - 1)
+    os.setreuid(-1, -1)
+    os.setregid(-1, -1)
+    st2 = os.stat(path)
+    assert (st2.st_uid, st2.st_gid) == (st.st_uid, st.st_gid)
+    errors = []
+    for v in [2 ** 32 + 1234, 2 ** 32, -2, 2 ** 63 - 1]:
+        try:
+            os.chown(path, v, -1)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            os.lchown(path, -1, v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            os.setuid(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            os.setegid(v)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            os.setreuid(v, -1)
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+        try:
+            os.setgroups([v])
+            errors.append('none')
+        except OverflowError as e:
+            errors.append(str(e))
+    assert errors == 4 * ['uid is less than minimum', 'gid is less than minimum', 'uid is less than minimum', 'gid is less than minimum', 'uid is less than minimum', 'gid is less than minimum']
+    st2 = os.stat(path)
+    assert (st2.st_uid, st2.st_gid) == (st.st_uid, st.st_gid)
+    os.remove(path)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -673,6 +769,8 @@ def test_all():
     test_pathconf_errors()
     test_setsid()
     test_wait_status_macros()
+    test_device_numbers()
+    test_uid_gid_overflow()
 
 
 if __name__ == '__main__':
