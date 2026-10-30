@@ -37,6 +37,11 @@ template<class T, class V>
 bytes *b64decode(T *s, bytes *altchars, V validate, __ss_bool padded=True, bytes *ignorechars=0, __ss_bool canonical=False) {
     return b64decode(__binascii__::__ascii_data(s), altchars, validate, padded, ignorechars, canonical);
 }
+/* ..as does altchars (a deduced A, so that a NULL altchars can't pick this) */
+template<class T, class A, class V>
+bytes *b64decode(T *s, A *altchars, V validate, __ss_bool padded=True, bytes *ignorechars=0, __ss_bool canonical=False) {
+    return b64decode(__binascii__::__ascii_data(s), __binascii__::__ascii_data(altchars), validate, padded, ignorechars, canonical);
+}
 template<class T> bytes *standard_b64decode(T *s) { return standard_b64decode(__binascii__::__ascii_data(s)); }
 template<class T> bytes *urlsafe_b64decode(T *s, __ss_bool padded=False) { return urlsafe_b64decode(__binascii__::__ascii_data(s), padded); }
 
@@ -47,6 +52,7 @@ template<class T> bytes *b16decode(T *s, __ss_bool casefold, bytes *ignorechars=
 bytes *b32encode(bytes *s, __ss_bool padded=True, __ss_int wrapcol=0);
 bytes *b32decode(bytes *s, __ss_bool casefold=False, bytes *map01=0, __ss_bool padded=True, bytes *ignorechars=0, __ss_bool canonical=False);
 template<class T> bytes *b32decode(T *s, __ss_bool casefold=False, bytes *map01=0, __ss_bool padded=True, bytes *ignorechars=0, __ss_bool canonical=False) { return b32decode(__binascii__::__ascii_data(s), casefold, map01, padded, ignorechars, canonical); }
+template<class T, class M> bytes *b32decode(T *s, __ss_bool casefold, M *map01, __ss_bool padded=True, bytes *ignorechars=0, __ss_bool canonical=False) { return b32decode(__binascii__::__ascii_data(s), casefold, __binascii__::__ascii_data(map01), padded, ignorechars, canonical); }
 bytes *b32hexencode(bytes *s, __ss_bool padded=True, __ss_int wrapcol=0);
 bytes *b32hexdecode(bytes *s, __ss_bool casefold=False, __ss_bool padded=True, bytes *ignorechars=0, __ss_bool canonical=False);
 template<class T> bytes *b32hexdecode(T *s, __ss_bool casefold=False, __ss_bool padded=True, bytes *ignorechars=0, __ss_bool canonical=False) { return b32hexdecode(__binascii__::__ascii_data(s), casefold, padded, ignorechars, canonical); }

@@ -85,7 +85,18 @@ def test_a2b_uu_short_input():
     # end" harmlessly sees an implicit 0 there and CPython treats that
     # like whitespace/padding; our storage has no such terminator, so
     # this used to read past the end of the buffer.
-    assert binascii.a2b_uu(b'') == b'\x00' * 32
+    # an empty input has no length byte at all (CPython < 3.13 decoded
+    # it as 32 NULs, 3.13 raises)
+    ok = False
+    try:
+        binascii.a2b_uu(b'')
+    except binascii.Error as e:
+        ok = True
+        assert str(e) == 'Missing length byte'
+    assert ok
+
+    # a bare newline is a length byte: (10 - 32) & 077 == 42 NULs
+    assert binascii.a2b_uu(b'\n') == b'\x00' * 42
 
     # length byte claims 45 bytes of output, but only one data
     # character follows before the line ends.

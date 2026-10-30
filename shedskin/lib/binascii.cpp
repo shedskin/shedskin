@@ -86,21 +86,19 @@ bytes *unhexlify(bytes *hex, bytes *ignorechars) {
 // from python 2.7.1
 bytes *a2b_uu(bytes *string) {
     size_t ascii_len = string->unit.size();
+    /* as in CPython 3.13 (earlier versions decoded b'' as 32 NULs) */
+    if (ascii_len == 0)
+        throw new Error(new str("Missing length byte"));
     char * ascii_data = &string->unit[0];
 
-    /* CPython's buffers are always NUL-terminated, so a length byte
-    ** read from an empty (or otherwise exhausted) input is implicitly
-    ** 0 there; our own storage has no such guarantee, so guard the
-    ** read explicitly instead of dereferencing past the end.
-    */
-    __ss_int bin_len = ((ascii_len ? *ascii_data++ : 0) - ' ') & 077;
+    __ss_int bin_len = (*ascii_data++ - ' ') & 077;
     bytes *binary = new bytes(1);
     binary->unit.resize(bin_len);
     char * bin_data = &binary->unit[0];
     unsigned char this_ch;
     __ss_int leftchar=0, leftbits=0;
 
-    if (ascii_len) ascii_len--;
+    ascii_len--;
     for( ; bin_len > 0 ; ascii_data++ ) {
         /* XXX is it really best to add NULs if there's no more data */
         this_ch = (unsigned char)((ascii_len > 0) ? *ascii_data : 0);
