@@ -697,6 +697,19 @@ def test_bytearray_from_non_int_iterable():
     assert error == "'str' object cannot be interpreted as an integer"
 
 
+def test_bytearray_join_single():
+    # joining a single element returned that element itself (1030-B4)
+    r = bytearray(b'').join([b'x'])
+    assert repr(r) == "bytearray(b'x')"
+    r[0] = 121
+    assert repr(r) == "bytearray(b'y')"
+    a = bytearray(b'a')
+    s = bytearray(b'-').join([a])
+    assert repr(s) == "bytearray(b'a')"
+    a[0] = 122
+    assert repr(s) == "bytearray(b'a')"
+
+
 def test_all():
     test_unchanged_results_are_copies()
     test_index_error_messages()
@@ -727,6 +740,7 @@ def test_all():
     test_bytearray_maketrans()
     test_bytearray_take_bytes()
     test_bytearray_from_non_int_iterable()
+    test_bytearray_join_single()
 
 
 if __name__ == "__main__":

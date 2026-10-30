@@ -195,6 +195,14 @@ def test_join():
     board = [[bytes([65+i+j]) for i in range(2)] for j in range(2)]
     assert b'\n'.join(b''.join(row) for row in board) == b'AB\nBC'
 
+    # single bytearray element: result is a new bytes object (1030-B4)
+    y = bytearray(b'a')
+    z = b''.join([y])
+    assert repr(z) == "b'a'"
+    y[0] = 122
+    assert repr(z) == "b'a'"
+    assert repr(b'-'.join([b'x'])) == "b'x'"
+
 def test_ljust():
     assert b'bla'.ljust(8) == b'bla     '
     assert b'bla'.ljust(6, b'+') == b'bla+++'
