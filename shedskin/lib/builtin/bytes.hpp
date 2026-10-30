@@ -299,7 +299,7 @@ template <class U> bytes *bytes::join(U *iter) {
     END_FOR
     size_t unitsize = this->unit.size();
     size_t elems = __join_cache.units.size();
-    if(elems==1)
+    if(elems==1 and frozen and __join_cache.units[0]->frozen) /* only safe when immutable and of the same type */
         return __join_cache.units[0];
     bytes *s = new bytes(frozen);
     if(unitsize == 0 and only_ones) {
