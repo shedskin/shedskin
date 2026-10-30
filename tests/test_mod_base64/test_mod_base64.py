@@ -696,6 +696,14 @@ def test_str_argument():
     assert base64.b85decode(base64.b85encode(b'hello').decode()) == b'hello'
     assert base64.z85decode(base64.z85encode(b'hell').decode()) == b'hell'
 
+    # ..and so do altchars and map01
+    assert base64.b64decode(b'aGk-', '-_') == b'hi>'
+    assert base64.b64decode('aGk-', '-_') == b'hi>'
+    assert base64.b64decode(b'aGk*', altchars='*?', validate=True) == b'hi>'
+    assert base64.b32decode(b'MZXW6YTB0I======', map01='I') == b'foobar'
+    assert base64.b32decode('MZXW6YTB01======', False, 'I') == b'foobar'
+    assert base64.b32decode(b'NB1Q====', map01='L') == b'hW'
+
     error = ''
     try:
         base64.b64decode('h\xe9')
