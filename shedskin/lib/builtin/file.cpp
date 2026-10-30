@@ -298,6 +298,17 @@ __ss_int file::tell() {
 /* text-mode read(n) and readline(n) mean n *characters* (as in CPython), so
    stop -- pushing the byte back -- when character n+1 begins (see
    __char_counter). */
+
+/* .. and push back the trailing bytes of a truncated sequence that turned out
+   not to fit. (this needs more than the one byte of pushback that ungetc
+   guarantees; glibc and the bsds give us more) */
+static void __give_back(FILE *f, __GC_VECTOR(char) &cache, size_t k) {
+    while(k--) {
+        ungetc((unsigned char)cache.back(), f);
+        cache.pop_back();
+    }
+}
+
 str *file::readline(__ss_int n) {
     __check_closed();
     __switch_op(f, options, 'r');
@@ -350,6 +361,7 @@ str *file::readline(__ss_int n) {
             }
         }
     }
+    __give_back(f, __read_cache, cc.excess(size_t(n)));
     if(__error())
         __throw_oserror();
 
@@ -388,6 +400,7 @@ str *file::read(__ss_int n) {
             }
             __read_cache.push_back((char)c);
         }
+        __give_back(f, __read_cache, cc.excess(size_t(n)));
         if(__error())
             __throw_io_error();
         return __decode_cache();
@@ -413,6 +426,7 @@ str *file::read(__ss_int n) {
         }
         __read_cache.push_back((char)c);
     }
+    __give_back(f, __read_cache, cc.excess(size_t(n)));
     if(__error())
         __throw_io_error();
     return __decode_cache();

@@ -581,6 +581,20 @@ void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc
     }
 }
 
+void __char_counter::__ill_formed(size_t n) {
+    /* one character so far, none with 'ignore', one per byte with surrogateescape */
+    if (err == __SS_ERR_IGNORE)
+        chars--;
+    else if (err == __SS_ERR_SURROGATEESCAPE) {
+        chars += pending - 1;
+        if (chars > n) { /* (never the lead byte: it started below n) */
+            over = chars - n;
+            chars = n;
+        }
+    }
+    need = 0;
+}
+
 bool __char_counter::__full(int c, size_t n) {
     if (need) {
         if (c >= lo && c <= hi) { /* continues the sequence */
@@ -590,12 +604,7 @@ bool __char_counter::__full(int c, size_t n) {
             need--;
             return false;
         }
-        /* ill-formed: one character so far, none with 'ignore', one per byte with surrogateescape */
-        if (err == __SS_ERR_IGNORE)
-            chars--;
-        else if (err == __SS_ERR_SURROGATEESCAPE)
-            chars += pending - 1;
-        need = 0;
+        __ill_formed(n);
     }
     if (chars >= n)
         return true;

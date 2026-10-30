@@ -184,7 +184,9 @@ void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err, 
 /* text-mode read(n)/readline(n) take n *characters*: count what the bytes
    read so far decode to (as __decode_into, so invalid bytes count as the
    error handler expands them). full(c, n): byte c starts character n+1.
-   (with surrogateescape, a truncated sequence may still overshoot n) */
+   with surrogateescape, a truncated sequence turns into one character per
+   byte, which we only find out after reading past it; excess(n) then says how
+   many of its trailing bytes do not fit and must be given back (in reverse). */
 struct __char_counter {
     __ss_encoding enc;
     __ss_errors err;
@@ -192,6 +194,7 @@ struct __char_counter {
     size_t pending = 0; /* bytes of an unfinished utf-8 sequence */
     size_t need = 0; /* .. and its continuation bytes still missing */
     unsigned char lo = 0, hi = 0; /* allowed range for its next byte */
+    size_t over = 0; /* bytes to give back (see excess) */
 
     __char_counter(__ss_encoding enc, __ss_errors err) : enc(enc == __SS_ENC_UTF8_SIG ? __SS_ENC_UTF8 : enc), err(err) {}
     bool full(int c, size_t n) { /* inline: the common ascii case */
@@ -203,6 +206,12 @@ struct __char_counter {
         return false;
     }
     bool __full(int c, size_t n);
+    void __ill_formed(size_t n);
+    size_t excess(size_t n) { /* after the last byte (or at eof) */
+        if (need)
+            __ill_formed(n);
+        return over;
+    }
 };
 
 /* widen an ascii c-string / std::string to __GC_STR (repr building etc.) */

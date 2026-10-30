@@ -99,6 +99,14 @@ public:
         return (unsigned char)outbuf[outpos++];
     }
     void __ungetc() { outpos--; pos--; }
+    void __unget(const char *s, size_t k) { /* the last k bytes read, again */
+        if (outpos < k) { /* (a __fill may have dropped them) */
+            outbuf.insert(0, s, k - outpos);
+            outpos = k;
+        }
+        outpos -= k;
+        pos -= k;
+    }
     bool __ensure(size_t n); /* at least n bytes in outbuf, unless at eof */
 
     /* internals */
