@@ -770,6 +770,28 @@ static void __give_back(GzipFile *gz, __GC_VECTOR(char) &cache, size_t k) {
     }
 }
 
+/* after a '\r': whether a '\n' follows, which is then consumed. with
+   errors='ignore', ill-formed bytes in between are skipped too, as they
+   decode to nothing (CPython translates newlines after decoding) */
+bool _GzipTextFile::__take_lf() {
+    size_t skip = 0;
+    if (__errors == __SS_ERR_IGNORE) {
+        for (;;) {
+            bool more = gz->__ensure(skip + 4); /* (a whole utf-8 sequence) */
+            size_t avail = gz->outbuf.size() - gz->outpos;
+            size_t k = __ignored_prefix(&gz->outbuf[gz->outpos + skip], avail - skip, __encoding, !more);
+            if (!k)
+                break;
+            skip += k;
+        }
+    }
+    if (!gz->__ensure(skip + 1) || gz->outbuf[gz->outpos + skip] != '\n')
+        return false;
+    for (size_t i = 0; i <= skip; i++)
+        gz->__getc();
+    return true;
+}
+
 str *_GzipTextFile::readline(__ss_int n) {
     __check_closed();
     if (gz->writing)
@@ -791,10 +813,7 @@ str *_GzipTextFile::readline(__ss_int n) {
                 __read_cache.push_back('\r');
                 break;
             }
-            int d = gz->__getc();
-            bool crlf = (d == '\n');
-            if (!crlf && d != -1)
-                gz->__ungetc();
+            bool crlf = __take_lf();
             if (nl == NL_UNIVERSAL) { /* '\r' and '\r\n' become '\n' */
                 __read_cache.push_back('\n');
                 break;
@@ -837,9 +856,7 @@ str *_GzipTextFile::read(__ss_int n) {
             break;
         }
         if (c == '\r' && nl == NL_UNIVERSAL) { /* '\r' and '\r\n' become '\n' */
-            int d = gz->__getc();
-            if (d != '\n' && d != -1)
-                gz->__ungetc();
+            __take_lf();
             c = '\n';
         }
         __read_cache.push_back((char)c);

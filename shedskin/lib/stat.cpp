@@ -278,13 +278,28 @@ void __init() {
    __ss_STATX_ATTR_WRITE_ATOMIC = 0x00400000;
 }
 
-__ss_bool __ss_S_ISDIR(__ss_int mode) {
+/* as cpython, mode arguments must fit a C mode_t (16 bits on macos and
+   windows, 32 bits on linux) */
+#if defined(_WIN32)
+typedef unsigned short __ss_mode_t;
+#else
+typedef mode_t __ss_mode_t;
+#endif
 
+static void __ss_check_mode(__ss_int mode) {
+    if (mode < 0)
+        throw new OverflowError(new str("can't convert negative value to unsigned int"));
+    if ((__ss_int)(__ss_mode_t)mode != mode)
+        throw new OverflowError(new str("mode out of range"));
+}
+
+__ss_bool __ss_S_ISDIR(__ss_int mode) {
+    __ss_check_mode(mode);
     return __mbool(S_ISDIR(mode));
 }
 
 __ss_bool __ss_S_ISREG(__ss_int mode) {
-
+    __ss_check_mode(mode);
     return __mbool(S_ISREG(mode));
 }
 
@@ -292,10 +307,12 @@ __ss_bool __ss_S_ISREG(__ss_int mode) {
    dependency on the POSIX macros that are missing from MSVC's
    <sys/stat.h>, so they are compiled unconditionally. */
 __ss_int __ss_S_IMODE(__ss_int mode) {
+    __ss_check_mode(mode);
     return (mode&4095); /* XXX */
 }
 
 __ss_int __ss_S_IFMT(__ss_int mode) {
+    __ss_check_mode(mode);
     return (mode&61440); /* XXX */
 }
 
@@ -307,22 +324,27 @@ __ss_int __ss_S_IFMT(__ss_int mode) {
    above and stat.py's own constants, so they compile and behave
    identically on every platform. */
 __ss_bool __ss_S_ISCHR(__ss_int mode) {
+    __ss_check_mode(mode);
     return __mbool((mode & 0170000) == 0020000);
 }
 
 __ss_bool __ss_S_ISBLK(__ss_int mode) {
+    __ss_check_mode(mode);
     return __mbool((mode & 0170000) == 0060000);
 }
 
 __ss_bool __ss_S_ISFIFO(__ss_int mode) {
+    __ss_check_mode(mode);
     return __mbool((mode & 0170000) == 0010000);
 }
 
 __ss_bool __ss_S_ISLNK(__ss_int mode) {
+    __ss_check_mode(mode);
     return __mbool((mode & 0170000) == 0120000);
 }
 
 __ss_bool __ss_S_ISSOCK(__ss_int mode) {
+    __ss_check_mode(mode);
     return __mbool((mode & 0170000) == 0140000);
 }
 
@@ -330,21 +352,25 @@ __ss_bool __ss_S_ISSOCK(__ss_int mode) {
    exist (solaris doors and event ports, bsd/macos whiteouts) and are
    constant-false everywhere else, matching cpython on each platform. */
 __ss_bool __ss_S_ISDOOR(__ss_int mode) {
+    __ss_check_mode(mode);
     (void)mode; /* unused where the platform has no such file type */
     return __mbool(S_ISDOOR(mode));
 }
 
 __ss_bool __ss_S_ISPORT(__ss_int mode) {
+    __ss_check_mode(mode);
     (void)mode; /* unused where the platform has no such file type */
     return __mbool(S_ISPORT(mode));
 }
 
 __ss_bool __ss_S_ISWHT(__ss_int mode) {
+    __ss_check_mode(mode);
     (void)mode; /* unused where the platform has no such file type */
     return __mbool(S_ISWHT(mode));
 }
 
 str *filemode(__ss_int mode) {
+    __ss_check_mode(mode);
     __GC_STRING perm;
 
     /* Use the literal POSIX mode-bit values directly rather than the

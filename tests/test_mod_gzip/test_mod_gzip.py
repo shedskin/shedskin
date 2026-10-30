@@ -741,6 +741,20 @@ def test_text_read_chars_invalid():
         assert f.read() == '\udc9f'
 
 
+def test_text_crlf_ignore():
+    # with errors='ignore', bytes that decode to nothing between '\r' and
+    # '\n' do not split the line ending (newlines are translated after decoding)
+    blob = gzip.compress(b'a\r\xff\nb\r\xe2\x82\n\xacc\r\xc3\xa9\nd\r\xff\xffe\r\xff')
+    with gzip.open(io.BytesIO(blob), 'rt', errors='ignore') as f:
+        assert f.read() == 'a\nb\nc\n\xe9\nd\ne\n'
+    with gzip.open(io.BytesIO(blob), 'rt', errors='ignore') as f:
+        assert f.readlines() == ['a\n', 'b\n', 'c\n', '\xe9\n', 'd\n', 'e\n']
+    with gzip.open(io.BytesIO(blob), 'rt', errors='ignore', newline='') as f:
+        assert f.readlines() == ['a\r\n', 'b\r\n', 'c\r', '\xe9\n', 'd\r', 'e\r']
+    with gzip.open(io.BytesIO(blob), 'rt', errors='replace') as f:
+        assert f.read() == 'a\n\ufffd\nb\n\ufffd\n\ufffdc\n\xe9\nd\n\ufffd\ufffde\n\ufffd'
+
+
 def test_enter_exit_results():
     # __enter__ returns the file itself and __exit__ returns None
     name = tmpname('c.gz')
@@ -782,6 +796,7 @@ def test_all():
     test_text_newlines()
     test_text_files()
     test_text_read_chars_invalid()
+    test_text_crlf_ignore()
 
 
 if __name__ == '__main__':

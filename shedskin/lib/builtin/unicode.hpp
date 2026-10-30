@@ -181,6 +181,11 @@ void __unknown_errors(str *errors); /* raises LookupError or ValueError */
 void __decode_into(__GC_STR &out, const char *src, size_t len, __ss_encoding enc, __ss_errors err, str *errors);
 void __encode_into(__GC_BYTES &out, str *s, __ss_encoding enc, __ss_errors err, str *errors);
 
+/* errors='ignore' drops ill-formed input: the number of bytes at src that
+   decode to nothing, up to the first character. unless final (no more
+   data follows), stop before a sequence that more data may yet complete */
+size_t __ignored_prefix(const char *src, size_t len, __ss_encoding enc, bool final);
+
 /* text-mode read(n)/readline(n) take n *characters*: count what the bytes
    read so far decode to (as __decode_into, so invalid bytes count as the
    error handler expands them). full(c, n): byte c starts character n+1.
@@ -207,9 +212,12 @@ struct __char_counter {
     }
     bool __full(int c, size_t n);
     void __ill_formed(size_t n);
-    size_t excess(size_t n) { /* after the last byte (or at eof) */
+    void cut(size_t n) { /* the unfinished sequence ends here (ill-formed) */
         if (need)
             __ill_formed(n);
+    }
+    size_t excess(size_t n) { /* after the last byte (or at eof) */
+        cut(n);
         return over;
     }
 };

@@ -164,6 +164,37 @@ def test_filemode():
     assert stat.filemode(stat.S_IFDIR | 0o1777) == 'drwxrwxrwt'
 
 
+def test_mode_range():
+    # mode arguments must fit a C mode_t
+    for mode in [-1, 2**32 + 0o100644]:
+        msg = ''
+        try:
+            stat.filemode(mode)
+        except OverflowError as e:
+            msg = str(e)
+        assert msg in ["can't convert negative value to unsigned int", 'mode out of range']
+        assert (msg == 'mode out of range') == (mode > 0)
+
+    errors = 0
+    for i in range(12):
+        try:
+            if i == 0: stat.S_ISDIR(-1)
+            elif i == 1: stat.S_ISREG(-1)
+            elif i == 2: stat.S_ISLNK(-1)
+            elif i == 3: stat.S_ISFIFO(-1)
+            elif i == 4: stat.S_ISCHR(-1)
+            elif i == 5: stat.S_ISBLK(-1)
+            elif i == 6: stat.S_ISSOCK(-1)
+            elif i == 7: stat.S_ISDOOR(-1)
+            elif i == 8: stat.S_ISPORT(-1)
+            elif i == 9: stat.S_ISWHT(-1)
+            elif i == 10: stat.S_IMODE(-1)
+            else: stat.S_IFMT(-1)
+        except OverflowError:
+            errors += 1
+    assert errors == 12
+
+
 def test_stat_indices():
     # indices into the tuple returned by os.stat(), fixed by cpython
     assert stat.ST_MODE == 0
@@ -277,6 +308,7 @@ def test_all():
     test_file_attributes()
     test_statx_attributes()
     test_filemode()
+    test_mode_range()
     test_stat_indices()
     test_file_type_constants()
     test_permission_constants()

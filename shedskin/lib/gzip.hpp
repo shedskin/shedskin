@@ -154,6 +154,7 @@ public:
     bool __error() { return false; }
 
     void __skip_bom();
+    bool __take_lf();
 };
 
 /* filename can also be a binary file object (such as an io.BytesIO) */
