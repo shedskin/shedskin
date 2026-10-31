@@ -225,6 +225,29 @@ str *Match::__repr__() {
     return new str(__gcs("<re.Match object; span=(") + __gcs(std::to_string(regs[0])) + __gcs(", ") + __gcs(std::to_string(regs[1])) + __gcs("), match=") + __repr_cut(group((__ss_int)0, (__ss_int)0), 50) + __gcs(">"));
 }
 
+//sre.c: pattern_richcompare
+__ss_bool Pattern::__eq__(pyobj *other) {
+    if(this == other)
+        return True;
+    Pattern *o = dynamic_cast<Pattern *>(other);
+    if(!o)
+        return False;
+    return __mbool(flags == o->flags && code == o->code && __eq(pattern, o->pattern));
+}
+
+__ss_bool Pattern::__ne__(pyobj *other) {
+    return __mbool(!__eq__(other));
+}
+
+//sre.c: pattern_hash
+__ss_int Pattern::__hash__() {
+    __ss_int h = hasher<str *>(pattern);
+    for(unsigned int c : code)
+        h = hash_combine(h, (__ss_int)c);
+    h = hash_combine(h, flags);
+    return h == -1 ? -2 : h;
+}
+
 //sre.c: pattern_repr
 str *Pattern::__repr__() {
     static const struct { const char *name; __ss_int value; } flag_names[] = {

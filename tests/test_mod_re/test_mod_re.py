@@ -899,6 +899,25 @@ def test_re_module_funcs_compiled_pattern():
         pass
 
 
+def test_re_pattern_eq_hash():
+    # compare/hash by value, not identity (1031-C4)
+    a = re.compile('ab+')
+    re.purge()
+    b = re.compile('ab+')
+    assert a is not b
+    assert a == b and not (a != b)
+    assert hash(a) == hash(b)
+    assert len({a, b}) == 1
+    assert b in {a: 1}
+    assert [a].index(b) == 0
+    c = re.compile('ab+', re.I)
+    d = re.compile('ab*')
+    assert a != c and a != d
+    assert len({a, b, c, d}) == 3
+    re.purge()
+    assert re.compile('x', re.U) == re.compile('x')  # same flags after parsing
+
+
 def test_all():
     test_re_endpos_default()
     test_re_subn_func()
@@ -962,6 +981,7 @@ def test_all():
     test_re_compile_groupnames_gc()
     test_re_groupindex_values()
     test_re_module_funcs_compiled_pattern()
+    test_re_pattern_eq_hash()
 
 
 if __name__ == "__main__":
