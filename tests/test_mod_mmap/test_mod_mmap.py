@@ -1005,6 +1005,27 @@ def test_c_int_overflow():
     assert errors == 4 * ['signed integer is greater than maximum'] + 4 * ['signed integer is less than minimum'] + ['signed integer is greater than maximum']
 
 
+def test_read_negative_size():
+    # 1031-A2: any negative size reads the rest; position stays in range
+    m = mmap.mmap(-1, 16)
+    m.write(b'0123456789abcdef')
+    m.seek(4)
+    assert m.read(-5) == b'456789abcdef'
+    assert m.tell() == 16
+    assert m.read() == b''
+    m.seek(10)
+    assert m.read(-2**63) == b'abcdef'
+    assert m.tell() == 16
+    m.seek(10)
+    assert m.read(2**63-1) == b'abcdef'
+    assert m.tell() == 16
+    m.seek(3)
+    assert m.read(0) == b''
+    assert m.read(2) == b'34'
+    assert m.tell() == 5
+    m.close()
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1037,6 +1058,7 @@ def test_all():
     test_offset()
     test_return_values()
     test_flush_range()
+    test_read_negative_size()
 
 if __name__ == '__main__':
     test_all()

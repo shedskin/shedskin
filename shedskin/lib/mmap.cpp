@@ -839,21 +839,15 @@ bytes *mmap::read(__ss_int size)
 {
     __raise_if_closed_or_not_readable();
     const iterator at = m_position;
-    if (size == all)
+    /* any negative size reads the rest (like CPython); compare against the
+       remaining length to avoid pointer arithmetic outside the mapping. */
+    if (size < 0 or size >= (__ss_int)(m_end - at))
     {
         m_position = m_end;
     }
     else
     {
         m_position += size;
-        if (m_position < at)
-        {
-            throw new OverflowError(const_14);
-        }
-        if (m_position >= m_end)
-        {
-            m_position = m_end;
-        }
     }
     bytes *b = new bytes(at, (size_t)(m_position - at), 1);
     return b;
