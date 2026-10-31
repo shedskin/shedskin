@@ -703,6 +703,22 @@ def test_str_argument():
     assert base64.b32decode(b'MZXW6YTB0I======', map01='I') == b'foobar'
     assert base64.b32decode('MZXW6YTB01======', False, 'I') == b'foobar'
     assert base64.b32decode(b'NB1Q====', map01='L') == b'hW'
+    assert base64.b64decode(b'aGk-', altchars='-_', validate=True) == b'hi>'
+    assert base64.b64decode(b'-_-_Pg==', altchars='-_', ignorechars=b'\n') == b'\xfb\xff\xbf>'
+    assert base64.b32decode('NB1Q====', map01='L') == b'hW'
+    assert base64.b32decode(b'nb1q====', True, 'L') == b'hW'
+    error = ''
+    try:
+        base64.b64decode(b'aGk-', '\xe9_')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'string argument should contain only ASCII characters'
+    error = ''
+    try:
+        base64.b32decode(b'NB1Q====', map01='\xe9')
+    except ValueError as e:
+        error = str(e)
+    assert error == 'string argument should contain only ASCII characters'
 
     error = ''
     try:

@@ -710,6 +710,23 @@ def test_bytearray_join_single():
     assert repr(s) == "bytearray(b'a')"
 
 
+def test_bytearray_explicit_dunder_calls():
+    # an explicit __setitem__ call was emitted without arguments (1030-C9)
+    ba = bytearray(b'abc')
+    ba.__setitem__(1, 66)
+    assert ba == bytearray(b'aBc')
+    ba.__setitem__(-1, 67)
+    assert ba == bytearray(b'aBC')
+    ba.__delitem__(0)
+    assert ba == bytearray(b'BC')
+    error = ''
+    try:
+        ba.__setitem__(2, 68)
+    except IndexError as e:
+        error = str(e)
+    assert error == 'bytearray index out of range'
+
+
 def test_all():
     test_unchanged_results_are_copies()
     test_index_error_messages()
@@ -741,6 +758,7 @@ def test_all():
     test_bytearray_take_bytes()
     test_bytearray_from_non_int_iterable()
     test_bytearray_join_single()
+    test_bytearray_explicit_dunder_calls()
 
 
 if __name__ == "__main__":
