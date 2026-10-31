@@ -169,6 +169,11 @@ public:
     list<str *> *findall(str *subj, __ss_int pos = 0, __ss_void_struct endpos = {});
     list<str *> *findall(str *subj, __ss_int pos, __ss_int endpos);
 
+    //compare/hash by flags, code and pattern, like CPython
+    __ss_bool __eq__(pyobj *other);
+    __ss_bool __ne__(pyobj *other);
+    __ss_int __hash__();
+
     str *__repr__();
 };
 
