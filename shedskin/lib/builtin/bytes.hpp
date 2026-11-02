@@ -283,7 +283,7 @@ inline __ss_int bytes::for_in_next(size_t &i) {
 template <class U> bytes *bytes::join(U *iter) {
     size_t sz, total;
     int __2;
-    bool only_ones = true;
+    bool only_ones = true, all_frozen = true;
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     U *__1;
@@ -296,7 +296,18 @@ template <class U> bytes *bytes::join(U *iter) {
         if(sz != 1)
             only_ones = false;
         total += sz;
+        all_frozen &= e->frozen;
     END_FOR
+    if(!all_frozen) { /* a bytearray may have been resized while the iterable was consumed */
+        only_ones = true;
+        total = 0;
+        for(bytes *t : __join_cache.units) {
+            sz = t->unit.size();
+            if(sz != 1)
+                only_ones = false;
+            total += sz;
+        }
+    }
     size_t unitsize = this->unit.size();
     size_t elems = __join_cache.units.size();
     if(elems==1 and frozen and __join_cache.units[0]->frozen) /* only safe when immutable and of the same type */
