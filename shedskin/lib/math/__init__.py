@@ -45,7 +45,11 @@ def log2(x): return 1.0
 def log10(x): return 1.0
 
 def trunc(x): return 1
-def fsum(x): return 1.0
+def fsum(x):
+    for e in x:
+        e.__float__()
+        e.__index__()
+    return 1.0
 
 def sqrt(x): return 1.0
 def cbrt(x): return 1.0

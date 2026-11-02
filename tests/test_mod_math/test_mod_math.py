@@ -55,6 +55,54 @@ def test_fsum():
         error = str(e)
     assert error == 'intermediate overflow in fsum'
 
+    # non-float elements (1031-D4)
+    assert math.fsum([1, 2, 3]) == 6.0
+    assert math.fsum(range(10)) == 45.0
+    assert math.fsum((4, 5)) == 9.0
+    assert math.fsum(i * i for i in range(5)) == 30.0
+    assert math.fsum([True, True, False]) == 2.0
+    assert math.fsum({1: 'a', 2: 'b'}) == 3.0
+    assert math.fsum([2**53, 1, 1]) == 9007199254740994.0
+    assert math.fsum([FsumFloat(0.5), FsumFloat(0.25)]) == 0.75
+    assert math.fsum([FsumIndex(2), FsumIndex(3)]) == 5.0
+
+    error = ''
+    try:
+        math.fsum([1j, 2j])
+    except TypeError as e:
+        error = str(e)
+    assert error == 'must be real number, not complex'
+
+    error = ''
+    try:
+        math.fsum(['1.0'])
+    except TypeError as e:
+        error = str(e)
+    assert error == 'must be real number, not str'
+
+    error = ''
+    try:
+        math.fsum([b'1.0'])
+    except TypeError as e:
+        error = str(e)
+    assert error == 'must be real number, not bytes'
+
+
+class FsumFloat:
+    def __init__(self, v):
+        self.v = v
+
+    def __float__(self):
+        return self.v
+
+
+class FsumIndex:
+    def __init__(self, v):
+        self.v = v
+
+    def __index__(self):
+        return self.v
+
 
 def test_sqrt():
     assert math.sqrt(0.0) == 0.0
@@ -561,6 +609,13 @@ def test_prod():
     assert math.prod([2,3,4], start=2.0) == 48.0
     assert '%.2f' %  (math.prod([2.1,3,4], start=2)) == '50.40'
 
+    # complex
+    assert math.prod([1j, 2j]) == -2
+    assert math.prod([1j, 2j], start=3) == -6
+    assert math.prod([1j, 2j], start=0.5) == -1
+    assert math.prod([1j, 2j, 1+1j], start=2j) == 4-4j
+    assert math.prod((1j, 2+0j)) == 2j
+
 
 def test_isclose():
     assert math.isclose(math.inf, math.inf)
@@ -595,6 +650,7 @@ def test_sumprod():
     assert math.sumprod([1,2],[3,4]) == 11
     assert math.sumprod([1,2.1],[3.3,4]) == 11.7
     assert math.sumprod((1,2), iter([3,4])) == 11
+    assert math.sumprod([1j, 2j], [3j, 1+1j]) == -5+2j
 
     # user class (shedskin starts from the first product, not from 0)
     ns = [SumprodNum(1), SumprodNum(2)]

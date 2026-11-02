@@ -337,17 +337,26 @@ inline __ss_int comb(__ss_int n, __ss_int k) {
     return __math__::__integer__::comb(n, k);
 }
 
+/* fsum elements: whatever float() accepts as a number (int, bool, float,
+   objects with __float__), but not str, bytes or complex (TypeError, as in CPython) */
+template<class T> inline __ss_float __fsum_arg(T x) { return __float(x); }
+inline __ss_float __fsum_arg(str *x) { __mod_type_error("must be real number, not ", x); }
+inline __ss_float __fsum_arg(bytes *x) { __mod_type_error("must be real number, not ", x); }
+inline __ss_float __fsum_arg(complex x) { __mod_type_error("must be real number, not ", x); }
+
 /* shewchuk's algorithm with a correctly rounded final summation, as in CPython */
-inline __ss_float fsum(pyiter<__ss_float> *iterable) {
+template<class T> __ss_float fsum(pyiter<T> *iterable) {
     std::vector<__ss_float> p; /* partials, increasing magnitude */
     __ss_float x, y, hi, yr, lo = 0.0;
     __ss_float special_sum = 0.0, inf_sum = 0.0;
 
+    T e;
     __ss_int __2;
-    pyiter<__ss_float> *__1;
-    pyiter<__ss_float>::for_in_loop __3;
+    pyiter<T> *__1;
+    typename pyiter<T>::for_in_loop __3;
 
-    FOR_IN(x,iterable,1,2,3)
+    FOR_IN(e,iterable,1,2,3)
+        x = __fsum_arg(e);
         __ss_float xsave = x;
         size_t i = 0;
         for(size_t j = 0; j < p.size(); j++) {
@@ -427,7 +436,7 @@ template<> inline __ss_int __mul(__ss_int a, __ss_int b) { return a*b; }
 #endif
 template<> inline int __mul(int a, int b) { return a*b; }
 template<> inline __ss_float __mul(__ss_float a, __ss_float b) { return a*b; }
-// TODO complex?
+template<> inline complex __mul(complex a, complex b) { return a*b; }
 
 template<class A> A prod(pyiter<A> *iterable, A start) {
     __ss_int __2;
@@ -457,6 +466,18 @@ inline __ss_float prod(pyiter<__ss_float> *iterable, __ss_int start) {
 
 inline __ss_float prod(pyiter<__ss_int> *iterable, __ss_float start) {
     return (__ss_float)prod(iterable) * start;
+}
+
+inline complex prod(pyiter<complex> *iterable) {
+    return prod(iterable, mcomplex(1.0, 0.0));
+}
+
+inline complex prod(pyiter<complex> *iterable, __ss_int start) {
+    return prod(iterable, mcomplex((__ss_float)start, 0.0));
+}
+
+inline complex prod(pyiter<complex> *iterable, __ss_float start) {
+    return prod(iterable, mcomplex(start, 0.0));
 }
 
 template<class A> __ss_float dist(pyiter<A> *p, pyiter<A> *q) {
