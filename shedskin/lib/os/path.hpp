@@ -36,6 +36,7 @@ str *basename(str *p);
 bytes *basename(bytes *p); /* TODO ugh, support bytes everywhere..? */
 str *dirname(str *p);
 str *commonprefix(list<str *> *m);
+inline str *commonprefix(pyseq<str *> *m) { return commonprefix(new list<str *>(m)); } /* tuple */
 __ss_int getsize(str *filename);
 double getmtime(str *filename);
 double getatime(str *filename);
@@ -54,6 +55,7 @@ str *relpath(str *path, str *start=0);
 str *expanduser(str *path);
 str *expandvars(str *path);
 str *commonpath(list<str *> *paths);
+inline str *commonpath(pyiter<str *> *paths) { return commonpath(new list<str *>(paths)); } /* tuple, set, generator.. */
 
 __ss_bool samefile(str *f1, str *f2);
 __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2);

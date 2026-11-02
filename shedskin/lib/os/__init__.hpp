@@ -314,6 +314,16 @@ __ss_int spawnvp(__ss_int mode, str *file, list<str *> *args);
 __ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env);
 __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env);
 
+/* argv as a tuple */
+inline void *execv(str *file, tuple<str *> *args) { return execv(file, new list<str *>(args)); }
+inline void *execvp(str *file, tuple<str *> *args) { return execvp(file, new list<str *>(args)); }
+inline void *execve(str *file, tuple<str *> *args, dict<str *, str *> *env) { return execve(file, new list<str *>(args), env); }
+inline void *execvpe(str *file, tuple<str *> *args, dict<str *, str *> *env) { return execvpe(file, new list<str *>(args), env); }
+inline __ss_int spawnv(__ss_int mode, str *file, tuple<str *> *args) { return spawnv(mode, file, new list<str *>(args)); }
+inline __ss_int spawnvp(__ss_int mode, str *file, tuple<str *> *args) { return spawnvp(mode, file, new list<str *>(args)); }
+inline __ss_int spawnve(__ss_int mode, str *file, tuple<str *> *args, dict<str *, str *> *env) { return spawnve(mode, file, new list<str *>(args), env); }
+inline __ss_int spawnvpe(__ss_int mode, str *file, tuple<str *> *args, dict<str *, str *> *env) { return spawnvpe(mode, file, new list<str *>(args), env); }
+
 template <class ... Args> void *execlp(__ss_int n, str *file, Args ... args) {
     list<str *> *vals = new list<str *>();
     (vals->append(args), ...);

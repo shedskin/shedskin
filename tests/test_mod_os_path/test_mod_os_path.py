@@ -11,6 +11,7 @@ def test_os_path_join():
 
 def test_os_path():
     assert commonprefix(["xxx", "xxxx"]) == 'xxx'
+    assert commonprefix(("/usr/lib", "/usr/local")) == '/usr/l'
     assert normcase("hoei") == 'hoei'
     assert splitext("hoei/woei") == ('hoei/woei', '')
     assert splitext(".cshrc") == ('.cshrc', '')
@@ -478,6 +479,9 @@ def test_os_path_commonpath():
     assert commonpath(["/", "/a"]) == "/"
     assert commonpath(["a"]) == "a"
     assert commonpath(["/a"]) == "/a"
+    assert commonpath(("/usr/lib", "/usr/local")) == "/usr"
+    assert commonpath(p for p in ["/a/b", "/a/c"]) == "/a"
+    assert commonpath({"/a/b"}) == "/a/b"
 
     try:
         commonpath(["/a/b", "a/b"])

@@ -407,6 +407,7 @@ public:
     );
 
     void *setfieldnames(list<str *> *value);
+    template<class T> void *setfieldnames(T *value) { return setfieldnames(new list<str *>(value)); } /* tuple.. */
     list<str *> *getfieldnames();
 
     dict<str *, str *> *__next__();

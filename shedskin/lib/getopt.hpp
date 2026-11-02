@@ -40,6 +40,19 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *args, str *shortopts, str *longopts);
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *args, str *shortopts);
 
+/* getopt() returns a trailing slice of args, so a tuple stays a tuple */
+inline tuple2<list<tuple2<str *, str *> *> *, tuple<str *> *> *__getopt_tuple(tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *r) {
+    return new tuple2<list<tuple2<str *, str *> *> *, tuple<str *> *>(2, r->__getfirst__(), new tuple<str *>(r->__getsecond__()));
+}
+inline tuple2<list<tuple2<str *, str *> *> *, tuple<str *> *> *getopt(tuple<str *> *args, str *shortopts, pyiter<str *> *longopts) { return __getopt_tuple(getopt(new list<str *>(args), shortopts, longopts)); }
+inline tuple2<list<tuple2<str *, str *> *> *, tuple<str *> *> *getopt(tuple<str *> *args, str *shortopts, str *longopts) { return __getopt_tuple(getopt(new list<str *>(args), shortopts, longopts)); }
+inline tuple2<list<tuple2<str *, str *> *> *, tuple<str *> *> *getopt(tuple<str *> *args, str *shortopts) { return __getopt_tuple(getopt(new list<str *>(args), shortopts)); }
+
+/* gnu_getopt() always returns a new list */
+inline tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(tuple<str *> *args, str *shortopts, pyiter<str *> *longopts) { return gnu_getopt(new list<str *>(args), shortopts, longopts); }
+inline tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(tuple<str *> *args, str *shortopts, str *longopts) { return gnu_getopt(new list<str *>(args), shortopts, longopts); }
+inline tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(tuple<str *> *args, str *shortopts) { return gnu_getopt(new list<str *>(args), shortopts); }
+
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str *, str *> *> *opts, str *opt, pyiter<str *> *longopts, list<str *> *args);
 tuple2<__ss_bool, str *> *long_has_args(str *opt, pyiter<str *> *longopts);
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str *, str *> *> *opts, str *optstring, str *shortopts, list<str *> *args);

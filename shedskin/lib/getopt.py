@@ -17,7 +17,7 @@ __getopterror = GetoptError('', '')
 __getopterror2 = error('', '')
 
 def getopt(args, shortopts, longopts = []):
-    return ([('',)], [''])
+    return ([('',)], args)  # trailing slice of args (list or tuple)
 
 def gnu_getopt(args, shortopts, longopts = []):
     return ([('',)], [''])

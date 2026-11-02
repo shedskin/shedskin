@@ -170,6 +170,17 @@ def test_popen_spawn():
     assert os.spawnv(os.P_WAIT, '/bin/sh', ['sh', '-c', 'exit 0']) == 0
     assert os.spawnv(os.P_WAIT, '/bin/sh', ['sh', '-c', 'exit 3']) == 3
 
+    # argv may also be a tuple
+    assert os.spawnv(os.P_WAIT, '/bin/sh', ('sh', '-c', 'exit 4')) == 4
+    assert os.spawnvp(os.P_WAIT, 'sh', ('sh', '-c', 'exit 5')) == 5
+    assert os.spawnve(os.P_WAIT, '/bin/sh', ('sh', '-c', 'exit $X'), {'X': '6'}) == 6
+    assert os.spawnvpe(os.P_WAIT, 'sh', ('sh', '-c', 'exit $X'), {'X': '2', 'PATH': os.environ['PATH']}) == 2
+    if os.environ.get('SHEDSKIN_NEVER_SET') == 'yes':  # compile-only
+        os.execv('/bin/true', ('true',))
+        os.execvp('true', ('true',))
+        os.execve('/bin/true', ('true',), {'X': '1'})
+        os.execvpe('true', ('true',), {'X': '1'})
+
     # P_NOWAIT: the return value is a pid, to be collected with waitpid
     pid = os.spawnv(os.P_NOWAIT, '/bin/sh', ['sh', '-c', 'exit 7'])
     assert pid > 0
