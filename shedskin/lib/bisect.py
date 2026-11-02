@@ -6,9 +6,10 @@ def insort_right(a, x, lo=0, hi=-1, __kw_key=None):
 def insort_left(a, x, lo=0, hi=-1, __kw_key=None):
     insort(a, x, key=__kw_key)
 def insort(a, x, lo=0, hi=-1, __kw_key=None):
-    a.append(x)
+    a.insert(0, x)
+    len(a)
     __cmp(x, x)
-    unit = iter(a).__next__()
+    unit = a[0]
     __cmp(__kw_key(unit), __kw_key(x))
 
 
@@ -19,7 +20,10 @@ def bisect_left(a, x, lo=0, hi=-1, __kw_key=None):
     bisect(a, x, key=__kw_key)
     return 1
 def bisect(a, x, lo=0, hi=-1, __kw_key=None):
+    # any sequence: __getitem__, plus __len__ when 'hi' is omitted (and
+    # insert() for insort), as in CPython
+    len(a)
     __cmp(x, x)
-    unit = iter(a).__next__()
+    unit = a[0]
     __cmp(__kw_key(unit), x)
     return 1

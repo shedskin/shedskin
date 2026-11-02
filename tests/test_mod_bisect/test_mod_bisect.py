@@ -1,4 +1,6 @@
+import array
 import bisect
+import collections
 
 
 def test_bisect():
@@ -236,6 +238,92 @@ def test_hi_keyword():
     assert l == [1, 2, 4, 3, 4]
 
 
+class Seq:
+    # only __getitem__ and __len__, like a minimal CPython sequence
+    def __init__(self, n):
+        self.n = n
+        self.inserted = []
+
+    def __getitem__(self, i):
+        assert 0 <= i < self.n
+        return i * 10
+
+    def __len__(self):
+        return self.n
+
+    def insert(self, i, x):
+        self.inserted.append((i, x))
+
+
+class NoLen:
+    # without __len__, CPython only needs it when hi is omitted
+    def __getitem__(self, i):
+        return i * 10
+
+
+def test_sequences():
+    # tuple
+    t = (1, 2, 2, 3)
+    assert bisect.bisect_left(t, 2) == 1
+    assert bisect.bisect_right(t, 2) == 3
+    assert bisect.bisect(t, 2) == 3
+    assert bisect.bisect_left(t, 2, 2) == 2
+    assert bisect.bisect_right(t, 2, 0, 2) == 2
+    assert bisect.bisect(t, 0, hi=2) == 0
+    assert bisect.bisect_left(t, 4, key=lambda v: v * 2) == 1
+    ts = ('a', 'bb', 'ccc')
+    assert bisect.bisect_left(ts, 2, key=len) == 1
+    assert bisect.bisect_right(ts, 2, key=len) == 2
+    try:
+        bisect.bisect(t, 2, 0, 10)
+        assert False
+    except IndexError as e:
+        assert str(e) == 'tuple index out of range'
+    try:
+        bisect.bisect(t, 2, -1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'lo must be non-negative'
+
+    # str, bytes
+    assert bisect.bisect_left('abcd', 'c') == 2
+    assert bisect.bisect_right('aabb', 'a') == 2
+    assert bisect.bisect_left(b'abcd', ord('c')) == 2
+    assert bisect.bisect_right(bytearray(b'aabb'), ord('a')) == 2
+
+    # deque and array have insert(), so insort works too
+    d = collections.deque([1, 3, 5])
+    assert bisect.bisect_left(d, 3) == 1
+    bisect.insort(d, 4)
+    bisect.insort_left(d, 0)
+    bisect.insort_right(d, 6, key=lambda v: v)
+    assert list(d) == [0, 1, 3, 4, 5, 6]
+    ar = array.array('i', [1, 3, 5])
+    assert bisect.bisect_right(ar, 3) == 2
+    bisect.insort(ar, 2)
+    assert list(ar) == [1, 2, 3, 5]
+
+    # user classes
+    s = Seq(8)
+    assert bisect.bisect_left(s, 35) == 4
+    assert bisect.bisect_right(s, 30) == 4
+    assert bisect.bisect(s, 30, 0, 3) == 3
+    assert bisect.bisect_left(s, 3, key=lambda v: v // 10) == 3
+    bisect.insort(s, 15)
+    bisect.insort_left(s, 20)
+    bisect.insort_right(s, 20, 0, 2)
+    assert s.inserted == [(2, 15), (2, 20), (2, 20)]
+
+    n = NoLen()
+    assert bisect.bisect_right(n, 35, 0, 100) == 4
+    assert bisect.bisect_left(n, 35, hi=1000) == 4
+    try:
+        bisect.bisect(n, 35)
+        assert False
+    except TypeError as e:
+        assert str(e) == "object of type 'NoLen' has no len()"
+
+
 def test_all():
     test_bisect()
     test_bisect_insort()
@@ -244,6 +332,7 @@ def test_all():
     test_hi_out_of_range()
     test_insort_left_key()
     test_hi_keyword()
+    test_sequences()
 
 
 if __name__ == '__main__':
