@@ -710,6 +710,50 @@ def test_bytearray_join_single():
     assert repr(s) == "bytearray(b'a')"
 
 
+JOIN_BA = bytearray(b'ab')
+
+
+def join_gen():
+    yield JOIN_BA
+    JOIN_BA.extend(b'x' * 200)
+    yield b'yz'
+
+
+def join_gen2():
+    yield JOIN_BA
+    JOIN_BA.clear()
+    yield b'q'
+
+
+def join_gen3():
+    yield JOIN_BA
+    JOIN_BA.extend(b'ef')
+    yield bytearray(b'g')
+
+
+def test_bytearray_join_resized_during_iteration():
+    # an element resized while the iterable was consumed overflowed the result (1031-A1)
+    JOIN_BA[:] = b'ab'
+    r = b''.join(join_gen())
+    assert len(r) == 204
+    assert r[-3:] == b'xyz'
+    JOIN_BA[:] = b'ab'
+    r = b'-'.join(join_gen())
+    assert len(r) == 205
+    assert r[:3] == b'abx'
+    assert r[-4:] == b'x-yz'
+
+    JOIN_BA[:] = b'c'
+    assert b''.join(join_gen2()) == b'q'
+    JOIN_BA[:] = b'c'
+    assert bytearray(b',').join(join_gen2()) == bytearray(b',q')
+
+    JOIN_BA[:] = b'd'
+    assert b''.join(join_gen3()) == b'defg'
+    JOIN_BA[:] = b'd'
+    assert bytearray(b'').join(join_gen3()) == bytearray(b'defg')
+
+
 def test_bytearray_explicit_dunder_calls():
     # an explicit __setitem__ call was emitted without arguments (1030-C9)
     ba = bytearray(b'abc')
@@ -758,6 +802,7 @@ def test_all():
     test_bytearray_take_bytes()
     test_bytearray_from_non_int_iterable()
     test_bytearray_join_single()
+    test_bytearray_join_resized_during_iteration()
     test_bytearray_explicit_dunder_calls()
 
 
