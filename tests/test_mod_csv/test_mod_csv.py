@@ -69,6 +69,8 @@ def test_program():
     bla.close()
     rd.fieldnames = fieldnames
     assert rd.fieldnames == ['hop', 'hap', 'ole', 'aap']
+    rd.fieldnames = ('hap', 'hop')  # any sequence (note: CPython keeps the tuple)
+    assert list(rd.fieldnames) == ['hap', 'hop']
     # print(open(csvfile_out).read())
 
     csv.DictReader(

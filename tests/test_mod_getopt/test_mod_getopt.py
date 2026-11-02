@@ -151,7 +151,7 @@ def test_long_option_empty_argument_rejected():
     # '--foo=' supplies an argument (the empty string), which is not
     # the same as supplying no argument at all. Even though '' is
     # falsy, a no-argument long option must still reject it, the same
-    # way CPython's getopt.getopt(['--foo='], '', ['foo']) does.
+    # way CPython's getopt(['--foo='], '', ['foo']) does.
     error_msg = None
     error_opt = None
     try:
@@ -290,6 +290,18 @@ def test_error_constructor_opt():
     assert msg == "raised"
 
 
+def test_tuple_args():
+    # args may be a tuple: getopt() returns a trailing slice (so a tuple),
+    # gnu_getopt() always returns a list
+    assert getopt(('-a', 'x'), 'a') == ([('-a', '')], ('x',))
+    assert getopt(('x',), 'a') == ([], ('x',))
+    assert getopt(('-a', '--long', 'x'), 'a', ['long']) == ([('-a', ''), ('--long', '')], ('x',))
+    assert getopt(('--long=v', 'x'), '', 'long=') == ([('--long', 'v')], ('x',))
+    assert gnu_getopt(('x', '-a'), 'a') == ([('-a', '')], ['x'])
+    assert gnu_getopt(('x', '-a', '--long'), 'a', ('long',)) == ([('-a', ''), ('--long', '')], ['x'])
+    assert gnu_getopt(('x', '--long'), '', 'long') == ([('--long', '')], ['x'])
+
+
 def test_all():
     test_getopt()
     test_getopt_stops_at_first_nonoption()
@@ -308,6 +320,7 @@ def test_all():
     test_optional_arguments()
     test_error_str_args_repr()
     test_error_constructor_opt()
+    test_tuple_args()
 
 if __name__ == '__main__':
     test_all()

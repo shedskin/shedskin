@@ -73,6 +73,16 @@ def test_rawconfigparser():
     assert items['pages'] == '250'
     assert items['hop'] == 'True'
 
+def test_read_iterables():
+    # filenames may be any iterable of str
+    for files in [(datafile, '/nonexistent_cp'), (datafile,)]:
+        rcp = configparser.RawConfigParser()
+        assert rcp.read(files) == [datafile]
+        assert rcp.get('ematter', 'pages') == '250'
+    rcp = configparser.RawConfigParser()
+    assert rcp.read(f for f in ['/nonexistent_cp', datafile]) == [datafile]
+    assert rcp.read({'/nonexistent_cp'}) == []
+
 def test_items_all_sections():
     rcp = configparser.RawConfigParser()
     rcp.read([datafile])
@@ -1405,6 +1415,7 @@ def test_all():
     test_configparser()
     test_write_and_reread()
     test_rawconfigparser()
+    test_read_iterables()
     test_items_all_sections()
     test_items_raw_and_vars()
     test_defaults_section()

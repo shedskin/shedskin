@@ -404,6 +404,7 @@ public:
     list<str *> *sections();
     list<str *> *read(str *filename, str *encoding=0);
     list<str *> *read(list<str *> *filenames, str *encoding=0);
+    list<str *> *read(pyiter<str *> *filenames, str *encoding=0) { return read(new list<str *>(filenames), encoding); } /* tuple, set, generator.. */
     void *read_string(str *string_, str *source=NULL);
     void *read_dict(dict<str *, dict<str *, str *> *> *dictionary, str *source=NULL);
     void *read_file(file *fp, str *source=NULL);
