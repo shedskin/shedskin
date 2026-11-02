@@ -266,6 +266,32 @@ def test_crlf_ignore():
         g.write(b'a\r\xff\nb\r\xc3\xa9\nc\r\xffd')
     with open('ctest.txt', errors='ignore', newline='') as f:
         assert f.readlines() == ['a\r\n', 'b\r', '\xe9\n', 'c\r', 'd']
+    # .. also a cut-short utf-8 sequence, which later bytes could still complete (1031-B1)
+    for data in [b'a\r\xe2\nb\n', b'a\r\xe2\x82\nb\n', b'a\r\xf0\x9f\x98\nb', b'a\r\x80\xe2\nb',
+                 b'a\r\xc3\xe2\x82\nb', b'a\r\xff\xff\xff\xe2\x82\nb']:
+        with open('ctest.txt', 'wb') as g:
+            g.write(data)
+        with open('ctest.txt', errors='ignore', newline='') as f:
+            assert f.readlines() == ['a\r\n', 'b\n' if data.endswith(b'\n') else 'b']
+        with open('ctest.txt', errors='ignore', newline='') as f:
+            assert f.readline(2) == 'a\r'
+            assert f.readline() == '\n'
+    with open('ctest.txt', 'wb') as g:
+        g.write(b'a\r\xe2\x82\xacb\r\xf0\x9f\x98\x80\nc\r\xe2')
+    with open('ctest.txt', errors='ignore', newline='') as f:
+        assert f.readlines() == ['a\r', '€b\r', '\U0001f600\n', 'c\r']
+    # tell() (or seek, or a write) after '\r', '\n' and ignored bytes between (1031-B2)
+    with open('ctest.txt', 'wb') as g:
+        g.write(b'x\r\xff\nyz\r\xe2\x82\nw')
+    with open('ctest.txt', errors='ignore') as f:
+        assert f.readline() == 'x\n'
+        pos = f.tell()
+        assert pos == 4
+        assert f.readline() == 'yz\n'
+        assert f.tell() == 10
+        assert f.read() == 'w'
+        f.seek(pos)
+        assert f.read() == 'yz\nw'
     os.remove('ctest.txt')
 
 

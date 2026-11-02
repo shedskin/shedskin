@@ -203,15 +203,51 @@ str *file::__decode_cache() {
     return s;
 }
 
+/* after a '\r': take the '\n' of a '\r\n', if one follows. with
+   errors='ignore', bytes that decode to nothing may come in between, as
+   CPython translates newlines only after decoding: these are dropped either
+   way (the '\r' is a sequence boundary, so they decode to nothing whatever
+   follows). a cut-short utf-8 sequence may still be completed by the bytes
+   after it, so look ahead (and push back) up to a whole sequence */
+static bool __take_lf(FILE *f, __ss_encoding enc, __ss_errors err) {
+    char la[4]; /* lookahead: (the start of) a single character */
+    size_t m = 0;
+    bool eof = false;
+    if(err == __SS_ERR_IGNORE) {
+        for(;;) {
+            if(!eof && (!m || (m < sizeof(la) && !__ignored_prefix(la, m, enc, false) &&
+                               __ignored_prefix(la, m, enc, true) == m))) { /* undecided: need more */
+                int d = GETC(f);
+                if(d != EOF) {
+                    la[m++] = (char)d;
+                    continue;
+                }
+                eof = true;
+            }
+            size_t k = m ? __ignored_prefix(la, m, enc, eof) : 0;
+            if(!k)
+                break;
+            memmove(la, la + k, m - k);
+            m -= k;
+        }
+    } else {
+        int d = GETC(f);
+        if(d != EOF)
+            la[m++] = (char)d;
+    }
+    bool lf = m && la[0] == '\n';
+    while(m > size_t(lf)) /* (more than the one byte of ungetc that C guarantees, see __give_back) */
+        ungetc((unsigned char)la[--m], f);
+    return lf;
+}
+
 /* universal newlines translate '\r\n' lazily: after a '\r', the next read
    skips a '\n' (so reading a line never blocks on the character after it).
    settle that before the file position is used or changed */
-static void __settle_cr(FILE *f, __file_options &options) {
+static void __settle_cr(FILE *f, __file_options &options, __ss_encoding enc, __ss_errors err) {
     if(options.cr) {
         options.cr = false;
-        int c = GETC(f);
-        if(c != '\n' && c != EOF)
-            ungetc(c, f);
+        __take_lf(f, enc, err);
     }
 }
 
@@ -241,10 +277,11 @@ bool file::__skip_lf(int c, size_t &cr_at, __char_counter &cc, size_t n) {
 /* C stdio needs a file positioning call when switching between reading and
    writing the same stream (C11 7.21.5.3). glibc does not care, but macOS and
    windows lose or misplace the data otherwise */
-static inline void __switch_op(FILE *f, __file_options &options, char op) {
+static inline void __switch_op(FILE *f, __file_options &options, char op,
+                               __ss_encoding enc=__SS_ENC_UTF8, __ss_errors err=__SS_ERR_STRICT) {
     if(options.last_op != op) {
         if(options.last_op && f) {
-            __settle_cr(f, options);
+            __settle_cr(f, options, enc, err);
             fseek(f, 0, SEEK_CUR);
         }
         options.last_op = op;
@@ -254,7 +291,7 @@ static inline void __switch_op(FILE *f, __file_options &options, char op) {
 __ss_int file::write(str *s) {
     __ss_int size = -1;
     __check_closed();
-    __switch_op(f, options, 'w');
+    __switch_op(f, options, 'w', __encoding, __errors);
     if(f) {
         __GC_BYTES b;
         if (__bom_pending) {
@@ -298,7 +335,7 @@ __ss_int file::seek(__ss_int i, __ss_int w) {
     if(i < 0)
         throw new ValueError(__add_strs(2, new str("negative seek position "), __str(i)));
     if(f) {
-        __settle_cr(f, options);
+        __settle_cr(f, options, __encoding, __errors);
         if(fseek(f, i, (int)w) == -1)
             __throw_oserror();
         return tell(); /* the new absolute position */
@@ -309,7 +346,7 @@ __ss_int file::seek(__ss_int i, __ss_int w) {
 __ss_int file::tell() {
     __check_closed();
     if(f) {
-        __settle_cr(f, options);
+        __settle_cr(f, options, __encoding, __errors);
         long status = ftell(f);
         if(status == -1)
             __throw_oserror();
@@ -334,7 +371,7 @@ static void __give_back(FILE *f, __GC_VECTOR(char) &cache, size_t k) {
 
 str *file::readline(__ss_int n) {
     __check_closed();
-    __switch_op(f, options, 'r');
+    __switch_op(f, options, 'r', __encoding, __errors);
     __read_cache.clear();
     __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
@@ -371,18 +408,12 @@ str *file::readline(__ss_int n) {
             if(c == '\n')
                 break;
             if(c == '\r' && options.split_cr) { /* '\r' or '\r\n' ends the line too */
-                int d = GETC(f);
-                if(__errors == __SS_ERR_IGNORE) { /* skip bytes that decode to nothing (see __skip_lf).
-                    XXX a cut-short utf-8 sequence would need more than one byte of ungetc */
-                    for(char b = (char)d; d != EOF && __ignored_prefix(&b, 1, __encoding, false); b = (char)d) {
-                        __read_cache.push_back(b);
-                        d = GETC(f);
-                    }
+                if(__take_lf(f, __encoding, __errors)) {
+                    if(cc.chars < size_t(n))
+                        __read_cache.push_back('\n');
+                    else
+                        ungetc('\n', f);
                 }
-                if(d == '\n' && cc.chars < size_t(n))
-                    __read_cache.push_back('\n');
-                else if(d != EOF)
-                    ungetc(d, f);
                 break;
             }
         }
@@ -400,7 +431,7 @@ static void __throw_io_error() {
 
 str *file::read(__ss_int n) {
     __check_closed();
-    __switch_op(f, options, 'r');
+    __switch_op(f, options, 'r', __encoding, __errors);
     __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
         __read_cache.clear();
