@@ -123,14 +123,18 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline)
     this->encoding = encoding ? encoding : new str("utf-8");
     this->errors = errors ? errors : new str("strict");
 
-    /* newline='' or '\n': no translation in either direction, so also
-       none by the C runtime (Windows text mode) */
-    bool untranslated = false;
+    /* the file is always opened in binary mode: we translate newlines
+       ourselves. the C runtime's text mode (Windows) would translate '\r\n'
+       a second time, stop at a ctrl-z, and make ftell() count every '\n' in
+       its buffer as a '\r\n', also when it was a lone '\n' on disk */
+#ifdef WIN32
+    options.crlf_out = true; /* newline=None writes os.linesep */
+#endif
     if (newline) {
         if (newline->unit.empty() || newline->unit == U"\n") {
             options.universal_mode = false;
             options.split_cr = newline->unit.empty();
-            untranslated = true;
+            options.crlf_out = false;
         } else if (newline->unit == U"\r" || newline->unit == U"\r\n")
             throw new ValueError(__add_strs(3, new str("newline="), repr(newline), new str(" is not supported by shedskin (only None, '' and '\\n')")));
         else
@@ -140,7 +144,7 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline)
     if (!flags)
         flags = __char_cache['r'];
     str *cflags = flags;
-    if (untranslated && cflags->unit.find('b') == std::string::npos)
+    if (cflags->unit.find('b') == std::string::npos)
         cflags = new str(cflags->unit + __gcs("b"));
     f = __ss_fopen(file_name, cflags);
     if(f == 0)
@@ -298,13 +302,25 @@ __ss_int file::write(str *s) {
             __bom_pending = false;
             b = "\xef\xbb\xbf";
         }
+        if (options.crlf_out && s->unit.find(U'\n') != std::string::npos) {
+            str *t = new str();
+            t->unit.reserve(s->unit.size() + 16);
+            for (char32_t c : s->unit) {
+                if (c == U'\n')
+                    t->unit += U'\r';
+                t->unit += c;
+            }
+            size = (__ss_int)s->unit.size(); /* (the untranslated characters) */
+            s = t;
+        }
         if (__encoding == __SS_ENC_UTF8 && __errors == __SS_ERR_SURROGATEESCAPE && b.empty())
             b = __to_utf8_se(s); /* fast path (standard streams) */
         else
             __encode_into(b, s, __encoding, __errors, errors);
         if(FWRITE(b.data(), 1, b.size(), f) != b.size() and __error())
             __throw_oserror();
-        size = (__ss_int)s->unit.size(); /* characters written, as CPython */
+        if (size < 0)
+            size = (__ss_int)s->unit.size(); /* characters written, as CPython */
     }
     return size;
 }

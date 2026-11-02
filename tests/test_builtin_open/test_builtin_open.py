@@ -758,6 +758,31 @@ def test_pending_cr_seek_tell():
         assert f.tell() == 6
         f.seek(3)
         assert f.read() == 'b\n'
+    # .. also with lone '\n's (windows text mode ftell() counts each as '\r\n')
+    with open('ucr2.bin', 'wb') as g:
+        g.write(b'a\nbc\nd\x1ae\r\nf')
+    with open('ucr2.bin') as f:
+        assert f.readline() == 'a\n'
+        assert f.tell() == 2
+        assert f.readline() == 'bc\n'
+        assert f.tell() == 5
+        assert f.readline() == 'd\x1ae\n'  # (no ctrl-z eof)
+        assert f.tell() == 10
+        assert f.read() == 'f'
+        f.seek(2)
+        assert f.read() == 'bc\nd\x1ae\nf'
+    # newline=None writes os.linesep
+    with open('ucr2.bin', 'w') as f:
+        assert f.write('a\nb\r\n') == 5
+    with open('ucr2.bin', 'rb') as g:
+        if sys.platform == 'win32':
+            assert g.read() == b'a\r\nb\r\r\n'
+        else:
+            assert g.read() == b'a\nb\r\n'
+    with open('ucr2.bin', 'w', newline='') as f:
+        f.write('a\nb')
+    with open('ucr2.bin', 'rb') as g:
+        assert g.read() == b'a\nb'
     os.remove('ucr2.bin')
 
 
