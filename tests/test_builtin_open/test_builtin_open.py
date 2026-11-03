@@ -152,9 +152,13 @@ def test_lineendings():
      with open(lf_txt, "r") as f4b:
          assert f4b.read() == "hello world\nbye\n"
 
-     with open(crlf_txt, "w") as f5:
+     # (newline='': on windows, newline=None would write '\r\r\n')
+     with open(crlf_txt, "w", newline='') as f5:
          f5.write("hello world\r\n")
          f5.write("bye\r\n")
+
+     with open(crlf_txt, "rb") as f6r:
+         assert f6r.read() == b"hello world\r\nbye\r\n"
 
      with open(crlf_txt, "r") as f6:
          assert list(f6) == ["hello world\n", "bye\n"]
