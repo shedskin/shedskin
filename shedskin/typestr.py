@@ -123,6 +123,15 @@ def polymorphic_cl(
         python.def_class(gx, "tuple") in cls or python.def_class(gx, "tuple2") in cls
     ):  # XXX hmm
         cls.remove(python.def_class(gx, "tuple3"))
+    # a library subclass of tuple (e.g. sys.version_info) combined with a
+    # (homogeneous) tuple2/tuple3, such as (3, 8): use tuple, as in C++
+    tuple_cl = python.def_class(gx, "tuple")
+    if any(isinstance(cl, python.Class) and tuple_cl in cl.ancestors() for cl in cls):
+        for ident in ("tuple2", "tuple3"):
+            cl = python.def_class(gx, ident)
+            if cl in cls:
+                cls.remove(cl)
+                cls.add(tuple_cl)
     return cls
 
 
