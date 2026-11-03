@@ -43,6 +43,16 @@ def is_assign_list_or_tuple(node: ast.AST) -> bool:
     return isinstance(node, (ast.Tuple, ast.List)) and isinstance(node.ctx, ast.Store)
 
 
+def has_starred(node: ast.AST) -> bool:
+    """Check if a node is an assignment to a list or tuple with a starred
+    item (extended unpacking, e.g. 'a, *b = ..')"""
+    return (
+        isinstance(node, (ast.Tuple, ast.List))
+        and isinstance(node.ctx, ast.Store)
+        and any(isinstance(elt, ast.Starred) for elt in node.elts)
+    )
+
+
 def is_assign_tuple(node: ast.AST) -> bool:
     """Check if a node is an assignment to a tuple"""
     return isinstance(node, ast.Tuple) and isinstance(node.ctx, ast.Store)
@@ -222,6 +232,7 @@ def is_enumerate(
         and len(node.iter.args) == 1
         and not node.iter.keywords  # TODO start arg not supported
         and is_assign_list_or_tuple(node.target)
+        and not has_starred(node.target)
     )
 
 
@@ -238,13 +249,18 @@ def is_zip2(
         and not _is_shadowed("zip", parent, mv)
         and len(node.iter.args) == 2
         and is_assign_list_or_tuple(node.target)
+        and not has_starred(node.target)
     )
 
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 def assign_rec(left: ast.AST, right: ast.AST) -> list[tuple[ast.AST, ast.AST]]:
     """Recursively determine (lvalue, rvalue) pairs in assignment expressions"""
-    if is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
+    if (
+        is_assign_list_or_tuple(left)
+        and isinstance(right, (ast.Tuple, ast.List))
+        and not has_starred(left)  # unpacked as a whole
+    ):
         assert isinstance(left, (ast.Tuple, ast.List))
         pairs = []
         for lvalue, rvalue in zip(left.elts, right.elts):
@@ -269,7 +285,11 @@ def check_assign_arity(left: ast.AST, right: ast.AST) -> Optional[tuple[int, int
     from a non-literal iterable is still checked at runtime via
     __SS_UNPACK_CHECK.
     """
-    if is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
+    if (
+        is_assign_list_or_tuple(left)
+        and isinstance(right, (ast.Tuple, ast.List))
+        and not has_starred(left)  # unpacked as a whole
+    ):
         assert isinstance(left, (ast.Tuple, ast.List))
         if len(left.elts) != len(right.elts):
             return (len(left.elts), len(right.elts))

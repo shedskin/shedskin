@@ -2468,6 +2468,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.struct_unpack(rvalue2, func)
                 and isinstance(rvalue2, ast.Call)  # TODO double check
                 and ast_utils.is_assign_list_or_tuple(lvalue2)
+                and not ast_utils.has_starred(lvalue2)
                 and isinstance(lvalue2, (ast.List, ast.Tuple))  # TODO double check
                 and not [
                     n for n in lvalue2.elts if ast_utils.is_assign_list_or_tuple(n)
@@ -2653,7 +2654,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             assert isinstance(lvalue, (ast.Tuple, ast.List))
             lvalues = lvalue.elts
 
+        after_star = False
         for i, item in enumerate(lvalues):
+            after_star = after_star or isinstance(item, ast.Starred)
             fakenode = infer.CNode(
                 self.gx, getmv(), (item,), parent=func
             )  # fake node per item, for multiple callfunc triggers
@@ -2662,23 +2665,34 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             fakefunc = ast.Call(
                 ast.Attribute(_as_expr(rvalue), "__getunit__", ast.Load()),
-                [ast.Constant(i)],
+                [ast.Constant(i - len(lvalues) if after_star else i)],  # a, *b, c
                 [],
             )
 
             fakenode.callfuncs.append(fakefunc)
             self.visit_Call(fakefunc, func, fake_attr=True)
 
+            value: ast.AST = fakefunc
             self.gx.item_rvalue[item] = rvalue
+
+            # a, *b, c = ..: b becomes a new list, holding the remaining units
+            if isinstance(item, ast.Starred):
+                value = ast.List([], ast.Load())
+                self.visit(value, func)
+                self.add_dynamic_constraint(value, fakefunc, "unit", func)
+                self.temp_var2(item, infer.inode(self.gx, value), func)
+                self.gx.item_rvalue[item] = value
+                item = item.value
+
             if isinstance(item, ast.Name):
                 lvar = self.default_var(item.id, func)
                 self.add_constraint(
-                    (infer.inode(self.gx, fakefunc), infer.inode(self.gx, lvar)), func
+                    (infer.inode(self.gx, value), infer.inode(self.gx, lvar)), func
                 )
             elif isinstance(item, ast.Subscript) or ast_utils.is_assign_attribute(item):
-                self.assign_pair(item, fakefunc, func)
+                self.assign_pair(item, value, func)
             elif ast_utils.is_assign_list_or_tuple(item):  # recursion
-                self.tuple_flow(item, fakefunc, func)
+                self.tuple_flow(item, value, func)
             else:
                 error.error("unsupported type of assignment", self.gx, item, mv=getmv())
 

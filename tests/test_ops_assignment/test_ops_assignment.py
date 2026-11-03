@@ -364,6 +364,67 @@ def test_unpack17():
     assert (e, f, g, h) == (1, 2, 1, 2)
 
 
+class UnpackStar:
+    def __init__(self):
+        self.x = [0]
+
+
+def test_unpack18():
+    # extended iterable unpacking (#1484)
+    a, *rest, b = [1, 2, 3, 4]
+    assert (a, rest, b) == (1, [2, 3], 4)
+    *rest, b = (1, 2, 3)
+    assert (rest, b) == ([1, 2], 3)
+    a, *rest = range(3)
+    assert (a, rest) == (0, [1, 2])
+    a, *rest, b = iter([1, 2])
+    assert (a, rest, b) == (1, [], 2)
+    *rest, = {5}
+    assert rest == [5]
+    a, *rest = b'xyz'
+    assert (a, rest) == (120, [121, 122])
+    a, *rest = unpack_gen(3)
+    assert (a, rest) == (1, [2, 3])
+    [c, *s] = 'hoi'
+    assert (c, s) == ('h', ['o', 'i'])
+
+    # starred attribute, subscript and nested targets
+    q = UnpackStar()
+    a, *q.x = [1, 2, 3]
+    assert (a, q.x) == (1, [2, 3])
+    l = [[0], [0]]
+    a, *l[1], b = [1, 2, 3, 4]
+    assert (a, l, b) == (1, [[0], [2, 3]], 4)
+    a, *(e, f) = [1, 2, 3]
+    assert (a, e, f) == (1, 2, 3)
+    (a, *rest), b = [1, 2, 3], 4
+    assert (a, rest, b) == (1, [2, 3], 4)
+
+    # loops and comprehensions
+    for a, *rest in [(1, 2, 3)]:
+        assert (a, rest) == (1, [2, 3])
+    for a, *rest in {1: 2}.items():
+        assert (a, rest) == (1, [2])
+    for a, *rest in enumerate([7]):
+        assert (a, rest) == (0, [7])
+    for a, *rest in zip([1], [2]):
+        assert (a, rest) == (1, [2])
+    assert [s for c, *s in ['abc', 'de']] == [['b', 'c'], ['e']]
+    assert [(a, b, q.x) for a, *(b, *q.x) in [[1, 2, 3, 4], [5, 6]]] == \
+        [(1, 2, [3, 4]), (5, 6, [])]
+
+    try:
+        a, *rest, b = [1]
+        assert False
+    except ValueError:
+        pass
+    try:
+        a, b, *rest = iter([1])
+        assert False
+    except ValueError:
+        pass
+
+
 def test_all():
     test_assign_int()
     test_assign_list()
@@ -386,6 +447,7 @@ def test_all():
     test_unpack15()
     test_unpack16()
     test_unpack17()
+    test_unpack18()
     test_walrus()
     test_walrus2()
     test_walrus3()
