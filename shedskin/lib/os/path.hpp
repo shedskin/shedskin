@@ -58,7 +58,7 @@ str *commonpath(list<str *> *paths);
 inline str *commonpath(pyiter<str *> *paths) { return commonpath(new list<str *>(paths)); } /* tuple, set, generator.. */
 
 __ss_bool samefile(str *f1, str *f2);
-__ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2);
+__ss_bool samestat(__os__::stat_result *s1, __os__::stat_result *s2);
 __ss_bool sameopenfile(__ss_int fp1, __ss_int fp2);
 __ss_bool isdevdrive(str *path);
 __ss_bool ismount(str *path);

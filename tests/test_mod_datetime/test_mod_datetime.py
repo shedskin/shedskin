@@ -770,6 +770,24 @@ def test_date_fromtimestamp_floor():
         pass
 
 
+def test_isocalendar_date():
+    # a tuple, with the items also as attributes
+    ic = datetime.date(2026, 11, 3).isocalendar()
+    assert ic.year == 2026 and ic.week == 45 and ic.weekday == 2
+    assert ic == (2026, 45, 2) and len(ic) == 3 and ic[1] == 45 and ic[-1] == 2
+    assert ic[:2] == (2026, 45)
+    assert hash(ic) == hash((2026, 45, 2))
+    assert repr(ic) == 'datetime.IsoCalendarDate(year=2026, week=45, weekday=2)'
+    assert str(ic) == repr(ic)
+    assert '%d-W%02d-%d' % ic == '2026-W45-2'
+    year, week, day = ic
+    assert (year, week, day) == (2026, 45, 2)
+    assert datetime.date.fromisocalendar(ic.year, ic.week, ic.weekday) == datetime.date(2026, 11, 3)
+    dic = datetime.datetime(2021, 1, 3, 12, 30).isocalendar()
+    assert dic.year == 2020 and dic.week == 53 and dic.weekday == 7
+    assert sorted([ic, dic]) == [(2020, 53, 7), (2026, 45, 2)]
+
+
 def test_fromisocalendar():
     # inverse of isocalendar(): round-trip a few dates, including ones where
     # the ISO year differs from the calendar year
@@ -1402,6 +1420,7 @@ def test_all():
         test_datetime_fromtimestamp_round_half_even()
         test_date_fromtimestamp_floor()
         test_fromisocalendar()
+        test_isocalendar_date()
         test_date_time_strptime()
         test_isoformat_timespec()
         test_fold()

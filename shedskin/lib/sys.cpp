@@ -223,6 +223,7 @@ __int_info::__int_info() {
     sizeof_digit = (__ss_int)sizeof(__ss_int);
     default_max_str_digits = 0; /* no limit, see flags.int_max_str_digits */
     str_digits_check_threshold = 640; /* CPython's lowest non-zero limit */
+    this->units.assign({bits_per_digit, sizeof_digit, default_max_str_digits, str_digits_check_threshold});
 }
 
 str *__int_info::__repr__() {

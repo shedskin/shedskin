@@ -91,7 +91,7 @@ public:
 
 /* describes __ss_int (one fixed-width 'digit'), so it stays honest
    under --int32/--int128 */
-class __int_info : public pyobj {
+class __int_info : public tuple2<__ss_int, __ss_int> { /* a tuple, with the items also as attributes */
 public:
     __ss_int bits_per_digit, sizeof_digit, default_max_str_digits, str_digits_check_threshold;
 

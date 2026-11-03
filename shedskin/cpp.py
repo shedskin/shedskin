@@ -5337,6 +5337,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 t
                 for t in self.gx.merged_inh[node.right]
                 if t[0].ident in ["tuple", "tuple2", "tuple3"]
+                or (  # library subclass, such as os.terminal_size
+                    isinstance(t[0], python.Class)
+                    and python.def_class(self.gx, "tuple") in t[0].ancestors()
+                )
             ]
         ):
             self.visitm("__modtuple(", node.left, ", ", node.right, ")", func)

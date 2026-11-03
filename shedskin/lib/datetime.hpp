@@ -33,6 +33,16 @@ class time;
 //todo:
 //check (unsigned) integer/long ranges (arguments as well)
 
+/* returned by isocalendar(): a tuple, with the items also as attributes */
+extern class_ *cl___IsoCalendarDate;
+class __IsoCalendarDate : public tuple2<__ss_int, __ss_int> {
+public:
+    __ss_int year, week, weekday;
+
+    __IsoCalendarDate(__ss_int year, __ss_int week, __ss_int weekday);
+    str *__repr__();
+};
+
 //class date
 extern class_ *cl_date;
 class date : public pyobj {
@@ -62,7 +72,7 @@ public:
     __ss_int toordinal();                                    //copied from cpython
     __ss_int weekday();                                      //copied from cpython
     __ss_int isoweekday();                                   //copied from cpython
-    tuple2<__ss_int, __ss_int> *isocalendar();
+    __IsoCalendarDate *isocalendar();
     str *isoformat();
     str *__str__();
     str *__repr__();

@@ -56,16 +56,7 @@ str *const_0, *const_1;
 
 class_ *cl_struct_time;
 
-__ss_int struct_time::__getitem__(__ss_int n) {
-
-    return ((new tuple2<__ss_int, __ss_int>(9,
-        this->tm_year, this->tm_mon,
-        this->tm_mday, this->tm_hour, this->tm_min, this->tm_sec,
-        this->tm_wday, this->tm_yday,
-        this->tm_isdst)))->__getitem__(n);
-}
-
-struct_time::struct_time(tuple2<__ss_int, __ss_int> *_tuple) {
+struct_time::struct_time(tuple2<__ss_int, __ss_int> *_tuple) : tuple2<__ss_int, __ss_int>(_tuple) {
     this->__class__ = cl_struct_time;
 
     if ((len(_tuple)!=9)) {
@@ -85,31 +76,6 @@ struct_time::struct_time(tuple2<__ss_int, __ss_int> *_tuple) {
 str *struct_time::__repr__() {
 
     return __mod6(const_1, 9, this->tm_year, this->tm_mon, this->tm_mday, this->tm_hour, this->tm_min, this->tm_sec, this->tm_wday, this->tm_yday, this->tm_isdst);
-}
-
-__ss_int struct_time::__len__() {
-    return 9;
-}
-
-__ss_bool struct_time::__eq__(pyobj *p) {
-    struct_time *b = (struct_time *)p;
-    return __mbool(tm_year==b->tm_year && tm_mon==b->tm_mon && tm_mday==b->tm_mday &&
-                    tm_hour==b->tm_hour && tm_min==b->tm_min && tm_sec==b->tm_sec &&
-                    tm_wday==b->tm_wday && tm_yday==b->tm_yday && tm_isdst==b->tm_isdst);
-}
-
-__ss_int struct_time::__cmp__(pyobj *p) {
-    if (!p) return 1;
-    struct_time *b = (struct_time *)p;
-    if(__ss_int c = __cmp(tm_year, b->tm_year)) return c;
-    if(__ss_int c = __cmp(tm_mon, b->tm_mon)) return c;
-    if(__ss_int c = __cmp(tm_mday, b->tm_mday)) return c;
-    if(__ss_int c = __cmp(tm_hour, b->tm_hour)) return c;
-    if(__ss_int c = __cmp(tm_min, b->tm_min)) return c;
-    if(__ss_int c = __cmp(tm_sec, b->tm_sec)) return c;
-    if(__ss_int c = __cmp(tm_wday, b->tm_wday)) return c;
-    if(__ss_int c = __cmp(tm_yday, b->tm_yday)) return c;
-    return __cmp(tm_isdst, b->tm_isdst);
 }
 
 /* like CPython's gettmarg(), which parses each field as a C int: raise

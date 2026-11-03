@@ -72,8 +72,10 @@ class __clock_info:
 def get_clock_info(name):
     return __clock_info()
 
-class struct_time(pyseq):
+# a tuple, with the items also as attributes (and tm_zone, tm_gmtoff)
+class struct_time(tuple):
     def __init__(self, tuple):
+        self.unit = 0
         self.tm_year = 0
         self.tm_mon = 0
         self.tm_mday = 0
@@ -85,15 +87,12 @@ class struct_time(pyseq):
         self.tm_isdst = 0
         self.tm_zone = ''
         self.tm_gmtoff = 0
-        self.unit = self.tm_year
-    def __getitem__(self, n):
-        return 1
-    def __len__(self):
-        return 9
-    def __iter__(self):
-        return __iter(self.tm_year)
+    def __slice__(self, x, l, u, s):
+        return (self.unit,)
+    def __mul__(self, n):
+        return (self.unit,)
     def __repr__(self):
-        return "str"
+        return ''
 
 def mktime(tuple):
     return 1.0

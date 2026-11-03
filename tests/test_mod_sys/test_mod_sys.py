@@ -369,6 +369,13 @@ def test_int_info():
     assert ii.default_max_str_digits >= 0
     assert ii.str_digits_check_threshold == 640
     assert repr(ii).startswith('sys.int_info(bits_per_digit=')
+    # a tuple, with the items also as attributes
+    assert len(ii) == 4
+    assert ii == (ii.bits_per_digit, ii.sizeof_digit, ii.default_max_str_digits, 640)
+    assert ii[0] == ii.bits_per_digit and ii[-1] == 640
+    bits, size, max_digits, threshold = ii
+    assert (bits, threshold) == (ii.bits_per_digit, 640)
+    assert ii[:2] == (ii.bits_per_digit, ii.sizeof_digit)
 
 def test_hash_info():
     hi = sys.hash_info

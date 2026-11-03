@@ -83,7 +83,8 @@ class struct_time;
 extern str *__name__;
 
 extern class_ *cl_struct_time;
-class struct_time : public pyseq<__ss_int> {
+/* a tuple, with the items also as attributes */
+class struct_time : public tuple2<__ss_int, __ss_int> {
 public:
     __ss_int tm_sec;
     __ss_int tm_hour;
@@ -99,15 +100,8 @@ public:
     __ss_int tm_gmtoff = 0;
     str *tm_zone = NULL;
 
-    struct_time() {
-        __class__ = cl_struct_time;
-    }
-    __ss_int __getitem__(__ss_int n);
     struct_time(tuple2<__ss_int, __ss_int> *_tuple);
     str *__repr__();
-    __ss_int __len__();
-    __ss_bool __eq__(pyobj *p);
-    __ss_int __cmp__(pyobj *p);
 };
 
 

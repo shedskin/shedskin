@@ -479,9 +479,9 @@ void *abort() {
     std::abort();
 }
 
-/* class __cstat */
+/* class stat_result */
 
-class_ *cl___cstat;
+class_ *cl_stat_result;
 
 /* set float seconds, integer nanoseconds and integer seconds for one timestamp,
    computed the same way as CPython (float: sec + nsec * 1e-9) */
@@ -502,7 +502,7 @@ static void __set_stat_filetime(__ss_float &f, __ss_int &ns, __ss_int &s, const 
     __set_stat_time(f, ns, s, in / 10000000LL - 11644473600LL, (long)(in % 10000000LL) * 100);
 }
 
-static void __stat_win32_info(__cstat *st, HANDLE h) {
+static void __stat_win32_info(stat_result *st, HANDLE h) {
     BY_HANDLE_FILE_INFORMATION info;
     if (h == INVALID_HANDLE_VALUE || !GetFileInformationByHandle(h, &info))
         return; /* keep the CRT values */
@@ -515,8 +515,8 @@ static void __stat_win32_info(__cstat *st, HANDLE h) {
 }
 #endif
 
-__cstat::__cstat(str *path, __ss_int t) {
-    this->__class__ = cl___cstat;
+stat_result::stat_result(str *path, __ss_int t) {
+    this->__class__ = cl_stat_result;
 
     int r = -1;
     if(t==1) {
@@ -570,10 +570,11 @@ __cstat::__cstat(str *path, __ss_int t) {
         }
     }
 #endif
+    __set_items();
 }
 
-__cstat::__cstat(__ss_int fd) {
-    this->__class__ = cl___cstat;
+stat_result::stat_result(__ss_int fd) {
+    this->__class__ = cl_stat_result;
 
     int r;
     {
@@ -588,9 +589,10 @@ __cstat::__cstat(__ss_int fd) {
 #ifdef WIN32
     __stat_win32_info(this, (HANDLE)_get_osfhandle((int)fd));
 #endif
+    __set_items();
 }
 
-void __cstat::fill_er_up() {
+void stat_result::fill_er_up() {
     this->st_mode = (__ss_int)sbuf.st_mode;
     this->st_ino = (__ss_int)sbuf.st_ino;
     this->st_dev = (__ss_int)sbuf.st_dev;
@@ -615,82 +617,42 @@ void __cstat::fill_er_up() {
 #endif
 }
 
-__ss_int __cstat::__len__() {
-    return 10;
+/* the items, once all fields are known (on windows, after __stat_win32_info) */
+void stat_result::__set_items() {
+    this->units.assign({st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, __atime_s, __mtime_s, __ctime_s});
 }
 
-__ss_int __cstat::__getitem__(__ss_int i) {
-    i = __wrap(this, i);
-    switch(i) {
-        case 0: return (__ss_int)st_mode;
-        case 1: return (__ss_int)st_ino;
-        case 2: return (__ss_int)st_dev;
-        case 3: return (__ss_int)st_nlink;
-        case 4: return (__ss_int)st_uid;
-        case 5: return (__ss_int)st_gid;
-        case 6: return (__ss_int)st_size;
-        case 7: return __atime_s;
-        case 8: return __mtime_s;
-        case 9: return __ctime_s;
-
-        default:
-            throw new IndexError(new str("tuple index out of range"));
-    }
-
-    return 0;
+str *stat_result::__repr__() {
+    return __mod6(new str("os.stat_result(st_mode=%d, st_ino=%d, st_dev=%d, st_nlink=%d, st_uid=%d, st_gid=%d, st_size=%d, st_atime=%d, st_mtime=%d, st_ctime=%d)"), 10,
+        st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, __atime_s, __mtime_s, __ctime_s);
 }
 
-
-/* class namedtuple */
-
-str *namedtuple::__repr__() {
-    tuple<__ss_int> *t = new tuple<__ss_int>();
-    for(__ss_int i=0; i < __len__(); i++)
-        t->units.push_back(__getitem__(i));
-    return repr(t);
+stat_result *stat(str *path) {
+    return new stat_result(path, 1);
 }
-
-tuple<__ss_int> *namedtuple::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
-    tuple<__ss_int> *c = new tuple<__ss_int>();
-
-    slicenr(x, l, u, s, __len__());
-
-    if(s > 0)
-        for(__ss_int i=l; i<u; i += s)
-            c->units.push_back(__getitem__(i));
-    else
-        for(__ss_int i=l; i>u; i += s)
-            c->units.push_back(__getitem__(i));
-
-    return c;
-}
-
-__cstat *stat(str *path) {
-    return new __cstat(path, 1);
-}
-__cstat *stat(bytes *path) {
+stat_result *stat(bytes *path) {
     return stat(fsdecode(path));
 }
-__cstat *stat(__ss_bool follow_symlinks, str *path) {
+stat_result *stat(__ss_bool follow_symlinks, str *path) {
     if(follow_symlinks)
         return stat(path);
     return lstat(path);
 }
-__cstat *stat(__ss_bool follow_symlinks, bytes *path) {
+stat_result *stat(__ss_bool follow_symlinks, bytes *path) {
     return stat(follow_symlinks, fsdecode(path));
 }
-__cstat *lstat(str *path) {
+stat_result *lstat(str *path) {
 #ifndef WIN32
-    return new __cstat(path, 2);
+    return new stat_result(path, 2);
 #else
-    return new __cstat(path, 1);
+    return new stat_result(path, 1);
 #endif
 }
-__cstat *lstat(bytes *path) {
+stat_result *lstat(bytes *path) {
     return lstat(fsdecode(path));
 }
-__cstat *fstat(__ss_int fd) {
-    return new __cstat(fd);
+stat_result *fstat(__ss_int fd) {
+    return new stat_result(fd);
 }
 
 /* class DirEntry */
@@ -742,7 +704,7 @@ __ss_int DirEntry::inode() {
     return __os__::lstat(this->path)->st_ino;
 }
 
-__cstat *DirEntry::stat(__ss_bool follow_symlinks) {
+stat_result *DirEntry::stat(__ss_bool follow_symlinks) {
     if(follow_symlinks)
         return __os__::stat(this->path);
     return __os__::lstat(this->path);
@@ -1678,7 +1640,7 @@ str *ttyname(__ss_int fd) {
 
 class_ *cl_uname_result;
 
-uname_result::uname_result(str *sysname, str *nodename, str *release, str *version, str *machine) {
+uname_result::uname_result(str *sysname, str *nodename, str *release, str *version, str *machine) : tuple2<str *, str *>(5, sysname, nodename, release, version, machine) {
     this->__class__ = cl_uname_result;
     this->sysname = sysname;
     this->nodename = nodename;
@@ -1687,7 +1649,7 @@ uname_result::uname_result(str *sysname, str *nodename, str *release, str *versi
     this->machine = machine;
 }
 
-uname_result::uname_result(tuple<str *> *t) {
+uname_result::uname_result(tuple<str *> *t) : tuple2<str *, str *>(t) {
     this->__class__ = cl_uname_result;
     if (len(t) != 5)
         throw new TypeError(__add_strs(3, new str("os.uname_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
@@ -1696,48 +1658,6 @@ uname_result::uname_result(tuple<str *> *t) {
     release = t->__getitem__(2);
     version = t->__getitem__(3);
     machine = t->__getitem__(4);
-}
-
-tuple<str *> *uname_result::__tuple() {
-    return new tuple<str *>(5, sysname, nodename, release, version, machine);
-}
-
-__ss_int uname_result::__len__() {
-    return 5;
-}
-
-str *uname_result::__getitem__(__ss_int i) {
-    if (i < 0)
-        i += 5;
-    switch(i) {
-        case 0: return sysname;
-        case 1: return nodename;
-        case 2: return release;
-        case 3: return version;
-        case 4: return machine;
-        default:
-            throw new IndexError(new str("tuple index out of range"));
-    }
-}
-
-tuple<str *> *uname_result::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
-    return __tuple()->__slice__(x, l, u, s);
-}
-
-__ss_bool uname_result::__contains__(str *x) {
-    return __tuple()->__contains__(x);
-}
-
-__ss_int uname_result::count(str *x) {
-    return __tuple()->count(x);
-}
-
-__ss_int uname_result::index(str *x, __ss_int start, __ss_void_struct) {
-    return __tuple()->index(x, start);
-}
-
-__ss_int uname_result::index(str *x, __ss_int start, __ss_int stop) {
-    return __tuple()->index(x, start, stop);
 }
 
 str *uname_result::__repr__() {
@@ -1889,25 +1809,25 @@ void *mkfifo(str *path, __ss_int mode) {
     return NULL;
 }
 
-/* class __vfsstat */
+/* class statvfs_result */
 
-class_ *cl___vfsstat;
+class_ *cl_statvfs_result;
 
-__vfsstat::__vfsstat(str *path) {
-    this->__class__ = cl___vfsstat;
+statvfs_result::statvfs_result(str *path) {
+    this->__class__ = cl_statvfs_result;
     if(statvfs(__ss_cpath(path, "statvfs"), &vbuf) == -1)
         __throw_oserror(path);
     fill_er_up();
 }
 
-__vfsstat::__vfsstat(__ss_int fd) {
-    this->__class__ = cl___vfsstat;
+statvfs_result::statvfs_result(__ss_int fd) {
+    this->__class__ = cl_statvfs_result;
     if(fstatvfs(__ss_cint(fd), &vbuf) == -1)
         __throw_oserror();
     fill_er_up();
 }
 
-void __vfsstat::fill_er_up() {
+void statvfs_result::fill_er_up() {
     this->f_bsize = (__ss_int)vbuf.f_bsize;
     this->f_frsize = (__ss_int)vbuf.f_frsize;
     this->f_blocks = (__ss_int)vbuf.f_blocks;
@@ -1918,38 +1838,20 @@ void __vfsstat::fill_er_up() {
     this->f_favail = (__ss_int)vbuf.f_favail;
     this->f_flag = (__ss_int)vbuf.f_flag;
     this->f_namemax = (__ss_int)vbuf.f_namemax;
+    this->f_fsid = (__ss_int)vbuf.f_fsid;
+    this->units.assign({f_bsize, f_frsize, f_blocks, f_bfree, f_bavail, f_files, f_ffree, f_favail, f_flag, f_namemax});
 }
 
-__ss_int __vfsstat::__len__() {
-    return 10;
+str *statvfs_result::__repr__() {
+    return __mod6(new str("os.statvfs_result(f_bsize=%d, f_frsize=%d, f_blocks=%d, f_bfree=%d, f_bavail=%d, f_files=%d, f_ffree=%d, f_favail=%d, f_flag=%d, f_namemax=%d)"), 10,
+        f_bsize, f_frsize, f_blocks, f_bfree, f_bavail, f_files, f_ffree, f_favail, f_flag, f_namemax);
 }
 
-__ss_int __vfsstat::__getitem__(__ss_int i) {
-    i = __wrap(this, i);
-    switch(i) {
-        case 0: return (__ss_int)vbuf.f_bsize;
-        case 1: return (__ss_int)vbuf.f_frsize;
-        case 2: return (__ss_int)vbuf.f_blocks;
-        case 3: return (__ss_int)vbuf.f_bfree;
-        case 4: return (__ss_int)vbuf.f_bavail;
-        case 5: return (__ss_int)vbuf.f_files;
-        case 6: return (__ss_int)vbuf.f_ffree;
-        case 7: return (__ss_int)vbuf.f_favail;
-        case 8: return (__ss_int)vbuf.f_flag;
-        case 9: return (__ss_int)vbuf.f_namemax;
-
-        default:
-            throw new IndexError(new str("tuple index out of range"));
-    }
-
-    return 0;
+statvfs_result *statvfs(str *path) {
+    return new statvfs_result(path);
 }
-
-__vfsstat *statvfs(str *path) {
-    return new __vfsstat(path);
-}
-__vfsstat *fstatvfs(__ss_int fd) {
-    return new __vfsstat(fd);
+statvfs_result *fstatvfs(__ss_int fd) {
+    return new statvfs_result(fd);
 }
 
 #endif /* WIN32 */
@@ -2231,33 +2133,18 @@ times_result *times() {
 
 class_ *cl_terminal_size;
 
-terminal_size::terminal_size(__ss_int columns, __ss_int lines) {
+terminal_size::terminal_size(__ss_int columns, __ss_int lines) : tuple2<__ss_int, __ss_int>(2, columns, lines) {
     this->__class__ = cl_terminal_size;
     this->columns = columns;
     this->lines = lines;
 }
 
-terminal_size::terminal_size(tuple<__ss_int> *t) {
+terminal_size::terminal_size(tuple<__ss_int> *t) : tuple2<__ss_int, __ss_int>(t) {
     this->__class__ = cl_terminal_size;
     if (len(t) != 2)
         throw new TypeError(__add_strs(3, new str("os.terminal_size() takes a 2-sequence ("), __str(len(t)), new str("-sequence given)")));
     this->columns = t->__getitem__(0);
     this->lines = t->__getitem__(1);
-}
-
-__ss_int terminal_size::__len__() {
-    return 2;
-}
-
-__ss_int terminal_size::__getitem__(__ss_int i) {
-    if (i < 0)
-        i += 2;
-    switch(i) {
-        case 0: return columns;
-        case 1: return lines;
-        default:
-            throw new IndexError(new str("tuple index out of range"));
-    }
 }
 
 str *terminal_size::__repr__() {
@@ -2266,7 +2153,7 @@ str *terminal_size::__repr__() {
 
 class_ *cl_times_result;
 
-times_result::times_result(__ss_float user, __ss_float system, __ss_float children_user, __ss_float children_system, __ss_float elapsed) {
+times_result::times_result(__ss_float user, __ss_float system, __ss_float children_user, __ss_float children_system, __ss_float elapsed) : tuple2<__ss_float, __ss_float>(5, user, system, children_user, children_system, elapsed) {
     this->__class__ = cl_times_result;
     this->user = user;
     this->system = system;
@@ -2275,7 +2162,7 @@ times_result::times_result(__ss_float user, __ss_float system, __ss_float childr
     this->elapsed = elapsed;
 }
 
-times_result::times_result(tuple<__ss_float> *t) {
+times_result::times_result(tuple<__ss_float> *t) : tuple2<__ss_float, __ss_float>(t) {
     this->__class__ = cl_times_result;
     if (len(t) != 5)
         throw new TypeError(__add_strs(3, new str("os.times_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
@@ -2295,48 +2182,7 @@ times_result::times_result(tuple<__ss_int> *t) {
     children_user = (__ss_float)t->__getitem__(2);
     children_system = (__ss_float)t->__getitem__(3);
     elapsed = (__ss_float)t->__getitem__(4);
-}
-
-tuple<__ss_float> *times_result::__tuple() {
-    return new tuple<__ss_float>(5, user, system, children_user, children_system, elapsed);
-}
-
-__ss_int times_result::__len__() {
-    return 5;
-}
-
-__ss_float times_result::__getitem__(__ss_int i) {
-    if (i < 0)
-        i += 5;
-    switch(i) {
-        case 0: return user;
-        case 1: return system;
-        case 2: return children_user;
-        case 3: return children_system;
-        case 4: return elapsed;
-        default:
-            throw new IndexError(new str("tuple index out of range"));
-    }
-}
-
-tuple<__ss_float> *times_result::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
-    return __tuple()->__slice__(x, l, u, s);
-}
-
-__ss_bool times_result::__contains__(__ss_float x) {
-    return __tuple()->__contains__(x);
-}
-
-__ss_int times_result::count(__ss_float x) {
-    return __tuple()->count(x);
-}
-
-__ss_int times_result::index(__ss_float x, __ss_int start, __ss_void_struct) {
-    return __tuple()->index(x, start);
-}
-
-__ss_int times_result::index(__ss_float x, __ss_int start, __ss_int stop) {
-    return __tuple()->index(x, start, stop);
+    this->units.assign({user, system, children_user, children_system, elapsed});
 }
 
 str *times_result::__repr__() {
@@ -2824,7 +2670,7 @@ void *reload_environ() {
 }
 
 void __init() {
-    cl___cstat = new class_("__cstat");
+    cl_stat_result = new class_("stat_result");
     cl_DirEntry = new class_("DirEntry");
     cl_terminal_size = new class_("terminal_size");
     cl_times_result = new class_("times_result");
@@ -2835,7 +2681,7 @@ void __init() {
 #else
     linesep = new str("\n");
     name = new str("posix");
-    cl___vfsstat = new class_("__vfsstat");
+    cl_statvfs_result = new class_("statvfs_result");
     cl_uname_result = new class_("uname_result");
 #endif
 
