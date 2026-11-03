@@ -1,0 +1,7 @@
+add_shedskin_product(
+    SYS_MODULES
+        bisect
+        collections
+        io
+        random
+)
