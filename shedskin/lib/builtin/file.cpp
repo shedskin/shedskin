@@ -115,7 +115,21 @@ static FILE *__ss_fopen(str *file_name, str *flags) {
 #endif
 }
 
-file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline) : closed(False) {
+/* open(.., buffering): 0 means unbuffered (binary only), 1 line buffered
+   (text only: in binary mode cpython warns and uses the default), n > 1 a
+   buffer of n bytes (a hint: glibc picks its own size), and < 0 the default.
+   setvbuf() must come before any other operation on the stream */
+static void __set_buffering(FILE *f, __ss_int buffering, bool text) {
+    if (buffering == 0)
+        setvbuf(f, NULL, _IONBF, 0);
+    else if (buffering == 1) {
+        if (text)
+            setvbuf(f, NULL, _IOLBF, BUFSIZ);
+    } else if (buffering > 1)
+        setvbuf(f, NULL, _IOFBF, (size_t)std::min<__ss_int>(buffering, INT_MAX));
+}
+
+file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline, __ss_int buffering) : closed(False) {
     __check_open_mode(flags);
     options.universal_mode = true;
     __encoding = __lookup_encoding(encoding); /* LookupError before touching the file */
@@ -150,6 +164,12 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline)
     if(f == 0)
         __throw_oserror(file_name);
     __check_not_directory(f, file_name);
+    if (buffering == 0) { /* (as cpython: after opening, so 'w' truncates) */
+        fclose(f);
+        f = 0;
+        throw new ValueError(new str("can't have unbuffered text I/O"));
+    }
+    __set_buffering(f, buffering, true);
     name = file_name;
     mode = flags;
 
@@ -191,12 +211,12 @@ void file::__close_buffer() {
         buffer->closed = True;
 }
 
-file *open(str *name, str *flags, str *encoding, str *errors, str *newline) {
-    return new file(name, flags, encoding, errors, newline);
+file *open(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+    return new file(name, flags, encoding, errors, newline, buffering);
 }
 
-file *open(bytes *name, str *flags, str *encoding, str *errors, str *newline) {
-    return new file(new str(name->unit), flags, encoding, errors, newline);
+file *open(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+    return new file(new str(name->unit), flags, encoding, errors, newline, buffering);
 }
 
 /* decode the bytes collected in __read_cache, with the file's encoding */
@@ -604,7 +624,7 @@ str *file::__next__() {
 
 /* file_binary TODO merge with file */
 
-file_binary::file_binary(str *file_name, str *flags) : closed(False) {
+file_binary::file_binary(str *file_name, str *flags, __ss_int buffering) : closed(False) {
     __check_open_mode(flags);
     if (!flags)
         flags = __char_cache['r'];
@@ -612,6 +632,7 @@ file_binary::file_binary(str *file_name, str *flags) : closed(False) {
     if(f == 0)
         __throw_oserror(file_name);
     __check_not_directory(f, file_name);
+    __set_buffering(f, buffering, false);
     name = file_name;
     mode = flags;
 }
@@ -625,16 +646,16 @@ static void __check_binary_args(str *encoding, str *errors, str *newline) {
         throw new ValueError(new str("binary mode doesn't take a newline argument"));
 }
 
-file_binary *open_binary(str *name, str *flags, str *encoding, str *errors, str *newline) {
+file_binary *open_binary(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
     __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline);
-    return new file_binary(name, flags);
+    return new file_binary(name, flags, buffering);
 }
 
-file_binary *open_binary(bytes *name, str *flags, str *encoding, str *errors, str *newline) {
+file_binary *open_binary(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
     __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline);
-    return new file_binary(new str(name->unit), flags);
+    return new file_binary(new str(name->unit), flags, buffering);
 }
 
 __ss_int file_binary::write(bytes *s) {
