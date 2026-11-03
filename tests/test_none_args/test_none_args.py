@@ -94,6 +94,9 @@ def test_unchanged():
     assert {'a': 'b'}.get('c', None) is None
     dd = collections.defaultdict(str)
     assert dd.pop('c', None) is None
+    assert str(None) == 'None'
+    assert str(object=None) == 'None'
+    assert 'x' + str(None) == 'xNone'
 
 
 def test_all():

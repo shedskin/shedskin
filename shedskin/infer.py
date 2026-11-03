@@ -920,6 +920,7 @@ def analyze_args(
 # library methods where an explicit None differs from omitting the argument
 NONE_IS_VALUE = {
     ("builtin", "dict", "pop"),  # d.pop(k, None) must not raise KeyError
+    ("builtin", None, "str"),  # str(None) is 'None', not ''
 }
 
 
