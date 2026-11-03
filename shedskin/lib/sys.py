@@ -7,7 +7,26 @@ stdin, stdout, stderr = file('stdin'), file('stdout'), file('stderr')
 __stdin__, __stdout__, __stderr__ = stdin, stdout, stderr
 
 version = ''
-version_info = (0,)
+
+# like CPython's struct sequence, but only (major, minor, micro) are tuple
+# items, as releaselevel is a str: the others are attributes only
+class __version_info(tuple):
+    def __init__(self):
+        self.unit = 0
+        self.major = 0
+        self.minor = 0
+        self.micro = 0
+        self.releaselevel = ''
+        self.serial = 0
+
+    def __slice__(self, x, l, u, s):
+        return (self.unit,)
+    def __mul__(self, n):
+        return (self.unit,)
+    def __repr__(self):
+        return ''
+
+version_info = __version_info()
 copyright = ''
 platform = ''
 byteorder = ''

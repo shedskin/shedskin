@@ -12,7 +12,6 @@ void __init(int argc, char **argv);
 
 extern list<str *> *argv;
 extern str *version;
-extern tuple2<__ss_int, __ss_int> *version_info;
 extern str *__name__, *copyright, *platform, *byteorder;
 extern __ss_int hexversion, maxsize, maxunicode;
 extern str *executable;
@@ -41,7 +40,21 @@ str *getfilesystemencodeerrors();
 extern str *float_repr_style;
 extern list<str *> *orig_argv;
 
-extern class_ *cl_float_info, *cl_implementation, *cl_flags, *cl_int_info, *cl_hash_info;
+extern class_ *cl_version_info, *cl_float_info, *cl_implementation, *cl_flags, *cl_int_info, *cl_hash_info;
+
+/* like CPython's struct sequence, but only (major, minor, micro) are tuple
+   items, as releaselevel is a str: releaselevel and serial are attributes only.
+   (major, minor: renamed because of the glibc macros of the same name) */
+class __version_info : public tuple2<__ss_int, __ss_int> {
+public:
+    __ss_int __ss_major, __ss_minor, micro, serial;
+    str *releaselevel;
+
+    __version_info(__ss_int major, __ss_int minor, __ss_int micro, str *releaselevel, __ss_int serial);
+    str *__repr__();
+};
+
+extern __version_info *version_info;
 
 /* describes __ss_float, so it stays honest under --float32 */
 class __float_info : public pyobj {
@@ -56,7 +69,7 @@ public:
 class __implementation : public pyobj {
 public:
     str *name;
-    tuple2<__ss_int, __ss_int> *version;
+    __version_info *version;
     __ss_int hexversion;
 
     __implementation();

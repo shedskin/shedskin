@@ -11,14 +11,14 @@ namespace __sys__ {
 list<str *> *argv, *orig_argv;
 str *version, *float_repr_style;
 
-class_ *cl_float_info, *cl_implementation, *cl_flags, *cl_int_info, *cl_hash_info;
+class_ *cl_version_info, *cl_float_info, *cl_implementation, *cl_flags, *cl_int_info, *cl_hash_info;
 __float_info *float_info;
 __implementation *implementation;
 __flags *flags;
 __int_info *int_info;
 __hash_info *hash_info;
 
-tuple2<__ss_int, __ss_int> *version_info;
+__version_info *version_info;
 str *__name__, *copyright, *platform, *byteorder;
 __ss_int hexversion, maxsize, maxunicode;
 str *executable;
@@ -35,8 +35,9 @@ void __init(int c, char **v) {
     version = new str("Shed Skin Python-to-C++ Compiler 0.9.14\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
 #endif
-    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)3, (__ss_int)15, (__ss_int)0, (__ss_int)0, (__ss_int)0);
-    hexversion = 0x030f00f0;
+    cl_version_info = new class_("version_info");
+    version_info = new __version_info(3, 15, 0, new str("final"), 0);
+    hexversion = 0x030f00f0; /* keep in sync with version_info */
 
     copyright = new str("Copyright (c) Mark Dufour 2005-2026.\nAll Rights Reserved.");
 
@@ -136,6 +137,20 @@ str *getfilesystemencodeerrors() {
 #else
     return new str("surrogateescape");
 #endif
+}
+
+__version_info::__version_info(__ss_int major, __ss_int minor, __ss_int micro, str *releaselevel, __ss_int serial) : tuple2<__ss_int, __ss_int>(3, major, minor, micro) {
+    this->__class__ = cl_version_info;
+    this->__ss_major = major;
+    this->__ss_minor = minor;
+    this->micro = micro;
+    this->releaselevel = releaselevel;
+    this->serial = serial;
+}
+
+str *__version_info::__repr__() {
+    return __mod6(new str("sys.version_info(major=%d, minor=%d, micro=%d, releaselevel=%s, serial=%d)"), 5,
+        this->__ss_major, this->__ss_minor, this->micro, repr(this->releaselevel), this->serial);
 }
 
 __float_info::__float_info() {

@@ -117,12 +117,63 @@ def test_float_info():
     assert 1.0 + fi.epsilon / 2 == 1.0
     assert repr(fi).startswith('sys.float_info(max=')
 
+def _version_first(t):
+    return t[0]
+
+def test_version_info():
+    vi = sys.version_info
+
+    # attributes
+    assert (vi.major, vi.minor, vi.micro) == (3, 15, 0)
+    assert vi.releaselevel == 'final'
+    assert vi.serial == 0
+    assert repr(vi) == "sys.version_info(major=3, minor=15, micro=0, releaselevel='final', serial=0)"
+    assert str(vi) == repr(vi)
+
+    # the usual tuple idioms
+    assert vi >= (3, 8) and vi > (3,) and vi < (4,) and vi <= (3, 15, 0)
+    assert (3, 8) <= vi
+    assert vi[:2] == (3, 15)
+    major, minor = vi[:2]
+    assert (major, minor) == (vi.major, vi.minor)
+    assert '%d.%d' % vi[:2] == '3.15'
+    assert vi[0] == 3 and vi[-1] == 0
+
+    # only (major, minor, micro) are tuple items, as releaselevel is a str
+    assert len(vi) == 3
+    assert vi == (3, 15, 0)
+    assert tuple(vi) == (3, 15, 0)
+    assert list(vi) == [3, 15, 0]
+    assert [x for x in vi] == [3, 15, 0]
+    a, b, c = vi
+    assert (a, b, c) == (3, 15, 0)
+    try:
+        vi[3]
+        assert False
+    except IndexError:
+        pass
+
+    # mixing with plain tuples
+    assert hash(vi) == hash((3, 15, 0))
+    assert {vi: 1, (1, 2): 2}[(3, 15, 0)] == 1
+    assert len({vi, (3, 15, 0)}) == 1
+    assert sorted([vi, (3, 0)]) == [(3, 0), (3, 15, 0)]
+    assert _version_first(vi) == _version_first((3, 1))
+    assert vi + (1,) == (3, 15, 0, 1)
+    assert vi * 2 == (3, 15, 0, 3, 15, 0)
+    assert 15 in vi and vi.index(15) == 1 and vi.count(0) == 1
+    assert '.'.join(map(str, vi)) == '3.15.0'
+
+    assert sys.implementation.version.major == 3
+    assert sys.implementation.version.releaselevel == 'final'
+
 def test_implementation():
     assert sys.implementation.name == 'shedskin'
     assert sys.implementation.version[0] == sys.version_info[0]
     assert sys.implementation.version[1] == sys.version_info[1]
     assert sys.implementation.hexversion == sys.hexversion
     assert repr(sys.implementation).startswith("namespace(name='shedskin'")
+    assert 'version=sys.version_info(major=3, minor=15' in repr(sys.implementation)
 
 def test_encode_errors():
     assert sys.getfilesystemencodeerrors() in ('surrogateescape', 'surrogatepass')
@@ -369,6 +420,7 @@ def test_all():
     test_maxunicode()
     test_executable()
     test_float_info()
+    test_version_info()
     test_implementation()
     test_encode_errors()
     test_surrogateescape_roundtrip()

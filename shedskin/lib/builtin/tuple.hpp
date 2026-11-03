@@ -62,8 +62,10 @@ public:
 #endif
 };
 
-/* final: users cannot subclass builtins (see graph.py), so the C++ compiler may devirtualize */
-template<class T> class tuple2<T,T> final : public pyseq<T> {
+/* not final as a class, as some library objects subclass it to add attributes and
+   a __repr__ (e.g. sys.version_info). users cannot subclass builtins (see graph.py),
+   so the other virtual methods are final, and the C++ compiler may devirtualize them */
+template<class T> class tuple2<T,T> : public pyseq<T> {
 public:
     __GC_VECTOR(T) units;
 
@@ -80,7 +82,7 @@ public:
     T __getsecond__();
 
     inline T __getfast__(__ss_int i);
-    inline T __getitem__(__ss_int i);
+    inline T __getitem__(__ss_int i) final;
 
     inline __ss_int __len__() final;
 
@@ -92,9 +94,9 @@ public:
     tuple2<T,T> *__iadd__(tuple2<T,T> *b);
     tuple2<T,T> *__imul__(__ss_int n);
 
-    __ss_bool __contains__(T a);
-    __ss_bool __eq__(pyobj *p);
-    __ss_int __cmp__(pyobj *p);
+    __ss_bool __contains__(T a) final;
+    __ss_bool __eq__(pyobj *p) final;
+    __ss_int __cmp__(pyobj *p) final;
 
     __ss_int index(T a);
     __ss_int index(T a, __ss_int s);
@@ -104,10 +106,10 @@ public:
 
     tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
-    __ss_int __hash__();
+    __ss_int __hash__() final;
 
-    tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
-    tuple2<T,T> *__copy__();
+    tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo) final;
+    tuple2<T,T> *__copy__() final;
 
     /* iteration */
 
@@ -389,7 +391,8 @@ template<class A, class B> __ss_int tuple2<A, B>::__cmp__(pyobj *p) {
     return __cmp_id(second, b->second);
 }
 
-/* not through the virtual pyobj::__lt__ etc. (tuple2 is final, so __cmp__ is called directly;
+/* not through the virtual pyobj::__lt__ etc. (tuple2 and tuple2<T,T>::__cmp__ are final,
+   so __cmp__ is called directly;
    this also covers the homogeneous tuple2<T,T>) */
 template<class A, class B> inline __ss_bool __gt(tuple2<A,B> *a, tuple2<A,B> *b) { return __mbool(a->__cmp__(b) > 0); }
 template<class A, class B> inline __ss_bool __ge(tuple2<A,B> *a, tuple2<A,B> *b) { return __mbool(a->__cmp__(b) >= 0); }
