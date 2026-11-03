@@ -514,6 +514,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for elemname in elemnames:
                 infer.default_var(self.gx, elemname, cl)
 
+            self.check_starred_elts(node)
+
             for elem in node.elts:
                 self.visit(elem, func)
 
@@ -545,11 +547,26 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.add_dynamic_constraint(node, key, "unit", func)
                     self.add_dynamic_constraint(node, value, "value", func)
         else:
+            self.check_starred_elts(node)
+
             for child in node.elts:
                 self.visit(child, func)
 
             for child in self.filter_redundant_children(node):
                 self.add_dynamic_constraint(node, child, "unit", func)
+
+    def check_starred_elts(self, node: Union[ast.Tuple, ast.List, ast.Set]) -> None:
+        """Report iterable unpacking in a display, e.g. [*a, *b] or 'return *a, b'"""
+        for elt in node.elts:
+            if isinstance(elt, ast.Starred):
+                kind = {ast.Tuple: "tuple", ast.List: "list", ast.Set: "set"}
+                error.error(
+                    "iterable unpacking ('*') in a %s display is not supported"
+                    % kind[type(node)],
+                    self.gx,
+                    elt,
+                    mv=getmv(),
+                )
 
     # --- for compound list/tuple/dict constructors, we only consider a single child node for each subtype
     def filter_redundant_children(
@@ -1446,6 +1463,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         lambdanr = len(self.lambdas)
         name = "__lambda%d__" % lambdanr
         fakenode = ast.FunctionDef(name, node.args, [ast.Return(node.body)], [])
+        ast.copy_location(fakenode, node)  # line numbers for error messages
         self.visit(fakenode, None, True)
         f = self.lambdas[name]
         f.lambdanr = lambdanr
@@ -2303,7 +2321,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 lvar = self.default_var(item.optional_vars.id, func)
                 self.add_constraint((varnode, infer.inode(self.gx, lvar)), func)
             else:
-                error.error("unsupported with syntax", self.gx, item, mv=getmv())
+                error.error(
+                    "unsupported 'with' target (only a plain name is supported)",
+                    self.gx,
+                    item.optional_vars,
+                    mv=getmv(),
+                )
 
         for child in node.body:
             self.visit(child, func)
@@ -2316,6 +2339,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # --- {..}
         # --- {a: b for .. }
         # --- (expr for .. }
+        if isinstance(node.elt, ast.Starred):  # [*it for it in ..] (3.15+)
+            error.error(
+                "iterable unpacking ('*') in a comprehension is not supported",
+                self.gx,
+                node,
+                mv=getmv(),
+            )
         lcfunc = python.Function(self.gx, getmv())
         lcfunc.listcomp = True
         lcfunc.ident = "l.c."  # XXX
@@ -2468,6 +2498,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.struct_unpack(rvalue2, func)
                 and isinstance(rvalue2, ast.Call)  # TODO double check
                 and ast_utils.is_assign_list_or_tuple(lvalue2)
+                and not ast_utils.has_starred(lvalue2)
                 and isinstance(lvalue2, (ast.List, ast.Tuple))  # TODO double check
                 and not [
                     n for n in lvalue2.elts if ast_utils.is_assign_list_or_tuple(n)
@@ -2653,7 +2684,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             assert isinstance(lvalue, (ast.Tuple, ast.List))
             lvalues = lvalue.elts
 
+        after_star = False
         for i, item in enumerate(lvalues):
+            after_star = after_star or isinstance(item, ast.Starred)
             fakenode = infer.CNode(
                 self.gx, getmv(), (item,), parent=func
             )  # fake node per item, for multiple callfunc triggers
@@ -2662,23 +2695,34 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             fakefunc = ast.Call(
                 ast.Attribute(_as_expr(rvalue), "__getunit__", ast.Load()),
-                [ast.Constant(i)],
+                [ast.Constant(i - len(lvalues) if after_star else i)],  # a, *b, c
                 [],
             )
 
             fakenode.callfuncs.append(fakefunc)
             self.visit_Call(fakefunc, func, fake_attr=True)
 
+            value: ast.AST = fakefunc
             self.gx.item_rvalue[item] = rvalue
+
+            # a, *b, c = ..: b becomes a new list, holding the remaining units
+            if isinstance(item, ast.Starred):
+                value = ast.List([], ast.Load())
+                self.visit(value, func)
+                self.add_dynamic_constraint(value, fakefunc, "unit", func)
+                self.temp_var2(item, infer.inode(self.gx, value), func)
+                self.gx.item_rvalue[item] = value
+                item = item.value
+
             if isinstance(item, ast.Name):
                 lvar = self.default_var(item.id, func)
                 self.add_constraint(
-                    (infer.inode(self.gx, fakefunc), infer.inode(self.gx, lvar)), func
+                    (infer.inode(self.gx, value), infer.inode(self.gx, lvar)), func
                 )
             elif isinstance(item, ast.Subscript) or ast_utils.is_assign_attribute(item):
-                self.assign_pair(item, fakefunc, func)
+                self.assign_pair(item, value, func)
             elif ast_utils.is_assign_list_or_tuple(item):  # recursion
-                self.tuple_flow(item, fakefunc, func)
+                self.tuple_flow(item, value, func)
             else:
                 error.error("unsupported type of assignment", self.gx, item, mv=getmv())
 

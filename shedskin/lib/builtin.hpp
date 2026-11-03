@@ -834,6 +834,17 @@ template<class P> inline void __ss_unpack_end(P *p, typename P::for_in_loop &l) 
 #endif
 }
 
+/* extended unpacking (a, *b, c = ..): collect the remaining items into a new
+   list, which must hold at least the 'after' items for the targets after *b */
+template<class L, class P> inline L *__ss_unpack_star(P *p, typename P::for_in_loop &l, __ss_int after) {
+    L *r = new L();
+    while(p->for_in_has_next(l))
+        r->append(p->for_in_next(l));
+    if(r->__len__() < after)
+        throw new ValueError(new str("not enough values to unpack"));
+    return r;
+}
+
 template<class T> list<T> *__ss_list() {
     list<T> *l = new list<T>();
 #ifndef __SS_BOOST

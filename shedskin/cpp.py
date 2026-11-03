@@ -1718,6 +1718,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return (
             isinstance(node.iter, ast.Call)
             and ast_utils.is_assign_list_or_tuple(node.target)
+            and not ast_utils.has_starred(node.target)
             and isinstance(node.iter.func, ast.Attribute)
             and node.iter.func.attr == "items"
             and self.only_classes(node.iter.func.value, ("dict",))
@@ -4336,10 +4337,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(rvalue, func)
         self.eol()
 
+        if ast_utils.has_starred(lvalue):
+            self.check_starred_rvalue(lvalue, nodes, rvalue)
+
         temp_loop = None
+        temp_star = None
         for i, item in enumerate(nodes):
             if i == 0:
-                if self.only_classes(
+                if not ast_utils.has_starred(lvalue) and self.only_classes(
                     self.gx.item_rvalue[item],
                     ("list", "str_", "bytes_", "tuple", "tuple2", "tuple3"),
                 ):
@@ -4351,7 +4356,24 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.indent()
                     self.output("auto %s = %s->for_in_init();" % (temp_loop, temp))
 
-            if temp_loop:
+            if isinstance(item, ast.Starred):
+                # a, *b, c = ..: collect the remaining items, minus those for c
+                temp_star = self.mv.tempcount[item]
+                after = len(nodes) - i - 1
+                ts = typestr.nodetypestr(
+                    self.gx, self.gx.item_rvalue[item], func, mv=self.mv
+                )
+                self.output(
+                    "%s = __ss_unpack_star<%s>(%s, %s, %d);"
+                    % (temp_star, ts[:-2], temp, temp_loop, after)
+                )
+                selector = temp_star
+                if after:
+                    selector += "->__slice__(2, 0, %d, 0)" % -after
+                item = item.value
+            elif temp_star:
+                selector = "%s->__getfast__(%d)" % (temp_star, i - len(nodes))
+            elif temp_loop:
                 selector = "__ss_unpack_next(%s, %s)" % (temp, temp_loop)
             else:
                 selector = self.get_selector(temp, item, i)
@@ -4370,9 +4392,33 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.eol(" = " + selector)
 
         if temp_loop:
-            self.output("__ss_unpack_end(%s, %s);" % (temp, temp_loop))
+            if not temp_star:
+                self.output("__ss_unpack_end(%s, %s);" % (temp, temp_loop))
             self.deindent()
             self.output("}")
+
+    def check_starred_rvalue(
+        self,
+        lvalue: Union[ast.List, ast.Tuple],
+        nodes: list[ast.expr],
+        rvalue: Union[ast.AST, str],
+    ) -> None:
+        """Report extended unpacking (a, *b = ..) of a mixed-type tuple, such
+        as (1, 'x') or the items of enumerate(..) or dict.items(), as there is
+        no list type to hold its remaining items"""
+        rnodes = [
+            self.gx.item_rvalue[n] for n in nodes if not isinstance(n, ast.Starred)
+        ]
+        if not rnodes and isinstance(rvalue, ast.AST):  # *a, = ..
+            rnodes = [rvalue]
+        for rnode in rnodes:
+            if self.hetero_tuple(self.mergeinh.get(rnode, set())):
+                error.error(
+                    "extended unpacking ('*') of a mixed-type tuple is not supported",
+                    self.gx,
+                    lvalue,
+                    mv=self.mv,
+                )
 
     def one_class(self, node: ast.AST, names: tuple[str, ...]) -> bool:
         """Check if a node is a single class"""
