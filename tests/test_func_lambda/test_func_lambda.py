@@ -36,9 +36,31 @@ def test_lambdas():
 
     # assert l4(10,2) == 12
 
+LAMBDA_N = 10
+
+def lambda_default_global():
+    g = lambda q=LAMBDA_N + 1, r=len('xyz'): q * 100 + r
+    return g()
+
+def apply0(fn):
+    return fn()
+
+def test_lambda_defaults():
+    # non-constant defaults are evaluated where the lambda is created
+    f = lambda q=len('ab'): q
+    assert f() == 2
+    assert f(5) == 5
+    global LAMBDA_N
+    LAMBDA_N = 20
+    assert lambda_default_global() == 2103
+    LAMBDA_N = 30
+    assert lambda_default_global() == 3103
+    assert apply0(lambda s=str(LAMBDA_N) + '!': s) == '30!'
+
 def test_all():
     test_funcs()
     test_lambdas()
+    test_lambda_defaults()
 
 
 if __name__ == '__main__':

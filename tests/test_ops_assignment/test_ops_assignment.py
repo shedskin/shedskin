@@ -377,6 +377,10 @@ def test_unpack18():
     assert (rest, b) == ([1, 2], 3)
     a, *rest = 1, 2
     assert (a, rest) == (1, [2])
+    a, *rest = [1, 2]
+    assert (a, rest) == (1, [2])
+    a, *rest = [1, 2, 3, 4]
+    assert (a, rest) == (1, [2, 3, 4])
     a, *rest = range(3)
     assert (a, rest) == (0, [1, 2])
     a, *rest, b = iter([1, 2])

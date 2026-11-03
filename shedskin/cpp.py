@@ -537,8 +537,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 nr,
             )  #  + ' ' + ('default_%d;' % nr)
 
-    def init_defaults(self, func2: ast.FunctionDef) -> None:
-        """Initialize default values for function arguments"""
+    def stored_defaults(
+        self, func2: Union[ast.FunctionDef, ast.Lambda]
+    ) -> Iterator[tuple[int, ast.expr, "python.Variable"]]:
+        """The non-literal default values of a function or lambda that are
+        kept in a global 'default_N' variable"""
         for default in func2.args.defaults:
             if default in self.mv.defaults:
                 nr, func, func_def_nr = self.mv.defaults[default]
@@ -553,9 +556,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         if isinstance(t[0], python.Function)
                     ]
                     if not ts or [t for t in ts if infer.called(t[0])]:
-                        self.start("default_%d = " % nr)
-                        self.impl_visit_conv(default, self.mergeinh[var], None)
-                        self.eol()
+                        yield nr, default, var
+
+    def init_defaults(self, func2: ast.FunctionDef) -> None:
+        """Initialize default values for function arguments"""
+        for nr, default, var in self.stored_defaults(func2):
+            self.start("default_%d = " % nr)
+            self.impl_visit_conv(default, self.mergeinh[var], None)
+            self.eol()
 
     def rich_comparison(self) -> None:
         """Generate rich comparison functions"""
@@ -1232,7 +1240,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Lambda(self, node: ast.Lambda, parent: Optional[Parent] = None) -> None:
         """Visit a lambda node"""
+        # evaluate non-literal defaults where the lambda is created, as a
+        # comma expression: (default_0 = expr, __lambda0__)
+        defaults = list(self.stored_defaults(node))
+        if defaults:
+            self.append("(")
+            for nr, default, var in defaults:
+                self.append("default_%d = " % nr)
+                self.impl_visit_conv(default, self.mergeinh[var], None)
+                self.append(", ")
         self.append(self.mv.lambdaname[node])
+        if defaults:
+            self.append(")")
 
     def subtypes(self, types: Types, varname: Optional[str]) -> Types:
         """Get the subtypes of a type"""
