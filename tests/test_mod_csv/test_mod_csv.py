@@ -931,10 +931,18 @@ def test_dictwriter_any_values():
     assert s.getvalue() == '1|'
     w = csv.DictWriter(s, ['a'], lineterminator='|')
     try:
+        w.writerow({'a': 1, "c'd": 3})
+        assert False
+    except ValueError as e:
+        assert str(e) == 'dict contains fields not in fieldnames: "c\'d"'
+    # the order of multiple wrong fields depends on hashing, in CPython (a set
+    # difference) as well as in shedskin (std::hash differs between platforms)
+    try:
         w.writerow({'a': 1, 'b': 2, "c'd": 3})
         assert False
     except ValueError as e:
-        assert str(e) == 'dict contains fields not in fieldnames: \'b\', "c\'d"'
+        assert str(e) in ['dict contains fields not in fieldnames: \'b\', "c\'d"',
+                          'dict contains fields not in fieldnames: "c\'d", \'b\'']
 
 
 def test_field_size_limit():
