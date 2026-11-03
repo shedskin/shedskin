@@ -377,7 +377,7 @@ class Shedskin:
             "--build-type",
             help="Set cmake build type (default: '%(default)s')",
             metavar="T",
-            default="Debug",
+            default="Release",
         )
         grp("--test", help="Run ctest", action="store_true")
         grp("--reset", help="Reset cmake build", action="store_true")
@@ -585,7 +585,9 @@ class Shedskin:
         args = parser.parse_args(args=bypassargs)
 
         if platform.system() == "Windows" and args.subcmd in ("build", "run"):
-            args.build_type = "Release"  # Debug doesn't work in CI, possibly because of missing debug symbols
+            # a Debug build links the debug CRT (/MDd), which does not match
+            # the release builds of python and the dependencies
+            args.build_type = "Release"
 
         # Make --local-deps the default unless another dep manager is specified
         if args.subcmd in ("build", "run", "runtests"):

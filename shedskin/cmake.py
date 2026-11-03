@@ -1005,7 +1005,7 @@ class CMakeBuilder:
         opts = " ".join(options)
 
         # --config is needed for multi-config generators (Visual Studio on Windows)
-        build_type = self.options.build_type or "Debug"
+        build_type = self.options.build_type or "Release"
         bld_cmd = f"cmake --build {self.build_dir} --config {build_type} {opts}"
 
         self.log.info(bld_cmd)

@@ -129,3 +129,51 @@ def test_no_gccpp_linked():
                 continue
             for name in ("gccpp", "GCCPP", "gctba"):
                 assert name not in line, f"{source.name}: links {name}: {line.strip()}"
+
+
+def _flag_sources():
+    root = Path(__file__).parents[2] / "shedskin"
+    return [
+        root / "makefile.py",
+        root / "resources" / "cmake" / "fn_add_shedskin_product.cmake",
+        root / "resources" / "flags" / "FLAGS",
+        root / "resources" / "flags" / "FLAGS.osx",
+        root / "resources" / "flags" / "FLAGS.mingw",
+    ]
+
+
+def test_no_march_native():
+    """-march=native makes binaries (and extension modules) crash with an
+    illegal instruction on older/other CPUs than the build machine, while
+    measured over 25 examples it did not make them faster on average."""
+    for source in _flag_sources():
+        assert "-march=native" not in source.read_text(), source
+
+
+def test_cmake_release_matches_translate_flags():
+    """A cmake Release build must use the same optimization flags as the
+    Makefile written by 'shedskin translate', and the target's own options
+    must not override the -O3 of the Release configuration with -O2."""
+    root = Path(__file__).parents[2] / "shedskin"
+    flags = (root / "resources" / "flags" / "FLAGS").read_text()
+    for flag in ("-O3", "-flto=auto", "--param=early-inlining-insns=40", "-DNDEBUG"):
+        assert flag in flags
+    template = (root / "resources" / "cmake" / "fn_add_shedskin_product.cmake").read_text()
+    assert "$<$<BOOL:${UNIX}>:-O2>" not in template
+    assert "$<IF:$<CONFIG:Release>,-O3,-O2>" in template
+    assert "$<CONFIG:Release>>:-flto=auto>" in template
+    assert "--param=early-inlining-insns=40>" in template
+    # both executables and extension modules, at compile and link time
+    assert template.count("${SHEDSKIN_OPT_FLAGS}") == 2
+    assert template.count("${SHEDSKIN_OPT_LINK_FLAGS}") == 2
+
+
+@pytest.mark.parametrize("cmd", ["build", "run"])
+def test_build_type_defaults_to_release(cmd, monkeypatch):
+    """'shedskin build/run' should produce optimized binaries by default."""
+    seen = []
+    monkeypatch.setattr(Shedskin, "build", lambda self: seen.append(self.gx.options.build_type))
+    monkeypatch.setattr(Shedskin, "run", lambda self: None)
+    demo_path = Path(__file__).parent / "fixtures" / "demo_program1.py"
+    Shedskin.commandline([cmd, str(demo_path)])
+    assert seen == ["Release"]

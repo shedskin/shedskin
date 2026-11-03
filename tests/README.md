@@ -47,7 +47,7 @@ options:
   --debug               set cmake debug on
   --generator G         specify a cmake build system generator
   --jobs N              build and run in parallel using N jobs
-  --build-type T        set cmake build type (default: 'Debug')
+  --build-type T        set cmake build type (default: 'Release')
   --reset               reset cmake build
   --spm                 install cmake dependencies with spm
   --fetchcontent        install cmake dependencies with fetchcontent
