@@ -24,7 +24,7 @@ void __throw_no_char();
 void __throw_float_item();
 
 extern class_ *cl_array;
-template <class T> class array : public pyseq<T> {
+template <class T> class array final : public pyseq<T> {
 public:
     __GC_VECTOR(char) units; /* XXX no pointers, so avoid GC */
     str *typecode;
@@ -68,6 +68,17 @@ public:
 
     T __getitem__(__ss_int i);
     T __getfast__(__ss_int i);
+    T __getat__(size_t off); /* element at byte offset off, no checks */
+
+    /* iterate over byte offsets rather than through the (virtual) pyseq
+       __len__/__getitem__: no division by itemsize, wrap-around or bounds
+       check per element, and nothing virtual left in a 'for x in a' loop */
+    inline bool for_in_has_next(size_t off) { return off < units.size(); }
+    inline T for_in_next(size_t &off) {
+        T t = __getat__(off);
+        off += (size_t)itemsize;
+        return t;
+    }
     void *__setitem__(__ss_int i, T t);
     void *__delitem__(__ss_int i);
 
@@ -132,7 +143,7 @@ public:
  * before the first use that would otherwise instantiate the primary
  * template. */
 template<> inline void array<str *>::fillbuf(str *t);
-template<> inline str *array<str *>::__getfast__(__ss_int i);
+template<> inline str *array<str *>::__getat__(size_t off);
 template<> inline str *array<str *>::__repr__();
 template<> inline str *array<str *>::tounicode();
 template<> inline void *array<str *>::fromunicode(str *s);
@@ -481,29 +492,32 @@ template<class T> T array<T>::__getitem__(__ss_int i) {
     return __getfast__(i);
 }
 
-template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
+template<class T> inline T array<T>::__getfast__(__ss_int i) {
     i = __wrap(this, i, "array index out of range");
-    unsigned int j = (unsigned int)i;
+    return __getat__((size_t)i*(size_t)itemsize);
+}
+
+template<> inline __ss_int array<__ss_int>::__getat__(size_t off) {
+    const char *p = &units[off];
     switch(typechar) {
-        case 'b': return (__ss_int)(*((signed char *)(&units[j*itemsize])));
-        case 'B': return (__ss_int)(*((unsigned char *)(&units[j*itemsize])));
-        case 'h': return (__ss_int)(*((signed short *)(&units[j*itemsize])));
-        case 'H': return (__ss_int)(*((unsigned short *)(&units[j*itemsize])));
-        case 'i': return (__ss_int)(*((signed int *)(&units[j*itemsize])));
-        case 'I': return (__ss_int)(*((unsigned int *)(&units[j*itemsize])));
-        case 'l': return (__ss_int)(*((signed long *)(&units[j*itemsize])));
-        case 'L': return (__ss_int)(*((unsigned long *)(&units[j*itemsize])));
-        case 'q': return (__ss_int)(*((signed long long *)(&units[j*itemsize])));
-        case 'Q': return (__ss_int)(*((unsigned long long *)(&units[j*itemsize])));
+        case 'b': return (__ss_int)(*((signed char *)p));
+        case 'B': return (__ss_int)(*((unsigned char *)p));
+        case 'h': return (__ss_int)(*((signed short *)p));
+        case 'H': return (__ss_int)(*((unsigned short *)p));
+        case 'i': return (__ss_int)(*((signed int *)p));
+        case 'I': return (__ss_int)(*((unsigned int *)p));
+        case 'l': return (__ss_int)(*((signed long *)p));
+        case 'L': return (__ss_int)(*((unsigned long *)p));
+        case 'q': return (__ss_int)(*((signed long long *)p));
+        case 'Q': return (__ss_int)(*((unsigned long long *)p));
     }
     return 0;
 }
-template<> inline __ss_float array<__ss_float>::__getfast__(__ss_int i) {
-    i = __wrap(this, i, "array index out of range");
+template<> inline __ss_float array<__ss_float>::__getat__(size_t off) {
     if(typechar == 'f')
-        return (__ss_float)(*((float *)(&units[(size_t)i*itemsize])));
+        return (__ss_float)(*((float *)(&units[off])));
     else
-        return (__ss_float)(*((double *)(&units[(size_t)i*itemsize])));
+        return (__ss_float)(*((double *)(&units[off])));
 }
 
 /* unicode arrays ('u'/'w'): elements are single-character strings, stored as
@@ -516,9 +530,8 @@ template<> inline void array<str *>::fillbuf(str *t) {
     *((__ss_char *)buffy) = t->unit[0];
 }
 
-template<> inline str *array<str *>::__getfast__(__ss_int i) {
-    i = __wrap(this, i, "array index out of range");
-    return __char_str(*((__ss_char *)(&units[(size_t)i*itemsize])));
+template<> inline str *array<str *>::__getat__(size_t off) {
+    return __char_str(*((__ss_char *)(&units[off])));
 }
 
 template<class T> void *array<T>::append(T t) {

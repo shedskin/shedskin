@@ -884,6 +884,80 @@ def test_float_into_int_array():
     assert d.tolist() == [5.0, 4.0, 2.0, 3.0]
 
 
+def _iteration_ints():
+    vals = [0, 1, 2, 3, 127]
+    ints = [array.array('b', vals), array.array('B', vals), array.array('h', vals),
+            array.array('H', vals), array.array('i', vals), array.array('I', vals),
+            array.array('l', vals), array.array('L', vals), array.array('q', vals),
+            array.array('Q', vals)]
+    for a in ints:
+        got = []
+        for x in a:
+            got.append(x)
+        assert got == vals, a.typecode
+        assert sum(a) == 133, a.typecode
+        assert max(a) == 127 and min(a) == 0, a.typecode
+    neg = [-1, -128, 5]
+    for a in [array.array('b', neg), array.array('h', neg), array.array('i', neg),
+              array.array('l', neg), array.array('q', neg)]:
+        assert [x for x in a] == neg, a.typecode
+    assert [x for x in array.array('B', [255, 0, 200])] == [255, 0, 200]
+    for x in array.array('Q', [2**63 - 1]):
+        assert x == 2**63 - 1
+    n = 0
+    for x in array.array('i'):
+        n += 1
+    assert n == 0
+
+
+def _iteration_floats():
+    fvals = [1.5, -2.25, 0.0, 1024.125]
+    for a in [array.array('f', fvals), array.array('d', fvals)]:
+        total = 0.0
+        for y in a:
+            total += y
+        assert total == 1.5 - 2.25 + 1024.125, a.typecode
+        assert list(a) == fvals, a.typecode
+    assert [y for y in array.array('d')] == []
+
+
+def _iteration_mutate():
+    # the end is rechecked every step, as in CPython
+    a = array.array('h', [1, 2, 3])
+    seen = []
+    for x in a:
+        seen.append(x)
+        if x == 1:
+            a.append(4)
+        if len(seen) > 10:
+            break
+    assert seen == [1, 2, 3, 4]
+    a = array.array('i', [1, 2, 3, 4])
+    seen = []
+    for x in a:
+        seen.append(x)
+        a.pop()
+    assert seen == [1, 2]
+
+
+def _iteration_protocol():
+    # other users of the for_in protocol
+    a = array.array('l', [3, 1, 2])
+    b = array.array('d', [0.5, 1.5, 2.5])
+    assert sorted(a) == [1, 2, 3]
+    assert [(x, y) for x, y in zip(a, b)] == [(3, 0.5), (1, 1.5), (2, 2.5)]
+    assert [i for i, x in enumerate(a)] == [0, 1, 2]
+    assert 2 in a and 7 not in a
+    assert list(array.array('w', 'abc')) == ['a', 'b', 'c']
+
+
+def test_iteration():
+    # 'for x in a' walks the buffer by byte offset (array.hpp for_in_next)
+    _iteration_ints()
+    _iteration_floats()
+    _iteration_mutate()
+    _iteration_protocol()
+
 def test_all():
     test_typecodes()
     test_buffer_info()
@@ -925,6 +999,7 @@ def test_all():
     test_error_messages()
     test_bytes_buffer()
     test_float_into_int_array()
+    test_iteration()
 
 
 if __name__ == '__main__':

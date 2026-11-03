@@ -18,7 +18,7 @@ template <class K, class V> class __counterelements;
 extern class_ *cl_deque;
 extern class_ *cl_defaultdict;
 extern class_ *cl_counter;
-template <class A> class deque : public pyiter<A> {
+template <class A> class deque final : public pyiter<A> {
 public:
 #ifdef __SS_NOGC
     std::deque<A> units;
@@ -301,7 +301,7 @@ public:
 
 };
 
-template <class T> class __dequeiter : public __iter<T> {
+template <class T> class __dequeiter final : public __iter<T> {
 public:
     deque<T> *p;
     size_t i, size;
@@ -319,7 +319,7 @@ public:
     }
 };
 
-template <class T> class __dequereviter : public __iter<T> {
+template <class T> class __dequereviter final : public __iter<T> {
 public:
     deque<T> *p;
     __ss_int i;
@@ -361,7 +361,7 @@ template<class T> inline __ss_bool __ge(deque<T> *a, deque<T> *b) { return __deq
 template<class T> inline __ss_bool __lt(deque<T> *a, deque<T> *b) { return __deque_order(a, b, [](auto x, auto y) { return __lt(x, y); }); }
 template<class T> inline __ss_bool __le(deque<T> *a, deque<T> *b) { return __deque_order(a, b, [](auto x, auto y) { return __le(x, y); }); }
 
-template <class K, class V> class defaultdict : public dict<K, V> {
+template <class K, class V> class defaultdict final : public dict<K, V> {
     V (*func)();
 
 public:
@@ -469,7 +469,7 @@ public:
 };
 
 /* Counter.elements(): repeats each key `value` times (counts <= 0 skipped) */
-template <class K, class V> class __counterelements : public __iter<K> {
+template <class K, class V> class __counterelements final : public __iter<K> {
 public:
     Counter<K, V> *p;
     typename __GC_DICT<K, V>::iterator it;
@@ -499,7 +499,7 @@ public:
     inline str *__str__() { return new str("Counter_elements"); }
 };
 
-template <class K, class V> class Counter : public dict<K, V> {
+template <class K, class V> class Counter final : public dict<K, V> {
 public:
     Counter() {
         this->__class__ = cl_counter;

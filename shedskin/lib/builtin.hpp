@@ -537,7 +537,7 @@ template <class T>
 using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, __ss_allocator< T > >;
 #endif
 
-class class_: public pyobj {
+class class_ final: public pyobj {
 public:
     str *__name__;
 
@@ -567,7 +567,7 @@ public:
     str *__repr__();
 };
 
-template <class T> class __seqiter : public __iter<T> {
+template <class T> class __seqiter final : public __iter<T> {
 public:
     __ss_int counter, size;
     pyseq<T> *p;

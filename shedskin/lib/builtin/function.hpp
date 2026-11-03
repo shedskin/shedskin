@@ -340,7 +340,7 @@ template <class V, class W> list<str *> *sorted(str *x, V cmp, W key, __ss_int r
 
 /* range */
 
-class __xrange : public pyseq<__ss_int> {
+class __xrange final : public pyseq<__ss_int> {
 public:
     __ss_int a, b, s; // TODO remove
     __ss_int start, stop, step;
@@ -368,7 +368,7 @@ __xrange *range(__ss_int a, __ss_int b, __ss_int s=1);
 
 /* reversed */
 
-template<class A> class __ss_reverse : public __iter<A> {
+template<class A> class __ss_reverse final : public __iter<A> {
 public:
     pyseq<A> *p;
     __ss_int i;
@@ -396,7 +396,7 @@ __iter<__ss_int> *reversed(__xrange *x);
 
 /* enumerate */
 
-template<class A> class __enumiter : public __iter<tuple2<__ss_int, A> *> {
+template<class A> class __enumiter final : public __iter<tuple2<__ss_int, A> *> {
 public:
     __iter<A> *p;
     __ss_int i;
@@ -438,7 +438,7 @@ template<class T> inline bool __zip_advance(__iter<T> *iter, T &result) {
     return !iter->__stop_iteration;
 }
 
-template<class T, class U> class izipiter : public __iter<tuple2<T, U> *> {
+template<class T, class U> class izipiter final : public __iter<tuple2<T, U> *> {
 public:
     bool exhausted;
     __ss_bool strict;
@@ -488,7 +488,7 @@ template<class T, class U> tuple2<T, U> *izipiter<T, U>::__get_next() {
     return NULL;
 }
 
-template<class T> class izipiter<T, T> : public __iter<tuple2<T, T> *> {
+template<class T> class izipiter<T, T> final : public __iter<tuple2<T, T> *> {
 public:
     bool exhausted;
     __ss_bool strict;
@@ -590,7 +590,7 @@ template<class T, class U> inline izipiter<T, U> *__zip(int, __ss_bool strict_, 
    indexing, checking the current length at each step), instead of allocating
    an iterator and making a virtual call per element */
 
-template<class A, class B> class izipiter2 : public __iter<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> {
+template<class A, class B> class izipiter2 final : public __iter<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> {
 public:
     typedef typename A::for_in_unit TA;
     typedef typename B::for_in_unit TB;
@@ -671,7 +671,7 @@ template <class A> A next(__iter<A> *iter1) { return iter1->__next__(); }
 
 // TODO use variadic template instead?
 
-template <class R, class T1> class imapiter1: public __iter <R> {
+template <class R, class T1> class imapiter1 final: public __iter <R> {
 public:
     bool exhausted;
     __ss_bool strict;
@@ -726,7 +726,7 @@ template <class R, class T1> inline imapiter1<R, T1> *map(int, __ss_bool strict_
 
 /* map (2 iters) */
 
-template<class R, class T1, class T2> class imapiter2: public __iter<R> {
+template<class R, class T1, class T2> class imapiter2 final: public __iter<R> {
 public:
     bool exhausted;
     __ss_bool strict;
@@ -789,7 +789,7 @@ template<class R, class T1, class T2> inline imapiter2<R, T1, T2> *map(int, __ss
 
 /* map (3 iters) */
 
-template<class R, class T1, class T2, class T3> class imapiter3: public __iter<R> {
+template<class R, class T1, class T2, class T3> class imapiter3 final: public __iter<R> {
 public:
     bool exhausted;
     __ss_bool strict;
@@ -871,7 +871,7 @@ template<class T> static __ss_bool _identity(T value) {
     return ___bool(value);
 }
 
-template<class T, class B> class ifilteriter : public __iter<T> {
+template<class T, class B> class ifilteriter final : public __iter<T> {
 public:
     B (*predicate)(T);
     __iter<T> *iter;
