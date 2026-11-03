@@ -922,7 +922,10 @@ class dict(pyiter):
         yield (self.unit, self.value)
 
     def __or__(self, e):
-        return self
+        d = dict()
+        d.__setunit__(self.unit, self.value)
+        d.__setunit__(e.unit, e.value)
+        return d
 
     def __ior__(self, d):
         self.__setunit__(d.unit, d.value)

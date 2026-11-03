@@ -144,7 +144,7 @@ public:
 
     frozendict<K,V> *copy();
 
-    frozendict<K,V> *__or__(dict<K,V> *s);
+    dict<K,V> *__or__(dict<K,V> *s);
     dict<K,V> *__or_dict__(dict<K,V> *s) { return __or__(s); }
     template <class U> frozendict<K,V> *__ior__(U *other);
 };
@@ -564,7 +564,7 @@ template<class K, class V> str *frozendict<K,V>::__repr__() {
     return r;
 }
 
-template<class K, class V> frozendict<K,V> *frozendict<K,V>::__or__(dict<K,V> *other) {
+template<class K, class V> dict<K,V> *frozendict<K,V>::__or__(dict<K,V> *other) {
     frozendict<K,V> *result = this->copy();
     result->update(other);
     return result;
