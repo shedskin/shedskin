@@ -47,6 +47,24 @@ def use_windows_macros():
     return small + hyper + near + far + pascal + cdecl + interface
 
 
+# C/C++ macros from the system headers (1029-C2): any use of these names
+# was expanded by the preprocessor
+INFINITY = float('inf')
+
+
+class Limits:
+    def __init__(self):
+        self.INT_MAX = 2**31 - 1
+
+
+def use_path_max(PATH_MAX=4096):
+    return PATH_MAX
+
+
+def alloca(n):  # function-like macro
+    return n + 1
+
+
 def double(v):
     return v * 2
 
@@ -96,6 +114,13 @@ def test_windows_macros_as_identifiers():
     assert use_windows_macros() == 28
 
 
+def test_c_macros_as_identifiers():
+    assert INFINITY > 1e308
+    assert Limits().INT_MAX == 2147483647
+    assert use_path_max() == 4096
+    assert alloca(1) == 2
+
+
 def test_reserved_function_names_as_values():
     f = double
     assert f(21) == 42
@@ -126,6 +151,7 @@ def test_all():
     test_decltype_and_thread_local_as_identifiers()
     test_other_reserved_identifiers()
     test_windows_macros_as_identifiers()
+    test_c_macros_as_identifiers()
     test_reserved_function_names_as_values()
     test_reserved_class_names()
 
