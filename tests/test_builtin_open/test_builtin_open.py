@@ -152,9 +152,13 @@ def test_lineendings():
      with open(lf_txt, "r") as f4b:
          assert f4b.read() == "hello world\nbye\n"
 
-     with open(crlf_txt, "w") as f5:
+     # (newline='': on windows, newline=None would write '\r\r\n')
+     with open(crlf_txt, "w", newline='') as f5:
          f5.write("hello world\r\n")
          f5.write("bye\r\n")
+
+     with open(crlf_txt, "rb") as f6r:
+         assert f6r.read() == b"hello world\r\nbye\r\n"
 
      with open(crlf_txt, "r") as f6:
          assert list(f6) == ["hello world\n", "bye\n"]
@@ -266,6 +270,32 @@ def test_crlf_ignore():
         g.write(b'a\r\xff\nb\r\xc3\xa9\nc\r\xffd')
     with open('ctest.txt', errors='ignore', newline='') as f:
         assert f.readlines() == ['a\r\n', 'b\r', '\xe9\n', 'c\r', 'd']
+    # .. also a cut-short utf-8 sequence, which later bytes could still complete (1031-B1)
+    for data in [b'a\r\xe2\nb\n', b'a\r\xe2\x82\nb\n', b'a\r\xf0\x9f\x98\nb', b'a\r\x80\xe2\nb',
+                 b'a\r\xc3\xe2\x82\nb', b'a\r\xff\xff\xff\xe2\x82\nb']:
+        with open('ctest.txt', 'wb') as g:
+            g.write(data)
+        with open('ctest.txt', errors='ignore', newline='') as f:
+            assert f.readlines() == ['a\r\n', 'b\n' if data.endswith(b'\n') else 'b']
+        with open('ctest.txt', errors='ignore', newline='') as f:
+            assert f.readline(2) == 'a\r'
+            assert f.readline() == '\n'
+    with open('ctest.txt', 'wb') as g:
+        g.write(b'a\r\xe2\x82\xacb\r\xf0\x9f\x98\x80\nc\r\xe2')
+    with open('ctest.txt', errors='ignore', newline='') as f:
+        assert f.readlines() == ['a\r', '€b\r', '\U0001f600\n', 'c\r']
+    # tell() (or seek, or a write) after '\r', '\n' and ignored bytes between (1031-B2)
+    with open('ctest.txt', 'wb') as g:
+        g.write(b'x\r\xff\nyz\r\xe2\x82\nw')
+    with open('ctest.txt', errors='ignore') as f:
+        assert f.readline() == 'x\n'
+        pos = f.tell()
+        assert pos == 4
+        assert f.readline() == 'yz\n'
+        assert f.tell() == 10
+        assert f.read() == 'w'
+        f.seek(pos)
+        assert f.read() == 'yz\nw'
     os.remove('ctest.txt')
 
 
@@ -732,6 +762,31 @@ def test_pending_cr_seek_tell():
         assert f.tell() == 6
         f.seek(3)
         assert f.read() == 'b\n'
+    # .. also with lone '\n's (windows text mode ftell() counts each as '\r\n')
+    with open('ucr2.bin', 'wb') as g:
+        g.write(b'a\nbc\nd\x1ae\r\nf')
+    with open('ucr2.bin') as f:
+        assert f.readline() == 'a\n'
+        assert f.tell() == 2
+        assert f.readline() == 'bc\n'
+        assert f.tell() == 5
+        assert f.readline() == 'd\x1ae\n'  # (no ctrl-z eof)
+        assert f.tell() == 10
+        assert f.read() == 'f'
+        f.seek(2)
+        assert f.read() == 'bc\nd\x1ae\nf'
+    # newline=None writes os.linesep
+    with open('ucr2.bin', 'w') as f:
+        assert f.write('a\nb\r\n') == 5
+    with open('ucr2.bin', 'rb') as g:
+        if sys.platform == 'win32':
+            assert g.read() == b'a\r\nb\r\r\n'
+        else:
+            assert g.read() == b'a\nb\r\n'
+    with open('ucr2.bin', 'w', newline='') as f:
+        f.write('a\nb')
+    with open('ucr2.bin', 'rb') as g:
+        assert g.read() == b'a\nb'
     os.remove('ucr2.bin')
 
 

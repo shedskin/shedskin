@@ -242,7 +242,7 @@ def test_excel():
         ['hoi2', 'a, b, c', '17'],
     ]
 
-    with open('excel_out.csv', 'w') as f:
+    with open('excel_out.csv', 'w', newline='') as f:  # (else '\r\r\n' on windows)
         writer = csv.writer(f)
         writer.writerows(data)
 
@@ -267,7 +267,7 @@ def test_excel():
         {'aap': 'hoi2', 'bert': 'a, b, c', 'frits': '17'}
     ]
 
-    with open('excel_out2.csv', 'w') as f:
+    with open('excel_out2.csv', 'w', newline='') as f:
         dict_writer = csv.DictWriter(f, fieldnames=iter(['aap', 'bert', 'frits']))  # iterable fieldnames
         dict_writer.writeheader()
         dict_writer.writerows(iter(rows))  # iterable rows
@@ -412,7 +412,7 @@ def test_writerow_none_field():
 def test_writerow_single_empty_field():
     # a row with exactly one empty/None field must be disambiguated from a
     # truly blank row (regression test).
-    with open('test_out.csv', 'w') as f:
+    with open('test_out.csv', 'w', newline='') as f:  # (else '\r\r\n' on windows)
         writer = csv.writer(f)
         row_empty = []
         row_single_empty = ['']
