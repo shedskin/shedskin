@@ -313,6 +313,57 @@ def test_unpack16():
             pass
 
 
+class UnpackPoint:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+
+
+def test_unpack17():
+    # attribute/subscript/nested targets (#1580)
+    p = UnpackPoint()
+    p.x, p.y = [1, 2]
+    assert (p.x, p.y) == (1, 2)
+    for rhs in ([1, 2, 3], [1]):
+        try:
+            p.x, p.y = rhs
+            assert False
+        except ValueError:
+            pass
+    for p.x, p.y in [[3, 4]]:
+        pass
+    assert (p.x, p.y) == (3, 4)
+    try:
+        for p.x, p.y in [[1, 2], [3, 4, 5]]:
+            pass
+        assert False
+    except ValueError:
+        pass
+
+    l = [0, 0]
+    l[0], l[1] = {1: 10, 0: 20}  # keys, not d[0], d[1]
+    assert sorted(l) == [0, 1]
+    l[0], l[1] = (x for x in range(2))
+    assert l == [0, 1]
+    l[0], l[1] = {9, 10}
+    assert sorted(l) == [9, 10]
+    l[0], p.y = unpack_gen(2)
+    assert (l[0], p.y) == (1, 2)
+    ls = ['', '']
+    ls[0], ls[1] = {'a': 'b', 'c': 'd'}
+    assert sorted(ls) == ['a', 'c']
+
+    try:
+        (a, b), c = [(i, i) for i in range(3)]
+        assert False
+    except ValueError:
+        pass
+    (a, b), c = [(1, 2), (3, 4)]
+    assert (a, b, c) == (1, 2, (3, 4))
+    (e, f), (g, h) = unpack_gen(2), unpack_gen(2)
+    assert (e, f, g, h) == (1, 2, 1, 2)
+
+
 def test_all():
     test_assign_int()
     test_assign_list()
@@ -334,6 +385,7 @@ def test_all():
     test_unpack14()
     test_unpack15()
     test_unpack16()
+    test_unpack17()
     test_walrus()
     test_walrus2()
     test_walrus3()

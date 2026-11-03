@@ -4329,66 +4329,50 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             nodes = lvalue.elts
 
-        # --- nested unpacking assignment: a, (b,c) = d, e
-        if [item for item in nodes if not isinstance(item, ast.Name)]:
-            self.start(temp + " = ")
-            if isinstance(rvalue, str):
-                self.append(rvalue)
-            else:
-                self.visit(rvalue, func)
-            self.eol()
-
-            for i, item in enumerate(nodes):
-                selector = self.get_selector(temp, item, i)
-                if isinstance(item, ast.Name):
-                    self.output("{} = {};".format(item.id, selector))
-                elif ast_utils.is_assign_list_or_tuple(item):  # recursion
-                    assert isinstance(item, (ast.List, ast.Tuple))
-                    self.tuple_assign(item, selector, func)
-                elif isinstance(item, ast.Subscript):
-                    self.assign_pair(item, selector, func)
-                elif ast_utils.is_assign_attribute(item):
-                    self.assign_pair(item, selector, func)
-                    self.eol(" = " + selector)
-
-        # --- non-nested unpacking assignment: a,b,c = d
+        self.start(temp + " = ")
+        if isinstance(rvalue, str):
+            self.append(rvalue)
         else:
-            self.start()
-            self.visitm(temp, " = ", rvalue, func)
-            self.eol()
+            self.visit(rvalue, func)
+        self.eol()
 
-            temp_loop = None
-            for i, item in enumerate(lvalue.elts):
-                rvalue_node = self.gx.item_rvalue[item]
-                if i == 0:
-                    if self.only_classes(
-                        rvalue_node,
-                        ("list", "str_", "bytes_", "tuple", "tuple2", "tuple3"),
-                    ):
-                        self.output(
-                            "__SS_UNPACK_CHECK(%s, %d);" % (temp, len(lvalue.elts))
-                        )
-                    else:
-                        # use iteration protocol (avoid list allocation)
-                        temp_loop = temp + "_loop"
-                        self.output("{")
-                        self.indent()
-                        self.output(
-                            "auto %s = %s->for_in_init();" % (temp_loop, temp)
-                        )
-
-                if temp_loop:
-                    selector = "__ss_unpack_next(%s, %s)" % (temp, temp_loop)
+        temp_loop = None
+        for i, item in enumerate(nodes):
+            if i == 0:
+                if self.only_classes(
+                    self.gx.item_rvalue[item],
+                    ("list", "str_", "bytes_", "tuple", "tuple2", "tuple3"),
+                ):
+                    self.output("__SS_UNPACK_CHECK(%s, %d);" % (temp, len(nodes)))
                 else:
-                    selector = self.get_selector(temp, item, i)
+                    # use iteration protocol (avoid list allocation)
+                    temp_loop = temp + "_loop"
+                    self.output("{")
+                    self.indent()
+                    self.output("auto %s = %s->for_in_init();" % (temp_loop, temp))
+
+            if temp_loop:
+                selector = "__ss_unpack_next(%s, %s)" % (temp, temp_loop)
+            else:
+                selector = self.get_selector(temp, item, i)
+
+            if isinstance(item, ast.Name):
                 self.start()
                 self.visitm(item, " = ", selector, func)
                 self.eol()
+            elif ast_utils.is_assign_list_or_tuple(item):  # a, (b,c) = d, e
+                assert isinstance(item, (ast.List, ast.Tuple))
+                self.tuple_assign(item, selector, func)
+            elif isinstance(item, ast.Subscript):
+                self.assign_pair(item, selector, func)
+            elif ast_utils.is_assign_attribute(item):
+                self.assign_pair(item, selector, func)
+                self.eol(" = " + selector)
 
-            if temp_loop:
-                self.output("__ss_unpack_end(%s, %s);" % (temp, temp_loop))
-                self.deindent()
-                self.output("}")
+        if temp_loop:
+            self.output("__ss_unpack_end(%s, %s);" % (temp, temp_loop))
+            self.deindent()
+            self.output("}")
 
     def one_class(self, node: ast.AST, names: tuple[str, ...]) -> bool:
         """Check if a node is a single class"""
