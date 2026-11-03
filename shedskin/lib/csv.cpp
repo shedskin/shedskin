@@ -15,7 +15,7 @@ dict<str *, Dialect *> *_dialects;
 
 tuple2<str *, str *> *const_3;
 
-str *const_1, *const_16, *const_17, *const_2, *const_21, *const_22, *const_23;
+str *const_1, *const_16, *const_17, *const_2, *const_23;
 
 
 const __ss_int QUOTE_MINIMAL = 0;
@@ -186,35 +186,6 @@ void *unregister_dialect(str *name) {
         throw new Error(new str("unknown dialect"));
     _dialects->__delitem__(name);
     return NULL;
-}
-
-static inline list<str *> *list_comp_0(DictWriter *self, dict<str *, str *> *rowdict) {
-    list<str *> *__ss_result = new list<str *>();
-    str *k;
-    dict<str *, str *>::for_in_loop __3;
-    int __2;
-    dict<str *, str *> *__1;
-    FOR_IN(k,rowdict,1,2,3)
-        if ((!(self->fieldnames)->__contains__(k)))
-            __ss_result->append(__add_strs(3, new str("'"), k, new str("'")));
-    END_FOR
-    return __ss_result;
-}
-
-static inline list<str *> *list_comp_1(DictWriter *self, dict<str *, str *> *rowdict) {
-    list<str *> *__37;
-    list<str *>::for_in_loop __123;
-    __ss_int __39;
-    str *key;
-    list<str *> *__ss_result = new list<str *>();
-
-    __37 = self->fieldnames;
-    __ss_result->resize(len(__37));
-    FOR_IN(key,__37,37,39,123)
-        __ss_result->units[(size_t)__39] = rowdict->get(key, self->restval);
-    END_FOR
-
-    return __ss_result;
 }
 
 /* reader */
@@ -713,39 +684,8 @@ void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, s
     return NULL;
 }
 
-list<str *> *DictWriter::_dict_to_list(dict<str *, str *> *rowdict) {
-    list<str *> *wrong_fields;
-
-    if (__eq(this->extrasaction, const_1)) {
-        wrong_fields = list_comp_0(this, rowdict);
-        if (___bool(wrong_fields)) {
-            throw ((new ValueError((const_21)->__add__((const_22)->join(wrong_fields)))));
-        }
-    }
-    return list_comp_1(this, rowdict);
-}
-
 __ss_int DictWriter::writeheader() {
     return this->_writer->writerow(this->fieldnames);
-}
-
-__ss_int DictWriter::writerow(dict<str *, str *> *rowdict) {
-    return (this->_writer)->writerow(this->_dict_to_list(rowdict));
-}
-
-void *DictWriter::writerows(pyiter<dict<str *, str *> *> *rowdicts) {
-    list<list<str *> *> *rows;
-
-    pyiter<dict<str *, str *> *> *__40;
-    pyiter<dict<str *, str *> *>::for_in_loop __123;
-    __ss_int __42;
-
-    dict<str *, str *> *rowdict;
-    FOR_IN(rowdict,rowdicts,40,42,123)
-        (this->_writer)->writerow(this->_dict_to_list(rowdict));
-    END_FOR
-
-    return NULL;
 }
 
 /* Sniffer */
@@ -1225,8 +1165,6 @@ void __init() {
     const_3 = (new tuple2<str *, str *>(2, const_1, const_2));
     const_16 = new str("");
     const_17 = new str("field larger than field limit (%d)");
-    const_21 = new str("dict contains fields not in fieldnames: ");
-    const_22 = new str(", ");
     const_23 = new str("extrasaction (%s) must be 'raise' or 'ignore'");
 
     _dialects = new dict<str *, Dialect *>();

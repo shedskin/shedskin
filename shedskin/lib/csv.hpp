@@ -277,36 +277,44 @@ public:
         typename T::for_in_loop __3;
         int __2;
         T *__1;
-        __ss_int quoting = this->dialect->quoting;
         bool null_field = false;
 
         this->join_reset();
 
         FOR_IN(field,seq,1,2,3)
-            if constexpr (std::is_pointer_v<E>)
-                null_field = (field == NULL);
-
-            __ss_int quoted;
-            if (quoting == QUOTE_ALL)
-                quoted = 1;
-            else if (quoting == QUOTE_NONNUMERIC)
-                quoted = !__csv_is_numeric<E>::value;
-            else if (quoting == QUOTE_STRINGS)
-                quoted = std::is_same_v<E, str *> && !null_field;
-            else if (quoting == QUOTE_NOTNULL)
-                quoted = !null_field;
-            else
-                quoted = 0;
-
-            if constexpr (std::is_same_v<E, str *>)
-                this->join_append(field, quoted);
-            else if constexpr (std::is_pointer_v<E>)
-                this->join_append(null_field ? NULL : __str(field), quoted);
-            else
-                this->join_append(__str(field), quoted);
+            null_field = this->append_field(field);
         END_FOR
 
         return this->join_finish(null_field);
+    }
+
+    /* append a single field, quoting it according to its type; returns whether it was None */
+    template<class E> bool append_field(E field) {
+        __ss_int quoting = this->dialect->quoting;
+        bool null_field = false;
+        if constexpr (std::is_pointer_v<E>)
+            null_field = (field == NULL);
+
+        __ss_int quoted;
+        if (quoting == QUOTE_ALL)
+            quoted = 1;
+        else if (quoting == QUOTE_NONNUMERIC)
+            quoted = !__csv_is_numeric<E>::value;
+        else if (quoting == QUOTE_STRINGS)
+            quoted = std::is_same_v<E, str *> && !null_field;
+        else if (quoting == QUOTE_NOTNULL)
+            quoted = !null_field;
+        else
+            quoted = 0;
+
+        if constexpr (std::is_same_v<E, str *>)
+            this->join_append(field, quoted);
+        else if constexpr (std::is_pointer_v<E>)
+            this->join_append(null_field ? NULL : __str(field), quoted);
+        else
+            this->join_append(__str(field), quoted);
+
+        return null_field;
     }
 
     template<class T> void *writerows(T *seqs) {
@@ -483,11 +491,48 @@ public:
     );
 
     __ss_int writeheader();
-    __ss_int writerow(dict<str *, str *> *rowdict);
-    void *writerows(pyiter<dict<str *, str *> *> *rowdicts);
 
-    // internal
-    list<str *> *_dict_to_list(dict<str *, str *> *rowdict);
+    /* like CPython, accept dicts with any value type: values are written
+       as by writer.writerow, missing fields as restval */
+    template<class T> __ss_int writerow(T *rowdict) {
+        if (this->extrasaction->unit == U"raise") {
+            list<str *> *wrong_fields = new list<str *>();
+            typename T::for_in_unit k;
+            typename T::for_in_loop __3;
+            int __2;
+            T *__1;
+            FOR_IN(k,rowdict,1,2,3)
+                if (!this->fieldnames->__contains__(k))
+                    wrong_fields->append(repr(k));
+            END_FOR
+            if (___bool(wrong_fields))
+                throw new ValueError((new str("dict contains fields not in fieldnames: "))->__add__((new str(", "))->join(wrong_fields)));
+        }
+
+        writer *w = this->_writer;
+        bool null_field = false;
+        w->join_reset();
+        for (str *key : this->fieldnames->units) {
+            if (rowdict->__contains__(key))
+                null_field = w->append_field(rowdict->__getitem__(key));
+            else
+                null_field = w->append_field(this->restval);
+        }
+        return w->join_finish(null_field);
+    }
+
+    template<class T> void *writerows(T *rowdicts) {
+        typename T::for_in_unit rowdict;
+        typename T::for_in_loop __3;
+        int __2;
+        T *__1;
+
+        FOR_IN(rowdict,rowdicts,1,2,3)
+            this->writerow(rowdict);
+        END_FOR
+
+        return NULL;
+    }
 };
 
 class Sniffer : public pyobj {
