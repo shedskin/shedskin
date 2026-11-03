@@ -271,6 +271,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 for n in assign_values:
                     assign_targets.setdefault(n, set()).add(target_var)
 
+    def get_assign_targets(self, item: ast.expr, func: Optional[python.Namespace]) -> set[python.Variable] | None:
+        if not func or not isinstance(item, ast.Name):
+            return None
+        targets = None
+        if func:
+            assign_targets = func.split_assign_targets.get(item.id)
+            if assign_targets:
+                targets = assign_targets.get(item, set())
+        return targets
+
     def cpp_name(self, obj: Any) -> str:
         """Generate a C++ name for an object"""
         return self.namer.name(obj)
@@ -978,7 +988,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if item.optional_vars:
             # declared by the caller, so it stays bound after the block
             self.start()
-            self.visitm(item.optional_vars, " = __with%d" % n, func)
+            optional_vars = item.optional_vars
+            targets = self.get_assign_targets(optional_vars, func)
+            if targets is None or not isinstance(optional_vars, ast.Name):
+                self.visitm(item.optional_vars, " = __with%d" % n, func)
+            else:
+                for var in targets:
+                    self.output(f"{self.cpp_name(var)} = __with{n};")
             self.eol()
         self.mv.current_with_vars.append(handle_with_vars(item.optional_vars))
         # as try..finally, so __exit__ also runs for return/break/continue, and an
@@ -1902,20 +1918,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Generate a for loop"""
         iter_targets: set[python.Variable] | None = None
         if isinstance(node.target, ast.Name):
-            targets = None
-            if func:
-                assign_targets = func.split_assign_targets.get(node.target.id)
-                if assign_targets:
-                    targets = assign_targets.get(node.target, set())
-            if targets:
-                if len(targets) > 1:
-                    assname = self.temp_varname(node.target)
-                    iter_targets = targets
-                else:
-                    var = next(iter(targets))
-                    assname = var.name
-            else:
+            targets = self.get_assign_targets(node.target, func)
+            if not targets:
                 assname = node.target.id
+            elif len(targets) > 1:
+                assname = self.temp_varname(node.target)
+                iter_targets = targets
+            else:
+                var = next(iter(targets))
+                assname = var.name
         elif ast_utils.is_assign_attribute(node.target):
             assert isinstance(node.target, ast.Attribute)
             self.start("")
@@ -4607,24 +4618,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 selector = self.get_selector(temp, item, i)
 
             if isinstance(item, ast.Name):
-                assign_targets = None
-                if func:
-                    assign_targets = func.split_assign_targets.get(item.id)
-                if assign_targets:
-                    targets = assign_targets.get(item)
-                    if targets:
-                        for var in targets:
-                            self.start()
-                            self.append(self.cpp_name(var))
-                            self.visitm(" = ", selector, func)
-                            self.eol()
-                    else:
-                        # value never reaches a read
-                        pass
-                else:
+                targets = self.get_assign_targets(item, func)
+                if targets is None:
                     self.start()
                     self.visitm(item, " = ", selector, func)
                     self.eol()
+                elif targets:
+                    for var in targets:
+                        self.start()
+                        self.append(self.cpp_name(var))
+                        self.visitm(" = ", selector, func)
+                        self.eol()
+                else:
+                    # value never reaches a read
+                    pass
             elif ast_utils.is_assign_list_or_tuple(item):  # a, (b,c) = d, e
                 assert isinstance(item, (ast.List, ast.Tuple))
                 self.tuple_assign(item, selector, func)
@@ -4897,12 +4904,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
                 # name = expr
                 elif isinstance(lvalue, ast.Name):
-                    assign_targets = None
-                    if func:
-                        assign_targets = func.split_assign_targets.get(lvalue.id)
-                    if assign_targets:
+                    targets = self.get_assign_targets(lvalue, func)
+                    if targets is None:
+                        var_types = self.mergeinh[
+                            python.lookup_var(lvalue.id, func, self.mv)
+                        ]
+                        self.visit(lvalue, func)
+                        self.append(" = ")
+                        self.impl_visit_conv(rvalue, var_types, func)
+                        self.eol()
+                    else:
                         var_types = self.mergeinh[lvalue]
-                        targets = assign_targets.get(lvalue, set())
                         if len(targets) > 1:
                             temp_varname = self.temp_varname(lvalue)
                             item_typestr = typestr.nodetypestr(self.gx, lvalue, func, mv = self.mv)
@@ -4917,14 +4929,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                                 self.append(" = ")
                             self.impl_visit_conv(rvalue, var_types, func) #possible side effects
                             self.eol()
-                    else:
-                        var_types = self.mergeinh[
-                            python.lookup_var(lvalue.id, func, self.mv)
-                        ]
-                        self.visit(lvalue, func)
-                        self.append(" = ")
-                        self.impl_visit_conv(rvalue, var_types, func)
-                        self.eol()
 
                 # (a,(b,c), ..) = expr
                 elif ast_utils.is_assign_list_or_tuple(lvalue):
