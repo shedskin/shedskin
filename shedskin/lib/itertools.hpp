@@ -35,12 +35,16 @@ public:
 
 template<class T> inline countiter<T>::countiter() {}
 template<class T> inline countiter<T>::countiter(T start, T step_) {
-    counter = start - step_;
+    counter = start;
     step = step_;
 }
 
 template<class T> inline T countiter<T>::__next__() {
-    return this->counter += this->step;
+    /* return the current value, then advance: pre-subtracting the step
+       in the constructor loses precision for floats and can overflow */
+    T result = this->counter;
+    this->counter += this->step;
+    return result;
 }
 
 template<class T> inline countiter<T> *count(T start, T step) {

@@ -19,6 +19,19 @@ def test_count():
     assert get_count(threshold=-16, n=4, step=-3) == [4, 1, -2, -5, -8, -11, -14]
 
 
+def test_count_float_start():
+    # regression test: the first value used to be computed as
+    # (start - step) + step, which is not exactly start for floats
+    c = itertools.count(0.1, 0.7)
+    assert next(c) == 0.1
+    d = itertools.count(-1e308, 1e308)
+    assert next(d) == -1e308
+    assert next(d) == 0.0
+    e = itertools.count(2.5)
+    assert next(e) == 2.5
+    assert next(e) == 3.5
+
+
 def get_cycle(iterable, max_iters=10):
     res = []
     n_iters = 0
@@ -556,6 +569,7 @@ def test_index_arrays_edge_cases():
 def test_all():
     test_index_arrays_edge_cases()
     test_count()
+    test_count_float_start()
     test_cycle()
     test_repeat()
     test_repeat_large_count()
