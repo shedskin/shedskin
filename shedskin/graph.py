@@ -514,6 +514,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for elemname in elemnames:
                 infer.default_var(self.gx, elemname, cl)
 
+            self.check_starred_elts(node)
+
             for elem in node.elts:
                 self.visit(elem, func)
 
@@ -545,11 +547,26 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.add_dynamic_constraint(node, key, "unit", func)
                     self.add_dynamic_constraint(node, value, "value", func)
         else:
+            self.check_starred_elts(node)
+
             for child in node.elts:
                 self.visit(child, func)
 
             for child in self.filter_redundant_children(node):
                 self.add_dynamic_constraint(node, child, "unit", func)
+
+    def check_starred_elts(self, node: Union[ast.Tuple, ast.List, ast.Set]) -> None:
+        """Report iterable unpacking in a display, e.g. [*a, *b] or 'return *a, b'"""
+        for elt in node.elts:
+            if isinstance(elt, ast.Starred):
+                kind = {ast.Tuple: "tuple", ast.List: "list", ast.Set: "set"}
+                error.error(
+                    "iterable unpacking ('*') in a %s display is not supported"
+                    % kind[type(node)],
+                    self.gx,
+                    elt,
+                    mv=getmv(),
+                )
 
     # --- for compound list/tuple/dict constructors, we only consider a single child node for each subtype
     def filter_redundant_children(
@@ -1446,6 +1463,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         lambdanr = len(self.lambdas)
         name = "__lambda%d__" % lambdanr
         fakenode = ast.FunctionDef(name, node.args, [ast.Return(node.body)], [])
+        ast.copy_location(fakenode, node)  # line numbers for error messages
         self.visit(fakenode, None, True)
         f = self.lambdas[name]
         f.lambdanr = lambdanr
@@ -2303,7 +2321,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 lvar = self.default_var(item.optional_vars.id, func)
                 self.add_constraint((varnode, infer.inode(self.gx, lvar)), func)
             else:
-                error.error("unsupported with syntax", self.gx, item, mv=getmv())
+                error.error(
+                    "unsupported 'with' target (only a plain name is supported)",
+                    self.gx,
+                    item.optional_vars,
+                    mv=getmv(),
+                )
 
         for child in node.body:
             self.visit(child, func)
@@ -2316,6 +2339,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # --- {..}
         # --- {a: b for .. }
         # --- (expr for .. }
+        if isinstance(node.elt, ast.Starred):  # [*it for it in ..] (3.15+)
+            error.error(
+                "iterable unpacking ('*') in a comprehension is not supported",
+                self.gx,
+                node,
+                mv=getmv(),
+            )
         lcfunc = python.Function(self.gx, getmv())
         lcfunc.listcomp = True
         lcfunc.ident = "l.c."  # XXX

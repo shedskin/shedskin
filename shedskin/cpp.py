@@ -4337,6 +4337,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(rvalue, func)
         self.eol()
 
+        if ast_utils.has_starred(lvalue):
+            self.check_starred_rvalue(lvalue, nodes, rvalue)
+
         temp_loop = None
         temp_star = None
         for i, item in enumerate(nodes):
@@ -4393,6 +4396,29 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.output("__ss_unpack_end(%s, %s);" % (temp, temp_loop))
             self.deindent()
             self.output("}")
+
+    def check_starred_rvalue(
+        self,
+        lvalue: Union[ast.List, ast.Tuple],
+        nodes: list[ast.expr],
+        rvalue: Union[ast.AST, str],
+    ) -> None:
+        """Report extended unpacking (a, *b = ..) of a mixed-type tuple, such
+        as (1, 'x') or the items of enumerate(..) or dict.items(), as there is
+        no list type to hold its remaining items"""
+        rnodes = [
+            self.gx.item_rvalue[n] for n in nodes if not isinstance(n, ast.Starred)
+        ]
+        if not rnodes and isinstance(rvalue, ast.AST):  # *a, = ..
+            rnodes = [rvalue]
+        for rnode in rnodes:
+            if self.hetero_tuple(self.mergeinh.get(rnode, set())):
+                error.error(
+                    "extended unpacking ('*') of a mixed-type tuple is not supported",
+                    self.gx,
+                    lvalue,
+                    mv=self.mv,
+                )
 
     def one_class(self, node: ast.AST, names: tuple[str, ...]) -> bool:
         """Check if a node is a single class"""
