@@ -3,5 +3,7 @@ add_shedskin_product(
         bisect
         collections
         io
+        math
         random
+        time
 )
