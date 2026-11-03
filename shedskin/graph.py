@@ -1789,7 +1789,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         func: Optional[AllParent] = context.parent_object()
 
         self.visit(node.subject, context)
-        tvar = self.temp_var2(node, infer.inode(self.gx, node.subject), func)
+        tvar = self.temp_var(node, func)
+        tvar_name_node = ast.Name(tvar.name, ast.Store())
+        context.write(tvar_name_node, infer.inode(self.gx, node.subject))
+        self.add_constraint((infer.inode(self.gx, tvar_name_node), infer.inode(self.gx, tvar)), func)
 
         for i, case in enumerate(node.cases):
             test = self.match_pattern(case.pattern, tvar.name)
