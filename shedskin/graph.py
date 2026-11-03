@@ -1925,13 +1925,37 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             blah = node.target
             lnode = ast.Name(clone.target.id, ast.Load(), lineno=node.target.lineno)
         elif isinstance(clone.target, ast.Attribute):
-            blah = node.target
-            lnode = ast.Attribute(
-                clone.target.value,
-                clone.target.attr,
-                ast.Load(),
-                lineno=node.target.lineno,
-            )
+            if self.is_name_chain(node.target.value):
+                blah = node.target
+                lnode = ast.Attribute(
+                    clone.target.value,
+                    clone.target.attr,
+                    ast.Load(),
+                    lineno=node.target.lineno,
+                )
+            else:
+                # f().x += c: evaluate the object expression only once
+                t1 = self.temp_var(node.target.value, func)
+                a1 = ast.Assign([ast.Name(t1.name, ast.Store())], node.target.value)
+                self.visit(a1, func)
+                self.add_constraint(
+                    (infer.inode(self.gx, node.target.value), infer.inode(self.gx, t1)),
+                    func,
+                )
+                infer.inode(self.gx, node).temp1 = t1.name
+
+                blah = ast.Attribute(
+                    ast.Name(t1.name, ast.Load(), lineno=node.lineno),
+                    node.target.attr,
+                    ast.Store(),
+                    lineno=node.lineno,
+                )
+                lnode = ast.Attribute(
+                    ast.Name(t1.name, ast.Load(), lineno=node.lineno),
+                    node.target.attr,
+                    ast.Load(),
+                    lineno=node.lineno,
+                )
         elif isinstance(node.target, ast.Subscript):
             t1 = self.temp_var(node.target.value, func)
             a1 = ast.Assign([ast.Name(t1.name, ast.Store())], node.target.value)
@@ -1982,6 +2006,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         register_node(assign, func)
         infer.inode(self.gx, node).assignhop = assign
         self.visit(assign, func)
+
+    def is_name_chain(self, node: ast.expr) -> bool:
+        """Is node a name or a chain of attributes on a name (a.b.c)?"""
+        while isinstance(node, ast.Attribute):
+            node = node.value
+        return isinstance(node, ast.Name)
 
     def temp_var(
         self,

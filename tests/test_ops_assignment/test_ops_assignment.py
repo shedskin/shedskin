@@ -427,6 +427,51 @@ def test_unpack18():
         pass
 
 
+class AugAttr:
+    def __init__(self):
+        self.n = 0
+        self.s = 'a'
+        self.l = [1]
+        self.other = None
+
+
+augattr_objs = [AugAttr(), AugAttr()]
+augattr_pos = [0]
+augattr_k = [0]
+
+
+def augattr_nxt():
+    augattr_pos[0] += 1
+    return augattr_objs[augattr_pos[0] - 1]
+
+
+def augattr_idx():
+    augattr_k[0] += 1
+    return augattr_k[0] - 1
+
+
+def test_augassign_attr_sidefx():
+    # 'f().x += c' evaluates f() only once (1025-B3)
+    objs, pos = augattr_objs, augattr_pos
+
+    augattr_nxt().n += 10
+    assert (objs[0].n, objs[1].n, pos[0]) == (10, 0, 1)
+    augattr_nxt().s += 'b'
+    assert (objs[0].s, objs[1].s, pos[0]) == ('a', 'ab', 2)
+    pos[0] = 0
+    augattr_nxt().l += [2]
+    assert (objs[0].l, objs[1].l, pos[0]) == ([1, 2], [1], 1)
+
+    objs[augattr_idx()].n -= 3
+    assert (objs[0].n, augattr_k[0]) == (7, 1)
+
+    objs[0].other = objs[1]
+    objs[1].n = 1
+    pos[0] = 0
+    augattr_nxt().other.n <<= 2
+    assert (objs[0].n, objs[1].n, pos[0]) == (7, 4, 1)
+
+
 def test_all():
     test_assign_int()
     test_assign_list()
@@ -457,6 +502,7 @@ def test_all():
     test_walrus5()
     test_walrus6()
     test_augassign_dict_inplace()
+    test_augassign_attr_sidefx()
 
 
 if __name__ == '__main__':

@@ -2720,6 +2720,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 func,
             )
             self.eol()
+        elif isinstance(node.target, ast.Attribute):
+            # 'f().x += c': evaluate the object expression only once
+            temp1 = getattr(infer.inode(self.gx, node), "temp1", None)
+            if temp1 is not None:
+                self.start()
+                self.visitm(temp1 + " = ", node.target.value, func)
+                self.eol()
         self.visit(infer.inode(self.gx, node).assignhop, func)
 
     def visit_BinOp(
