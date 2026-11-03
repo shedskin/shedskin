@@ -32,7 +32,7 @@ public:
 #endif
 };
 
-template<class A, class B, class C> class tuple3 : public pyobj {
+template<class A, class B, class C> class tuple3 final : public pyobj {
 public:
     A first;
     B second;

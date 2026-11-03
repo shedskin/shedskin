@@ -7,7 +7,7 @@ template<class K, class V> struct dict_looper {
     typename __GC_DICT<K, V>::iterator it;
 };
 
-template <class K, class V> class __dictiterkeys : public __iter<K> {
+template <class K, class V> class __dictiterkeys final : public __iter<K> {
 public:
     dict<K,V> *p;
     typename __GC_DICT<K, V>::iterator it;
@@ -19,7 +19,7 @@ public:
     inline __ss_int __len__() { return p->__len__(); } /* view is live: reflects the dict's current size */
 };
 
-template <class K, class V> class __dictitervalues : public __iter<V> {
+template <class K, class V> class __dictitervalues final : public __iter<V> {
 public:
     dict<K,V> *p;
     typename __GC_DICT<K, V>::iterator it;
@@ -31,7 +31,7 @@ public:
     inline __ss_int __len__() { return p->__len__(); } /* view is live: reflects the dict's current size */
 };
 
-template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
+template <class K, class V> class __dictiteritems final : public __iter<tuple2<K, V> *> {
 public:
     dict<K,V> *p;
     typename __GC_DICT<K, V>::iterator it;
@@ -130,7 +130,7 @@ public:
 #endif
 };
 
-template <class K, class V> class frozendict : public dict<K, V> {
+template <class K, class V> class frozendict final : public dict<K, V> {
 public:
     __ss_int hash;
 

@@ -7,7 +7,7 @@ template<class T> struct set_looper {
     typename __GC_SET<T>::iterator it;
 };
 
-template <class T> class __setiter : public __iter<T> {
+template <class T> class __setiter final : public __iter<T> {
 public:
     set<T> *p;
     typename __GC_SET<T>::iterator it;
