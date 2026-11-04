@@ -16,8 +16,8 @@ extern str *__name__;
 
 __ss_bool fnmatch(str *name, str *pat);
 __ss_bool fnmatchcase(str *name, str *pat);
-list<str *> *filter(list<str *> *names, str *pat);
-list<str *> *filterfalse(list<str *> *names, str *pat);
+list<str *> *filter(pyiter<str *> *names, str *pat);
+list<str *> *filterfalse(pyiter<str *> *names, str *pat);
 str *translate(str *pat);
 
 /* internal: re.escape() for a single character (CPython 3.7+ rule: only

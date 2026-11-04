@@ -69,11 +69,27 @@ def test_fnmatch_posix_bracket():
 
 
 def test_filter():
-    fnmatch.filter(fs, '*.txt') == ['a.txt', 'b.txt', 'c.txt']
+    assert fnmatch.filter(fs, '*.txt') == ['a.txt', 'b.txt', 'c.txt']
 
 
 def test_filterfalse():
-    fnmatch.filterfalse(fs, '*.txt') == ['d.mod']
+    assert fnmatch.filterfalse(fs, '*.txt') == ['d.mod']
+
+
+def test_filter_iterables():
+    # any iterable of str, not just list
+    t = ('a.py', 'b.txt', 'c.py')
+    assert fnmatch.filter(t, '*.py') == ['a.py', 'c.py']
+    assert fnmatch.filterfalse(t, '*.py') == ['b.txt']
+    s = {'a.py', 'b.txt', 'c.py'}
+    assert sorted(fnmatch.filter(s, '*.py')) == ['a.py', 'c.py']
+    assert sorted(fnmatch.filterfalse(s, '*.py')) == ['b.txt']
+    assert fnmatch.filter((n for n in t), '*.txt') == ['b.txt']
+    assert fnmatch.filterfalse((n.upper() for n in t), '*.py') == ['A.PY', 'B.TXT', 'C.PY']
+    d = {'x.py': 1, 'y.c': 2}
+    assert fnmatch.filter(d, '*.py') == ['x.py']
+    assert fnmatch.filter(d.keys(), '*.c') == ['y.c']
+    assert fnmatch.filter(iter(['q.py', 'r']), '?.py') == ['q.py']
 
 
 def test_translate():
@@ -122,6 +138,7 @@ def test_all():
     test_fnmatch_posix_bracket()
     test_filter()
     test_filterfalse()
+    test_filter_iterables()
     test_translate()
     test_translate_matching()
 
