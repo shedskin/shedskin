@@ -3459,7 +3459,21 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if isinstance(value, ast.FormattedValue):
                 # a (supported) format spec is applied to the value after
                 # any conversion (including '!s'), as in CPython
-                spec = ast_utils.supported_format_spec(value.format_spec)
+                spec = ast_utils.const_format_spec(value.format_spec)
+                if (
+                    spec
+                    and not ast_utils.supported_format_spec(value.format_spec)
+                    and not (
+                        value.conversion in (None, -1)
+                        and self.has_own_format(value.value)
+                    )
+                ):
+                    error.error(
+                        "invalid or unsupported format spec '%s'" % spec.value,
+                        self.gx,
+                        node,
+                        mv=self.mv,
+                    )
                 if value.conversion == ord("r"):
                     convert = "repr"
                 elif value.conversion == ord("a"):
@@ -3482,6 +3496,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if i != len(node.values) - 1:
                 self.append(", ")
         self.append(")")
+
+    def has_own_format(self, node: ast.AST) -> bool:
+        """Whether every type of node is a library class with its own
+        __format__, which may accept any format spec (e.g. datetime.date,
+        where it is passed on to strftime)"""
+        mini = [
+            python.def_class(self.gx, cl)
+            for cl in ("int_", "bool_", "float_", "complex", "str_")
+        ]
+        types = self.mergeinh[node]
+        return bool(types) and all(
+            isinstance(t[0], python.Class)
+            and t[0].mv.module.builtin
+            and t[0] not in mini
+            and "__format__" in t[0].funcs
+            for t in types
+        )
 
     def visit_StrFormat(
         self, node: ast_utils.StrFormat, func: Optional["python.Function"] = None

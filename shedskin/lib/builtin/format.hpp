@@ -674,8 +674,11 @@ str *__format(__ss_float arg, str *spec);
 str *__format(str *arg, str *spec);
 str *__format(complex arg, str *spec);
 
-/* like object.__format__ */
+/* a class with its own __format__ (e.g. datetime.date), else like
+   object.__format__ */
 template<class T> str *__format(T arg, str *spec) {
+    if constexpr (requires { arg->__format__(spec); })
+        return arg->__format__(spec);
     if (spec->unit.empty())
         return __str(arg);
     throw new TypeError(__add_strs(3, new str("unsupported format string passed to "), __fmt_typename(arg), new str(".__format__")));

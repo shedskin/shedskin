@@ -79,6 +79,7 @@ public:
     __ss_int __hash__();
     str *ctime();
     str *strftime(str *format);
+    virtual str *__format__(str *format_spec);
 
     __ss_int __cmp__(date *other);
     __ss_bool __eq__(date *other);
@@ -167,6 +168,7 @@ public:
     __ss_int __hash__();
     str *ctime();
     str *strftime(str *format);
+    str *__format__(str *format_spec);
 
     __ss_int __cmp__(datetime *other);
     __ss_bool __eq__(datetime *other);
@@ -210,6 +212,7 @@ public:
     str *__repr__();
     __ss_int __hash__();
     str *strftime(str* format);
+    str *__format__(str *format_spec);
     timedelta *utcoffset();
     timedelta *dst();
     str *tzname();

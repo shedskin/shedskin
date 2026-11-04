@@ -1032,6 +1032,39 @@ def test_today():
     assert dt.year >= 2024
     assert abs((datetime.datetime.now() - dt).total_seconds()) < 60
 
+def test_format():
+    # __format__: an empty spec gives str(), anything else goes to strftime
+    d = datetime.date(2024, 2, 29)
+    dt = datetime.datetime(2024, 12, 31, 13, 5, 7, 12345)
+    t = datetime.time(1, 2, 3, 4)
+    assert f'{d:%Y-%m-%d %A}' == '2024-02-29 Thursday'
+    assert f'{dt:%H:%M:%S.%f}' == '13:05:07.012345'
+    assert f'{t:%I %p}' == '01 AM'
+    assert f'{d:10}|' == '10|'  # not a width!
+    assert f'{d:}' == f'{d}' == '2024-02-29'
+    assert f'{dt!s}' == '2024-12-31 13:05:07.012345'
+    assert '{:%d/%m/%Y}'.format(d) == '29/02/2024'
+    assert '{0:%A} {1:%B}'.format(dt, d) == 'Tuesday February'
+    assert '{x:%M}'.format(x=t) == '02'
+    assert format(d, '%j') == '060'
+    assert format(dt, '') == '2024-12-31 13:05:07.012345'
+    assert format(t) == '01:02:03.000004'
+    assert d.__format__('%a') == 'Thu'
+    assert dt.__format__('') == '2024-12-31 13:05:07.012345'
+    assert t.__format__('%H') == '01'
+    # datetime is a subclass of date
+    dd = [d, dt]
+    assert [f'{x:%Y %H}' for x in dd] == ['2024 00', '2024 13']
+    assert [format(x, '') for x in dd] == ['2024-02-29', '2024-12-31 13:05:07.012345']
+    # timedelta has no __format__ of its own
+    td = datetime.timedelta(1)
+    assert f'{td:}' == format(td, '') == '1 day, 0:00:00'
+    try:
+        f'{td:10}'
+        assert False
+    except TypeError:
+        pass
+
 def test_strftime():
     d = datetime.date(2024, 2, 29)
     dt = datetime.datetime(2024, 12, 31, 13, 5, 7, 12345)
@@ -1431,6 +1464,7 @@ def test_all():
         test_timetuple()
         test_today()
         test_strftime()
+        test_format()
         test_arithmetic_overflow()
         test_date_dict_key()
         test_tzinfo_shared_offsets()
