@@ -1472,6 +1472,22 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node,
                 mv=getmv(),
             )
+        # remove_poskw_only_args is not applied to lambdas
+        if not getmv().module.builtin:
+            if node.args.kwonlyargs:
+                error.error(
+                    "keyword-only arguments in lambdas are not supported",
+                    self.gx,
+                    node,
+                    mv=getmv(),
+                )
+            if node.args.posonlyargs:
+                error.error(
+                    "positional-only arguments in lambdas are not supported",
+                    self.gx,
+                    node,
+                    mv=getmv(),
+                )
         lambdanr = len(self.lambdas)
         name = "__lambda%d__" % lambdanr
         fakenode = ast.FunctionDef(name, node.args, [ast.Return(node.body)], [])
