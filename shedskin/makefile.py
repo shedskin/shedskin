@@ -673,7 +673,6 @@ class ShedskinBuilder(Builder):
             "-DWIN32",
             "-std=c++20",
             "-ffp-contract=off",
-            "-march=native",
             "-Wno-deprecated",
             "-Wl,--enable-auto-import",
         )
@@ -729,7 +728,7 @@ class ShedskinBuilder(Builder):
                 )
                 if not self.py.is_shared:
                     self.add_link_dirs(self.py.libpl)
-            self.add_cxxflags("-O2", "-std=c++20", "-ffp-contract=off", "-march=native")
+            self.add_cxxflags("-O2", "-std=c++20", "-ffp-contract=off")
             self.add_ldlibs("-lgc", "-lutil")
 
     def _add_feature_flags(self) -> None:
@@ -1192,7 +1191,6 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 "-DWIN32",
                 "-std=c++20",
                 "-ffp-contract=off",
-                "-march=native",
                 "-Wno-deprecated",
                 "-Wl,--enable-auto-import",
                 "$(CPPFLAGS)",
@@ -1276,7 +1274,7 @@ class ShedskinMakefileGenerator(MakefileGenerator):
                 if not self.py.is_shared:
                     self.add_link_dirs(self.py.libpl)
             if self.no_flag_file:
-                self.add_cxxflags("-O2", "-std=c++20", "-ffp-contract=off", "-march=native", "$(CPPFLAGS)")
+                self.add_cxxflags("-O2", "-std=c++20", "-ffp-contract=off", "$(CPPFLAGS)")
                 self.add_ldlibs("-lgc", "-lutil")
 
         self.add_variable("CPPFILES", "$(GENERATED_CPPFILES) $(BUILTIN_CPPFILES)")

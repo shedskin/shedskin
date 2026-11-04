@@ -652,7 +652,7 @@ options:
   -x, --executable      Generate executable
   --generator G         Specify a cmake build system generator
   --jobs N              Build and run in parallel using N jobs
-  --build-type T        Set cmake build type (default: 'Debug')
+  --build-type T        Set cmake build type (default: 'Release')
   --test                Run ctest
   --reset               Reset cmake build
   --spm                 Install cmake dependencies with spm
@@ -713,7 +713,7 @@ options:
   -x, --executable      Generate executable
   --generator G         Specify a cmake build system generator
   --jobs N              Build and run in parallel using N jobs
-  --build-type T        Set cmake build type (default: 'Debug')
+  --build-type T        Set cmake build type (default: 'Release')
   --test                Run ctest
   --reset               Reset cmake build
   --spm                 Install cmake dependencies with spm
@@ -754,7 +754,7 @@ options:
   --collect-stats       Collect and report shedskin stats
   --generator G         Specify a cmake build system generator
   --jobs N              Build and run in parallel using N jobs
-  --build-type T        Set cmake build type (default: 'Debug')
+  --build-type T        Set cmake build type (default: 'Release')
   --test                Run ctest
   --reset               Reset cmake build
   --spm                 Install cmake dependencies with spm

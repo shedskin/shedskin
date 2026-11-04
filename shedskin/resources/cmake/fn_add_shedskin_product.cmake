@@ -344,6 +344,20 @@ function(add_shedskin_product)
         endif()
     endif()
 
+    # optimization flags (unix): a Release build matches the flags that
+    # 'shedskin translate' writes into its Makefile (resources/flags/FLAGS),
+    # other build types keep -O2. no cpu-specific -march, so that binaries and
+    # extension modules also run on other machines than the build machine.
+    # (msvc keeps the CMAKE_CXX_FLAGS_<CONFIG> defaults)
+    set(SHEDSKIN_OPT_FLAGS
+        $<$<BOOL:${UNIX}>:$<IF:$<CONFIG:Release>,-O3,-O2>>
+        $<$<AND:$<BOOL:${UNIX}>,$<CONFIG:Release>>:-flto=auto>
+        $<$<AND:$<BOOL:${UNIX}>,$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:--param=early-inlining-insns=40>
+    )
+    set(SHEDSKIN_OPT_LINK_FLAGS
+        $<$<AND:$<BOOL:${UNIX}>,$<CONFIG:Release>>:-flto=auto>
+    )
+
     # -------------------------------------------------------------------------
     # build executable section
 
@@ -418,7 +432,7 @@ function(add_shedskin_product)
 
         target_compile_options(${EXE} PRIVATE
             ${SHEDSKIN_COMPILE_OPTIONS}
-            $<$<BOOL:${UNIX}>:-O2>
+            ${SHEDSKIN_OPT_FLAGS}
             $<$<BOOL:${UNIX}>:-ffp-contract=off> # no FMA contraction: match CPython float results
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
@@ -460,6 +474,7 @@ function(add_shedskin_product)
 
         target_link_options(${EXE} PRIVATE
             ${SHEDSKIN_LINK_OPTIONS}
+            ${SHEDSKIN_OPT_LINK_FLAGS}
             "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
             # same main thread stack size as on linux (default: 1MB)
             "$<$<CXX_COMPILER_ID:MSVC>:/STACK:8388608>"
@@ -580,7 +595,7 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-fPIC>
             $<$<BOOL:${UNIX}>:-fwrapv>
             $<$<BOOL:${UNIX}>:-g>
-            $<$<BOOL:${UNIX}>:-O2>
+            ${SHEDSKIN_OPT_FLAGS}
             $<$<BOOL:${UNIX}>:-ffp-contract=off> # no FMA contraction: match CPython float results
             # hide all symbols by default so shedskin's Boehm-GC-backed
             # operator new/delete (and other runtime internals) don't leak
@@ -621,6 +636,7 @@ function(add_shedskin_product)
         target_link_options(${EXT} PRIVATE
             $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
             ${SHEDSKIN_LINK_OPTIONS}
+            ${SHEDSKIN_OPT_LINK_FLAGS}
             "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
             # keep symbols pulled in from static libs (libgc.a in particular)
             # out of the extension's dynamic symbol table, so they cannot

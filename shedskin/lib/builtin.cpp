@@ -714,11 +714,36 @@ void *__ss_gc_malloc_atomic_slow(std::size_t n) {
 
 #ifdef __SS_ELIDE_NEW
 
+/* the free lists of the replaceable operator new below, which must not be shared with the
+   inline allocation paths (__ss_gc_malloc, as used by pyobj::operator new and
+   __ss_allocator): for a new-expression, compilers may assume that a replaceable global
+   operator new does not access any memory visible to the caller (clang always does, gcc 15+
+   with -fassume-sane-operators-new, its default). so with LTO, where __ss_gc_malloc_slow is
+   inlined, a free list head loaded before such a call could be reused after it, handing
+   out the same object twice (seen with clang -flto on macOS). */
+static void *__ss_new_free_lists[17];
+
+static void *__ss_new_malloc(std::size_t n) {
+    std::size_t g = (n >> 4) + 1;
+    if (g < 17) {
+        void *p = __ss_new_free_lists[g];
+        if (!p) {
+            p = GC_malloc_many(16*g-1);
+            if (!p)
+                return nullptr;
+        }
+        __ss_new_free_lists[g] = GC_NEXT(p);
+        GC_NEXT(p) = nullptr;
+        return p;
+    }
+    return GC_MALLOC(n);
+}
+
 /* see __SS_NEW. other (over-aligned) requests are served like libstdc++ does */
 void *operator new(std::size_t n, std::align_val_t al) {
     void *r;
     if (al == __shedskin__::__ss_gc_tag)
-        r = __shedskin__::__ss_gc_malloc(n);
+        r = __ss_new_malloc(n);
     else {
         std::size_t a = (std::size_t)al;
 #ifdef WIN32
