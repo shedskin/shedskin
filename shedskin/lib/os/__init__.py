@@ -74,8 +74,11 @@ confstr_names = {'': 1}
 class error(OSError):
     pass
 
-class __cstat:
+# struct sequences: subclasses of tuple, with the items also as attributes.
+# (__slice__/__mul__: the tuple versions return self, so a subclass)
+class stat_result(tuple):
     def __init__(self):
+        self.unit = 1
         self.st_mode = 1
         self.st_size = 1
         self.st_ino = 1
@@ -93,17 +96,16 @@ class __cstat:
 
         self.st_blksize = 1
         self.st_blocks = 1
-    def __len__(self):
-        return 1
-    def __getitem__(self, i):
-        return 1
     def __slice__(self, x, l, u, s):
-        return (1,)
+        return (self.unit,)
+    def __mul__(self, n):
+        return (self.unit,)
     def __repr__(self):
         return ''
 
-class __vfsstat:
+class statvfs_result(tuple):
     def __init__(self):
+        self.unit = 1
         self.f_bsize = 1
         self.f_frsize = 1
         self.f_blocks = 1
@@ -114,21 +116,19 @@ class __vfsstat:
         self.f_favail = 1
         self.f_flag = 1
         self.f_namemax = 1
-
-    def __len__(self):
-        return 1
-    def __getitem__(self, i):
-        return 1
+        self.f_fsid = 1
     def __slice__(self, x, l, u, s):
-        return (1,)
+        return (self.unit,)
+    def __mul__(self, n):
+        return (self.unit,)
     def __repr__(self):
         return ''
 
 def statvfs(path):
-    return __vfsstat()
+    return statvfs_result()
 
 def fstatvfs(fd):
-    return __vfsstat()
+    return statvfs_result()
 
 class popen_pipe(file):
     def close(self):
@@ -152,7 +152,7 @@ class DirEntry:
     def inode(self):
         return 1
     def stat(self, follow_symlinks=True):
-        return __cstat()
+        return stat_result()
     def __repr__(self):
         return ''
 
@@ -239,13 +239,13 @@ def strerror(code):
     return ''
 
 def stat(path, __kw_follow_symlinks=True):
-    return __cstat()
+    return stat_result()
 
 def lstat(path):
-    return __cstat()
+    return stat_result()
 
 def fstat(fd):
-    return __cstat()
+    return stat_result()
 
 def readlink(path):
     return ''
@@ -424,30 +424,18 @@ def isatty(fd):
 def ttyname(fd):
     return ''
 
-class uname_result:
+class uname_result(tuple):
     def __init__(self, t):
+        self.unit = ''
         self.sysname = ''
         self.nodename = ''
         self.release = ''
         self.version = ''
         self.machine = ''
-        self.unit = ''  # element type, for iteration/unpacking
-    def __len__(self):
-        return 1
-    def __iter__(self):
-        return __iter('')
-    def __getunit__(self, i):
-        return ''
-    def __getitem__(self, i):
-        return ''
     def __slice__(self, x, l, u, s):
-        return ('',)
-    def __contains__(self, x):
-        return True
-    def count(self, x):
-        return 1
-    def index(self, x, start=0, stop=__void):
-        return 1
+        return (self.unit,)
+    def __mul__(self, n):
+        return (self.unit,)
     def __repr__(self):
         return ''
 
@@ -517,21 +505,15 @@ def set_blocking(fd, blocking):
 def device_encoding(fd):
     return ''
 
-class terminal_size:
+class terminal_size(tuple):
     def __init__(self, t):
+        self.unit = 1
         self.columns = 1
         self.lines = 1
-        self.unit = 1  # element type, for iteration/unpacking
-    def __len__(self):
-        return 1
-    def __iter__(self):
-        return __iter(1)
-    def __getunit__(self, i):
-        return 1
-    def __getitem__(self, i):
-        return 1
     def __slice__(self, x, l, u, s):
-        return (1,)
+        return (self.unit,)
+    def __mul__(self, n):
+        return (self.unit,)
     def __repr__(self):
         return ''
 
@@ -565,30 +547,18 @@ def utime(path, times=None, __kw_ns=None):
 def access(path, mode):
     return True
 
-class times_result:
+class times_result(tuple):
     def __init__(self, t):
+        self.unit = 1.0
         self.user = 1.0
         self.system = 1.0
         self.children_user = 1.0
         self.children_system = 1.0
         self.elapsed = 1.0
-        self.unit = 1.0  # element type, for iteration/unpacking
-    def __len__(self):
-        return 1
-    def __iter__(self):
-        return __iter(1.0)
-    def __getunit__(self, i):
-        return 1.0
-    def __getitem__(self, i):
-        return 1.0
     def __slice__(self, x, l, u, s):
-        return (1.0,)
-    def __contains__(self, x):
-        return True
-    def count(self, x):
-        return 1
-    def index(self, x, start=0, stop=__void):
-        return 1
+        return (self.unit,)
+    def __mul__(self, n):
+        return (self.unit,)
     def __repr__(self):
         return ''
 

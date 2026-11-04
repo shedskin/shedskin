@@ -20,7 +20,7 @@ extern __ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __
 
 typedef OSError error;
 
-class __cstat;
+class stat_result;
 
 /* bytes paths: like CPython, these give bytes where a str path gives str.
    the bytes overloads go through fsdecode()/fsencode(), which round-trip
@@ -60,45 +60,31 @@ void *abort();
 __ss_int system(str *c);
 void *unlink(str *path);
 
-class namedtuple : public pyobj {
-public:
-    tuple2<__ss_int, __ss_int> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-    str *__repr__();
-    virtual __ss_int __len__() = 0;
-    virtual __ss_int __getitem__(__ss_int i) = 0;
+/* the struct sequences below (stat_result, terminal_size..) are tuples, with
+   the items also as attributes: items are set once, as they are immutable */
 
-    /* iteration (and so unpacking) goes through __getitem__ */
-    typedef __ss_int for_in_unit;
-    typedef __ss_int for_in_loop;
-    inline __ss_int for_in_init() { return 0; }
-    inline bool for_in_has_next(__ss_int i) { return i < __len__(); }
-    inline __ss_int for_in_next(__ss_int &i) { return __getitem__(i++); }
-};
-
-extern class_ *cl___cstat;
-class __cstat : public namedtuple {
+extern class_ *cl_stat_result;
+class stat_result : public tuple2<__ss_int, __ss_int> {
 public:
     __ss_int st_mode, st_ino, st_dev, st_rdev, st_nlink, st_uid, st_gid, st_size, st_blksize, st_blocks;
     __ss_float __ss_st_mtime, __ss_st_atime, __ss_st_ctime; /* float seconds, as in CPython */
     __ss_int st_atime_ns, st_mtime_ns, st_ctime_ns;
-    __ss_int __atime_s, __mtime_s, __ctime_s; /* integer seconds, for indexing (items 7-9) */
+    __ss_int __atime_s, __mtime_s, __ctime_s; /* integer seconds, which are items 7-9 */
 
-    __cstat(str *path, __ss_int t);
-    __cstat(__ss_int fd);
+    stat_result(str *path, __ss_int t);
+    stat_result(__ss_int fd);
     void fill_er_up();
-
-    __ss_int __len__();
-    __ss_int __getitem__(__ss_int i);
-
+    void __set_items();
+    str *__repr__();
 };
 
-__cstat *stat(str *path);
-__cstat *stat(bytes *path);
-__cstat *stat(__ss_bool follow_symlinks, str *path); /* follow_symlinks is keyword-only */
-__cstat *stat(__ss_bool follow_symlinks, bytes *path);
-__cstat *lstat(str *path);
-__cstat *lstat(bytes *path);
-__cstat *fstat(__ss_int fd);
+stat_result *stat(str *path);
+stat_result *stat(bytes *path);
+stat_result *stat(__ss_bool follow_symlinks, str *path); /* follow_symlinks is keyword-only */
+stat_result *stat(__ss_bool follow_symlinks, bytes *path);
+stat_result *lstat(str *path);
+stat_result *lstat(bytes *path);
+stat_result *fstat(__ss_int fd);
 
 extern class_ *cl_DirEntry;
 class DirEntry : public pyobj {
@@ -117,7 +103,7 @@ public:
     __ss_bool is_symlink();
     __ss_bool is_junction();
     __ss_int inode();
-    __cstat *stat(__ss_bool follow_symlinks=True);
+    stat_result *stat(__ss_bool follow_symlinks=True);
     str *__repr__();
 };
 
@@ -245,7 +231,7 @@ void *fsync(__ss_int fd);
 __ss_bool access(str *path, __ss_int mode);
 
 extern class_ *cl_times_result;
-class times_result : public pyobj {
+class times_result : public tuple2<__ss_float, __ss_float> {
 public:
     __ss_float user, system, children_user, children_system, elapsed;
 
@@ -253,22 +239,7 @@ public:
     times_result(tuple<__ss_float> *t);
     times_result(tuple<__ss_int> *t);
 
-    tuple<__ss_float> *__tuple();
-    __ss_int __len__();
-    __ss_float __getitem__(__ss_int i);
-    tuple<__ss_float> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-    __ss_bool __contains__(__ss_float x);
-    __ss_int count(__ss_float x);
-    __ss_int index(__ss_float x, __ss_int start, __ss_void_struct stop); /* stop not given */
-    __ss_int index(__ss_float x, __ss_int start, __ss_int stop);
     str *__repr__();
-
-    /* iteration (and so unpacking) goes through __getitem__ */
-    typedef __ss_float for_in_unit;
-    typedef __ss_int for_in_loop;
-    inline __ss_int for_in_init() { return 0; }
-    inline bool for_in_has_next(__ss_int i) { return i < 5; }
-    inline __ss_float for_in_next(__ss_int &i) { return __getitem__(i++); }
 };
 
 times_result *times();
@@ -283,15 +254,13 @@ void *set_blocking(__ss_int fd, __ss_bool blocking);
 str *device_encoding(__ss_int fd);
 
 extern class_ *cl_terminal_size;
-class terminal_size : public namedtuple {
+class terminal_size : public tuple2<__ss_int, __ss_int> {
 public:
     __ss_int columns, lines;
 
     terminal_size(__ss_int columns, __ss_int lines);
     terminal_size(tuple<__ss_int> *t);
 
-    __ss_int __len__();
-    __ss_int __getitem__(__ss_int i);
     str *__repr__();
 };
 
@@ -389,21 +358,19 @@ __ss_bool __ss_WIFSTOPPED(__ss_int status);
 __ss_int __ss_WSTOPSIG(__ss_int status);
 __ss_int __ss_WTERMSIG(__ss_int status);
 
-extern class_ *cl___vfsstat;
-class __vfsstat : public namedtuple {
+extern class_ *cl_statvfs_result;
+class statvfs_result : public tuple2<__ss_int, __ss_int> {
 public:
-    __ss_int f_bsize, f_frsize, f_blocks, f_bfree, f_bavail, f_files, f_ffree, f_favail, f_flag, f_namemax;
+    __ss_int f_bsize, f_frsize, f_blocks, f_bfree, f_bavail, f_files, f_ffree, f_favail, f_flag, f_namemax, f_fsid;
 
-    __vfsstat(str *path);
-    __vfsstat(__ss_int fd);
+    statvfs_result(str *path);
+    statvfs_result(__ss_int fd);
     void fill_er_up();
-
-    __ss_int __len__();
-    __ss_int __getitem__(__ss_int i);
+    str *__repr__();
 };
 
-__vfsstat *statvfs(str *path);
-__vfsstat *fstatvfs(__ss_int fd);
+statvfs_result *statvfs(str *path);
+statvfs_result *fstatvfs(__ss_int fd);
 
 __ss_int getuid();
 void *setuid(__ss_int uid);
@@ -438,29 +405,14 @@ str *ctermid();
 str *ttyname(__ss_int fd);
 
 extern class_ *cl_uname_result;
-class uname_result : public pyobj {
+class uname_result : public tuple2<str *, str *> {
 public:
     str *sysname, *nodename, *release, *version, *machine;
 
     uname_result(str *sysname, str *nodename, str *release, str *version, str *machine);
     uname_result(tuple<str *> *t);
 
-    tuple<str *> *__tuple();
-    __ss_int __len__();
-    str *__getitem__(__ss_int i);
-    tuple<str *> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-    __ss_bool __contains__(str *x);
-    __ss_int count(str *x);
-    __ss_int index(str *x, __ss_int start, __ss_void_struct stop); /* stop not given */
-    __ss_int index(str *x, __ss_int start, __ss_int stop);
     str *__repr__();
-
-    /* iteration (and so unpacking) goes through __getitem__ */
-    typedef str *for_in_unit;
-    typedef __ss_int for_in_loop;
-    inline __ss_int for_in_init() { return 0; }
-    inline bool for_in_has_next(__ss_int i) { return i < 5; }
-    inline str *for_in_next(__ss_int &i) { return __getitem__(i++); }
 };
 
 uname_result *uname();

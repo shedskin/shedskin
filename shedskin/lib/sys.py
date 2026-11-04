@@ -124,13 +124,18 @@ class __flags:
 
 flags = __flags()
 
-class __int_info:
+class __int_info(tuple):
     def __init__(self):
+        self.unit = 0
         self.bits_per_digit = 0
         self.sizeof_digit = 0
         self.default_max_str_digits = 0
         self.str_digits_check_threshold = 0
 
+    def __slice__(self, x, l, u, s):
+        return (self.unit,)
+    def __mul__(self, n):
+        return (self.unit,)
     def __repr__(self):
         return 'str'
 

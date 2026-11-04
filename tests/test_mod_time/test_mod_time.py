@@ -252,6 +252,27 @@ def test_gmtime_negative_fraction():
     assert (t3.tm_year, t3.tm_mon, t3.tm_mday, t3.tm_hour, t3.tm_min, t3.tm_sec) == \
         (1970, 1, 1, 0, 0, 0)
 
+def test_struct_time_tuple():
+    # a tuple, with the items also as attributes
+    t = time.gmtime(1700000000)
+    assert t == (2023, 11, 14, 22, 13, 20, 1, 318, 0)
+    assert (2023, 11, 14, 22, 13, 20, 1, 318, 0) == t
+    assert hash(t) == hash((2023, 11, 14, 22, 13, 20, 1, 318, 0))
+    assert t[:3] == (2023, 11, 14) and t[-1] == 0 and t[::4] == (2023, 13, 0)
+    assert t > (2023, 11) and t < (2024,)
+    assert t + (1,) == (2023, 11, 14, 22, 13, 20, 1, 318, 0, 1)
+    assert len(t * 2) == 18
+    assert t.index(318) == 7 and t.count(1) == 1 and 22 in t
+    assert '%d-%02d-%02d' % t[:3] == '2023-11-14'
+    assert sorted([t, (2000,)])[0] == (2000,)
+    # time functions also take a plain 9-tuple
+    assert time.mktime(t) == time.mktime(tuple(t))
+    assert time.strftime('%Y-%m-%d', tuple(t)) == '2023-11-14'
+    assert time.struct_time(tuple(t)) == t
+    # tm_zone and tm_gmtoff are attributes only
+    assert t.tm_zone in ('UTC', 'GMT') and t.tm_gmtoff == 0
+    assert len(t) == 9
+
 def test_iteration():
     # regression test: struct_time must support the sequence protocol
     # beyond __getitem__/__len__ (previously derived from plain pyobj,
@@ -557,6 +578,7 @@ def test_all():
     test_strftime_utc_offset()
     test_tuple_field_overflow()
     test_zone_gmtoff()
+    test_struct_time_tuple()
     print('ok')
 
 if __name__ == '__main__':

@@ -151,6 +151,32 @@ def test_uname():
     except IndexError:
         ok = True
     assert ok
+    # a tuple, with the items also as attributes
+    assert ur == ('A', 'b', 'c', 'b', 'e')
+    assert hash(ur) == hash(('A', 'b', 'c', 'b', 'e'))
+    assert '-'.join(ur) == 'A-b-c-b-e'
+    assert ur + ('f',) == ('A', 'b', 'c', 'b', 'e', 'f')
+    assert sorted(ur) == ['A', 'b', 'b', 'c', 'e']
+    assert '%s/%s' % ur[:2] == 'A/b'
+
+
+def test_statvfs():
+    # a tuple, with the items also as attributes
+    vf = os.statvfs('.')
+    assert len(vf) == 10
+    assert vf[0] == vf.f_bsize and vf[1] == vf.f_frsize and vf[-1] == vf.f_namemax
+    bsize, frsize, blocks, bfree, bavail, files, ffree, favail, flag, namemax = vf
+    assert (blocks, bfree, bavail) == (vf.f_blocks, vf.f_bfree, vf.f_bavail)
+    assert (files, ffree, favail, flag) == (vf.f_files, vf.f_ffree, vf.f_favail, vf.f_flag)
+    assert vf[2:4] == (vf.f_blocks, vf.f_bfree)
+    assert vf.f_namemax > 0
+    assert vf.f_fsid == os.statvfs('.').f_fsid
+    assert repr(vf) == ('os.statvfs_result(f_bsize=%d, f_frsize=%d, f_blocks=%d, f_bfree=%d, f_bavail=%d, '
+                        'f_files=%d, f_ffree=%d, f_favail=%d, f_flag=%d, f_namemax=%d)' % vf)
+    fd = os.open('.', os.O_RDONLY)
+    vf2 = os.fstatvfs(fd)
+    os.close(fd)
+    assert vf2.f_bsize == vf.f_bsize and len(vf2) == 10
 
 
 def test_popen_spawn():
@@ -764,6 +790,7 @@ def test_all():
     test_fchmod()
     test_blocking()
     test_uname()
+    test_statvfs()
     test_popen_spawn()
     test_times_children()
     test_misc_constants()

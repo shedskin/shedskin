@@ -1224,6 +1224,56 @@ def test_terminal_size():
         pass
 
 
+def test_struct_sequences():
+    # stat_result, terminal_size and times_result are tuples, with the
+    # items also as attributes
+    path = 'shedskin_test_struct_sequences.txt'
+    with open(path, 'w') as f:
+        f.write('xyz')
+    os.utime(path, (1000000000.5, 1234567890.25))
+    st = os.stat(path)
+    assert len(st) == 10
+    assert st[:7] == (st.st_mode, st.st_ino, st.st_dev, st.st_nlink, st.st_uid, st.st_gid, 3)
+    assert st[-3:-1] == (1000000000, 1234567890)
+    mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime = st
+    assert (size, atime, mtime) == (3, 1000000000, 1234567890)
+    assert list(st)[6] == 3 and tuple(st) == st
+    assert st == os.stat(path) and hash(st) == hash(os.lstat(path))
+    assert 1234567890 in st and st.index(1234567890) == 8
+    assert repr(st).startswith('os.stat_result(st_mode=%d, st_ino=' % st.st_mode)
+    assert repr(st).endswith(', st_size=3, st_atime=1000000000, st_mtime=1234567890, st_ctime=%d)' % ctime)
+    assert os.path.samestat(st, os.stat(path))
+    for entry in os.scandir('.'):
+        if entry.name == path:
+            assert entry.stat() == st
+    os.remove(path)
+
+    ts = os.terminal_size((80, 24))
+    cols, rows = ts
+    assert (cols, rows) == (80, 24)
+    assert ts == (80, 24) and (80, 24) == ts and ts < (81,)
+    assert hash(ts) == hash((80, 24))
+    assert ts + (1,) == (80, 24, 1)
+    assert ts * 2 == (80, 24, 80, 24)
+    assert ts[::-1] == (24, 80)
+    assert '%dx%d' % ts == '80x24'
+    assert max(ts) == 80 and sorted(ts) == [24, 80]
+    assert ts.count(80) == 1 and ts.index(24) == 1
+    assert sorted([ts, (1, 2)]) == [(1, 2), (80, 24)]
+    ok = False
+    try:
+        os.terminal_size((1, 2, 3))
+    except TypeError:
+        ok = True
+    assert ok
+
+    tr = os.times_result((1.5, 2.0, 0.0, 0.0, 10.25))
+    assert tr == (1.5, 2.0, 0.0, 0.0, 10.25)
+    assert hash(tr) == hash((1.5, 2.0, 0.0, 0.0, 10.25))
+    assert sum(tr) == 13.75
+    assert '%.1f/%.1f' % tr[:2] == '1.5/2.0'
+
+
 walk_errors = []
 walk_errnos = []
 
@@ -1778,6 +1828,7 @@ def test_all():
     test_fchmod()
     test_device_encoding()
     test_terminal_size()
+    test_struct_sequences()
 
     test_utime_extended()
     test_stat_follow_symlinks()

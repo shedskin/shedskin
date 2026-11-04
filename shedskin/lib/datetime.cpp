@@ -59,10 +59,11 @@ str *comma_space_string, *zero_string, *close_paren_string, *repr_fold_string;
 
 list<str *> *DayNames, *MonthNames;
 
-class_ *cl_date, *cl_tzinfo, *cl_timedelta, *cl_time, *cl_datetime;
+class_ *cl_date, *cl_tzinfo, *cl_timedelta, *cl_time, *cl_datetime, *cl___IsoCalendarDate;
 
 void __init() {
 	cl_date = new class_("date");
+	cl___IsoCalendarDate = new class_("IsoCalendarDate");
 	cl_tzinfo = new class_("tzinfo");
 	cl_datetime = new class_("datetime");
 	cl_time = new class_("time");
@@ -380,7 +381,18 @@ __ss_int date::isoweekday() {
     return (ymd_to_ord(year, month, day) + 6) % 7+1;
 }
 
-tuple2<__ss_int, __ss_int> *date::isocalendar() {
+__IsoCalendarDate::__IsoCalendarDate(__ss_int year, __ss_int week, __ss_int weekday) : tuple2<__ss_int, __ss_int>(3, year, week, weekday) {
+    this->__class__ = cl___IsoCalendarDate;
+    this->year = year;
+    this->week = week;
+    this->weekday = weekday;
+}
+
+str *__IsoCalendarDate::__repr__() {
+    return __mod6(new str("datetime.IsoCalendarDate(year=%d, week=%d, weekday=%d)"), 3, year, week, weekday);
+}
+
+__IsoCalendarDate *date::isocalendar() {
 //modified from cpython
     __ss_int  week1_monday = iso_week1_monday(year);
     __ss_int  today        = ymd_to_ord(year, month, day);
@@ -398,7 +410,7 @@ tuple2<__ss_int, __ss_int> *date::isocalendar() {
         ++tmpyear;
         tmpweek = 0;
     }
-    return new tuple2<__ss_int, __ss_int>(3, (__ss_int)tmpyear, (__ss_int)(tmpweek+1), (__ss_int)(tmpday+1));
+    return new __IsoCalendarDate((__ss_int)tmpyear, (__ss_int)(tmpweek+1), (__ss_int)(tmpday+1));
 }
 
 str *date::isoformat() {

@@ -5,6 +5,20 @@ from time import struct_time
 MINYEAR = 1
 MAXYEAR = 9999
 
+# returned by isocalendar(): a tuple, with the items also as attributes
+class __IsoCalendarDate(tuple):
+    def __init__(self):
+        self.unit = 1
+        self.year = 1
+        self.week = 1
+        self.weekday = 1
+    def __slice__(self, x, l, u, s):
+        return (self.unit,)
+    def __mul__(self, n):
+        return (self.unit,)
+    def __repr__(self):
+        return ''
+
 class date:
     def __init__(self, year, month, day):
         self.year = year
@@ -61,7 +75,7 @@ class date:
         return 1
 
     def isocalendar(self):
-        return (1, 1, 1)
+        return __IsoCalendarDate()
 
     def isoformat(self):
         return ''
@@ -201,7 +215,7 @@ class datetime(date):
         return 1
 
     def isocalendar(self):
-        return (1, 1, 1)
+        return __IsoCalendarDate()
 
     def isoformat(self, sep=None, timespec=None):
         return ''

@@ -820,7 +820,7 @@ template<class T> T __seqiter<T>::__get_next() { /* no exception at the end (see
 #endif
 
 /* unpacking of arbitrary iterables, using the same for_in_* protocol as
-   for-loops (so e.g. os.times_result works, which has no __iter__) */
+   for-loops (so e.g. classes without __iter__ work) */
 template<class P> inline typename P::for_in_unit __ss_unpack_next(P *p, typename P::for_in_loop &l) {
     if(!p->for_in_has_next(l))
         throw new ValueError(new str("not enough values to unpack"));

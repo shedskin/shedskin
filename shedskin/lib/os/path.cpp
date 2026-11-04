@@ -289,7 +289,7 @@ __ss_bool islink(str *path) {
     */
     if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
-    __os__::__cstat *st;
+    __os__::stat_result *st;
 
     try {
         st = __os__::lstat(path);
@@ -334,7 +334,7 @@ __ss_bool isdir(str *path) {
     */
     if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
-    __os__::__cstat *st;
+    __os__::stat_result *st;
 
     try {
         st = __os__::stat(path);
@@ -350,7 +350,7 @@ __ss_bool isfile(str *path) {
     */
     if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
-    __os__::__cstat *st;
+    __os__::stat_result *st;
 
     try {
         st = __os__::stat(path);
@@ -374,14 +374,14 @@ __ss_bool samefile(str *f1, str *f2) {
     /**
     Test whether two pathnames reference the same actual file
     */
-    __os__::__cstat *s1, *s2;
+    __os__::stat_result *s1, *s2;
 
     s1 = __os__::stat(f1);
     s2 = __os__::stat(f2);
     return __mbool(samestat(s1, s2));
 }
 
-__ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
+__ss_bool samestat(__os__::stat_result *s1, __os__::stat_result *s2) {
     /**
     Test whether two stat buffers reference the same file
     */
@@ -393,7 +393,7 @@ __ss_bool sameopenfile(__ss_int fp1, __ss_int fp2) {
     /**
     Test whether two open file objects reference the same file
     */
-    __os__::__cstat *s1, *s2;
+    __os__::stat_result *s1, *s2;
 
     s1 = __os__::fstat(fp1);
     s2 = __os__::fstat(fp2);
@@ -416,7 +416,7 @@ __ss_bool ismount(str *path) {
     */
     if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
-    __os__::__cstat *s1, *s2;
+    __os__::stat_result *s1, *s2;
     str *parent;
 
     try {
@@ -1020,7 +1020,7 @@ __ss_bool exists(str *path) {
     */
     if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
-    __os__::__cstat *st;
+    __os__::stat_result *st;
 
     try {
         st = __os__::stat(path);
@@ -1040,7 +1040,7 @@ __ss_bool isdir(str *path) {
     */
     if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
-    __os__::__cstat *st;
+    __os__::stat_result *st;
 
     try {
         st = __os__::stat(path);
@@ -1056,7 +1056,7 @@ __ss_bool isfile(str *path) {
     */
     if (__ss_bad_path(path)) /* as in CPython: no ValueError here */
         return False;
-    __os__::__cstat *st;
+    __os__::stat_result *st;
 
     try {
         st = __os__::stat(path);
@@ -1134,7 +1134,7 @@ __ss_bool samefile(str *f1, str *f2) {
     return result;
 }
 
-__ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
+__ss_bool samestat(__os__::stat_result *s1, __os__::stat_result *s2) {
     /**
     Test whether two stat buffers reference the same file
     */
