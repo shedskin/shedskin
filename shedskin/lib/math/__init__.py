@@ -75,9 +75,8 @@ def dist(p, q):
 def sumprod(p, q):
     elem = iter(p).__next__()
     elem = iter(q).__next__()
-    elem.__mul__(elem)
     elem.__add__(elem)
-    return elem
+    return elem.__mul__(elem)  # bool*bool is int
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return True

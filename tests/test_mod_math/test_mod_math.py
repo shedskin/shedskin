@@ -652,6 +652,12 @@ def test_sumprod():
     assert math.sumprod((1,2), iter([3,4])) == 11
     assert math.sumprod([1j, 2j], [3j, 1+1j]) == -5+2j
 
+    # bools (1025-C4): products are ints, so the result is an int
+    assert math.sumprod([True, True], [True, False]) == 1
+    assert math.sumprod([True, True, True], [True, False, True]) == 2
+    assert math.sumprod([False], [True]) == 0
+    assert math.sumprod((True, True), iter([True, True])) + 10 == 12
+
     # user class (shedskin starts from the first product, not from 0)
     ns = [SumprodNum(1), SumprodNum(2)]
     ms = [SumprodNum(3), SumprodNum(4)]
