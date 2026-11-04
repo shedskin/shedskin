@@ -104,6 +104,23 @@ def test_zip_exhaustion():
     assert [a + b for a, b in zip(it5, it5)] == ['ab', 'cd', 'ef']
 
 
+def test_zip_alloc_pattern():
+    # with clang -flto, a zip object and the list built from it were once
+    # allocated at the same address: a replaceable operator new shared its
+    # free lists with the inline allocation paths
+    z = zip([1], [2])
+    assert next(z) == (1, 2)
+    stops = 0
+    for i in range(2):
+        try:
+            next(z)
+        except StopIteration:
+            stops += 1
+    assert stops == 2
+    gen = (x * 10 for x in range(4))
+    assert list(zip(gen, gen)) == [(0, 10), (20, 30)]
+
+
 def zip_strict_error(z):
     try:
         for t in z:
@@ -290,6 +307,7 @@ def test_all():
     test_zip()
     test_zip_strict()
     test_zip_exhaustion()
+    test_zip_alloc_pattern()
     test_zip_strict_messages()
     test_zip_sequences()
     test_map()
