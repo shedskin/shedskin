@@ -1379,10 +1379,10 @@ class file_binary(pyiter):
         return self.unit
 
 __file = file('')
-def open(file, mode=None, encoding=None, errors=None, newline=None):
+def open(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None):
     return __file
 
-def open_binary(file, mode=None, encoding=None, errors=None, newline=None):
+def open_binary(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None):
     return file_binary('')
 
 def ord(c):

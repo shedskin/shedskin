@@ -718,7 +718,7 @@ list<str *> *RawConfigParser::read(list<str *> *filenames, str *encoding) {
 
     FOR_IN(filename,filenames,7,9,123)
         try {
-            fp = open(filename, 0, encoding);
+            fp = open(filename, 0, -1, encoding);
         } catch (OSError *) {
             continue;
         }

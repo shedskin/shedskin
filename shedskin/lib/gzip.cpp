@@ -1008,7 +1008,7 @@ GzipFile *open(str *filename, str *mode, __ss_int compresslevel, str *encoding, 
 }
 
 GzipFile *open(bytes *filename, str *mode, __ss_int compresslevel, str *encoding, str *errors, str *newline) {
-    return open(new str(filename->unit), mode, compresslevel, encoding, errors, newline);
+    return __gzip__::open(new str(filename->unit), mode, compresslevel, encoding, errors, newline);
 }
 
 GzipFile *open(file_binary *fileobj, str *mode, __ss_int compresslevel, str *encoding, str *errors, str *newline) {

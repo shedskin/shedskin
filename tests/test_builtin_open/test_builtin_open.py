@@ -964,7 +964,72 @@ def test_enter_exit_results():
     os.remove('eetest.txt')
 
 
+def test_open_buffering():
+    # buffering as the third positional argument, as in cpython
+    f = open('ubuf.txt', 'w', -1)
+    f.write('x')
+    f.close()
+    with open('ubuf.txt', 'r', -1, 'utf-8', 'strict', None) as g:
+        assert g.read() == 'x'
+    with open('ubuf.txt', 'rb', -1) as h:
+        assert h.read() == b'x'
+    with open('ubuf.txt', buffering=1) as g:
+        assert g.read() == 'x'
+    # unbuffered text is not allowed; as cpython, the file is opened first
+    errors = []
+    try:
+        open('ubuf.txt', 'r', 0)
+    except ValueError as e:
+        errors.append(str(e))
+    with open('ubuf.txt') as g:
+        assert g.read() == 'x'
+    try:
+        open('ubuf.txt', 'w', buffering=0)
+    except ValueError as e:
+        errors.append(str(e))
+    assert errors == ["can't have unbuffered text I/O"] * 2
+    assert os.stat('ubuf.txt').st_size == 0
+    try:
+        open(os.path.join('ubuf_nodir', 'x'), 'w', 0)
+    except FileNotFoundError:
+        errors.append('FileNotFoundError')
+    assert errors[-1] == 'FileNotFoundError'
+    # unbuffered binary: each write reaches the file at once
+    with open('ubuf.txt', 'wb', 0) as h:
+        h.write(b'abc')
+        assert os.stat('ubuf.txt').st_size == 3
+        h.write(b'd\ne')
+        assert os.stat('ubuf.txt').st_size == 6
+    with open('ubuf.txt', 'rb', 0) as h:
+        assert h.read(1) == b'a'
+        assert h.readline() == b'bcd\n'
+        assert h.read() == b'e'
+    # line buffered text: flushed at each newline (Windows has no line buffering)
+    with open('ubuf.txt', 'w', 1) as g:
+        g.write('ab')
+        g.write('c\n')
+        if sys.platform != 'win32':
+            assert os.stat('ubuf.txt').st_size == 4
+        g.write('d')
+    assert os.stat('ubuf.txt').st_size == nl_size(5)
+    # buffer sizes (and line buffering in binary mode, which cpython warns about)
+    for size in [2, 4096, 1 << 20, -5]:
+        with open('ubuf.txt', 'w', size) as g:
+            g.write('hello\n' * 1000)
+        with open('ubuf.txt', 'r', size) as g:
+            assert g.readlines() == ['hello\n'] * 1000
+    with open('ubuf.txt', 'rb', 1) as h:
+        assert len(h.read()) == nl_size(6000, 1000)
+    os.remove('ubuf.txt')
+
+
+def nl_size(n, lines=1):
+    # file size of text with 'lines' newlines (os.linesep on Windows)
+    return n + lines * (len(os.linesep) - 1)
+
+
 def test_all():
+    test_open_buffering()
     test_utf8_sig()
     test_seek_returns_position()
     test_open_exclusive()
