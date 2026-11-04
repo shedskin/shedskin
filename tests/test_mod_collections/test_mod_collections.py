@@ -418,6 +418,35 @@ def test_deque_maxlen_on_init():
     assert e.maxlen == 3
 
 
+def test_deque_maxlen_none():
+    # regression test: an explicit maxlen=None was passed as 0, so the
+    # deque silently dropped everything (1023-B5)
+    d = deque([1,2,3], maxlen=None)
+    d.append(4)
+    assert list(d) == [1,2,3,4]
+    assert str(d) == 'deque([1, 2, 3, 4])'
+    e = deque([1,2], None)
+    e.extend([3,4])
+    assert list(e) == [1,2,3,4]
+    f = deque(maxlen=None)
+    f.append(1)
+    assert list(f) == [1]
+
+    # maxlen=0 is still a valid (always empty) deque
+    g = deque([1,2], maxlen=0)
+    g.append(3)
+    assert list(g) == []
+    assert g.maxlen == 0
+
+    # negative maxlen is rejected
+    for bad in (-1, -5):
+        try:
+            deque([1], maxlen=bad)
+            assert False
+        except ValueError as ex:
+            assert str(ex) == 'maxlen must be non-negative'
+
+
 def test_deque_eq():
     # regression test: deque used to fall back to pyobj's default
     # __eq__ (pointer identity), so equal-content deques compared unequal
@@ -1048,6 +1077,7 @@ def test_all():
     test_deque4()
     test_deque_maxlen()
     test_deque_maxlen_on_init()
+    test_deque_maxlen_none()
     test_deque_extend_self()
     test_deque_maxlen_negative()
     test_deque_eq()
