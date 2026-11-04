@@ -207,6 +207,14 @@ def test_copy_attr_names():
     assert d.c.name == 'inner'
 
 
+def test_copy_keyword():
+    # parameter is called 'x', as in CPython
+    assert copy.copy(x=[1, 2]) == [1, 2]
+    l = [[3], [4]]
+    d = copy.deepcopy(x=l)
+    assert d == l and d[0] is not l[0]
+
+
 def test_all():
     test_copy1()
     test_copy2()
@@ -219,6 +227,7 @@ def test_all():
     test_copy_obj3()
     test_copy_obj_class()
     test_copy_attr_names()
+    test_copy_keyword()
     test_error()
 
 if __name__ == '__main__':

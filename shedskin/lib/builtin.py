@@ -25,7 +25,7 @@ class int_:
         return b''
 
     @classmethod
-    def from_bytes(cls, b, byteorder=None, signed=False):
+    def from_bytes(cls, bytes, byteorder=None, signed=False):
         return 1
 
     def as_integer_ratio(self):

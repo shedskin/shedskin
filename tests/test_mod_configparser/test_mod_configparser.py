@@ -1429,6 +1429,14 @@ def test_read_encoding():
         pass
     os.remove(encfile)
 
+def test_error_keywords():
+    # constructor parameter is called 'filename', as in CPython
+    e = configparser.MissingSectionHeaderError(filename='f.ini', lineno=3, line='x\n')
+    assert e.source == 'f.ini' and e.lineno == 3 and e.line == 'x\n'
+    e2 = configparser.MultilineContinuationError(filename='g.ini', lineno=4, line='y\n')
+    assert e2.source == 'g.ini' and e2.lineno == 4 and e2.line == 'y\n'
+
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -1487,6 +1495,7 @@ def test_all():
     test_interpolation_before_methods()
     test_add_default_section_error()
     test_read_encoding()
+    test_error_keywords()
 
 if __name__ == '__main__':
     test_all()
