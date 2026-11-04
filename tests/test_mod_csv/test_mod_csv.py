@@ -883,6 +883,68 @@ def test_writerow_any_iterable():
     assert results == ['""|', '""|', '""|', err, '""|', err, err, err]
 
 
+def test_dictwriter_any_values():
+    # like CPython, DictWriter accepts dicts with non-str values, written as
+    # by writer.writerow (missing fields become restval)
+    s = io.StringIO()
+    w = csv.DictWriter(s, ['a', 'b'], lineterminator='\n')
+    assert w.writerow({'a': 1, 'b': 2}) == 4
+    w.writerow({'a': 3})
+    w.writerows([{'a': 5, 'b': 6}, {'b': 7}])
+    w.writerows({'a': i, 'b': i * i} for i in range(2))
+    assert s.getvalue() == '1,2\n3,\n5,6\n,7\n0,0\n1,1\n'
+
+    s = io.StringIO()
+    w = csv.DictWriter(s, ['a', 'b', 'c'], restval='r', lineterminator='|')
+    w.writerow({'a': 1.5, 'c': -2.0})
+    w.writerow({'a': None, 'b': None})
+    w.writerow({'a': [1, 2], 'b': (3,), 'c': None})
+    w.writerow({'a': True, 'b': False})
+    dd = collections.defaultdict(int)
+    dd['b'] = 7
+    w.writerow(dd)  # missing keys use restval, not the default factory
+    assert s.getvalue() == '1.5,r,-2.0|,,r|"[1, 2]","(3,)",|True,False,r|r,7,r|'
+
+    # quoting depends on the value type; restval is a str
+    results = []
+    for quoting in [csv.QUOTE_MINIMAL, csv.QUOTE_ALL, csv.QUOTE_NONNUMERIC,
+                    csv.QUOTE_STRINGS, csv.QUOTE_NOTNULL, csv.QUOTE_NONE]:
+        s = io.StringIO()
+        w = csv.DictWriter(s, ['a', 'b'], restval='r', quoting=quoting, lineterminator='|')
+        w.writerow({'a': 1})
+        w.writerow({'a': 2.5, 'b': 3.5})
+        w.writerow({'b': None})
+        results.append(s.getvalue())
+    assert results == [
+        '1,r|2.5,3.5|r,|',
+        '"1","r"|"2.5","3.5"|"r",""|',
+        '1,"r"|2.5,3.5|"r",""|',
+        '1,"r"|2.5,3.5|"r",|',
+        '"1","r"|"2.5","3.5"|"r",|',
+        '1,r|2.5,3.5|r,|',
+    ]
+
+    # extrasaction
+    s = io.StringIO()
+    w = csv.DictWriter(s, ['a'], extrasaction='ignore', lineterminator='|')
+    w.writerow({'a': 1, 'b': 2})
+    assert s.getvalue() == '1|'
+    w = csv.DictWriter(s, ['a'], lineterminator='|')
+    try:
+        w.writerow({'a': 1, "c'd": 3})
+        assert False
+    except ValueError as e:
+        assert str(e) == 'dict contains fields not in fieldnames: "c\'d"'
+    # the order of multiple wrong fields depends on hashing, in CPython (a set
+    # difference) as well as in shedskin (std::hash differs between platforms)
+    try:
+        w.writerow({'a': 1, 'b': 2, "c'd": 3})
+        assert False
+    except ValueError as e:
+        assert str(e) in ['dict contains fields not in fieldnames: \'b\', "c\'d"',
+                          'dict contains fields not in fieldnames: "c\'d", \'b\'']
+
+
 def test_field_size_limit():
     old = csv.field_size_limit()
     assert old == 131072
@@ -1207,6 +1269,7 @@ def test_all():
     test_unicode_roundtrip()
     test_quote_nonnumeric_writer()
     test_writerow_any_iterable()
+    test_dictwriter_any_values()
     test_field_size_limit()
     test_reader_doublequote()
     test_reader_skipinitialspace()
