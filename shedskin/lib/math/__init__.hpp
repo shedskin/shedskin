@@ -198,7 +198,7 @@ template<class ... Args> __ss_float hypot(int, __ss_float x, Args ... args) {
     return __vector_norm(v, 1 + sizeof...(args));
 }
 inline __ss_float hypot(int, __ss_float x) {
-    return x < 0 ? -x : x;
+    return std::fabs(x); /* hypot(-0.0) is 0.0 */
 }
 inline __ss_float hypot(int) {
     return 0.0;
@@ -217,7 +217,7 @@ inline __ss_float degrees(__ss_float x) {
 }
 
 inline __ss_float radians(__ss_float x) {
-    return x/(180.0/pi);
+    return x*(pi/180.0); /* as cpython; x/(180.0/pi) can differ by an ulp */
 }
 
 inline __ss_float cosh(__ss_float x) {
@@ -313,6 +313,14 @@ inline __ss_float gamma(__ss_float x) {
     /* poles at non-positive integers (including -0.0), and -inf */
     if((std::isfinite(x) && x <= 0.0 && std::floor(x) == x) || (std::isinf(x) && x < 0.0))
         __math_domain_error(__SS_MATH_GAMMA_MSG, x);
+    /* as cpython: exact (x-1)! for integers 1..23 (tgamma may be off by an
+       ulp); every such factorial is exactly representable as a double */
+    if(x >= 1.0 && x <= 23.0 && std::floor(x) == x) {
+        __ss_float r = 1.0;
+        for(int i = 2; i < (int)x; i++)
+            r *= i;
+        return r;
+    }
     return __math_1(x, ::tgamma(x), true, __SS_MATH_GAMMA_MSG);
 }
 
@@ -465,7 +473,19 @@ inline __ss_float prod(pyiter<__ss_float> *iterable, __ss_int start) {
 }
 
 inline __ss_float prod(pyiter<__ss_int> *iterable, __ss_float start) {
-    return (__ss_float)prod(iterable) * start;
+    /* as cpython: multiply into the float start from left to right, rather
+       than taking the int product first (different rounding, int overflow) */
+    __ss_int __2;
+    pyiter<__ss_int> *__1;
+    pyiter<__ss_int>::for_in_loop __3;
+    __ss_int x;
+    __ss_float result = start;
+
+    FOR_IN(x,iterable,1,2,3)
+        result *= (__ss_float)x;
+    END_FOR
+
+    return result;
 }
 
 inline complex prod(pyiter<complex> *iterable) {

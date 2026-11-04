@@ -424,6 +424,10 @@ def test_math():
 
     assert math.frexp(2) == (0.5, 2)
     assert math.gamma(2) == 1.0
+    # exact factorials for integer arguments (1024-D2)
+    assert math.gamma(13.0) == 479001600.0
+    assert [math.gamma(float(i)) == math.factorial(i - 1) for i in range(1, 21)] == [True] * 20
+    assert math.gamma(23.0) == 1124000727777607680000.0
     assert math.lgamma(2) == 0.0
 
     assert math.ldexp(float("inf"), -10 ** 20) == float("inf")
@@ -549,6 +553,7 @@ def test_math():
     assert math.hypot() == 0.0
     assert math.hypot(3.0) == 3.0
     assert math.hypot(-3.0) == 3.0
+    assert math.copysign(1.0, math.hypot(-0.0)) == 1.0  # 1024-D2
     assert math.hypot(3.0, 4.0) == 5.0
     assert math.hypot(3.0, 4.0, 12.0) == 13.0
     assert math.hypot(1.0, 2.0, 3.0, 4.0) == math.sqrt(30.0)
@@ -608,6 +613,9 @@ def test_prod():
 
     assert math.prod([2,3,4], start=2.0) == 48.0
     assert '%.2f' %  (math.prod([2.1,3,4], start=2)) == '50.40'
+    # float start multiplied in from the left (1024-D2)
+    assert math.prod([3, 7], start=0.1) == 2.1000000000000005
+    assert math.prod([2**40, 2**40], start=1.0) == 2.0**80
 
     # complex
     assert math.prod([1j, 2j]) == -2
@@ -896,6 +904,7 @@ def test_degrees_radians():
     assert '%.8f' % math.degrees(math.pi / 2) == '90.00000000'
     assert '%.8f' % math.radians(180.0) == '3.14159265'
     assert '%.8f' % math.radians(90.0) == '1.57079633'
+    assert math.radians(3.0) == 0.05235987755982989  # 1024-D2
 
 
 def test_fabs():
