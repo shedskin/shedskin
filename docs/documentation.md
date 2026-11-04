@@ -114,6 +114,23 @@ var = SomeClass # bad
 [var] # bad, contained
 ```
 
+## Differences with CPython
+
+Even when a program compiles fine, its behaviour may differ from CPython in some details, so it is better not to depend on these:
+
+* the evaluation order of arguments to a function call (including `print`) is unspecified in C++, so it may change with translation, and may even differ between C++ compilers (or compiler versions/options):
+
+```python
+print('hoei', input()) # input may be called before printing 'hoei'!
+f(g(), h()) # h may be called before g
+```
+
+* the `random` module uses a different random number generator (xoshiro256 instead of the Mersenne Twister), so the generated values differ from those under CPython, even when using the same seed
+
+* the values returned by `hash` may be different (for example for strings, tuples and floats)
+
+* as a consequence, the iteration order of sets may differ as well. Note that dicts also do not preserve insertion order (see [Python Subset Restrictions](#python-subset-restrictions)).
+
 ## Library Limitations
 
 At the moment, the following 33 modules are (partially) supported:
@@ -810,12 +827,6 @@ statistics = {'nodes': 28, 'solutions': set()}
 
 class statistics: pass
 s = statistics(); s.nodes = 28; s.solutions = set()
-```
-
-* The evaluation order of arguments to a function or print changes with translation to C++, so it's better not to depend on this:
-
-```python
-print('hoei', input()) # input is called before printing 'hoei'!
 ```
 
 * Tuples with different types of elements and length > 2 are currently not supported. It can however be useful to 'simulate' them:
