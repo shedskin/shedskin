@@ -771,6 +771,13 @@ def test_bytearray_explicit_dunder_calls():
     assert error == 'bytearray index out of range'
 
 
+def test_bytearray_from_str_keywords():
+    # keyword encoding/errors must land in their own slots
+    assert bytearray('abc', encoding='ascii') == b'abc'
+    assert bytearray('h\xffi', 'ascii', errors='ignore') == b'hi'
+    assert bytearray('h\xffi', encoding='ascii', errors='replace') == b'h?i'
+
+
 def test_all():
     test_unchanged_results_are_copies()
     test_index_error_messages()
@@ -804,6 +811,7 @@ def test_all():
     test_bytearray_join_single()
     test_bytearray_join_resized_during_iteration()
     test_bytearray_explicit_dunder_calls()
+    test_bytearray_from_str_keywords()
 
 
 if __name__ == "__main__":

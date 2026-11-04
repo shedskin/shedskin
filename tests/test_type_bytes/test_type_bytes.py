@@ -905,6 +905,13 @@ def test_bytes_from_non_int_iterable():
     assert error == "'bytearray' object cannot be interpreted as an integer"
 
 
+def test_bytes_from_str_keywords():
+    # keyword encoding/errors must land in their own slots
+    assert bytes('abc', encoding='ascii') == b'abc'
+    assert bytes('h\xffi', 'ascii', errors='ignore') == b'hi'
+    assert bytes('h\xffi', encoding='ascii', errors='replace') == b'h?i'
+
+
 def test_all():
     test_bytes_list_literal()
     test_character_classes()
@@ -975,6 +982,7 @@ def test_all():
     test_copy_independent()
     test_search_int_range()
     test_bytes_from_non_int_iterable()
+    test_bytes_from_str_keywords()
 
 
 if __name__ == "__main__":
