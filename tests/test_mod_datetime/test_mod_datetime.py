@@ -770,6 +770,37 @@ def test_date_fromtimestamp_floor():
         pass
 
 
+def fromtimestamp_error(kind, ts):
+    try:
+        if kind == 0:
+            datetime.datetime.fromtimestamp(ts)
+        elif kind == 1:
+            datetime.datetime.utcfromtimestamp(ts)
+        else:
+            datetime.date.fromtimestamp(ts)
+    except OverflowError as e:
+        return 'OverflowError: ' + str(e)
+    except OSError:
+        return 'OSError'
+    except ValueError as e:
+        return 'ValueError: ' + str(e)
+    return 'ok'
+
+
+def test_fromtimestamp_out_of_range():
+    # like cpython: OverflowError if it does not fit in time_t, OSError if
+    # localtime()/gmtime() cannot represent the year, ValueError for nan
+    toobig = 'OverflowError: timestamp out of range for platform time_t'
+    for kind in range(3):
+        for ts in [2.0**63, -2.0**64, 1e20, -1e20, float('inf'), float('-inf')]:
+            assert fromtimestamp_error(kind, ts) == toobig
+        assert fromtimestamp_error(kind, float('nan')) == 'ValueError: Invalid value NaN (not a number)'
+        if sys.platform != 'win32':
+            assert fromtimestamp_error(kind, 2.0**62) == 'OSError'
+            assert fromtimestamp_error(kind, -2.0**62) == 'OSError'
+        assert fromtimestamp_error(kind, 1e12) == 'ValueError: year 33658 is out of range'
+
+
 def test_isocalendar_date():
     # a tuple, with the items also as attributes
     ic = datetime.date(2026, 11, 3).isocalendar()
@@ -1419,6 +1450,7 @@ def test_all():
         test_timedelta_huge_args()
         test_datetime_fromtimestamp_round_half_even()
         test_date_fromtimestamp_floor()
+        test_fromtimestamp_out_of_range()
         test_fromisocalendar()
         test_isocalendar_date()
         test_date_time_strptime()
