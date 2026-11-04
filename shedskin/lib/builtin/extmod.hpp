@@ -132,6 +132,25 @@ template<> PyObject *__to_py(__ss_float i);
 template<> PyObject *__to_py(void *);
 
 extern dict<void *, void *> *__ss_proxy;
+
+/* threads are not supported. CPython only runs one thread at a time in an
+ * extension module (the GIL, which is never released), but the garbage
+ * collector only knows about the thread that initialized it (the one that
+ * imported the module, see __init), and aborts the process when it has to
+ * collect in another thread ('Collecting from unknown thread'), or cannot find
+ * the importing thread anymore. whether that happens depends on when a
+ * collection is triggered, so a call from another thread seemed to work until
+ * it did not. so every entry point of an extension module checks the thread
+ * first, and raises a RuntimeError when called from another one. this sets
+ * the Python exception and returns true in that case. */
+extern std::thread::id __ss_init_thread;
+
+inline bool __ss_wrong_thread() {
+    if(std::this_thread::get_id() == __ss_init_thread) [[likely]]
+        return false;
+    PyErr_SetString(PyExc_RuntimeError, "a Shed Skin extension module can only be used from the thread that imported it");
+    return true;
+}
 #endif
 
 /* binding args */
