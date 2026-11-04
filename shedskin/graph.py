@@ -3024,6 +3024,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Visit a class definition"""
         if not getmv().module.builtin and node not in getmv().classnodes:
             error.error("non-global class '%s'" % node.name, self.gx, node, mv=getmv())
+        for dec in node.decorator_list:
+            error.error("class decorators are not supported", self.gx, dec, mv=getmv())
         real_bases = [
             base
             for base in node.bases
