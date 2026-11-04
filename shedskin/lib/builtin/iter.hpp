@@ -21,9 +21,9 @@
         e = __ ## temp->for_in_next(__ ## t);
 
 #define FOR_IN_ZIP(a, b, k, l, t, u, n, m) \
-    __ ## m = __SS_MIN(k->units.size(), l->units.size()); \
     __ ## t = k; \
     __ ## u = l; \
+    __ ## m = __SS_MIN((__ ## t)->units.size(), (__ ## u)->units.size()); \
     for(__ ## n = 0; __ ## n < __ ## m; __ ## n ++) { \
         a = (__ ## t)->units[__ ## n]; \
         b = (__ ## u)->units[__ ## n];

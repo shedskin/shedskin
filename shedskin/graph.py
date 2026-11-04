@@ -2256,15 +2256,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var2(node.target, assnode, func)
             self.temp_var2(node.iter, infer.inode(self.gx, node.iter.args[0]), func)
 
-            if (
-                len(node.iter.args) == 3
-                and not isinstance(node.iter.args[2], ast.Name)
-                and not ast_utils.is_literal(node.iter.args[2])
-            ):  # XXX merge with ast.ListComp
+            # non-literal step: FAST_FOR reads it every iteration (and before
+            # the bounds), so evaluate all arguments into temps up front (#607)
+            if len(node.iter.args) == 3 and not ast_utils.is_literal(
+                node.iter.args[2]
+            ):
                 for arg in node.iter.args:
-                    if not isinstance(arg, ast.Name) and not ast_utils.is_literal(
-                        arg
-                    ):  # XXX create func for better check
+                    if not ast_utils.is_literal(arg):
                         self.temp_var2(arg, infer.inode(self.gx, arg), func)
 
         # --- temp vars for list, iter etc.
