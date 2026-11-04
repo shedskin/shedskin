@@ -153,8 +153,45 @@ def test_keywords():
     assert complex(1.0, imag=4.0) == 1 + 4j
 
 
+def test_precision():
+    # abs uses hypot: no overflow/underflow of intermediate squares
+    assert abs(complex(1e200, 1e200)) == 1.414213562373095e+200
+    assert abs(complex(1e-200, 1e-200)) == 1.4142135623730951e-200
+    assert abs(3 + 4j) == 5.0
+    try:
+        abs(complex(1.5e308, 1.5e308))
+        assert False
+    except OverflowError as e:
+        assert str(e) == 'absolute value too large'
+
+    # Smith's algorithm for division
+    assert (1e200 + 1e200j) / (1e200 + 1e200j) == 1 + 0j
+    assert (1e-200 + 1e-200j) / (1e-200 + 1e-200j) == 1 + 0j
+    assert (1 + 2j) / (3 - 4j) == (-0.2 + 0.4j)
+    assert (1 + 2j) / 2.0 == (0.5 + 1j)
+    try:
+        (1 + 2j) / 0j
+        assert False
+    except ZeroDivisionError:
+        pass
+
+    # integer exponents multiply instead of going through polar form
+    assert repr((1j) ** 2) == '(-1+0j)'
+    assert repr((1 + 1j) ** 2) == '2j'
+    assert (1 + 1j) ** 3 == (-2 + 2j)
+    assert (2 + 0j) ** 10 == (1024 + 0j)
+    assert (1 + 1j) ** -2 == -0.5j
+    assert (2j) ** 0 == (1 + 0j)
+    assert (1 + 1j) ** 2.0 == 2j
+    n = 3
+    assert (1j) ** n == -1j
+    # non-integer exponents still use polar form
+    assert abs((1j) ** 0.5 - (0.7071067811865476 + 0.7071067811865475j)) < 1e-15
+
+
 def test_all():
     test_complex()
+    test_precision()
     test_attributes()
     test_keywords()
     test_from_string()
