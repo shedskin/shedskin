@@ -609,6 +609,12 @@ def test_pathconf_errors():
     except OSError as e:
         assert str(e) == "[Errno 2] No such file or directory: 'nope.txt'"
         assert e.filename == 'nope.txt'
+    try:  # EINVAL could be the name as well as the path: no filename
+        os.pathconf('.', 99999)
+        assert False
+    except OSError as e:
+        assert str(e) == '[Errno 22] Invalid argument'
+        assert e.filename is None
     try:
         os.fpathconf(987, 'PC_NAME_MAX')
         assert False

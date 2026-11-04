@@ -222,7 +222,7 @@ str *StringIO::readline(__ss_int n) {
 
 list<str *> *StringIO::readlines(__ss_int hint) {
     /* lines end according to newline (by default at '\n' only, unlike str.splitlines) */
-    __check_closed();
+    __check_closed_iobase();
     list<str *> *result = new list<str *>();
     __ss_int total = 0;
     while(!__eof()) {

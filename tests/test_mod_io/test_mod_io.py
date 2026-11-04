@@ -713,6 +713,24 @@ def test_closed_message():
     except ValueError as e:
         msg = str(e)
     assert msg == 'I/O operation on closed file'
+    # .. apart from the methods it inherits from io.IOBase
+    for i in range(5):
+        msg = ''
+        try:
+            if i == 0:
+                s.readlines()
+            elif i == 1:
+                s.writelines(['x'])
+            elif i == 2:
+                s.isatty()
+            elif i == 3:
+                iter(s)
+            else:
+                for line in s:
+                    pass
+        except ValueError as e:
+            msg = str(e)
+        assert msg == 'I/O operation on closed file.', '%d: %s' % (i, msg)
 
 
 def test_enter_exit_results():

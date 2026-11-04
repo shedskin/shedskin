@@ -108,9 +108,18 @@ public:
     __ss_bool readable() { __check_closed(); return True; }
     __ss_bool writable() { __check_closed(); return True; }
     __ss_bool seekable() { __check_closed(); return True; }
-    __ss_bool isatty() { __check_closed(); return False; }
+    __ss_bool isatty() { __check_closed_iobase(); return False; }
     __ss_int __ss_fileno() { throw new UnsupportedOperation(new str("fileno")); }
     void *detach() { throw new UnsupportedOperation(new str("detach")); }
+
+    /* unlike StringIO's own methods, the ones CPython inherits from io.IOBase
+       (readlines, writelines, isatty, __iter__) end the message with a period */
+    inline void __check_closed_iobase() {
+        if(closed)
+            throw new ValueError(new str("I/O operation on closed file."));
+    }
+    void *writelines(pyiter<str *> *iter) { __check_closed_iobase(); return file::writelines(iter); }
+    __iter<str *> *__iter__() { __check_closed_iobase(); return this; }
 };
 
 extern const __ss_int DEFAULT_BUFFER_SIZE;

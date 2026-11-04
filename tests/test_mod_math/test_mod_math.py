@@ -251,7 +251,7 @@ def test_errors():
         math.log(2.0, 1.0)
     except ZeroDivisionError as e:
         error = str(e)
-    assert error == 'division by zero'
+    assert error == 'float division by zero'
 
     error = ''
     try:
