@@ -795,10 +795,14 @@ def test_fromtimestamp_out_of_range():
         for ts in [2.0**63, -2.0**64, 1e20, -1e20, float('inf'), float('-inf')]:
             assert fromtimestamp_error(kind, ts) == toobig
         assert fromtimestamp_error(kind, float('nan')) == 'ValueError: Invalid value NaN (not a number)'
-        if sys.platform != 'win32':
+        if sys.platform == 'win32':
+            # the windows localtime()/gmtime() stop at the year 3000 (EINVAL),
+            # so cpython raises OSError here instead
+            assert fromtimestamp_error(kind, 1e12) == 'OSError'
+        else:
             assert fromtimestamp_error(kind, 2.0**62) == 'OSError'
             assert fromtimestamp_error(kind, -2.0**62) == 'OSError'
-        assert fromtimestamp_error(kind, 1e12) == 'ValueError: year 33658 is out of range'
+            assert fromtimestamp_error(kind, 1e12) == 'ValueError: year 33658 is out of range'
 
 
 def test_isocalendar_date():
