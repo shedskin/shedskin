@@ -126,8 +126,21 @@ class mmap: public pyiter<bytes *>
     void *   close();
     mmap    *__enter__();
     void    *__exit__();
-    void *   flush(__ss_int offset=0, __ss_int size=-1);
-    void *   madvise(__ss_int option, __ss_int start=0, __ss_int length=-1);
+    /* size is __ss_void_struct when omitted (the whole map), so that an
+       explicit -1 is out of range, as in CPython */
+    template<class S=__ss_void_struct> void *flush(__ss_int offset=0, S size=__ss_void) {
+        if constexpr (std::is_same_v<S, __ss_void_struct>)
+            return __flush(offset, 0, false);
+        else
+            return __flush(offset, size, true);
+    }
+    /* likewise, length is __ss_void_struct when omitted (the rest of the map) */
+    template<class L=__ss_void_struct> void *madvise(__ss_int option, __ss_int start=0, L length=__ss_void) {
+        if constexpr (std::is_same_v<L, __ss_void_struct>)
+            return __madvise(option, start, 0, false);
+        else
+            return __madvise(option, start, length, true);
+    }
     /* start/end are __ss_void_struct when omitted (start then defaults
        to the current position, end to the size), so that negative values
        can be passed and are relative to the end, as in CPython */
@@ -210,7 +223,9 @@ class mmap: public pyiter<bytes *>
     void *__seek_failed();
 
     inline size_t __subscript(__ss_int index, bool include_end=false) const;
-    void __check_flush_range(__ss_int offset, __ss_int &size) const;
+    void *__flush(__ss_int offset, __ss_int size, bool size_given);
+    void *__madvise(__ss_int option, __ss_int start, __ss_int length, bool length_given);
+    void __check_flush_range(__ss_int offset, __ss_int &size, bool size_given) const;
     inline size_t __tell() const { return (size_t)(m_position - m_begin); }
     __ss_int __find(const __GC_STRING& needle, __ss_int start, __ss_int end, bool reverse=false);
 
