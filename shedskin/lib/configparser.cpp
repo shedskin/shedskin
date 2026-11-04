@@ -440,7 +440,9 @@ void *RawConfigParser::__init__(dict<str *, str *> *defaults, __ss_int allow_no_
     this->_empty_lines_in_values = empty_lines_in_values;
     this->_allow_unnamed_section = allow_unnamed_section;
     this->default_section = (default_section_ != NULL) ? default_section_ : DEFAULTSECT;
-    this->_interpolation = (interpolation_ != NULL) ? interpolation_ : this->_default_interpolation();
+    /* interpolation=None: no interpolation (the omitted case passes the
+       class default, see the constructors) */
+    this->_interpolation = (interpolation_ != NULL) ? interpolation_ : new Interpolation();
 
     /* option-line regex: the class-level OPTCRE/OPTCRE_NV for the default
        '=' / ':' delimiters, a per-instance compile otherwise */

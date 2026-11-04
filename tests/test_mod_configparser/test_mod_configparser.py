@@ -707,6 +707,25 @@ def test_interpolation_kwarg():
     assert config2.get('p', 'my', raw=True) == '%(home)s/mine'
 
 
+def test_interpolation_none():
+    # interpolation=None means no interpolation (#1490), which differs from
+    # omitting it (BasicInterpolation for ConfigParser)
+    config = configparser.ConfigParser(interpolation=None)
+    config.read_string('[a]\nx = 1%\nhome = /h\nmy = %(home)s/m\n')
+    assert config.get('a', 'x') == '1%'
+    assert config.get('a', 'my') == '%(home)s/m'
+    config.set('a', 'y', '50%')
+    assert config['a']['y'] == '50%'
+
+    config2 = configparser.RawConfigParser(interpolation=None)
+    config2.read_string('[a]\nmy = %(x)s\n')
+    assert config2.get('a', 'my') == '%(x)s'
+
+    config3 = configparser.ConfigParser()
+    config3.read_string('[a]\nhome = /h\nmy = %(home)s/m\n')
+    assert config3.get('a', 'my') == '/h/m'
+
+
 def test_extended_interpolation():
     config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
     config.read_string('[DEFAULT]\nroot = /opt\n'
@@ -1446,6 +1465,7 @@ def test_all():
     test_error_messages()
     test_popitem()
     test_interpolation_kwarg()
+    test_interpolation_none()
     test_extended_interpolation()
     test_basic_interpolation_syntax_errors()
     test_module_constants()

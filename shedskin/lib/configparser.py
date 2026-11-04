@@ -123,7 +123,7 @@ __cperror12 = InvalidWriteError('')
 __cperror13 = UnnamedSectionDisabledError()
 
 class RawConfigParser:
-    def __init__(self, defaults=None, allow_no_value=False, delimiters=None, comment_prefixes=None, inline_comment_prefixes=None, strict=True, empty_lines_in_values=True, default_section=None, interpolation=None, allow_unnamed_section=False):
+    def __init__(self, defaults=None, allow_no_value=False, delimiters=None, comment_prefixes=None, inline_comment_prefixes=None, strict=True, empty_lines_in_values=True, default_section=None, interpolation=__void, allow_unnamed_section=False):
         # a class attribute in CPython; modelled per instance (shared dict)
         self.BOOLEAN_STATES = {'': True}
         self._sections = {'': ''}
@@ -136,10 +136,14 @@ class RawConfigParser:
         self._allow_no_value = allow_no_value
         self._empty_lines_in_values = empty_lines_in_values
         self._allow_unnamed_section = allow_unnamed_section
-        if interpolation is None:
-            self._interpolation = Interpolation()
-        else:
-            self._interpolation = interpolation
+        # interpolation=None means no interpolation (Interpolation), which
+        # differs from omitting it (__void: the class default, so
+        # BasicInterpolation for ConfigParser). __void is modelled as an int,
+        # so the argument is not stored here, to keep it out of the type of
+        # _interpolation.
+        self._interpolation = Interpolation()
+        self._interpolation = BasicInterpolation()
+        self._interpolation = ExtendedInterpolation()
     def defaults(self):
         return self._defaults
     def sections(self):

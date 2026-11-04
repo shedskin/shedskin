@@ -379,6 +379,13 @@ public:
         this->__class__ = cl_RawConfigParser;
         __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, interpolation_, allow_unnamed_section);
     }
+    /* interpolation= omitted (the model's __void default): use the
+       class-specific default; an explicit None (NULL) above means no
+       interpolation, as in CPython */
+    RawConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value, tuple<str *> *delimiters, tuple<str *> *comment_prefixes, tuple<str *> *inline_comment_prefixes, __ss_int strict, __ss_int empty_lines_in_values, str *default_section_, __ss_void_struct, __ss_int allow_unnamed_section=0) {
+        this->__class__ = cl_RawConfigParser;
+        __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, this->_default_interpolation(), allow_unnamed_section);
+    }
     /* class-specific default for the interpolation= constructor argument
        (Interpolation for RawConfigParser, BasicInterpolation for
        ConfigParser); resolved with a virtual call from within the derived
@@ -484,6 +491,13 @@ public:
     ConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value=0, tuple<str *> *delimiters=NULL, tuple<str *> *comment_prefixes=NULL, tuple<str *> *inline_comment_prefixes=NULL, __ss_int strict=1, __ss_int empty_lines_in_values=1, str *default_section_=NULL, Interpolation *interpolation_=NULL, __ss_int allow_unnamed_section=0) {
         this->__class__ = cl_ConfigParser;
         __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, interpolation_, allow_unnamed_section);
+    }
+    /* interpolation= omitted (the model's __void default): use the
+       class-specific default; an explicit None (NULL) above means no
+       interpolation, as in CPython */
+    ConfigParser(dict<str *, str *> *defaults, __ss_int allow_no_value, tuple<str *> *delimiters, tuple<str *> *comment_prefixes, tuple<str *> *inline_comment_prefixes, __ss_int strict, __ss_int empty_lines_in_values, str *default_section_, __ss_void_struct, __ss_int allow_unnamed_section=0) {
+        this->__class__ = cl_ConfigParser;
+        __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, this->_default_interpolation(), allow_unnamed_section);
     }
     Interpolation *_default_interpolation();
 };

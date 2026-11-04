@@ -846,6 +846,9 @@ def analyze_args(
     ):  # XXX
         args.insert(0, None)
 
+    if func.mv.module.builtin and not get_starargs(expr):
+        strip_none_args(func, formal_args, default_start, args, kwdict)
+
     kwextra = []
     for kw in kwdict:
         if kw not in formal_args and f"__kw_{kw}" not in formal_args:
@@ -912,6 +915,54 @@ def analyze_args(
             formals.append(func.formals[-1])
 
     return actuals, formals, defaults, extra, _error
+
+
+# library methods where an explicit None differs from omitting the argument
+NONE_IS_VALUE = {
+    ("builtin", "dict", "pop"),  # d.pop(k, None) must not raise KeyError
+    ("builtin", None, "str"),  # str(None) is 'None', not ''
+}
+
+
+def strip_none_args(
+    func: "python.Function",
+    formal_args: list[str],
+    default_start: int,
+    args: list[Optional[ast.AST]],
+    kwdict: dict[Optional[str], ast.AST],
+) -> None:
+    """Treat a literal None passed to a library function as an omitted
+    argument (CPython usually uses None as the 'not given' default). Only
+    keyword arguments and trailing positional arguments are dropped."""
+    cl = func.parent.ident if isinstance(func.parent, python.Class) else None
+    if (func.mv.module.ident, cl, func.ident) in NONE_IS_VALUE:
+        return
+
+    def droppable(formal: str) -> bool:
+        i = formal_args.index(formal)
+        if i < default_start:
+            return False
+        default = func.defaults[i - default_start]
+        # __void defaults: C++ distinguishes omission from None
+        return not (isinstance(default, ast.Name) and default.id == "__void")
+
+    for kw in list(kwdict):
+        if not ast_utils.is_none(kwdict[kw]):
+            continue
+        for formal in (kw, f"__kw_{kw}"):
+            if formal in formal_args and droppable(formal):
+                del kwdict[kw]
+                break
+
+    posformals = [f for f in formal_args if not f.startswith("__kw_")]
+    while (
+        args
+        and len(args) <= len(posformals)
+        and args[-1] is not None
+        and ast_utils.is_none(args[-1])
+        and droppable(posformals[len(args) - 1])
+    ):
+        args.pop()
 
 
 def get_starargs(node: ast.Call) -> Optional[ast.AST]:
