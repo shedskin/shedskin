@@ -31,10 +31,30 @@ public:
 
     /* XXX modulo rotate */
 
-    deque(pyiter<A> *iterable=0, __ss_int _maxlen=-1) {
-        this->__class__ = cl_deque;
-        if(_maxlen < -1)
+    /* maxlen=None is passed as (void *)NULL and means unbounded; it is
+       stored as -1, because the .maxlen attribute is typed int */
+    deque(pyiter<A> *iterable=0, void * =NULL) {
+        __init(iterable);
+    }
+    deque(pyiter<A> *iterable, __ss_int _maxlen) {
+        __init(iterable, __check_maxlen(_maxlen));
+    }
+    /* a None iterable is passed as (void *)NULL as well */
+    deque(void *, void *) {
+        __init(0);
+    }
+    deque(void *, __ss_int _maxlen) {
+        __init(0, __check_maxlen(_maxlen));
+    }
+
+    static __ss_int __check_maxlen(__ss_int _maxlen) {
+        if(_maxlen < 0)
             throw new ValueError(new str("maxlen must be non-negative"));
+        return _maxlen;
+    }
+
+    void __init(pyiter<A> *iterable, __ss_int _maxlen=-1) {
+        this->__class__ = cl_deque;
         this->maxlen = _maxlen;
         if(iterable)
             extend(iterable);
