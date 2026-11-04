@@ -65,6 +65,7 @@ str *byteorder_big, *byteorder_little;
 
 #ifdef __SS_BIND
 dict<void *, void *> *__ss_proxy;
+std::thread::id __ss_init_thread; /* see __ss_wrong_thread */
 #endif
 
 #ifndef __SS_NOGC
@@ -127,6 +128,7 @@ void __init() {
 #ifdef __SS_BIND
     Py_Initialize();
     __ss_proxy = new dict<void *, void *>();
+    __ss_init_thread = std::this_thread::get_id();
 #endif
 
 #if !defined(WIN32) && !defined(__SS_BIND)
@@ -660,7 +662,8 @@ __ss_int __extslice_size(__ss_int x, __ss_int l, __ss_int u, __ss_int s, __ss_in
      waste a little space, objects are never too small.
    - objects come back cleared, except for the link word, which is reset here.
    - not thread-safe: generated code is single-threaded. extension modules rely on the GIL
-     (they never release it), so this breaks if generated code is ever run without it.
+     (they never release it), so this breaks if generated code is ever run without it. they
+     also only run in the thread that imported them (see __ss_wrong_thread).
    - unlike GC_FAST_MALLOC_GRANS, this does not call GC_end_stubborn_change/GC_reachable_here,
      which are only needed for incremental collection (see GC_enable_incremental in __init).
 

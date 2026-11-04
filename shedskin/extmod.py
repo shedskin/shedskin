@@ -330,6 +330,8 @@ class ExtensionModule:
             % clname(cl)
         )
         write("    (void)args; (void)kwargs;")
+        write("    if (__ss_wrong_thread())")
+        write("        return NULL;")
         write("    PyObject *t = PyTuple_New(3);")
         write(
             '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));'
@@ -353,6 +355,8 @@ class ExtensionModule:
             % clname(cl)
         )
         write("    (void)kwargs;")
+        write("    if (__ss_wrong_thread())")
+        write("        return NULL;")
         write("    if (PyTuple_Size(args) != 1) {")
         write(
             '        PyErr_Format(PyExc_TypeError, "%s.__setstate__() takes exactly one argument (%%zd given)", PyTuple_Size(args));'
@@ -700,6 +704,9 @@ class ExtensionModule:
             id = "Global_" + "_".join(self.gv.module.name_list) + "_" + func.ident
         write("PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {" % id)
         write("    (void)self; (void)args; (void)kwargs;")
+        # threads are not supported (see __ss_wrong_thread)
+        write("    if (__ss_wrong_thread())")
+        write("        return NULL;")
         write("    try {")
 
         # reject extra positional arguments and unknown/duplicate keywords,
@@ -1089,6 +1096,8 @@ class ExtensionModule:
             % clname(cl)
         )
         write("    (void)args; (void)kwargs;")
+        write("    if (__ss_wrong_thread())")
+        write("        return NULL;")
         # without an __init__ (also not from a base class), arguments are an
         # error, as with object.__new__
         if not self.has_method(cl, "__init__"):
@@ -1135,6 +1144,8 @@ class ExtensionModule:
                 % (clname(cl), var.name, clname(cl))
             )
             write("    (void)closure;")
+            write("    if (__ss_wrong_thread())")
+            write("        return NULL;")
             write("    return __to_py(self->__ss_object->%s);" % self.gv.cpp_name(var))
             write("}\n")
 
@@ -1143,6 +1154,8 @@ class ExtensionModule:
                 % (clname(cl), var.name, clname(cl))
             )
             write("    (void)closure;")
+            write("    if (__ss_wrong_thread())")
+            write("        return -1;")
             # CPython signals 'del obj.attr' by calling the setter with a NULL
             # value. Without this guard it reaches __to_ss, which only
             # special-cases Py_None and dereferences the NULL, segfaulting the

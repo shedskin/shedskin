@@ -5,6 +5,7 @@
 
 #ifdef __SS_BIND
 #include <Python.h>
+#include <thread>
 #endif
 
 #ifndef __SS_NOGC
