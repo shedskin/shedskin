@@ -107,7 +107,26 @@ public:
     str *__repr__();
 };
 
-list<DirEntry *> *scandir(str *path=0);
+/* entries are read eagerly; close() (or leaving a 'with' block) drops them,
+   after which iteration stops, as in CPython */
+extern class_ *cl_ScandirIterator;
+class ScandirIterator : public __iter<DirEntry *> {
+public:
+    list<DirEntry *> *entries;
+    __ss_int pos;
+
+    ScandirIterator(list<DirEntry *> *entries_) : entries(entries_), pos(0) { __class__ = cl_ScandirIterator; }
+
+    ScandirIterator *__iter__() { return this; }
+    DirEntry *__next__();
+    DirEntry *__get_next();
+    ScandirIterator *__enter__() { return this; }
+    void *__exit__() { close(); return NULL; }
+    void *close() { entries = NULL; return NULL; }
+    str *__repr__();
+};
+
+ScandirIterator *scandir(str *path=0);
 
 typedef tuple3<str *, list<str *> *, list<str *> *> __walk_tuple;
 
