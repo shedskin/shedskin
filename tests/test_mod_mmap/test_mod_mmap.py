@@ -1005,6 +1005,17 @@ def test_c_int_overflow():
     assert errors == 4 * ['signed integer is greater than maximum'] + 4 * ['signed integer is less than minimum'] + ['signed integer is greater than maximum']
 
 
+def test_read_no_arg():
+    # 1028-D3: read() without a size reads the rest
+    m = mmap.mmap(-1, 8)
+    m.write(b'abcdefgh')
+    m.seek(3)
+    assert m.read() == b'defgh'
+    assert m.tell() == 8
+    assert m.read() == b''
+    m.close()
+
+
 def test_read_negative_size():
     # 1031-A2: any negative size reads the rest; position stays in range
     m = mmap.mmap(-1, 16)
@@ -1059,6 +1070,7 @@ def test_all():
     test_return_values()
     test_flush_range()
     test_read_negative_size()
+    test_read_no_arg()
 
 if __name__ == '__main__':
     test_all()

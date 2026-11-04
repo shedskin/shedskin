@@ -82,7 +82,7 @@ class mmap(pyiter):
     def move(self, destination, source, count):
         pass
 
-    def read(self, size):
+    def read(self, size=-1):
         return b''
 
     def read_byte(self):
