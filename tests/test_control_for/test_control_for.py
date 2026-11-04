@@ -215,6 +215,63 @@ def test_for_choice_none():
     assert lens == [1, -1, 2]
 
 
+zip_calls: list[int] = []
+
+
+def zip_arg(n):
+    """Logs each call, to check that fast-path arguments are evaluated once."""
+    zip_calls.append(n)
+    return list(range(n))
+
+
+def test_for_zip_args_evaluated_once():
+    # regression test (#607): the FOR_IN_ZIP fast path used to expand its
+    # arguments both in the length computation and in the assignments
+    pairs = []
+    for a, b in zip(zip_arg(3), zip_arg(4)):
+        pairs.append((a, b))
+    assert pairs == [(0, 0), (1, 1), (2, 2)]
+    assert zip_calls == [3, 4]
+    del zip_calls[:]
+    assert [a + b for a, b in zip(zip_arg(2), zip_arg(5))] == [0, 2]
+    assert zip_calls == [2, 5]
+    del zip_calls[:]
+    assert sum(a * b for a, b in zip(zip_arg(3), zip_arg(3))) == 5
+    assert zip_calls == [3, 3]
+    del zip_calls[:]
+
+
+range_calls: list[str] = []
+
+
+def range_arg(name, n):
+    range_calls.append(name)
+    return n
+
+
+def test_for_range_args_evaluated_once():
+    # regression test (#607): a variable range() step used to be re-read on
+    # every iteration of the FAST_FOR fast path
+    step = 3
+    lo, hi = 1, 12
+    result = []
+    for i in range(lo, hi, step):
+        step = 100
+        lo = 50
+        hi = 2
+        result.append(i)
+    assert result == [1, 4, 7, 10]
+    step = -2
+    assert [j for j in range(10, 0, step)] == [10, 8, 6, 4, 2]
+    assert list(j for j in range(10, 0, step)) == [10, 8, 6, 4, 2]
+    # bounds and step are evaluated once each, from left to right
+    result = []
+    for i in range(range_arg('lo', 0), range_arg('hi', 5), range_arg('step', 2)):
+        result.append(i)
+    assert result == [0, 2, 4]
+    assert range_calls == ['lo', 'hi', 'step']
+
+
 def test_all():
     test_for_range()
     test_for_range_near_int_limits()
@@ -225,6 +282,8 @@ def test_all():
     test_for_enumerate_shadowed()
     test_for_zip_shadowed()
     test_for_range_shadowed()
+    test_for_zip_args_evaluated_once()
+    test_for_range_args_evaluated_once()
     test_for_break()
     test_for_continue()
     test_for_else()
