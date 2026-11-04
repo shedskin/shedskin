@@ -512,12 +512,20 @@ template<class A> __ss_float dist(pyiter<A> *p, pyiter<A> *q) {
     return __vector_norm(diffs.data(), diffs.size());
 }
 
-template<class A> A sumprod(pyiter<A> *p, pyiter<A> *q) {
+/* bool products are ints, as in CPython */
+template<class A> struct __sumprod_type { typedef A type; };
+template<> struct __sumprod_type<__ss_bool> { typedef __ss_int type; };
+
+template<class A> inline A __sumprod_mul(A a, A b) { return __mul(a, b); }
+inline __ss_int __sumprod_mul(__ss_bool a, __ss_bool b) { return (__ss_int)(a.value & b.value); }
+
+template<class A> typename __sumprod_type<A>::type sumprod(pyiter<A> *p, pyiter<A> *q) {
+    typedef typename __sumprod_type<A>::type R;
     __iter<A> *p_iter = p->__iter__();
     __iter<A> *q_iter = q->__iter__();
 
     A a, b;
-    A sum = A();
+    R sum = R();
     bool first = true;
     size_t n_exhausted;
 
@@ -540,10 +548,10 @@ template<class A> A sumprod(pyiter<A> *p, pyiter<A> *q) {
             throw new ValueError(new str("Inputs are not the same length"));
 
         if(first) {
-            sum = __mul(a, b);
+            sum = __sumprod_mul(a, b);
             first = false;
         } else
-            sum = __add(sum, __mul(a, b));
+            sum = __add(sum, __sumprod_mul(a, b));
     }
 
     return sum;
