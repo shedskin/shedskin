@@ -1460,6 +1460,18 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self, node: ast.Lambda, func: Optional["python.Function"] = None
     ) -> None:
         """Visit a lambda function"""
+        # a lambda default belongs to each evaluation of the lambda, but would
+        # be kept in a single global; and a call through a function variable
+        # cannot tell which lambda (and so which default) it is calling
+        if not getmv().module.builtin and (
+            node.args.defaults or [d for d in node.args.kw_defaults if d]
+        ):
+            error.error(
+                "default arguments in lambdas are not supported",
+                self.gx,
+                node,
+                mv=getmv(),
+            )
         lambdanr = len(self.lambdas)
         name = "__lambda%d__" % lambdanr
         fakenode = ast.FunctionDef(name, node.args, [ast.Return(node.body)], [])
