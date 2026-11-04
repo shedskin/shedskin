@@ -36,7 +36,7 @@ public:
     str *errors = 0;
     bool __bom_pending = false; /* utf-8-sig: write a bom on the first write */
 
-    file(FILE *g=0);
+    file(FILE *g=0, str *name=0, str *mode=0);
     file(str *name, str *mode=0, str *encoding=0, str *errors=0, str *newline=0, __ss_int buffering=-1);
 
     virtual void * close();
@@ -86,7 +86,7 @@ public:
     __GC_VECTOR(char) __read_cache;
     file *__text = 0; /* as .buffer of a text file: shares its FILE *, so closing either closes both */
 
-    file_binary(FILE *g=0) : name(0), mode(0), f(g), closed(False) {}
+    file_binary(FILE *g=0, str *name=0, str *mode=0);
     file_binary(str *name, str *mode=0, __ss_int buffering=-1);
 
     virtual void * close();
@@ -156,6 +156,7 @@ inline std::wstring __ss_wpath(str *s, const char *func = 0, const char *arg = "
 
 void __check_open_mode(str *mode);
 str *__c_open_mode(str *mode, bool excl);
+str *__fileio_mode(str *mode);
 
 file *open(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
 file *open(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);

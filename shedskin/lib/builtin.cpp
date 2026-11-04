@@ -205,15 +205,9 @@ void __init() {
         for(__ss_int j=0; j<40; j++)
             __ss_tuple_cache[i*40+j] = new tuple<__ss_int>(2, i-20, j-20);
 
-    __ss_stdin = new file(stdin);
-    __ss_stdin->name = new str("<stdin>");
-    __ss_stdin->mode = new str("r");
-    __ss_stdout = new file(stdout);
-    __ss_stdout->name = new str("<stdout>");
-    __ss_stdout->mode = new str("w");
-    __ss_stderr = new file(stderr);
-    __ss_stderr->name = new str("<stderr>");
-    __ss_stderr->mode = new str("w");
+    __ss_stdin = new file(stdin, new str("<stdin>"), new str("r"));
+    __ss_stdout = new file(stdout, new str("<stdout>"), new str("w"));
+    __ss_stderr = new file(stderr, new str("<stderr>"), new str("w"));
     str *utf8 = new str("utf-8"), *se = new str("surrogateescape");
     for (file *fp : {__ss_stdin, __ss_stdout, __ss_stderr}) {
         fp->encoding = utf8;

@@ -819,19 +819,25 @@ static str *__makefile_mode(str *mode) {
     return new str(m.c_str());
 }
 
+/* as cpython: the binary mode is that of the underlying SocketIO, so 'rb',
+   'wb' or 'rwb' (a text file keeps the mode as given) */
+static str *__socketio_mode(str *mode) {
+    bool writing = mode->unit.find('w') != std::string::npos;
+    bool reading = !writing || mode->unit.find('r') != std::string::npos;
+    return new str(reading ? (writing ? "rwb" : "rb") : "wb");
+}
+
 file *socket::makefile(str *mode) {
     if(!mode)
         mode = new str("r");
-    file *f = new file(__makefile(_fd, __makefile_mode(mode)));
-    f->name = new str("<socket>");
-    f->mode = mode;
+    file *f = new file(__makefile(_fd, __makefile_mode(mode)), new str("<socket>"), mode);
+    f->buffer->mode = __socketio_mode(mode);
     return f;
 }
 
 file_binary *socket::makefile_binary(str *mode) {
-    file_binary *f = new file_binary(__makefile(_fd, __makefile_mode(mode)));
-    f->name = new str("<socket>");
-    f->mode = mode;
+    file_binary *f = new file_binary(__makefile(_fd, __makefile_mode(mode)), new str("<socket>"));
+    f->mode = __socketio_mode(mode);
     return f;
 }
 

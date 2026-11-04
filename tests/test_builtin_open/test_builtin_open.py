@@ -1028,6 +1028,62 @@ def nl_size(n, lines=1):
     return n + lines * (len(os.linesep) - 1)
 
 
+def closed_mode(g):
+    m = g.mode
+    g.close()
+    return m
+
+
+def test_binary_mode_normalised():
+    # as cpython's FileIO.mode: a binary file reports 'rb', 'wb', 'ab' or 'xb'
+    # (plus '+'), however the mode was spelled; a text file keeps it as given,
+    # and its .buffer has the binary mode and the same name
+    with open('bmode.bin', 'bw') as g:
+        assert g.mode == 'wb'
+    assert closed_mode(open('bmode.bin', 'br')) == 'rb'
+    assert closed_mode(open('bmode.bin', 'rb')) == 'rb'
+    assert closed_mode(open('bmode.bin', 'b+r')) == 'rb+'
+    assert closed_mode(open('bmode.bin', 'rb+')) == 'rb+'
+    assert closed_mode(open('bmode.bin', 'w+b')) == 'rb+'
+    assert closed_mode(open('bmode.bin', 'ba')) == 'ab'
+    assert closed_mode(open('bmode.bin', 'a+b')) == 'ab+'
+    os.remove('bmode.bin')
+    with open('bmode.bin', 'bx') as g:
+        assert g.mode == 'xb'
+    os.remove('bmode.bin')
+    with open('bmode.bin', 'x+b') as g:
+        assert g.mode == 'xb+'
+
+    with open('bmode.bin') as f:
+        assert f.mode == 'r'
+        assert f.buffer.mode == 'rb'
+        assert f.buffer.name == 'bmode.bin'
+    with open('bmode.bin', 'tr') as f:
+        assert f.mode == 'tr'
+        assert f.buffer.mode == 'rb'
+    with open('bmode.bin', 'w+') as f:
+        assert f.mode == 'w+'
+        assert f.buffer.mode == 'rb+'
+    with open('bmode.bin', 'a') as f:
+        assert f.buffer.mode == 'ab'
+
+    fd = os.open('bmode.bin', os.O_RDWR)
+    with os.fdopen(fd, 'w+b') as g:
+        assert g.mode == 'rb+'
+    fd = os.open('bmode.bin', os.O_RDONLY)
+    with os.fdopen(fd, 'br') as g:
+        assert g.mode == 'rb'
+    fd = os.open('bmode.bin', os.O_RDWR)
+    with os.fdopen(fd, 'r+') as f:
+        assert f.mode == 'r+'
+        assert f.buffer.mode == 'rb+'
+    os.remove('bmode.bin')
+
+    assert sys.stdin.buffer.mode == 'rb'
+    assert sys.stdout.buffer.mode == 'wb'
+    assert sys.stderr.buffer.name == '<stderr>'
+
+
 def test_all():
     test_open_buffering()
     test_utf8_sig()
@@ -1070,6 +1126,7 @@ def test_all():
     if sys.platform != 'win32':
         test_std_buffers()
     test_open_mode_order()
+    test_binary_mode_normalised()
     test_open_read_write_switch()
 
 

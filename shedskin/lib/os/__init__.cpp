@@ -1122,19 +1122,13 @@ static FILE *__fdopen(__ss_int fd, str *mode) {
 file* fdopen(__ss_int fd, str* mode, __ss_int) {
     if(!mode)
         mode = new str("r");
-    file* ret = new file(__fdopen(fd, mode));
-    ret->name = new str("<fdopen>");
-    ret->mode = mode;
-    return ret;
+    return new file(__fdopen(fd, mode), new str("<fdopen>"), mode);
 }
 
 file_binary* fdopen_binary(__ss_int fd, str* mode, __ss_int) {
     if(!mode)
         mode = new str("rb");
-    file_binary* ret = new file_binary(__fdopen(fd, mode));
-    ret->name = new str("<fdopen>");
-    ret->mode = mode;
-    return ret;
+    return new file_binary(__fdopen(fd, mode), new str("<fdopen>"), mode);
 }
 
 bytes *read(__ss_int fd, __ss_int n) {

@@ -555,6 +555,24 @@ def test_makefile_binary():
     assert g.mode == 'rb'
     f.close()
     g.close()
+    # as cpython: the mode of the SocketIO, however it was spelled
+    f = a.makefile('bw')
+    assert f.mode == 'wb'
+    f.close()
+    g = a.makefile('br')
+    assert g.mode == 'rb'
+    g.close()
+    g = a.makefile('b')
+    assert g.mode == 'rb'
+    g.close()
+    # a text file keeps its mode; its .buffer has the binary one
+    t = a.makefile('w')
+    assert t.mode == 'w'
+    assert t.buffer.mode == 'wb'
+    t.close()
+    t = a.makefile('r')
+    assert t.buffer.mode == 'rb'
+    t.close()
     a.close()
     b.close()
 
