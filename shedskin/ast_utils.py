@@ -82,16 +82,25 @@ FORMAT_SPEC = re.compile(
 )
 
 
-def supported_format_spec(spec: Optional[ast.expr]) -> Optional[ast.Constant]:
-    """The constant format spec of an f-string value, if it is supported"""
+def const_format_spec(spec: Optional[ast.expr]) -> Optional[ast.Constant]:
+    """The constant (non-empty) format spec of an f-string value, if any"""
     if (
         isinstance(spec, ast.JoinedStr)
         and len(spec.values) == 1
         and isinstance(spec.values[0], ast.Constant)
         and isinstance(spec.values[0].value, str)
-        and FORMAT_SPEC.fullmatch(spec.values[0].value)
     ):
         return spec.values[0]
+    return None
+
+
+def supported_format_spec(spec: Optional[ast.expr]) -> Optional[ast.Constant]:
+    """The constant format spec of an f-string value, if it is supported by
+    the format spec mini-language (other constant specs are only supported
+    for classes with their own __format__, see cpp.py)"""
+    const = const_format_spec(spec)
+    if const and FORMAT_SPEC.fullmatch(const.value):
+        return const
     return None
 
 

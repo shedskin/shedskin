@@ -473,6 +473,14 @@ str *date::strftime(str *format) {
     return __time__::strftime(__strftime_preprocess(format, 0, NULL, NULL), timetuple());
 }
 
+/* like CPython: an empty spec gives str(self), anything else is passed on
+   to strftime (see __format in lib/builtin/format.hpp) */
+str *date::__format__(str *format_spec) {
+    if (format_spec->unit.empty())
+        return __str__();
+    return strftime(format_spec);
+}
+
 
 //class tzinfo
 datetime *tzinfo::fromutc(datetime *dt) {
@@ -1047,6 +1055,12 @@ str *datetime::strftime(str *format) {
     return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z), timetuple());
 }
 
+str *datetime::__format__(str *format_spec) {
+    if (format_spec->unit.empty())
+        return __str__();
+    return strftime(format_spec);
+}
+
 //class time
 time::time(__ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo, __ss_int fold_) {
     __class__=cl_time;
@@ -1140,6 +1154,12 @@ str *time::strftime(str* format) {
             (__ss_int)1900, (__ss_int)1, (__ss_int)1,
             (__ss_int)hour, (__ss_int)minute, (__ss_int)second,
             (__ss_int)0, (__ss_int)1, (__ss_int)(-1))));
+}
+
+str *time::__format__(str *format_spec) {
+    if (format_spec->unit.empty())
+        return __str__();
+    return strftime(format_spec);
 }
 
 timedelta *time::utcoffset() {

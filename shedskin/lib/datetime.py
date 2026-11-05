@@ -86,6 +86,9 @@ class date:
     def strftime(self, format):
         return ''
 
+    def __format__(self, format_spec):
+        return ''
+
     def __str__(self):
         return ''
 
@@ -226,6 +229,9 @@ class datetime(date):
     def strftime(self, format):
         return ''
 
+    def __format__(self, format_spec):
+        return ''
+
     def timestamp(self):
         return 1.0
 
@@ -280,6 +286,9 @@ class time:
         return ''
 
     def strftime(self, format):
+        return ''
+
+    def __format__(self, format_spec):
         return ''
 
     def utcoffset(self):
