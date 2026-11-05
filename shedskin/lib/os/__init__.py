@@ -156,8 +156,22 @@ class DirEntry:
     def __repr__(self):
         return ''
 
+class ScandirIterator:
+    def __iter__(self):
+        return self
+    def __next__(self):
+        return DirEntry()
+    def __enter__(self):
+        return self
+    def __exit__(self):
+        pass
+    def close(self):
+        pass
+    def __repr__(self):
+        return ''
+
 def scandir(path=None):
-    return [DirEntry()]
+    return ScandirIterator()
 
 def walk(top, topdown=True, onerror=None, followlinks=False):
     onerror(OSError())

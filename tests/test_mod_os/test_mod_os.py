@@ -85,6 +85,41 @@ def test_scandir_name_path():
     os.rmdir(base)
 
 
+def test_scandir_context_manager():
+    base = 'shedskin_test_scandir_dir3'
+    os.mkdir(base)
+    for n in ['a', 'b', 'c']:
+        with open(os.path.join(base, n), 'w') as f:
+            f.write('x')
+
+    with os.scandir(base) as it:
+        assert sorted([e.name for e in it]) == ['a', 'b', 'c']
+
+    # leaving the 'with' block closes the iterator
+    with os.scandir(base) as it2:
+        pass
+    assert list(it2) == []
+
+    # a ScandirIterator is a one-shot iterator
+    it = os.scandir(base)
+    first = next(it)
+    assert first.name in ['a', 'b', 'c']
+    assert len(list(it)) == 2
+    assert list(it) == []
+
+    # close() stops iteration, and may be called twice
+    it = os.scandir(base)
+    it.close()
+    it.close()
+    assert list(it) == []
+
+    assert repr(os.scandir(base)).startswith('<%s.ScandirIterator object at ' % os.name)
+
+    for n in ['a', 'b', 'c']:
+        os.remove(os.path.join(base, n))
+    os.rmdir(base)
+
+
 def test_stat_times():
     path = 'shedskin_test_stat_times.txt'
     with open(path, 'w') as f:
@@ -1810,6 +1845,7 @@ def test_all():
     test_fspath()
     test_scandir()
     test_scandir_name_path()
+    test_scandir_context_manager()
     test_stat_times()
     test_direntry_inode_junction()
     test_scandir_no_leak()

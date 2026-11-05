@@ -716,7 +716,35 @@ str *DirEntry::__repr__() {
     return new str(ss.str().c_str());
 }
 
-list<DirEntry *> *scandir(str *path) {
+/* class ScandirIterator */
+
+class_ *cl_ScandirIterator;
+
+DirEntry *ScandirIterator::__next__() {
+    if(!entries || pos == len(entries))
+        __throw_stop_iteration();
+    return entries->units[pos++];
+}
+
+DirEntry *ScandirIterator::__get_next() { /* no exception at the end (see __iter) */
+    if(!entries || pos == len(entries)) {
+        this->__stop_iteration = true;
+        return NULL;
+    }
+    return entries->units[pos++];
+}
+
+str *ScandirIterator::__repr__() {
+    std::stringstream ss;
+#ifdef WIN32
+    ss << "<nt.ScandirIterator object at " << (void *)this << ">";
+#else
+    ss << "<posix.ScandirIterator object at " << (void *)this << ">";
+#endif
+    return new str(ss.str().c_str());
+}
+
+ScandirIterator *scandir(str *path) {
     if(!path)
         path = new str(".");
 
@@ -729,7 +757,7 @@ list<DirEntry *> *scandir(str *path) {
         __throw_fs_error(e, path);
     }
 
-    return r;
+    return new ScandirIterator(r);
 }
 
 /* os.walk */
@@ -2666,6 +2694,7 @@ void *reload_environ() {
 void __init() {
     cl_stat_result = new class_("stat_result");
     cl_DirEntry = new class_("DirEntry");
+    cl_ScandirIterator = new class_("ScandirIterator");
     cl_terminal_size = new class_("terminal_size");
     cl_times_result = new class_("times_result");
 
