@@ -383,6 +383,7 @@ template<class T> inline __ss_bool __le(deque<T> *a, deque<T> *b) { return __deq
 
 template <class K, class V> class defaultdict final : public dict<K, V> {
     V (*func)();
+    str *factory_name = NULL; /* e.g. "int" for defaultdict(int) */
 
 public:
     defaultdict(V (*func_)()=NULL) {
@@ -417,12 +418,25 @@ public:
         throw __key_error(k);
     }
 
+    defaultdict<K, V> *__set_factory_name__(str *name) {
+        factory_name = name;
+        return this;
+    }
+
     str *__repr__() {
-        return __add_strs(3, new str("defaultdict("), dict<K, V>::__repr__(), new str(")"));
+        str *f;
+        if(!func)
+            f = new str("None, ");
+        else if(factory_name)
+            f = __add_strs(3, new str("<class '"), factory_name, new str("'>, "));
+        else
+            f = new str("");
+        return __add_strs(4, new str("defaultdict("), f, dict<K, V>::__repr__(), new str(")"));
     }
 
     defaultdict<K, V> *copy() {
         defaultdict<K,V> *c = new defaultdict<K,V>(func);
+        c->factory_name = factory_name;
         c->gcd = this->gcd;
         return c;
     }
@@ -433,6 +447,7 @@ public:
 
     defaultdict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo) {
         defaultdict<K,V> *c = new defaultdict<K,V>(func);
+        c->factory_name = factory_name;
         memo->__setitem__(this, c);
         K e;
         typename dict<K,V>::for_in_loop __3;
@@ -456,6 +471,7 @@ public:
     }
     dict<K, V> *__ror_dict__(dict<K, V> *other) {
         defaultdict<K,V> *result = new defaultdict<K,V>(func);
+        result->factory_name = factory_name;
         result->gcd = other->gcd;
         result->dict<K,V>::__update_dict__(this);
         return result;

@@ -114,6 +114,19 @@ def test_defaultdict_type_identity():
     assert repr(e).startswith('defaultdict(')
 
 
+def test_defaultdict_repr_factory():
+    # repr includes the default_factory (1023-D4)
+    d = defaultdict(int, {'a': 1})
+    assert repr(d) == "defaultdict(<class 'int'>, {'a': 1})"
+    e = defaultdict(list)
+    e[1].append(2)
+    assert repr(e) == "defaultdict(<class 'list'>, {1: [2]})"
+    assert repr(e.copy()) == repr(e)
+    assert repr(e | {3: [4]}) == "defaultdict(<class 'list'>, {1: [2], 3: [4]})"
+    f = defaultdict.fromkeys(['a'], 1)
+    assert repr(f) == "defaultdict(None, {'a': 1})"
+
+
 def test_defaultdict_fromkeys():
     d = defaultdict.fromkeys(['a', 'b', 'c'], 1)
     assert list(sorted(d.items())) == [('a', 1), ('b', 1), ('c', 1)]
@@ -1062,6 +1075,7 @@ def test_all():
     test_defaultdict_copy_module()
     test_defaultdict_from_pairs()
     test_defaultdict_type_identity()
+    test_defaultdict_repr_factory()
     test_defaultdict_fromkeys()
     test_defaultdict_fromkeys_no_value()
     test_defaultdict_get()

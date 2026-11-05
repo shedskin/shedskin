@@ -4018,6 +4018,24 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(")")
         if constructor:
             self.append(")")
+            self.defaultdict_factory_name(node, constructor)
+
+    def defaultdict_factory_name(self, node: ast.Call, constructor: Any) -> None:
+        """defaultdict(int): remember 'int' for repr"""
+        if not (
+            isinstance(constructor, python.Class)
+            and constructor.ident == "defaultdict"
+            and constructor.mv.module.ident == "collections"
+            and node.args
+            and isinstance(node.args[0], ast.Name)
+            and node.args[0] in self.mv.lwrapper
+            and node.args[0].id in (
+                "int", "float", "complex", "bool", "str", "bytes", "bytearray",
+                "list", "tuple", "dict", "set", "frozenset", "object",
+            )
+        ):
+            return
+        self.append('->__set_factory_name__(new str("%s"))' % node.args[0].id)
 
     def bool_test(
         self,
