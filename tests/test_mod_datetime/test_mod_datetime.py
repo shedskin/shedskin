@@ -1304,6 +1304,41 @@ def test_timedelta_multiplication():
             assert error == ''
 
 
+def test_timedelta_float_exact():
+    # t * f and t / f are exact, rounded half to even, as cpython (1024-D2)
+    assert datetime.timedelta(days=-3, microseconds=5) * 0.1 == datetime.timedelta(days=-1, hours=16, minutes=48)
+    assert datetime.timedelta(days=1, hours=13, minutes=39, seconds=12, microseconds=243920) * 0.0016366612111292963 == datetime.timedelta(minutes=3, seconds=41, microseconds=853100)
+    assert datetime.timedelta(microseconds=1) * 0.5 == datetime.timedelta(0)
+    assert datetime.timedelta(microseconds=3) * 0.5 == datetime.timedelta(microseconds=2)
+    assert datetime.timedelta(microseconds=-3) * 0.5 == datetime.timedelta(microseconds=-2)
+    assert datetime.timedelta(microseconds=1) * 1e-300 == datetime.timedelta(0)
+    assert datetime.timedelta(microseconds=1) * 2.0 ** 64 == datetime.timedelta(days=213503982, seconds=28909, microseconds=551616)
+    assert datetime.timedelta(days=999999999, hours=23) * 0.9999999999 == datetime.timedelta(days=999999999, seconds=74159, microseconds=999285)
+    assert datetime.timedelta(hours=8, minutes=0, seconds=23, microseconds=475179) / 8.255849791520828e-10 == datetime.timedelta(days=404083220, seconds=3618, microseconds=378766)
+    assert datetime.timedelta(days=-796726, hours=23, minutes=12, seconds=29, microseconds=139962) / 0.5700810002054787 == datetime.timedelta(days=-1397565, seconds=33351, microseconds=133310)
+    assert datetime.timedelta(days=-1) / 7.0 == datetime.timedelta(days=-1, seconds=74057, microseconds=142857)
+    assert datetime.timedelta(microseconds=3) / 2.0 == datetime.timedelta(microseconds=2)
+    assert datetime.timedelta(microseconds=5) / 2.0 == datetime.timedelta(microseconds=2)
+    assert datetime.timedelta(microseconds=-2) / 3.0 == datetime.timedelta(microseconds=-1)
+    assert datetime.timedelta(microseconds=1) / 2.0 ** -60 == datetime.timedelta(days=13343998, seconds=77406, microseconds=846976)
+    assert datetime.timedelta(days=999999999) / 2.0 ** 66 == datetime.timedelta(microseconds=1)
+    assert datetime.timedelta(days=1) / 1e300 == datetime.timedelta(0)
+    for i in range(3):
+        error = ''
+        try:
+            if i == 0: datetime.timedelta(days=1) * 2e9
+            elif i == 1: datetime.timedelta(microseconds=1) / 2.0 ** -70
+            else: datetime.timedelta(days=600000000) / 0.5
+        except OverflowError as e:
+            error = str(e)
+        if i == 0:
+            assert error == 'days=2000000000; must have magnitude <= 999999999'
+        elif i == 1:
+            assert error == 'Python int too large to convert to C int'
+        else:
+            assert error == 'days=1200000000; must have magnitude <= 999999999'
+
+
 def test_timedelta_modulo():
     t = datetime.timedelta(seconds=10)
     u = datetime.timedelta(seconds=4)
@@ -1371,6 +1406,7 @@ def test_all():
         test_augmented_assignment()
         test_timedelta_division()
         test_timedelta_multiplication()
+        test_timedelta_float_exact()
         test_timedelta_modulo()
         test_timedelta_float_range()
         test_date()
