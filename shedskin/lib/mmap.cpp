@@ -459,10 +459,10 @@ void *mmap::close()
     return NULL;
 }
 
-void *mmap::flush(__ss_int offset, __ss_int size)
+void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 {
     __raise_if_closed();
-    __check_flush_range(offset, size);
+    __check_flush_range(offset, size, size_given);
     if (::msync(m_begin + offset, (size_t)size, MS_SYNC) == -1)
     {
         __throw_oserror();
@@ -737,10 +737,10 @@ void *mmap::close()
     return NULL;
 }
 
-void *mmap::flush(__ss_int offset, __ss_int size)
+void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 {
     __raise_if_closed();
-    __check_flush_range(offset, size);
+    __check_flush_range(offset, size, size_given);
     if (!FlushViewOfFile(m_begin + offset, (size_t)size))
     {
         throw new OSError();
@@ -919,17 +919,15 @@ __ss_int mmap::seek(__ss_int offset, __ss_int whence)
     return (__ss_int)__tell();
 }
 
-void *mmap::madvise(__ss_int option, __ss_int start, __ss_int length_)
+void *mmap::__madvise(__ss_int option, __ss_int start, __ss_int length_, bool length_given)
 {
     __raise_if_closed();
 #ifdef HAVE_MADVISE
     __ss_cint_i(option);
     const __ss_int mapsize = (__ss_int)__size();
-    /* CPython spells "the rest of the mapping" as a missing (or None)
-       length argument; since Shed Skin has no such default, -1 is used as
-       the sentinel instead. Other negative values are rejected, as in
-       CPython. */
-    __ss_int length = (length_ == -1) ? mapsize : length_;
+    /* an omitted length means the rest of the mapping; negative values
+       are rejected, as in CPython */
+    __ss_int length = length_given ? length_ : mapsize;
 
     if (start < 0 or start >= mapsize)
     {
@@ -959,6 +957,7 @@ void *mmap::madvise(__ss_int option, __ss_int start, __ss_int length_)
     (void)option;
     (void)start;
     (void)length_;
+    (void)length_given;
     throw new NotImplementedError(const_22);
 #endif /* HAVE_MADVISE */
 }
@@ -1219,12 +1218,12 @@ void *mmap::__seek_failed()
     return NULL;
 }
 
-/* as CPython; size -1 (not given) means the whole map, so that a nonzero
+/* as CPython; an omitted size means the whole map, so that a nonzero
    offset then needs an explicit size */
-void mmap::__check_flush_range(__ss_int offset, __ss_int &size) const
+void mmap::__check_flush_range(__ss_int offset, __ss_int &size, bool size_given) const
 {
     __ss_int total = (__ss_int)__size();
-    if (size == -1)
+    if (not size_given)
         size = total;
     if (size < 0 or offset < 0 or total - offset < size)
         throw new ValueError(const_33);

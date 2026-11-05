@@ -510,6 +510,14 @@ def test_madvise():
         assert str(e) == "madvise length invalid"
     assert error, "negative length should raise ValueError"
 
+    error = False
+    try:  # an explicit -1 is not the omitted length
+        m.madvise(mmap.MADV_NORMAL, 0, -1)
+    except ValueError as e:
+        error = True
+        assert str(e) == "madvise length invalid"
+    assert error, "length -1 should raise ValueError"
+
     m.close()
 
     error = False
@@ -884,12 +892,12 @@ def test_flush_range():
     f = open(TESTFILE_OUT, 'r+b')
     m = mmap.mmap(f.fileno(), 0)
     errors = []
-    for offset, size in [(0, 100000), (-1, 1), (4096, 5000), (6000, 1), (0, -2)]:
+    for offset, size in [(0, 100000), (-1, 1), (4096, 5000), (6000, 1), (0, -2), (0, -1)]:
         try:
             m.flush(offset, size)
         except ValueError as e:
             errors.append(str(e))
-    assert errors == ['flush values out of range'] * 5
+    assert errors == ['flush values out of range'] * 6
     try:  # the size defaults to the whole map, as cpython
         m.flush(4096)
         assert False
