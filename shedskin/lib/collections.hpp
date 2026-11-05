@@ -808,6 +808,26 @@ public:
         this->gcd = __and__(other)->gcd;
         return this;
     }
+    /* as in CPython, the in-place operators also take any other mapping,
+       not just a Counter (the binary ones don't) */
+    Counter<K, V> *__iadd__(dict<K, V> *other) {
+        return __iadd__(new Counter<K, V>(other));
+    }
+    Counter<K, V> *__isub__(dict<K, V> *other) {
+        return __isub__(new Counter<K, V>(other));
+    }
+    /* CPython looks up other[elem] for each of our keys, so a plain dict
+       raises KeyError for a key it lacks (a defaultdict inserts its default,
+       via the virtual __missing__), leaving the counts updated so far */
+    Counter<K, V> *__iand__(dict<K, V> *other) {
+        for(auto &kv : this->gcd) {
+            V b = other->__getitem__(kv.first);
+            if(b < kv.second)
+                kv.second = b;
+        }
+        this->gcd = __pos__()->gcd;
+        return this;
+    }
     Counter<K, V> *__ixor__(Counter<K, V> *other) {
         this->gcd = __xor__(other)->gcd;
         return this;

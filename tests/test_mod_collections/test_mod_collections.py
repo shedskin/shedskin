@@ -1045,6 +1045,61 @@ def test_counter_values():
     assert list(Counter().values()) == []
 
 
+def test_counter_inplace_mapping():
+    # 1028-C1: the in-place operators take any mapping, not just a Counter
+    c = Counter({'a': 1, 'b': 2})
+    c += {'a': 1, 'z': -1}
+    assert sorted(c.items()) == [('a', 2), ('b', 2)]
+    c -= {'a': 1, 'b': 5}
+    assert sorted(c.items()) == [('a', 1)]
+    c = Counter({'a': 3, 'b': 2})
+    c &= {'a': 1, 'b': 2, 'c': 9}
+    assert sorted(c.items()) == [('a', 1), ('b', 2)]
+    c = Counter({'a': 1})
+    c += defaultdict(int, {'a': 4})
+    c -= defaultdict(int, {'a': 2})
+    assert sorted(c.items()) == [('a', 3)]
+    # &= looks up other[key] for each of our keys: a plain dict raises
+    # KeyError for a missing one, a defaultdict inserts its default
+    c = Counter({'a': 1, 'b': 2})
+    raised = False
+    try:
+        c &= {'a': 0}
+    except KeyError:
+        raised = True
+    assert raised
+    dd = defaultdict(int, {'a': 2})
+    c = Counter({'a': 3, 'b': 1})
+    c &= dd
+    assert sorted(c.items()) == [('a', 2)]
+    assert sorted(dd.items()) == [('a', 2), ('b', 0)]
+
+
+def test_counter_empty_accumulator():
+    # an empty Counter gets its key type from the other operand
+    total = Counter()
+    for line in ['a b a', 'b c']:
+        total += Counter(line.split())
+    assert sorted(total.items()) == [('a', 2), ('b', 2), ('c', 1)]
+    e = Counter()
+    e += {'x': 2}
+    e -= {'x': 1}
+    assert sorted(e.items()) == [('x', 1)]
+    f = Counter()
+    f &= {1: 2}
+    assert len(f) == 0
+    assert sorted((Counter() + Counter('ab')).items()) == [('a', 1), ('b', 1)]
+    t = Counter()
+    t = t - Counter('ab')
+    assert len(t) == 0
+    t = Counter()
+    t = t | Counter('ab')
+    assert sorted(t.items()) == [('a', 1), ('b', 1)]
+    t = Counter()
+    t = t & Counter('ab')
+    assert len(t) == 0
+
+
 def test_counter_delitem():
     c = Counter('abc')
     del c['z']  # missing key: no KeyError
@@ -1129,6 +1184,8 @@ def test_all():
     test_counter_setdefault()
     test_counter_popitem()
     test_counter_values()
+    test_counter_inplace_mapping()
+    test_counter_empty_accumulator()
 
 
 if __name__ == '__main__':
