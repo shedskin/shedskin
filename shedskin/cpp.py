@@ -50,7 +50,7 @@ from typing import (
     TypeAlias,
     Union,
 )
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 from . import ast_utils, error, extmod, infer, loopidiom, python, typestr, virtual
 
@@ -909,21 +909,28 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return []
 
         item = node.items[0]
-        self.start()
-        if item.optional_vars:
-            self.visitm("WITH_VAR(", item.context_expr, ",", item.optional_vars, func)
-        else:
-            self.visitm("WITH(", item.context_expr, func)
-        self.append(",%d)" % self.with_count)
+        n = self.with_count
         self.with_count += 1
-        self.print(self.line)
+        self.output("{")
         self.indent()
+        self.start("auto __with%d = " % n)
+        self.visit(item.context_expr, func)
+        self.eol()
+        self.output("__with%d->__enter__();" % n)
+        if item.optional_vars:
+            # declared by the caller, so it stays bound after the block
+            self.start()
+            self.visitm(item.optional_vars, " = __with%d" % n, func)
+            self.eol()
         self.mv.current_with_vars.append(handle_with_vars(item.optional_vars))
-        for child in node.body:
-            self.visit(child, func)
+        # as try..finally, so __exit__ also runs for return/break/continue, and an
+        # exception from __exit__ replaces one from the body, as in CPython
+        self.impl_visit_try_finally(
+            node, func, final=lambda: self.output("__with%d->__exit__();" % n)
+        )
         self.mv.current_with_vars.pop()
         self.deindent()
-        self.output("END_WITH")
+        self.output("}")
 
     def visit_While(
         self, node: ast.While, func: Optional["python.Function"] = None
@@ -1442,7 +1449,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.impl_visit_try(node, func)
 
     def impl_visit_try_finally(
-        self, node: ast.Try, func: Optional["python.Function"] = None
+        self,
+        node: Union[ast.Try, ast.With],
+        func: Optional["python.Function"] = None,
+        final: Optional[Callable[[], None]] = None,
     ) -> None:
         """Generate a try..finally: the finally body is generated once, after
         the try block. A return, break or continue that leaves the try block
@@ -1459,7 +1469,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.out = io.StringIO()
         self.indent()
         self.finally_stack.append((n, func, len(self.gx.loopstack)))
-        if node.handlers:
+        if isinstance(node, ast.Try) and node.handlers:
             self.impl_visit_try(node, func)
         else:
             for child in node.body:
@@ -1494,8 +1504,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if exits:
             self.output("__fin%d_exit: ;" % n)
 
-        for child in node.finalbody:
-            self.visit(child, func)
+        if final:  # with statement
+            final()
+        else:
+            assert isinstance(node, ast.Try)
+            for child in node.finalbody:
+                self.visit(child, func)
 
         self.output("if (__fin%d_obj || __fin%d_exc)" % (n, n))
         self.output("    std::rethrow_exception(__fin%d_exc);" % n)

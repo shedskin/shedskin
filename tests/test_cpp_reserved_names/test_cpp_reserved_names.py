@@ -114,11 +114,21 @@ def test_windows_macros_as_identifiers():
     assert use_windows_macros() == 28
 
 
+def use_former_with_macros():
+    # no longer shedskin macros (with is generated as try..finally)
+    WITH = 1
+    WITH_VAR = 2
+    with open('former_with_macros.txt', 'w') as END_WITH:
+        WITH += END_WITH.write('abc')
+    return WITH + WITH_VAR
+
+
 def test_c_macros_as_identifiers():
     assert INFINITY > 1e308
     assert Limits().INT_MAX == 2147483647
     assert use_path_max() == 4096
     assert alloca(1) == 2
+    assert use_former_with_macros() == 6
 
 
 def test_reserved_function_names_as_values():
