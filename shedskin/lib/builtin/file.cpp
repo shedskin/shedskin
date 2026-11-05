@@ -98,6 +98,21 @@ str *__c_open_mode(str *mode, bool excl) {
     return m;
 }
 
+/* the .mode of a binary file, as cpython's FileIO.mode: one of 'rb', 'wb',
+   'ab' or 'xb', plus '+' when it is also writable/readable (so 'br' becomes
+   'rb', and 'w+b' becomes 'rb+'). a text file keeps the mode as given */
+str *__fileio_mode(str *mode) {
+    const auto &u = mode->unit;
+    bool plus = u.find('+') != std::string::npos;
+    if (u.find('x') != std::string::npos)
+        return new str(plus ? "xb+" : "xb");
+    if (u.find('a') != std::string::npos)
+        return new str(plus ? "ab+" : "ab");
+    if (plus)
+        return new str("rb+");
+    return new str(u.find('r') != std::string::npos ? "rb" : "wb");
+}
+
 static FILE *__ss_fopen(str *file_name, str *flags) {
     flags = __c_open_mode(flags, true);
     /* like cpython (PEP 446): the file descriptor is non-inheritable */
@@ -194,7 +209,7 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline,
     __make_buffer();
 }
 
-file::file(FILE *g) : name(0), mode(0), f(g), buffer(0), closed(False) {
+file::file(FILE *g, str *name, str *mode) : name(name), mode(mode), f(g), buffer(0), closed(False) {
     if (g)
         __make_buffer();
 }
@@ -202,7 +217,7 @@ file::file(FILE *g) : name(0), mode(0), f(g), buffer(0), closed(False) {
 /* the binary file as .buffer: it shares our FILE *, so it closes that by
    closing us (so e.g. a pipe is pclosed), and closing us marks it closed */
 void file::__make_buffer() {
-    buffer = new file_binary(f);
+    buffer = new file_binary(f, name, mode);
     buffer->__text = this;
 }
 
@@ -634,8 +649,10 @@ file_binary::file_binary(str *file_name, str *flags, __ss_int buffering) : close
     __check_not_directory(f, file_name);
     __set_buffering(f, buffering, false);
     name = file_name;
-    mode = flags;
+    mode = __fileio_mode(flags);
 }
+
+file_binary::file_binary(FILE *g, str *name, str *mode) : name(name), mode(mode ? __fileio_mode(mode) : 0), f(g), closed(False) {}
 
 static void __check_binary_args(str *encoding, str *errors, str *newline) {
     if (encoding)

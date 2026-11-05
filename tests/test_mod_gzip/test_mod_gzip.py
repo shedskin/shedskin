@@ -771,6 +771,26 @@ def test_enter_exit_results():
     os.remove(name)
 
 
+def test_fileobj_mode_order():
+    # the mode of the fileobj decides: open() reports 'br' as 'rb' (and 'bw'
+    # as 'wb'), as cpython
+    name = tmpname('order.gz')
+    fw = open(name, 'bw')
+    with gzip.GzipFile(fileobj=fw) as g:
+        assert g.mode == 'wb'
+        g.write(b'mode order')
+    fw.close()
+    fr = open(name, 'br')
+    with gzip.GzipFile(fileobj=fr) as g:
+        assert g.mode == 'rb'
+        assert g.read() == b'mode order'
+    fr.close()
+    with open(name) as ft:
+        with gzip.GzipFile(fileobj=ft.buffer) as g:
+            assert g.read() == b'mode order'
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -790,6 +810,7 @@ def test_all():
     test_invalid_modes()
     test_no_file()
     test_files()
+    test_fileobj_mode_order()
     test_large()
     test_text_mode()
     test_text_encodings()
