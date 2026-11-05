@@ -493,6 +493,13 @@ def outer_func(
         return None
 
 
+# real aliases (IOError is OSError), so 'except IOError' catches subclasses
+BUILTIN_CLASS_ALIASES = {
+    "IOError": "OSError",
+    "EnvironmentError": "OSError",
+}
+
+
 def lookup_class(
     node: ast.AST,
     mv: "graph.ModuleVisitor"
@@ -507,6 +514,8 @@ def lookup_class(
             return mv.classes[node.id]
         elif node.id in mv.ext_classes:
             return mv.ext_classes[node.id]
+        elif node.id in BUILTIN_CLASS_ALIASES:
+            return mv.ext_classes[BUILTIN_CLASS_ALIASES[node.id]]
         else:
             return None
     elif isinstance(node, ast.Attribute):

@@ -628,6 +628,8 @@ def analyze_callfunc(
             constructor = namespace.mv.ext_classes[ident]
         elif ident in namespace.mv.ext_funcs:
             direct_call = namespace.mv.ext_funcs[ident]
+        elif isinstance(node.func, ast.Name) and ident in python.BUILTIN_CLASS_ALIASES:
+            constructor = python.lookup_class(node.func, mv)
         else:
             if namespace != mv.module:
                 return objexpr, ident, None, False, None, False, False
