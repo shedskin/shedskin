@@ -2329,7 +2329,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         """Visit a while statement"""
         self.gx.loopstack.append(node)
         self.bool_test_add(node.test)
-        for child in ast.iter_child_nodes(node):
+        for child in [node.test] + node.body:  # orelse is visited below
             self.visit(child, func)
         self.gx.loopstack.pop()
 
