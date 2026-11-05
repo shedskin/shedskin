@@ -1069,6 +1069,18 @@ def test_read_negative_size():
     m.close()
 
 
+def test_enter_closed():
+    # 'with' on an already closed mmap raises ValueError
+    m = mmap.mmap(-1, 8)
+    m.close()
+    try:
+        with m:
+            assert False
+        assert False
+    except ValueError as e:
+        assert str(e) == 'mmap closed or invalid'
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1076,6 +1088,7 @@ def test_all():
         test_iter_after_close()
         test_bytes_from_mmap()
         test_enter_exit_results()
+        test_enter_closed()
         test_basic()
         test_readonly()
         test_rfind()

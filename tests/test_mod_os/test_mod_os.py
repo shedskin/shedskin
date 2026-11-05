@@ -1812,11 +1812,24 @@ def test_fdopen_bad_fd():
     assert errors == 2 * ['expected str, bytes or os.PathLike object, not int'] + ['negative file descriptor']
 
 
+def test_popen_enter_closed():
+    # unlike files, CPython allows 'with' on a closed popen pipe
+    p = os.popen('echo hi')
+    p.read()
+    p.close()
+    entered = False
+    with p:
+        entered = True
+    assert entered
+    assert p.closed
+
+
 def test_all():
     test_unicode_names()
     test_undecodable_names()
     test_bytes_paths()
     test_popen_enter_exit_results()
+    test_popen_enter_closed()
     test_getcwd()
     test_chdir()
     test_exceptions()

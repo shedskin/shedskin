@@ -807,6 +807,7 @@ void *mmap::resize(__ss_int new_size)
 
 mmap *mmap::__enter__()
 {
+    __raise_if_closed();
     return this;
 }
 

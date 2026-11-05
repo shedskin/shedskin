@@ -851,11 +851,34 @@ def test_fileobj_mode_order():
     os.remove(name)
 
 
+def test_enter_closed():
+    # 'with' on an already closed file raises ValueError
+    name = tmpname('d.gz')
+    g = gzip.open(name, 'wb')
+    g.close()
+    try:
+        with g:
+            assert False
+        assert False
+    except ValueError as e:
+        assert str(e).startswith('I/O operation on closed file')
+    t = gzip.open(name, 'rt')
+    t.close()
+    try:
+        with t:
+            assert False
+        assert False
+    except ValueError as e:
+        assert str(e).startswith('I/O operation on closed file')
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
     test_bad_level()
     test_enter_exit_results()
+    test_enter_closed()
     test_decompress_zlib_data()
     test_multi_member()
     test_header_fields()

@@ -199,7 +199,7 @@ public:
     popen_pipe(FILE* pipe=0) : __popen_file(pipe) {}
 
     __ss_int close(__ss_int=0); /* (hides __popen_file::close on purpose) */
-    popen_pipe *__enter__() { return this; }
+    popen_pipe *__enter__() { return this; } /* (CPython: no closed check) */
 };
 #pragma GCC diagnostic pop
 

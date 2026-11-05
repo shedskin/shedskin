@@ -1084,12 +1084,34 @@ def test_binary_mode_normalised():
     assert sys.stderr.buffer.name == '<stderr>'
 
 
+def test_enter_closed():
+    # 'with' on an already closed file raises ValueError
+    f = open('ectest.txt', 'w')
+    f.close()
+    try:
+        with f:
+            assert False
+        assert False
+    except ValueError as e:
+        assert str(e).startswith('I/O operation on closed file')
+    g = open('ectest.txt', 'rb')
+    g.close()
+    try:
+        with g:
+            assert False
+        assert False
+    except ValueError as e:
+        assert str(e).startswith('I/O operation on closed file')
+    os.remove('ectest.txt')
+
+
 def test_all():
     test_open_buffering()
     test_utf8_sig()
     test_seek_returns_position()
     test_open_exclusive()
     test_enter_exit_results()
+    test_enter_closed()
     test_newline_empty_splits_on_cr()
     test_readline_size_counts_characters()
     test_pending_cr_seek_tell()

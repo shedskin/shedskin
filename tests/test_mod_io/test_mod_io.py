@@ -749,11 +749,32 @@ def test_enter_exit_results():
     assert b.closed
 
 
+def test_enter_closed():
+    # 'with' on an already closed stream raises ValueError
+    s = io.StringIO('hoi')
+    s.close()
+    try:
+        with s:
+            assert False
+        assert False
+    except ValueError as e:
+        assert str(e).startswith('I/O operation on closed file')
+    b = io.BytesIO(b'hoi')
+    b.close()
+    try:
+        with b:
+            assert False
+        assert False
+    except ValueError as e:
+        assert str(e) == 'I/O operation on closed file.'
+
+
 def test_all():
     test_stringio()
     test_bytesio()
     test_io_from_file()
     test_enter_exit_results()
+    test_enter_closed()
     test_io_read_from_binary_string()
     test_io_write_to_binary_string()
     test_bytesio_write_none()

@@ -41,7 +41,7 @@ public:
     __ss_int truncate(__ss_int size=-1);
     void *close() { closed = True; return NULL; }
     __ss_int write(bytes *data);
-    BytesIO *__enter__() { return this; }
+    BytesIO *__enter__() { __check_closed(); return this; }
 
     bool __error() { return false; }
     bool __eof() { return (pos >= len(s)); }
@@ -96,7 +96,7 @@ public:
     __ss_int truncate(__ss_int size=-1);
     void *close() { closed = True; return NULL; }
     __ss_int write(str *data);
-    StringIO *__enter__() { return this; }
+    StringIO *__enter__() { __check_closed(); return this; }
 
     bool __error() { return false; }
     bool __eof() { return (pos >= len(s)); }

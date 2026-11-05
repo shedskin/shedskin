@@ -607,6 +607,7 @@ str *file::__repr__() {
 }
 
 file *file::__enter__() {
+    __check_closed();
     return this;
 }
 
@@ -844,6 +845,7 @@ str *file_binary::__repr__() {
 }
 
 file_binary *file_binary::__enter__() {
+    __check_closed();
     return this;
 }
 
