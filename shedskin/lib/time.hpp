@@ -116,6 +116,7 @@ struct_time *gmtime(const __ss_float seconds);
 
 str *asctime();
 str *asctime(struct_time *tuple);
+str *asctime(tuple2<__ss_int, __ss_int> *tuple);
 
 str *ctime();
 str *ctime(const __ss_float seconds);

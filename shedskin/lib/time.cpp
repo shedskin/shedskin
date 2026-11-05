@@ -646,6 +646,10 @@ str *asctime(struct_time *tuple) {
     return new str(buf, (size_t)n);
 }
 
+str *asctime(tuple2<__ss_int, __ss_int> *tuple) {
+    return asctime(new struct_time(tuple));
+}
+
 str *ctime() {
     return asctime(localtime());
 }
