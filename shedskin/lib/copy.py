@@ -5,10 +5,10 @@ class Error(Exception):
     pass
 
 
-def copy(a):
-    a.__copy__() # XXX hardcode in ss.py?
-    return a
+def copy(x):
+    x.__copy__() # XXX hardcode in ss.py?
+    return x
 
-def deepcopy(a):
-    a.__deepcopy__()
-    return a
+def deepcopy(x):
+    x.__deepcopy__()
+    return x

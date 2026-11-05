@@ -65,16 +65,16 @@ class ParsingError(Error):
     def combine(self, others):
         return self
 class MissingSectionHeaderError(ParsingError):
-    def __init__(self, source, lineno, line):
+    def __init__(self, filename, lineno, line):
         self.message = ''
-        self.source = source
+        self.source = filename
         self.errors = [(0, '')]
         self.lineno = lineno
         self.line = line
 class MultilineContinuationError(ParsingError):
-    def __init__(self, source, lineno, line):
+    def __init__(self, filename, lineno, line):
         self.message = ''
-        self.source = source
+        self.source = filename
         self.errors = [(0, '')]
         self.lineno = lineno
         self.line = line

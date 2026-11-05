@@ -273,6 +273,10 @@ def test_from_bytes():
     assert int.from_bytes(b'\xfe\xff') == 0xfeff
 
     assert int.from_bytes(b'\xff\xff\xff\xff') == 0xffffffff
+
+    # parameter is called 'bytes', as in CPython
+    assert int.from_bytes(bytes=b'\x01\x02') == 258
+    assert int.from_bytes(bytes=b'\x01\x02', byteorder='little') == 513
     assert int.from_bytes(b'\xff\xff\xff') == 0xffffff
 
     assert int.from_bytes(b'\xee\xdd\xcc\xbb') == 0xeeddccbb
