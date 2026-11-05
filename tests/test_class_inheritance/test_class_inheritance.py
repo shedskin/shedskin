@@ -208,6 +208,27 @@ def test_virtual_case():
     assert l == 'flup'
 
 
+class KwBase:  # 1031-D1: C++ keywords as parameter names
+    def get(self, key, default=None):
+        return default
+
+    def make(self, new, template):
+        return new + template
+
+
+class KwSub(KwBase):
+    def get(self, key, default=None):
+        return key
+
+    def make(self, new, template):
+        return new * template
+
+
+def test_virtual_cpp_keyword_formals():
+    res = [(o.get('a', 'b'), o.make(2, 3)) for o in [KwBase(), KwSub()]]
+    assert res == [('b', 5), ('a', 6)]
+
+
 def test_all():
     test_inheritance1()
     test_inheritance2()
@@ -217,6 +238,7 @@ def test_all():
     test_virtual_dunder()
     test_virtual_case()
     test_redundant_object_base()
+    test_virtual_cpp_keyword_formals()
 
 
 if __name__ == '__main__':
