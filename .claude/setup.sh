@@ -14,7 +14,9 @@ missing=()
 [ -f /usr/include/pcre.h ] || missing+=(libpcre3-dev)
 if [ ${#missing[@]} -gt 0 ]; then
     if command -v apt-get >/dev/null 2>&1; then
+        # the image's package lists can be stale, so refresh them and retry once
         apt-get install -y "${missing[@]}" >/dev/null 2>&1 \
+            || { apt-get update -qq >/dev/null 2>&1 && apt-get install -y "${missing[@]}" >/dev/null 2>&1; } \
             || echo "setup.sh: could not install ${missing[*]}; 'shedskin runtests' can build them from ext/ instead" >&2
     elif command -v brew >/dev/null 2>&1; then
         brew install bdw-gc pcre >/dev/null 2>&1 || true
