@@ -48,15 +48,16 @@ __ss_bool fnmatch(str *name, str *pat) {
     return fnmatchcase(name, pat);
 }
 
-list<str *> *filter(list<str *> *names, str *pat) {
+list<str *> *filter(pyiter<str *> *names, str *pat) {
     /**
-    Return the subset of the list NAMES that match PAT
+    Return the subset of the iterable NAMES that match PAT
     */
-    list<str *> *__0, *result;
+    pyiter<str *> *__0;
+    list<str *> *result;
     str *name, *res;
     __re__::Pattern *cpat;
     __ss_int __2;
-    list<str *>::for_in_loop __123;
+    pyiter<str *>::for_in_loop __123;
 
     result = (new list<str *>());
     pat = __os__::__path__::normcase(pat);
@@ -79,15 +80,16 @@ list<str *> *filter(list<str *> *names, str *pat) {
     return result;
 }
 
-list<str *> *filterfalse(list<str *> *names, str *pat) {
+list<str *> *filterfalse(pyiter<str *> *names, str *pat) {
     /**
-    Return the subset of the list NAMES that do not match PAT
+    Return the subset of the iterable NAMES that do not match PAT
     */
-    list<str *> *__0, *result;
+    pyiter<str *> *__0;
+    list<str *> *result;
     str *name, *res;
     __re__::Pattern *cpat;
     __ss_int __2;
-    list<str *>::for_in_loop __123;
+    pyiter<str *>::for_in_loop __123;
 
     result = (new list<str *>());
     pat = __os__::__path__::normcase(pat);
