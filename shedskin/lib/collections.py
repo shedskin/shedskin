@@ -203,22 +203,27 @@ class Counter(dict):
     def __add__(self, other):
         c = Counter()
         c.__setunit__(self.unit, self.value)
+        c.__setunit__(other.unit, other.value)
         return c
     def __sub__(self, other):
         c = Counter()
         c.__setunit__(self.unit, self.value)
+        c.__setunit__(other.unit, other.value)
         return c
     def __and__(self, other):
         c = Counter()
         c.__setunit__(self.unit, self.value)
+        c.__setunit__(other.unit, other.value)
         return c
     def __or__(self, other):
         c = Counter()
         c.__setunit__(self.unit, self.value)
+        c.__setunit__(other.unit, other.value)
         return c
     def __xor__(self, other):
         c = Counter()
         c.__setunit__(self.unit, self.value)
+        c.__setunit__(other.unit, other.value)
         return c
 
     def __pos__(self):
@@ -231,16 +236,16 @@ class Counter(dict):
         return c
 
     def __iadd__(self, other): # -> Counter (not None): reassigned by `c += ...`
-        self.__setunit__(self.unit, self.value)
+        self.__setunit__(other.unit, other.value)
         return self
     def __isub__(self, other):
-        self.__setunit__(self.unit, self.value)
+        self.__setunit__(other.unit, other.value)
         return self
     def __iand__(self, other):
-        self.__setunit__(self.unit, self.value)
+        self.__setunit__(other.unit, other.value)
         return self
     def __ixor__(self, other):
-        self.__setunit__(self.unit, self.value)
+        self.__setunit__(other.unit, other.value)
         return self
     def __ior__(self, d):
         self.__setunit__(d.unit, d.value)
