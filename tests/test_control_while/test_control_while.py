@@ -47,11 +47,30 @@ def test_while_else():
         xs.append(2)
 
 
+def gen_while_else(n, stop):
+    i = 0
+    while i < n:
+        if i == stop:
+            break
+        yield i
+        i += 1
+    else:
+        yield -1
+        yield -2
+
+
+def test_while_else_yield():  # 1027-C1
+    assert list(gen_while_else(3, 5)) == [0, 1, 2, -1, -2]
+    assert list(gen_while_else(5, 2)) == [0, 1]
+    assert list(gen_while_else(0, 5)) == [-1, -2]
+
+
 def test_all():
     test_while_build_list()
     test_while_break()
     test_while_continue()
     test_while_else()
+    test_while_else_yield()
 
 
 if __name__ == '__main__':
