@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cmath>
 #include <limits>
+#include <cerrno>
 
 #ifdef _MSC_VER
 
@@ -229,17 +230,34 @@ date *date::today() {
     return new date(t->tm_year+1900,t->tm_mon+1,t->tm_mday);
 }
 
-date* date::fromtimestamp(double timestamp) {
-	//date from timestamp using localtime; like cpython, round down (so -0.5 is still 1969-12-31)
+/* like cpython: ValueError for NaN, OverflowError if the (floored) timestamp
+   does not fit in time_t (the cast would be undefined behaviour) */
+static double __floor_timestamp(double timestamp) {
 	if (std::isnan(timestamp))
 		throw new ValueError(new str("Invalid value NaN (not a number)"));
-	timestamp = std::floor(timestamp);
-	if (timestamp < (double)std::numeric_limits<time_t>::min() || timestamp >= (double)std::numeric_limits<time_t>::max())
+	double f = std::floor(timestamp);
+	const double lim = std::ldexp(1.0, (int)(sizeof(time_t) * 8 - 1));
+	if (!(f >= -lim && f < lim))
 		throw new OverflowError(new str("timestamp out of range for platform time_t"));
-	time_t t = time_t(timestamp);
-	tm *tm = localtime(&t);
-	if (!tm)
-		throw new ValueError(new str("timestamp out of range for platform localtime() function"));
+	return f;
+}
+
+/* localtime()/gmtime() return NULL (errno EOVERFLOW) when the year does not
+   fit in struct tm; cpython raises OSError there */
+static tm *__timestamp_tm(time_t t, bool utc) {
+	errno = 0;
+	tm *tm = utc ? gmtime(&t) : localtime(&t);
+	if (!tm) {
+		if (errno == 0)
+			errno = EINVAL;
+		__throw_oserror();
+	}
+	return tm;
+}
+
+date* date::fromtimestamp(double timestamp) {
+	//date from timestamp using localtime; like cpython, round down (so -0.5 is still 1969-12-31)
+	tm *tm = __timestamp_tm(time_t(__floor_timestamp(timestamp)), false);
 
 	return new date(tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
 }
@@ -608,17 +626,13 @@ datetime *datetime::from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn
 	double fraction;
 	__ss_int us;
 
-	timet = (time_t)timestamp;
-	fraction = timestamp - (double)timet;
+	/* floor (Python's mod semantics), so fraction is in [0, 1) */
+	double seconds = __floor_timestamp(timestamp);
+	timet = (time_t)seconds;
+	fraction = timestamp - seconds;
 	/* round-half-to-even, like cpython (_PyTime_ROUND_HALF_EVEN) */
 	us = ___round(fraction * 1e6);
 
-	if (us < 0) {
-		/* Truncation towards zero is not what we wanted
-		   for negative numbers (Python's mod semantics) */
-		timet -= 1;
-		us += 1000000;
-	}
 	/* If timestamp is less than one microsecond smaller than a
 	 * full second, round up. Otherwise, ValueErrors are raised
 	 * for some floats. */
@@ -626,35 +640,25 @@ datetime *datetime::from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn
 		timet += 1;
 		us = 0;
 	}
-	
-	struct tm *tm;
 
-	if(timefn)
-		tm = gmtime(&timet);
-	else
-		tm = localtime(&timet);
+	struct tm *tm = __timestamp_tm(timet, timefn);
 
-	if (tm) {
-		/* The platform localtime/gmtime may insert leap seconds,
-		 * indicated by tm->tm_sec > 59.  We don't care about them,
-		 * except to the extent that passing them on to the datetime
-		 * constructor would raise ValueError for a reason that
-		 * made no sense to the user.
-		 */
-		if (tm->tm_sec > 59)
-			tm->tm_sec = 59;
-		return new datetime(tm->tm_year + 1900,
-					       tm->tm_mon + 1,
-					       tm->tm_mday,
-					       tm->tm_hour,
-					       tm->tm_min,
-					       tm->tm_sec,
-					       us,
-					       tzinfo);
-	}
-	else
-		throw new ValueError(new str("timestamp out of range for platform localtime()/gmtime() function"));
-	return (datetime *)NULL;
+	/* The platform localtime/gmtime may insert leap seconds,
+	 * indicated by tm->tm_sec > 59.  We don't care about them,
+	 * except to the extent that passing them on to the datetime
+	 * constructor would raise ValueError for a reason that
+	 * made no sense to the user.
+	 */
+	if (tm->tm_sec > 59)
+		tm->tm_sec = 59;
+	return new datetime(tm->tm_year + 1900,
+				       tm->tm_mon + 1,
+				       tm->tm_mday,
+				       tm->tm_hour,
+				       tm->tm_min,
+				       tm->tm_sec,
+				       us,
+				       tzinfo);
 }
 
 datetime *datetime::utcfromtimestamp(double timestamp) {
