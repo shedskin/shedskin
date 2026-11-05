@@ -84,10 +84,41 @@ inline complex complex::operator/(complex b) {
 #ifndef __SS_NOZERO
     if(b.real == 0 && b.imag == 0) __throw_zero_division("complex division by zero");
 #endif
+    /* as in CPython (_Py_c_quot): Smith's algorithm, scaling by the larger
+       component of b, so (1e200+1e200j)/(1e200+1e200j) does not overflow */
     complex c;
-    __ss_float norm = b.real*b.real+b.imag*b.imag;
-    c.real = (real*b.real+imag*b.imag)/norm;
-    c.imag = (imag*b.real-b.imag*real)/norm;
+    __ss_float abs_breal = std::fabs(b.real);
+    __ss_float abs_bimag = std::fabs(b.imag);
+    if (abs_breal >= abs_bimag) {
+        __ss_float ratio = b.imag / b.real;
+        __ss_float denom = b.real + b.imag * ratio;
+        c.real = (real + imag * ratio) / denom;
+        c.imag = (imag - real * ratio) / denom;
+    }
+    else if (abs_bimag >= abs_breal) {
+        __ss_float ratio = b.real / b.imag;
+        __ss_float denom = b.real * ratio + b.imag;
+        c.real = (real * ratio + imag) / denom;
+        c.imag = (imag * ratio - real) / denom;
+    }
+    else { /* b.real or b.imag is nan */
+        c.real = c.imag = NAN;
+    }
+    /* recover infinities and zeros that computed as nan+nanj */
+    if (std::isnan(c.real) && std::isnan(c.imag)) {
+        if ((std::isinf(real) || std::isinf(imag)) && std::isfinite(b.real) && std::isfinite(b.imag)) {
+            __ss_float x = std::copysign(std::isinf(real) ? 1.0 : 0.0, real);
+            __ss_float y = std::copysign(std::isinf(imag) ? 1.0 : 0.0, imag);
+            c.real = INFINITY * (x*b.real + y*b.imag);
+            c.imag = INFINITY * (y*b.real - x*b.imag);
+        }
+        else if ((std::isinf(abs_breal) || std::isinf(abs_bimag)) && std::isfinite(real) && std::isfinite(imag)) {
+            __ss_float x = std::copysign(std::isinf(b.real) ? 1.0 : 0.0, b.real);
+            __ss_float y = std::copysign(std::isinf(b.imag) ? 1.0 : 0.0, b.imag);
+            c.real = 0.0 * (real*x + imag*y);
+            c.imag = 0.0 * (imag*x - real*y);
+        }
+    }
     return c;
 }
 inline complex complex::operator/(__ss_float b) { return (*this) / mcomplex(b); }
@@ -173,7 +204,13 @@ template<> inline complex __add(complex a, complex b) { return a + b; }
 
 /* abs */
 
-inline __ss_float __abs(complex c) { return std::sqrt(c.real*c.real+c.imag*c.imag); }
+inline __ss_float __abs(complex c) {
+    /* hypot avoids overflow/underflow of the intermediate squares */
+    __ss_float r = std::hypot(c.real, c.imag);
+    if (std::isinf(r) && std::isfinite(c.real) && std::isfinite(c.imag))
+        throw new OverflowError(new str("absolute value too large"));
+    return r;
+}
 
 /* bool */
 

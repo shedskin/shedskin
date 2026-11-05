@@ -91,6 +91,20 @@ str *complex::__repr__() {
 
 /* power */
 
+/* as in CPython (c_powu): exponentiation by repeated squaring */
+static complex __complex_powu(complex x, long n) {
+    complex r = mcomplex(1.0, 0.0);
+    complex p = x;
+    long mask = 1;
+    while (mask > 0 && n >= mask) {
+        if (n & mask)
+            r = r * p;
+        mask <<= 1;
+        p = p * p;
+    }
+    return r;
+}
+
 template<> complex __power(complex a, complex b) {
     complex r;
     __ss_float vabs, len, at, phase;
@@ -106,8 +120,17 @@ template<> complex __power(complex a, complex b) {
         r.real = 0;
         r.imag = 0;
     }
+    else if (b.imag == 0 and b.real == std::floor(b.real) and std::fabs(b.real) <= 100.0) {
+        /* as in CPython: small integer exponents multiply, avoiding the
+           rounding errors of polar form (so 1j**2 == -1+0j) */
+        long n = (long)b.real;
+        if (n > 0)
+            r = __complex_powu(a, n);
+        else
+            r = mcomplex(1.0, 0.0) / __complex_powu(a, -n);
+    }
     else {
-        vabs = __abs(a);
+        vabs = std::hypot(a.real, a.imag);
         len = std::pow(vabs,b.real);
         at = std::atan2(a.imag, a.real);
         phase = at*b.real;
