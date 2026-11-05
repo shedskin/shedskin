@@ -12,6 +12,7 @@ namespace __csv__ {
 str *__name__;
 
 dict<str *, Dialect *> *_dialects;
+str *__csv_none;
 
 tuple2<str *, str *> *const_3;
 
@@ -82,8 +83,10 @@ Dialect *_lookup_dialect(str *name) {
     }
 }
 
+/* str arguments are NULL when omitted and __csv_none for an explicit None */
 Dialect *_make_dialect(
     Dialect *from,
+    bool dialect_given,
     str *delimiter,
     str *quotechar,
     __ss_int doublequote,
@@ -105,12 +108,16 @@ Dialect *_make_dialect(
     dialect->escapechar = from->escapechar;
     dialect->strict = from->strict;
 
-    if ((delimiter!=NULL)) { // TODO exception when explicitly passing delimiter=None etc.
+    if (delimiter == __csv_none)
+        throw new TypeError(new str("\"delimiter\" must be string, not NoneType"));
+    if ((delimiter!=NULL)) {
         if(len(delimiter) != 1)
             throw new TypeError(new str("\"delimiter\" must be a 1-character string"));
         dialect->delimiter = delimiter;
     }
-    if ((quotechar!=NULL)) {
+    if (quotechar == __csv_none)
+        dialect->quotechar = NULL;
+    else if ((quotechar!=NULL)) {
         if(len(quotechar) != 1)
             throw new TypeError(new str("\"quotechar\" must be a 1-character string"));
         dialect->quotechar = quotechar;
@@ -121,6 +128,8 @@ Dialect *_make_dialect(
     if ((skipinitialspace!=(-1))) {
         dialect->skipinitialspace = __mbool(skipinitialspace);
     }
+    if (lineterminator == __csv_none)
+        throw new TypeError(new str("lineterminator must be set"));
     if ((lineterminator!=NULL)) {
         dialect->lineterminator = lineterminator;
     }
@@ -129,7 +138,9 @@ Dialect *_make_dialect(
             throw new TypeError(new str("bad \"quoting\" value"));
         dialect->quoting = quoting;
     }
-    if ((escapechar!=NULL)) {
+    if (escapechar == __csv_none)
+        dialect->escapechar = NULL;
+    else if ((escapechar!=NULL)) {
         if(len(escapechar) != 1)
             throw new TypeError(new str("\"escapechar\" must be a 1-character string"));
         dialect->escapechar = escapechar;
@@ -138,12 +149,12 @@ Dialect *_make_dialect(
         dialect->strict = __mbool(strict);
     }
 
-    /*
-       TODO
-    if (quotechar == Py_None && quoting == NULL)
-        self->quoting = QUOTE_NONE;
-    if (self->quoting != QUOTE_NONE && self->quotechar == NOT_SET) {
-    */
+    /* as in CPython, quotechar=None without a quoting or dialect argument
+       means QUOTE_NONE, and any other quoting needs a quote character */
+    if (quotechar == __csv_none && quoting == -1 && !dialect_given)
+        dialect->quoting = QUOTE_NONE;
+    if (dialect->quoting != QUOTE_NONE && dialect->quotechar == NULL)
+        throw new TypeError(new str("quotechar must be set if quoting enabled"));
 
     _dialect_check_char(new str("delimiter"), dialect->delimiter, dialect, true);
     _dialect_check_char(new str("escapechar"), dialect->escapechar, dialect, !dialect->skipinitialspace);
@@ -164,7 +175,7 @@ Dialect *get_dialect(str *name) {
     return _lookup_dialect(name);
 }
 
-void *register_dialect(
+void *_register_dialect(
     str *name,
     str *dialect,
     str *delimiter,
@@ -176,7 +187,7 @@ void *register_dialect(
     str *escapechar,
     __ss_int strict
 ) {
-    Dialect *new_dialect = _make_dialect(_lookup_dialect(dialect), delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    Dialect *new_dialect = _make_dialect(_lookup_dialect(dialect), dialect != NULL, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     _dialects->__setitem__(name, new_dialect);
     return NULL;
 }
@@ -195,10 +206,10 @@ void *excel::__init__() { return NULL; }
 void *excel_tab::__init__() { return NULL; }
 void *unix_dialect::__init__() { return NULL; }
 
-void *reader::__init__(pyiter<str *> *input_iter_, Dialect *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *reader::__init__(pyiter<str *> *input_iter_, Dialect *dialect_, bool dialect_given, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     this->input_iter = input_iter_->__iter__();
     this->line_num = 0;
-    this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    this->dialect = _make_dialect(dialect_, dialect_given, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     /* fields are always str here, so a reader cannot turn unquoted fields into floats */
     if (this->dialect->quoting == QUOTE_NONNUMERIC)
         throw new ValueError(new str("QUOTE_NONNUMERIC is not supported by csv.reader"));
@@ -234,8 +245,8 @@ void *reader::parse_process_char(str *s) {
                 parse_save_field();
                 this->state = (eol ? START_RECORD : EAT_CRNL);
             }
-            else if (c == dialect->quotechar->unit[0] &&
-                     dialect->quoting != QUOTE_NONE) {
+            else if (dialect->quoting != QUOTE_NONE &&
+                     c == dialect->quotechar->unit[0]) {
                 /* start quoted field */
                 this->unquoted_field = false;
                 this->state = IN_QUOTED_FIELD;
@@ -305,8 +316,8 @@ void *reader::parse_process_char(str *s) {
                 /* Possible escape character */
                 this->state = ESCAPE_IN_QUOTED_FIELD;
             }
-            else if (c == dialect->quotechar->unit[0] &&
-                     dialect->quoting != QUOTE_NONE) {
+            else if (dialect->quoting != QUOTE_NONE &&
+                     c == dialect->quotechar->unit[0]) {
                 if (dialect->doublequote) {
                     /* doublequote; " represented by "" */
                     this->state = QUOTE_IN_QUOTED_FIELD;
@@ -439,11 +450,13 @@ void *reader::parse_save_field() {
 
         this->field = (new list<str *>()); // TODO remove
 
+        /* CPython turns such a field into a float, but a row here is a
+           list of str (QUOTE_NONNUMERIC is rejected in reader::__init__) */
         if (this->unquoted_field &&
             this->field_len != 0 &&
-            (quoting == QUOTE_NONNUMERIC || quoting == QUOTE_STRINGS))
+            quoting == QUOTE_STRINGS)
         {
-            // TODO raise error
+            throw new ValueError(__add_strs(3, new str("csv.reader does not support QUOTE_STRINGS with unquoted fields (found "), repr(field_), new str(")")));
         }
 
         this->field_len = 0;
@@ -479,9 +492,9 @@ __csviter *reader::__iter__() {
 
 /* writer */
 
-void *writer::__init__(file *output_file_, Dialect *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *writer::__init__(file *output_file_, Dialect *dialect_, bool dialect_given, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     this->output_file = output_file_;
-    this->dialect = _make_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    this->dialect = _make_dialect(dialect_, dialect_given, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
 }
 
@@ -502,7 +515,7 @@ void *writer::join_append_data(str *field, __ss_int quoted) {
 
         if (c == dialect->delimiter->unit[0] ||
             (dialect->escapechar && c == dialect->escapechar->unit[0]) ||
-            c == dialect->quotechar->unit[0] ||
+            (dialect->quotechar && c == dialect->quotechar->unit[0]) ||
             c == '\n' ||
             c == '\r' ||
             dialect->lineterminator->unit.find(c) != __GC_STR::npos) {
@@ -589,14 +602,16 @@ void *writer::join_append(str *field, __ss_int quoted) {
 
 /* DictReader */
 
-void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *restkey, str *restval_, Dialect *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *DictReader::__init__(pyiter<str *> *f, pyiter<str *> *fieldnames_, str *restkey, str *restval_, Dialect *dialect_, bool dialect_given, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     if(fieldnames_)
         this->_fieldnames = new list<str *>(fieldnames_);
     else
         this->_fieldnames = NULL;
     this->restkey = restkey;
     this->restval = restval_;
-    this->_reader = (new reader(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
+    this->_reader = new reader();
+    this->_reader->__class__ = cl_reader;
+    this->_reader->__init__(f, dialect_, dialect_given, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     this->dialect = this->_reader->dialect;
     this->line_num = 0;
     return NULL;
@@ -666,7 +681,7 @@ __driter *DictReader::__iter__() {
 
 /* DictWriter */
 
-void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, str *extrasaction_, Dialect *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, str *extrasaction_, Dialect *dialect_, bool dialect_given, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     if(!restval_)
         restval_ = new str();
     if(!extrasaction_)
@@ -680,7 +695,9 @@ void *DictWriter::__init__(file *f, pyiter<str *> *fieldnames_, str *restval_, s
         throw ((new ValueError(__mod6(const_23, 1, extrasaction_))));
     }
     this->extrasaction = extrasaction_;
-    this->_writer = (new writer(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
+    this->_writer = new writer();
+    this->_writer->__class__ = cl_writer;
+    this->_writer->__init__(f, dialect_, dialect_given, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
 }
 
@@ -1078,7 +1095,7 @@ __ss_bool Sniffer::has_header(str *sample) {
     // pass the sniffed dialect as explicit overrides on top of "excel", since
     reader *rdr = new reader(
         sample_lines, dialect,
-        NULL, NULL, -1, -1, NULL, -1, NULL, -1
+        __ss_void, __ss_void, -1, -1, __ss_void, -1, __ss_void, -1
     );
 
     list<str *> *header = rdr->__next__();
@@ -1167,6 +1184,7 @@ void __init() {
     const_17 = new str("field larger than field limit (%d)");
     const_23 = new str("extrasaction (%s) must be 'raise' or 'ignore'");
 
+    __csv_none = new str("None");
     _dialects = new dict<str *, Dialect *>();
     _dialects->__setitem__(new str("unix"), new unix_dialect());
     _dialects->__setitem__(new str("excel"), new excel());

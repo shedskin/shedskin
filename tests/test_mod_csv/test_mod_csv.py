@@ -4,7 +4,6 @@ import io
 import os
 import os.path
 
-# TODO NOTSET/None differences
 # TODO newline='' to fix lineterminators for excel
 # TODO Dialect subclassing..?
 
@@ -370,9 +369,10 @@ def test_attrs():
         dict_writer = csv.DictWriter(f, dialect=csv.get_dialect('unix'), fieldnames=['x', 'y'])
         assert dict_writer.writer.dialect.lineterminator == '\n'
 
-#    with open(path) as f:
-#        reader = csv.reader(f, quotechar=None)
-#        assert reader.dialect.quoting == csv.QUOTE_NONE
+    with open(path) as f:
+        reader = csv.reader(f, quotechar=None)
+        assert reader.dialect.quoting == csv.QUOTE_NONE
+        assert reader.dialect.quotechar is None
 
 
 
@@ -1234,6 +1234,121 @@ def test_writer_return_values():
     os.remove(name)
 
 
+def test_none_args():
+    # an explicit None differs from an omitted argument, as in CPython
+
+    # quotechar=None: no quote character, so quotes are data (QUOTE_NONE)
+    assert list(csv.reader(['"x",y'])) == [['x', 'y']]
+    assert list(csv.reader(['"x",y'], quotechar=None)) == [['"x"', 'y']]
+    assert list(csv.reader(['a,"b",c'], quotechar=None, quoting=csv.QUOTE_NONE)) == [['a', '"b"', 'c']]
+    assert list(csv.reader(['"x",y'], dialect=None, quotechar=None)) == [['"x"', 'y']]
+    assert csv.reader(['x'], quotechar=None).dialect.quoting == csv.QUOTE_NONE
+
+    # ..but any other quoting needs a quote character, also from a dialect
+    try:
+        csv.reader(['x'], quotechar=None, quoting=csv.QUOTE_ALL)
+        assert False
+    except TypeError as e:
+        assert str(e) == 'quotechar must be set if quoting enabled'
+    try:
+        csv.reader(['x'], 'excel', quotechar=None)
+        assert False
+    except TypeError as e:
+        assert str(e) == 'quotechar must be set if quoting enabled'
+    try:
+        csv.reader(['x'], dialect=csv.excel(), quotechar=None)
+        assert False
+    except TypeError as e:
+        assert str(e) == 'quotechar must be set if quoting enabled'
+    try:
+        csv.writer(io.StringIO(), quotechar=None, quoting=csv.QUOTE_MINIMAL)
+        assert False
+    except TypeError as e:
+        assert str(e) == 'quotechar must be set if quoting enabled'
+    try:
+        csv.DictReader(['x'], quotechar=None)
+        assert False
+    except TypeError as e:
+        assert str(e) == 'quotechar must be set if quoting enabled'
+    try:
+        csv.DictWriter(io.StringIO(), ['a'], quotechar=None)
+        assert False
+    except TypeError as e:
+        assert str(e) == 'quotechar must be set if quoting enabled'
+
+    # a writer without quotechar must escape
+    s = io.StringIO()
+    w = csv.writer(s, quotechar=None, escapechar='\\', lineterminator='|')
+    w.writerow(['a,b', 'c"d'])
+    assert s.getvalue() == 'a\\,b,c"d|'
+    try:
+        csv.writer(io.StringIO(), quotechar=None).writerow(['a,b'])
+        assert False
+    except csv.Error as e:
+        assert str(e) == 'need to escape, but no escapechar set'
+
+    # escapechar=None overrides the escapechar of a dialect
+    csv.register_dialect('esc', escapechar='\\')
+    assert list(csv.reader(['a\\,b'], dialect='esc')) == [['a,b']]
+    assert list(csv.reader(['a\\,b'], dialect='esc', escapechar=None)) == [['a\\', 'b']]
+    assert csv.reader(['x'], dialect='esc', escapechar=None).dialect.escapechar is None
+    csv.unregister_dialect('esc')
+
+    # register_dialect
+    csv.register_dialect('noquote', quotechar=None)
+    d = csv.get_dialect('noquote')
+    assert d.quoting == csv.QUOTE_NONE
+    assert d.quotechar is None
+    assert list(csv.reader(['"x",y'], dialect='noquote')) == [['"x"', 'y']]
+    try:
+        csv.reader(['x'], dialect='noquote', quoting=csv.QUOTE_MINIMAL)
+        assert False
+    except TypeError as e:
+        assert str(e) == 'quotechar must be set if quoting enabled'
+    csv.unregister_dialect('noquote')
+
+    # delimiter and lineterminator cannot be None
+    try:
+        csv.reader(['x'], delimiter=None)
+        assert False
+    except TypeError as e:
+        assert str(e) == '"delimiter" must be string, not NoneType'
+    try:
+        csv.writer(io.StringIO(), lineterminator=None)
+        assert False
+    except TypeError as e:
+        assert str(e) == 'lineterminator must be set'
+    try:
+        csv.register_dialect('bad', delimiter=None)
+        assert False
+    except TypeError as e:
+        assert str(e) == '"delimiter" must be string, not NoneType'
+
+    # a str variable that may hold None
+    q = None
+    if len(csv.list_dialects()) > 100:
+        q = "'"
+    assert list(csv.reader(['"x",y'], quotechar=q)) == [['"x"', 'y']]
+
+
+def test_quote_strings_reader():
+    # quoted fields stay str, and an empty unquoted field is None
+    rows = list(csv.reader(['"a","",,"b"'], quoting=csv.QUOTE_STRINGS))
+    assert rows == [['a', '', None, 'b']]
+    rows = list(csv.DictReader(['"x","y"', '"1",'], quoting=csv.QUOTE_STRINGS))
+    assert rows == [{'x': '1', 'y': None}]
+
+    # CPython turns an unquoted field into a float, which a list of str
+    # cannot hold, so shedskin raises a ValueError for any unquoted field;
+    # CPython raises one too when the field is not a number
+    try:
+        list(csv.reader(['"1",abc'], quoting=csv.QUOTE_STRINGS))
+        assert False
+    except ValueError as e:
+        assert str(e) in ["could not convert string to float: 'abc'",
+                          "csv.reader does not support QUOTE_STRINGS with unquoted fields (found 'abc')"]
+
+
 def test_all():
     test_program()  # TODO split up test
     test_dialects()
@@ -1282,6 +1397,8 @@ def test_all():
     test_sniffer_non_ascii_delimiter()
     test_dictwriter_kwargs()
     test_writer_return_values()
+    test_none_args()
+    test_quote_strings_reader()
 
 
 if __name__ == "__main__":

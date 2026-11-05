@@ -121,6 +121,38 @@ public:
 
 Dialect *_lookup_dialect(str *name);
 
+/* the str arguments (delimiter, quotechar, lineterminator, escapechar) reach
+   _make_dialect as a str *: NULL when omitted (the model's __void default),
+   and __csv_none when None is passed explicitly, since CPython tells these
+   apart (quotechar=None means no quote character, for example) */
+extern str *__csv_none;
+
+template<class T> inline str *__csv_str_arg(T arg) {
+    if constexpr (std::is_same_v<T, __ss_void_struct>)
+        return NULL;
+    else if constexpr (std::is_same_v<T, str *>)
+        return arg ? arg : __csv_none;
+    else /* None */
+        return __csv_none;
+}
+
+/* the dialect argument: a registered name or a Dialect instance, or omitted
+   or None for excel; 'given' tells CPython's 'dialect is not NULL' check */
+template<class D> inline Dialect *__csv_dialect_arg(D dialect_, bool &given) {
+    if constexpr (std::is_same_v<D, str *>) {
+        given = (dialect_ != NULL);
+        return _lookup_dialect(dialect_);
+    }
+    else if constexpr (std::is_convertible_v<D, Dialect *>) { /* Dialect or predefined subclass instance */
+        given = (dialect_ != NULL);
+        return dialect_ ? (Dialect *)(dialect_) : _lookup_dialect(new str("excel"));
+    }
+    else { /* omitted (__ss_void) or None */
+        given = false;
+        return _lookup_dialect(new str("excel"));
+    }
+}
+
 class __csviter : public __iter<list<str *> *> {
 public:
     reader *r;
@@ -142,40 +174,34 @@ public:
 
 
     reader() {}
-    template<class D> reader(
+    template<class D, class DL, class Q, class L, class E> reader(
         pyiter<str *> *input_iter_,
         D dialect_,
-        str *delimiter,
-        str *quotechar,
+        DL delimiter,
+        Q quotechar,
         __ss_int doublequote,
         __ss_int skipinitialspace,
-        str *lineterminator,
+        L lineterminator,
         __ss_int quoting,
-        str *escapechar,
+        E escapechar,
         __ss_int strict
     ) {
         this->__class__ = cl_reader;
 
-        Dialect *from_dialect;
-        if constexpr (std::is_same_v<D, str *>) {
-            from_dialect = _lookup_dialect(dialect_);
-        }
-        else if constexpr (std::is_convertible_v<D, Dialect *>) { /* Dialect or predefined subclass instance */
-            from_dialect = dialect_ ? (Dialect *)(dialect_) : _lookup_dialect(new str("excel"));
-        }
-        else /* omitted (__ss_void) or None */
-            from_dialect = _lookup_dialect(new str("excel"));
+        bool dialect_given;
+        Dialect *from_dialect = __csv_dialect_arg(dialect_, dialect_given);
 
         __init__(
             input_iter_,
             from_dialect,
-            delimiter,
-            quotechar,
+            dialect_given,
+            __csv_str_arg(delimiter),
+            __csv_str_arg(quotechar),
             doublequote,
             skipinitialspace,
-            lineterminator,
+            __csv_str_arg(lineterminator),
             quoting,
-            escapechar,
+            __csv_str_arg(escapechar),
             strict
         );
     }
@@ -183,6 +209,7 @@ public:
     void *__init__(
         pyiter<str *> *input_iter_,
         Dialect *dialect_,
+        bool dialect_given,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -218,40 +245,34 @@ public:
     size_t rec_len;
 
     writer() {}
-    template <class D> writer(
+    template<class D, class DL, class Q, class L, class E> writer(
         file *output_file_,
         D dialect_,
-        str *delimiter,
-        str *quotechar,
+        DL delimiter,
+        Q quotechar,
         __ss_int doublequote,
         __ss_int skipinitialspace,
-        str *lineterminator,
+        L lineterminator,
         __ss_int quoting,
-        str *escapechar,
+        E escapechar,
         __ss_int strict
     ) {
         this->__class__ = cl_writer;
 
-        Dialect *from_dialect;
-        if constexpr (std::is_same_v<D, str *>) {
-            from_dialect = _lookup_dialect(dialect_);
-        }
-        else if constexpr (std::is_convertible_v<D, Dialect *>) { /* Dialect or predefined subclass instance */
-            from_dialect = dialect_ ? (Dialect *)(dialect_) : _lookup_dialect(new str("excel"));
-        }
-        else /* omitted (__ss_void) or None */
-            from_dialect = _lookup_dialect(new str("excel"));
+        bool dialect_given;
+        Dialect *from_dialect = __csv_dialect_arg(dialect_, dialect_given);
 
         __init__(
             output_file_,
             from_dialect,
-            delimiter,
-            quotechar,
+            dialect_given,
+            __csv_str_arg(delimiter),
+            __csv_str_arg(quotechar),
             doublequote,
             skipinitialspace,
-            lineterminator,
+            __csv_str_arg(lineterminator),
             quoting,
-            escapechar,
+            __csv_str_arg(escapechar),
             strict
         );
     }
@@ -259,6 +280,7 @@ public:
     void *__init__(
         file *output_file_,
         Dialect *dialect_,
+        bool dialect_given,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -354,32 +376,29 @@ public:
     reader *_reader;
 
     DictReader() {}
-    template <class D> DictReader(
+    template<class D, class DL, class Q, class L, class E> DictReader(
         pyiter<str *> *f,
         pyiter<str *> *fieldnames_,
         str *restkey_,
         str *restval_,
         D dialect_,
-        str *delimiter,
-        str *quotechar,
+        DL delimiter,
+        Q quotechar,
         __ss_int doublequote,
         __ss_int skipinitialspace,
-        str *lineterminator,
+        L lineterminator,
         __ss_int quoting,
-        str *escapechar,
+        E escapechar,
         __ss_int strict
     ) {
         this->__class__ = cl_DictReader;
 
-        Dialect *from_dialect;
-        if constexpr (std::is_same_v<D, str *>) {
-            from_dialect = _lookup_dialect(dialect_);
-        }
-        else if constexpr (std::is_convertible_v<D, Dialect *>) { /* Dialect or predefined subclass instance */
-            from_dialect = dialect_ ? (Dialect *)(dialect_) : _lookup_dialect(new str("excel"));
-        }
-        else /* omitted (__ss_void) or None */
-            from_dialect = _lookup_dialect(new str("excel"));
+        /* CPython's DictReader and DictWriter always pass a dialect on
+           ("excel" by default), so only an explicit None counts as not given */
+        bool dialect_given;
+        Dialect *from_dialect = __csv_dialect_arg(dialect_, dialect_given);
+        if constexpr (std::is_same_v<D, __ss_void_struct>)
+            dialect_given = true;
 
         __init__(
             f,
@@ -387,13 +406,14 @@ public:
             restkey_,
             restval_,
             from_dialect,
-            delimiter,
-            quotechar,
+            dialect_given,
+            __csv_str_arg(delimiter),
+            __csv_str_arg(quotechar),
             doublequote,
             skipinitialspace,
-            lineterminator,
+            __csv_str_arg(lineterminator),
             quoting,
-            escapechar,
+            __csv_str_arg(escapechar),
             strict
         );
     }
@@ -404,6 +424,7 @@ public:
         str *restkey_,
         str *restval_,
         Dialect *dialect_,
+        bool dialect_given,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -430,32 +451,29 @@ public:
     str *extrasaction;
 
     DictWriter() {}
-    template <class D> DictWriter(
+    template<class D, class DL, class Q, class L, class E> DictWriter(
         file *f,
         pyiter<str *> *fieldnames_,
         str *restval_,
         str *extrasaction_,
         D dialect_,
-        str *delimiter,
-        str *quotechar,
+        DL delimiter,
+        Q quotechar,
         __ss_int doublequote,
         __ss_int skipinitialspace,
-        str *lineterminator,
+        L lineterminator,
         __ss_int quoting,
-        str *escapechar,
+        E escapechar,
         __ss_int strict
     ) {
         this->__class__ = cl_DictWriter;
 
-        Dialect *from_dialect;
-        if constexpr (std::is_same_v<D, str *>) {
-            from_dialect = _lookup_dialect(dialect_);
-        }
-        else if constexpr (std::is_convertible_v<D, Dialect *>) { /* Dialect or predefined subclass instance */
-            from_dialect = dialect_ ? (Dialect *)(dialect_) : _lookup_dialect(new str("excel"));
-        }
-        else /* omitted (__ss_void) or None */
-            from_dialect = _lookup_dialect(new str("excel"));
+        /* CPython's DictReader and DictWriter always pass a dialect on
+           ("excel" by default), so only an explicit None counts as not given */
+        bool dialect_given;
+        Dialect *from_dialect = __csv_dialect_arg(dialect_, dialect_given);
+        if constexpr (std::is_same_v<D, __ss_void_struct>)
+            dialect_given = true;
 
         __init__(
             f,
@@ -463,13 +481,14 @@ public:
             restval_,
             extrasaction_,
             from_dialect,
-            delimiter,
-            quotechar,
+            dialect_given,
+            __csv_str_arg(delimiter),
+            __csv_str_arg(quotechar),
             doublequote,
             skipinitialspace,
-            lineterminator,
+            __csv_str_arg(lineterminator),
             quoting,
-            escapechar,
+            __csv_str_arg(escapechar),
             strict
         );
     }
@@ -480,6 +499,7 @@ public:
         str *restval_,
         str *extrasaction_,
         Dialect *dialect_,
+        bool dialect_given,
         str *delimiter,
         str *quotechar,
         __ss_int doublequote,
@@ -558,7 +578,7 @@ list<str *> *list_dialects();
 
 Dialect *get_dialect(str *name);
 
-void *register_dialect(
+void *_register_dialect(
     str *name,
     str *dialect,
     str *delimiter,
@@ -569,7 +589,22 @@ void *register_dialect(
     __ss_int quoting,
     str *escapechar,
     __ss_int strict
-); // TODO template dialect
+);
+
+template<class DL, class Q, class L, class E> void *register_dialect( // TODO template dialect
+    str *name,
+    str *dialect,
+    DL delimiter,
+    Q quotechar,
+    __ss_int doublequote,
+    __ss_int skipinitialspace,
+    L lineterminator,
+    __ss_int quoting,
+    E escapechar,
+    __ss_int strict
+) {
+    return _register_dialect(name, dialect, __csv_str_arg(delimiter), __csv_str_arg(quotechar), doublequote, skipinitialspace, __csv_str_arg(lineterminator), quoting, __csv_str_arg(escapechar), strict);
+}
 
 void *unregister_dialect(str *name);
 
