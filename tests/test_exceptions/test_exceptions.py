@@ -902,6 +902,30 @@ def test_super_init_no_args():
         assert repr(e3) == 'ExplicitNoArgErr()'
 
 
+def test_ioerror_alias():
+    # IOError and EnvironmentError are OSError itself, not subclasses
+    caught = False
+    try:
+        open('/nonexistent/x')
+    except IOError as e:
+        caught = e.errno == 2
+    assert caught
+    caught = False
+    try:
+        open('/nonexistent/x')
+    except (ValueError, EnvironmentError):
+        caught = True
+    assert caught
+    try:
+        raise IOError('boom')
+    except OSError as e:
+        assert repr(e) == "OSError('boom')"
+    try:
+        raise EnvironmentError
+    except IOError as e:
+        assert repr(e) == 'OSError()'
+
+
 def test_all():
     test_repr_escapes_argument()
     test_oserror_str_repr_filename()
@@ -931,6 +955,7 @@ def test_all():
     test_custom_error_no_args()
     test_raise_class()
     test_super_init_no_args()
+    test_ioerror_alias()
 
 
 if __name__ == '__main__':
