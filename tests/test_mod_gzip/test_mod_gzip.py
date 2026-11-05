@@ -349,6 +349,66 @@ def test_closed():
         assert False
     except ValueError as e:
         assert str(e) == 'I/O operation on closed file'
+    # the methods inherited from io.IOBase end the message with a period
+    data = gzip.compress(b'a\nb\n')
+    g = gzip.GzipFile(fileobj=io.BytesIO(data))
+    g.close()
+    for i in range(4):
+        msg = ''
+        try:
+            if i == 0:
+                g.readlines()
+            elif i == 1:
+                iter(g)
+            elif i == 2:
+                g.isatty()
+            else:
+                for line in g:
+                    pass
+        except ValueError as e:
+            msg = str(e)
+        assert msg == 'I/O operation on closed file.', '%d: %s' % (i, msg)
+    g = gzip.GzipFile(fileobj=io.BytesIO(), mode='wb')
+    g.close()
+    msg = ''
+    try:
+        g.writelines([b'x'])
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'I/O operation on closed file.'
+    # text mode (io.TextIOWrapper): always with a period
+    t = gzip.open(io.BytesIO(data), 'rt')
+    t.close()
+    for i in range(6):
+        msg = ''
+        try:
+            if i == 0:
+                t.read()
+            elif i == 1:
+                t.readline()
+            elif i == 2:
+                t.readlines()
+            elif i == 3:
+                t.isatty()
+            elif i == 4:
+                next(t)
+            else:
+                for line2 in t:
+                    pass
+        except ValueError as e:
+            msg = str(e)
+        assert msg == 'I/O operation on closed file.', '%d: %s' % (i, msg)
+    # .. while readable/writable/seekable still answer
+    assert t.readable() and not t.writable() and t.seekable()
+    t = gzip.open(io.BytesIO(), 'wt')
+    assert not t.readable() and t.writable() and t.seekable()
+    t.close()
+    assert not t.readable() and t.writable() and t.seekable()
+    try:
+        t.writelines(['x'])
+        assert False
+    except ValueError as e:
+        assert str(e) == 'I/O operation on closed file.'
 
 
 def test_invalid_modes():

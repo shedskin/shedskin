@@ -1764,8 +1764,11 @@ __ss_int pathconf(str *path, __ss_int name_) {
     /* -1 with errno unchanged means 'no limit' */
     errno = 0;
     long result = ::pathconf(__ss_cpath(path, "pathconf"), __ss_cint(name_));
-    if(result == -1 and errno != 0)
+    if(result == -1 and errno != 0) {
+        if(errno == EINVAL) /* as CPython: it could be the name rather than the path */
+            __throw_oserror();
         __throw_oserror(path);
+    }
     return (__ss_int)result;
 }
 

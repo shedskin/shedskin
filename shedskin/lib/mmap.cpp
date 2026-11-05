@@ -320,7 +320,7 @@ str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
     *const_13, *const_14, *const_15, *const_16, *const_17, *const_18,
     *const_19, *const_20, *const_21, *const_22, *const_23, *const_24,
     *const_25, *const_26, *const_27, *const_28, *const_29, *const_30,
-    *const_31, *const_32, *const_33;
+    *const_31, *const_32, *const_33, *const_34, *const_35;
 
 str *__name__;
 class_ *cl_mmap;
@@ -1071,7 +1071,7 @@ void *mmap::write_byte(__ss_int value)
     __raise_if_closed_or_not_writable();
     if (m_position + 1 > m_end)
     {
-        throw new ValueError(const_14);
+        throw new ValueError(const_34);
     }
     *m_position++ = (char)value;
     return NULL;
@@ -1215,7 +1215,7 @@ void *mmap::__raise_if_closed_or_not_resizeable()
 
 void *mmap::__seek_failed()
 {
-    throw new ValueError(const_14);
+    throw new ValueError(const_35);
     return NULL;
 }
 
@@ -1339,6 +1339,8 @@ void __init()
         const_31 = new str("mmap can't resize a readonly or copy-on-write memory map.");
         const_32 = new str("mmap: can't expand a shared anonymous mapping");
         const_33 = new str("flush values out of range");
+        const_34 = new str("write byte out of range");
+        const_35 = new str("seek out of range");
 
         __name__ = new str("mmap");
 

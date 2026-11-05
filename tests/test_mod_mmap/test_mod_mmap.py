@@ -1016,6 +1016,30 @@ def test_read_no_arg():
     m.close()
 
 
+def test_range_messages():
+    # write_byte() at the end and a seek out of range have their own messages
+    m = mmap.mmap(-1, 2)
+    m.write_byte(1)
+    m.write_byte(2)
+    errors = []
+    try:
+        m.write_byte(3)
+    except ValueError as e:
+        errors.append(str(e))
+    for pos in [3, -1]:
+        try:
+            m.seek(pos)
+        except ValueError as e:
+            errors.append(str(e))
+    try:
+        m.write(b'x')
+    except ValueError as e:
+        errors.append(str(e))
+    assert errors == ['write byte out of range', 'seek out of range',
+                      'seek out of range', 'data out of range']
+    m.close()
+
+
 def test_read_negative_size():
     # 1031-A2: any negative size reads the rest; position stays in range
     m = mmap.mmap(-1, 16)
@@ -1069,6 +1093,7 @@ def test_all():
     test_offset()
     test_return_values()
     test_flush_range()
+    test_range_messages()
     test_read_negative_size()
     test_read_no_arg()
 

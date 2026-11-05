@@ -87,6 +87,14 @@ public:
     __ss_bool writable() { return ___bool(writing); }
     __ss_bool seekable() { return True; }
 
+    /* the methods CPython inherits from io.IOBase end the message with a period */
+    inline void __check_closed_iobase() {
+        if(closed)
+            throw new ValueError(new str("I/O operation on closed file."));
+    }
+    void *writelines(pyiter<bytes *> *iter) { __check_closed_iobase(); return file_binary::writelines(iter); }
+    __iter<bytes *> *__iter__() { __check_closed_iobase(); return this; }
+
     bytes *__next__();
     bool __eof();
     bool __error() { return false; }
@@ -145,9 +153,17 @@ public:
     __ss_int __ss_fileno();
     __ss_bool isatty();
 
-    __ss_bool readable() { __check_closed(); return gz->readable(); }
-    __ss_bool writable() { __check_closed(); return gz->writable(); }
-    __ss_bool seekable() { __check_closed(); return False; }
+    __ss_bool readable() { return gz->readable(); }
+    __ss_bool writable() { return gz->writable(); }
+    __ss_bool seekable() { return gz->seekable(); }
+
+    /* (hides file::__check_closed: io.TextIOWrapper ends the message with a period) */
+    inline void __check_closed() {
+        if(closed)
+            throw new ValueError(new str("I/O operation on closed file."));
+    }
+    void *writelines(pyiter<str *> *iter) { __check_closed(); return file::writelines(iter); }
+    __iter<str *> *__iter__() { __check_closed(); return this; }
 
     str *__next__();
     bool __eof();

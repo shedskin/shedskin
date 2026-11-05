@@ -538,6 +538,7 @@ bytes *GzipFile::readline(__ss_int n) {
 }
 
 list<bytes *> *GzipFile::readlines(__ss_int hint) {
+    __check_closed_iobase();
     list<bytes *> *result = new list<bytes *>();
     __ss_int total = 0;
     for (;;) {
@@ -708,8 +709,7 @@ __ss_int GzipFile::__ss_fileno() {
 }
 
 __ss_bool GzipFile::isatty() {
-    if (closed)
-        throw new ValueError(new str("I/O operation on closed file."));
+    __check_closed_iobase();
     return False;
 }
 

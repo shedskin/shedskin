@@ -119,7 +119,7 @@ inline __ss_float log(__ss_float x, __ss_float base) {
     __ss_float num = log(x);
     __ss_float den = log(base);
     if(den == 0.0)
-        throw new ZeroDivisionError(new str("division by zero"));
+        throw new ZeroDivisionError(new str("float division by zero"));
     return num / den;
 }
 
