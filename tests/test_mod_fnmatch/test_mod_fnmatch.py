@@ -1,4 +1,5 @@
 import fnmatch
+import os
 import re
 
 fs = ['a.txt', 'b.txt', 'c.txt', 'd.mod']
@@ -85,7 +86,13 @@ def test_filter_iterables():
     assert sorted(fnmatch.filter(s, '*.py')) == ['a.py', 'c.py']
     assert sorted(fnmatch.filterfalse(s, '*.py')) == ['b.txt']
     assert fnmatch.filter((n for n in t), '*.txt') == ['b.txt']
-    assert fnmatch.filterfalse((n.upper() for n in t), '*.py') == ['A.PY', 'B.TXT', 'C.PY']
+    # names are case-normalized too where the OS requires it (windows)
+    up = fnmatch.filterfalse((n.upper() for n in t), '*.py')
+    if os.path.normcase('A.PY') == 'a.py':
+        assert up == ['B.TXT']
+    else:
+        assert up == ['A.PY', 'B.TXT', 'C.PY']
+    assert fnmatch.filterfalse((n.upper() for n in t), '*.PY') == ['B.TXT']
     d = {'x.py': 1, 'y.c': 2}
     assert fnmatch.filter(d, '*.py') == ['x.py']
     assert fnmatch.filter(d.keys(), '*.c') == ['y.c']
