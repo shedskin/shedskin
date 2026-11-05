@@ -242,6 +242,16 @@ static double __floor_timestamp(double timestamp) {
 	return f;
 }
 
+/* int timestamps are converted exactly (via double, 2**63-1 would round up
+   to 2**63 and overflow); only an --int128 value can be out of range */
+static time_t __int_timestamp(__ss_int timestamp) {
+	if (sizeof(__ss_int) > sizeof(time_t) &&
+	    (timestamp < (__ss_int)std::numeric_limits<time_t>::min() ||
+	     timestamp > (__ss_int)std::numeric_limits<time_t>::max()))
+		throw new OverflowError(new str("timestamp out of range for platform time_t"));
+	return (time_t)timestamp;
+}
+
 /* localtime()/gmtime() return NULL (errno EOVERFLOW) when the year does not
    fit in struct tm; cpython raises OSError there */
 static tm *__timestamp_tm(time_t t, bool utc) {
@@ -259,6 +269,11 @@ date* date::fromtimestamp(double timestamp) {
 	//date from timestamp using localtime; like cpython, round down (so -0.5 is still 1969-12-31)
 	tm *tm = __timestamp_tm(time_t(__floor_timestamp(timestamp)), false);
 
+	return new date(tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
+}
+
+date* date::fromtimestamp(__ss_int timestamp) {
+	tm *tm = __timestamp_tm(__int_timestamp(timestamp), false);
 	return new date(tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
 }
 
@@ -641,6 +656,10 @@ datetime *datetime::from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn
 		us = 0;
 	}
 
+	return from_time_t(timet, us, tzinfo, timefn);
+}
+
+datetime *datetime::from_time_t(time_t timet, __ss_int us, tzinfo *tzinfo, bool timefn) {
 	struct tm *tm = __timestamp_tm(timet, timefn);
 
 	/* The platform localtime/gmtime may insert leap seconds,
@@ -665,9 +684,21 @@ datetime *datetime::utcfromtimestamp(double timestamp) {
     return from_timestamp(timestamp,NULL,true);	//true=gmtime
 }
 
+datetime *datetime::utcfromtimestamp(__ss_int timestamp) {
+    return from_time_t(__int_timestamp(timestamp), 0, NULL, true);
+}
+
 datetime *datetime::fromtimestamp(double timestamp, tzinfo *tzinfo) {
 	datetime *tmp = from_timestamp(timestamp, tzinfo, (bool)tzinfo);
 				// tzinfo == Py_None ? localtime : gmtime,
+	if(tzinfo!=NULL)
+		return tzinfo->fromutc(tmp);
+	else
+		return tmp;
+}
+
+datetime *datetime::fromtimestamp(__ss_int timestamp, tzinfo *tzinfo) {
+	datetime *tmp = from_time_t(__int_timestamp(timestamp), 0, tzinfo, (bool)tzinfo);
 	if(tzinfo!=NULL)
 		return tzinfo->fromutc(tmp);
 	else

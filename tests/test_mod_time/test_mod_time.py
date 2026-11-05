@@ -468,6 +468,33 @@ def test_sleep_invalid():
             caught = True
         assert caught
 
+def test_int_out_of_range():
+    # an int is not rounded via float: 2**63-1 fits in time_t, so (like
+    # cpython) gmtime()/localtime()/ctime() fail with OSError, not OverflowError
+    for v in [2**63-1, -2**63]:
+        caught = False
+        try:
+            time.gmtime(v)
+        except OSError:
+            caught = True
+        assert caught
+        caught = False
+        try:
+            time.localtime(v)
+        except OSError:
+            caught = True
+        assert caught
+        caught = False
+        try:
+            time.ctime(v)
+        except OSError:
+            caught = True
+        assert caught
+    assert time.gmtime(86399) == time.gmtime(86399.0)
+    assert time.gmtime(True).tm_sec == 1
+    assert time.ctime(1700000000) == time.ctime(1700000000.0)
+
+
 def test_gmtime_out_of_range():
     # regression test: previously segfaulted on a NULL struct tm
     for v in [1e20, -1e20]:
@@ -582,6 +609,7 @@ def test_all():
     test_strftime_range()
     test_sleep_invalid()
     test_gmtime_out_of_range()
+    test_int_out_of_range()
     test_struct_time_no_leak()
     test_strftime_buffer()
     test_strftime_utc_offset()
