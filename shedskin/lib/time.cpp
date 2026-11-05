@@ -6,6 +6,7 @@
 #include <climits>
 #include <cmath>
 #include <cstring>
+#include <limits>
 
 namespace __time__ {
 
@@ -557,6 +558,16 @@ static inline time_t __ss_seconds_to_time_t(const __ss_float seconds) {
     return static_cast<time_t>(f);
 }
 
+/* int seconds are converted exactly: via __ss_float, 2**63-1 would round up
+   to 2**63 and overflow (CPython raises OSError for it, as for 2**62) */
+static inline time_t __ss_seconds_to_time_t(const __ss_int seconds) {
+    if (sizeof(__ss_int) > sizeof(time_t) &&
+        (seconds < (__ss_int)std::numeric_limits<time_t>::min() ||
+         seconds > (__ss_int)std::numeric_limits<time_t>::max()))
+        throw new OverflowError(new str("timestamp out of range for platform time_t"));
+    return static_cast<time_t>(seconds);
+}
+
 /* also keep the UTC offset and zone name of the result (see struct_time).
    windows has no tm_gmtoff/tm_zone, so derive them as CPython does there:
    "UTC" for gmtime(), else strftime('%Z') and the difference with timegm() */
@@ -614,11 +625,19 @@ struct_time *localtime(const __ss_float timep) {
     return __ss_localtime(__ss_seconds_to_time_t(timep));
 }
 
+struct_time *localtime(const __ss_int timep) {
+    return __ss_localtime(__ss_seconds_to_time_t(timep));
+}
+
 struct_time *gmtime() {
     return __ss_gmtime(::time(NULL));
 }
 
 struct_time *gmtime(const __ss_float seconds) {
+    return __ss_gmtime(__ss_seconds_to_time_t(seconds));
+}
+
+struct_time *gmtime(const __ss_int seconds) {
     return __ss_gmtime(__ss_seconds_to_time_t(seconds));
 }
 
@@ -655,6 +674,10 @@ str *ctime() {
 }
 
 str *ctime(const __ss_float seconds) {
+    return asctime(localtime(seconds));
+}
+
+str *ctime(const __ss_int seconds) {
     return asctime(localtime(seconds));
 }
 

@@ -110,9 +110,13 @@ __ss_float mktime(tuple2<__ss_int, __ss_int> *tuple);
 
 struct_time *localtime();
 struct_time *localtime(const __ss_float timep);
+struct_time *localtime(const __ss_int timep);
+inline struct_time *localtime(__ss_bool timep) { return localtime((__ss_int)timep.value); }
 
 struct_time *gmtime();
 struct_time *gmtime(const __ss_float seconds);
+struct_time *gmtime(const __ss_int seconds);
+inline struct_time *gmtime(__ss_bool seconds) { return gmtime((__ss_int)seconds.value); }
 
 str *asctime();
 str *asctime(struct_time *tuple);
@@ -120,6 +124,8 @@ str *asctime(tuple2<__ss_int, __ss_int> *tuple);
 
 str *ctime();
 str *ctime(const __ss_float seconds);
+str *ctime(const __ss_int seconds);
+inline str *ctime(__ss_bool seconds) { return ctime((__ss_int)seconds.value); } /* (else ambiguous) */
 
 str *strftime(str *format, struct_time* tuple);
 str *strftime(str *format);

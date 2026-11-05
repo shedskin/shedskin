@@ -57,6 +57,8 @@ public:
     static timedelta *resolution;
     static date *today();
     static date *fromtimestamp(double timestamp);
+    static date *fromtimestamp(__ss_int timestamp);
+    static date *fromtimestamp(__ss_bool timestamp) { return fromtimestamp((__ss_int)timestamp.value); }
     static date *fromordinal(__ss_int o);                    //copied from cpython
     static date *fromisoformat(str *date_string);
     static date *fromisocalendar(__ss_int year, __ss_int week, __ss_int day);
@@ -134,8 +136,13 @@ public:
     static datetime *utcnow();
 
 	static datetime *from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn);
+	static datetime *from_time_t(time_t timet, __ss_int us, tzinfo *tzinfo, bool timefn);
     static datetime *fromtimestamp(double timestamp, tzinfo *tzinfo=NULL);
+    static datetime *fromtimestamp(__ss_int timestamp, tzinfo *tzinfo=NULL);
+    static datetime *fromtimestamp(__ss_bool timestamp, tzinfo *tzinfo=NULL) { return fromtimestamp((__ss_int)timestamp.value, tzinfo); }
     static datetime *utcfromtimestamp(double timestamp);
+    static datetime *utcfromtimestamp(__ss_int timestamp);
+    static datetime *utcfromtimestamp(__ss_bool timestamp) { return utcfromtimestamp((__ss_int)timestamp.value); }
     __ss_float timestamp();
     static datetime *fromordinal(__ss_int o);
     static datetime *fromisocalendar(__ss_int year, __ss_int week, __ss_int day);

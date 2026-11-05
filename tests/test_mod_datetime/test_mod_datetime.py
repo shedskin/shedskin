@@ -805,6 +805,36 @@ def test_fromtimestamp_out_of_range():
             assert fromtimestamp_error(kind, 1e12) == 'ValueError: year 33658 is out of range'
 
 
+def fromtimestamp_error_int(kind, ts):
+    try:
+        if kind == 0:
+            datetime.datetime.fromtimestamp(ts)
+        elif kind == 1:
+            datetime.datetime.utcfromtimestamp(ts)
+        else:
+            datetime.date.fromtimestamp(ts)
+    except OverflowError as e:
+        return 'OverflowError: ' + str(e)
+    except OSError:
+        return 'OSError'
+    except ValueError as e:
+        return 'ValueError: ' + str(e)
+    return 'ok'
+
+
+def test_fromtimestamp_int():
+    # int timestamps are not rounded via float: 2**63-1 fits in time_t, so
+    # (like cpython) localtime()/gmtime() fail with OSError, not OverflowError
+    for kind in range(3):
+        assert fromtimestamp_error_int(kind, 2**63-1) == 'OSError'
+        assert fromtimestamp_error_int(kind, -2**63) == 'OSError'
+        assert fromtimestamp_error_int(kind, 1700000000) == 'ok'
+    assert datetime.datetime.utcfromtimestamp(86399) == datetime.datetime(1970, 1, 1, 23, 59, 59)
+    assert datetime.datetime.fromtimestamp(1700000000) == datetime.datetime.fromtimestamp(1700000000.0)
+    assert datetime.date.fromtimestamp(1700000000) == datetime.date.fromtimestamp(1700000000.0)
+    assert datetime.datetime.utcfromtimestamp(True) == datetime.datetime(1970, 1, 1, 0, 0, 1)
+
+
 def test_isocalendar_date():
     # a tuple, with the items also as attributes
     ic = datetime.date(2026, 11, 3).isocalendar()
@@ -1488,6 +1518,7 @@ def test_all():
         test_datetime_fromtimestamp_round_half_even()
         test_date_fromtimestamp_floor()
         test_fromtimestamp_out_of_range()
+        test_fromtimestamp_int()
         test_fromisocalendar()
         test_isocalendar_date()
         test_date_time_strptime()
