@@ -78,7 +78,8 @@ def virtuals(self: "cpp.GenerateVisitor", cl: "python.Class", declare: bool) -> 
         formals = []
         subcl0 = list(subclasses)[0]
         if ident in subcl0.funcs:
-            formals = list(subclasses)[0].funcs[ident].formals[1:]
+            func0 = subcl0.funcs[ident]
+            formals = [self.cpp_name(func0.vars[f]) for f in func0.formals[1:]]
 
         ftypes = []
         for m in merged:
