@@ -207,6 +207,8 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline,
     if(f == 0)
         __throw_oserror(file_name);
     __check_not_directory(f, file_name);
+    if (cflags->unit.find('a') != std::string::npos)
+        fseek(f, 0, SEEK_END); /* (as cpython: tell() and reads start at the end) */
     if (buffering == 0) { /* (as cpython: after opening, so 'w' truncates) */
         fclose(f);
         f = 0;
@@ -218,23 +220,27 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline,
 
     if (__encoding == __SS_ENC_UTF8_SIG) {
         __encoding = __SS_ENC_UTF8;
-        bool readable = mode->unit.find_first_of(__gcs("r+")) != std::string::npos;
-        bool bom = false;
-        if (readable) { /* skip a leading bom */
-            char head[3];
-            bom = fread(head, 1, 3, f) == 3 && std::string_view(head, 3) == "\xef\xbb\xbf";
-            if (!bom)
-                fseek(f, 0, SEEK_SET);
-        }
-        bool writable = mode->unit.find_first_of(__gcs("wax+")) != std::string::npos;
-        if (!bom && writable) { /* bom first, unless appending to existing data */
-            if (mode->unit.find('a') != std::string::npos)
-                fseek(f, 0, SEEK_END);
-            __bom_pending = (ftell(f) == 0);
-        }
+        __utf8_sig = true;
+        __sig_reset();
     }
 
     __make_buffer();
+}
+
+/* utf-8-sig, after opening or seeking (as cpython, which resets the codec):
+   at position 0, a read skips a leading bom, and without one a write adds it */
+void file::__sig_reset() {
+    __bom_pending = false;
+    if (ftell(f) != 0)
+        return;
+    if (mode->unit.find_first_of(__gcs("r+")) != std::string::npos) {
+        char head[3];
+        bool bom = fread(head, 1, 3, f) == 3 && std::string_view(head, 3) == "\xef\xbb\xbf";
+        fseek(f, bom ? 3 : 0, SEEK_SET); /* (also needed before a write) */
+        if (bom)
+            return;
+    }
+    __bom_pending = mode->unit.find_first_of(__gcs("wax+")) != std::string::npos;
 }
 
 file::file(FILE *g, str *name, str *mode) : name(name), mode(mode), f(g), buffer(0), closed(False) {
@@ -417,6 +423,8 @@ __ss_int file::seek(__ss_int i, __ss_int w) {
         __settle_cr(f, options, __encoding, __errors);
         if(fseek(f, i, (int)w) == -1)
             __throw_oserror();
+        if (__utf8_sig)
+            __sig_reset();
         return tell(); /* the new absolute position */
     }
     return -1;
@@ -676,6 +684,8 @@ file_binary::file_binary(str *file_name, str *flags, __ss_int buffering) : close
     if(f == 0)
         __throw_oserror(file_name);
     __check_not_directory(f, file_name);
+    if (flags->unit.find('a') != std::string::npos)
+        fseek(f, 0, SEEK_END); /* (as cpython: tell() and reads start at the end) */
     __set_buffering(f, buffering, false);
     name = file_name;
     mode = __fileio_mode(flags);

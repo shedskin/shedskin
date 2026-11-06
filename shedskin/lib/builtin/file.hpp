@@ -35,6 +35,7 @@ public:
     str *encoding = 0; /* the names as given (None for StringIO, as CPython) */
     str *errors = 0;
     bool __bom_pending = false; /* utf-8-sig: write a bom on the first write */
+    bool __utf8_sig = false; /* utf-8-sig: (re)check the bom at position 0 */
 
     file(FILE *g=0, str *name=0, str *mode=0);
     file(str *name, str *mode=0, str *encoding=0, str *errors=0, str *newline=0, __ss_int buffering=-1);
@@ -70,6 +71,7 @@ public:
     str *__decode_cache();
     bool __skip_lf(int c, size_t &cr_at, __char_counter &cc, size_t n);
     void __make_buffer();
+    void __sig_reset();
     void __close_buffer();
 };
 
