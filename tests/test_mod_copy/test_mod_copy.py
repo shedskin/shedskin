@@ -231,10 +231,10 @@ def test_copy_struct_seq():
     st = time.gmtime(0)
     for stc in (copy.copy(st), copy.deepcopy(st)):
         assert (stc.tm_year, stc.tm_mon, stc.tm_mday, stc.tm_yday) == (1970, 1, 1, 1)
-        assert stc.tm_zone == 'GMT' and stc.tm_gmtoff == 0
+        assert stc.tm_zone == st.tm_zone and stc.tm_zone in ('GMT', 'UTC') and stc.tm_gmtoff == 0
         assert stc == st and repr(stc) == repr(st)
     l = copy.deepcopy([time.gmtime(0), time.gmtime(86400)])
-    assert l[1].tm_mday == 2 and l[0].tm_zone == 'GMT'
+    assert l[1].tm_mday == 2 and l[0].tm_zone == st.tm_zone
 
     s = os.stat('.')
     for sc in (copy.copy(s), copy.deepcopy(s)):
@@ -242,12 +242,9 @@ def test_copy_struct_seq():
         assert sc.st_mode == s.st_mode and sc.st_ino == s.st_ino and sc.st_size == s.st_size
         assert sc.st_mtime == s.st_mtime and sc.st_mtime_ns == s.st_mtime_ns
 
-    u = os.uname()
-    assert copy.copy(u).sysname == u.sysname and copy.deepcopy(u).machine == u.machine
+    # (os.uname/os.statvfs are posix-only: see test_mod_os_posix)
     t = os.times()
     assert copy.copy(t).user == t.user and copy.deepcopy(t).elapsed == t.elapsed
-    v = os.statvfs('.')
-    assert copy.copy(v).f_bsize == v.f_bsize and copy.deepcopy(v).f_namemax == v.f_namemax
 
     ii = sys.int_info
     assert copy.copy(ii).bits_per_digit == ii.bits_per_digit

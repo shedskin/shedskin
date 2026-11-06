@@ -7,6 +7,7 @@ endif()
 
 add_shedskin_product(
     SYS_MODULES
+        copy
         os
         os.path
         stat
