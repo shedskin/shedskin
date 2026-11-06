@@ -2,4 +2,10 @@ add_shedskin_product(
     SYS_MODULES
         collections
         copy
+        datetime
+        os
+        os.path
+        stat
+        sys
+        time
 )
