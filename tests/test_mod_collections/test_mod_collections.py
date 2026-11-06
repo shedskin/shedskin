@@ -90,6 +90,20 @@ def test_defaultdict_from_pairs():
     assert d[99] == ""
 
 
+def test_defaultdict_from_non_tuple_pairs():
+    # regression test: defaultdict(factory, iterable) only accepted an
+    # iterable of tuples, unlike dict(iterable)
+    d = defaultdict(int, [[1, 2], [3, 4]])
+    assert sorted(d.items()) == [(1, 2), (3, 4)]
+    assert d[5] == 0
+    e = defaultdict(str, ['ab', 'cd'])
+    assert sorted(e.items()) == [('a', 'b'), ('c', 'd')]
+    f = defaultdict(int, zip([1, 2], [3, 4]))
+    assert sorted(f.items()) == [(1, 3), (2, 4)]
+    g = defaultdict(int, ((i, i * i) for i in range(3)))
+    assert sorted(g.items()) == [(0, 0), (1, 1), (2, 4)]
+
+
 def test_defaultdict_type_identity():
     # regression test: defaultdict never got its own class object, so every
     # defaultdict instance's __class__ silently stayed the base dict's. We
@@ -1129,6 +1143,7 @@ def test_all():
     test_defaultdict_copy()
     test_defaultdict_copy_module()
     test_defaultdict_from_pairs()
+    test_defaultdict_from_non_tuple_pairs()
     test_defaultdict_type_identity()
     test_defaultdict_repr_factory()
     test_defaultdict_fromkeys()

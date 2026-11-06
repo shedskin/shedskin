@@ -396,16 +396,12 @@ public:
         func = func_;
     }
 
-    defaultdict(V (*func_)(), pyiter<tuple2<K, V> *> *i) { /* XXX */
+    /* any iterable of pairs (tuples, 2-element lists, 2-char strings..),
+       or another mapping, like dict(iterable) */
+    template<class U> defaultdict(V (*func_)(), U *other) {
         this->__class__ = cl_defaultdict;
         func = func_;
-        tuple2<K, V> *k;
-        typename pyiter<tuple2<K, V> *>::for_in_loop __3;
-        int __2;
-        pyiter<tuple2<K, V> *> *__1;
-        FOR_IN(k,i,1,2,3)
-            this->__setitem__(k->__getfirst__(), k->__getsecond__());
-        END_FOR
+        this->update(other);
     }
 
     /* called by dict::__getitem__/__addtoitem__ for a missing key */
