@@ -1451,32 +1451,6 @@ static void timedelta_check_ratio(__ss_float f) {
         throw new OverflowError(new str("cannot convert Infinity to integer ratio"));
 }
 
-timedelta *timedelta::__mul__(__ss_float f) {
-    /* not exact like cpython (which multiplies by the exact integer ratio of
-       f), but close: the components are scaled separately and combined by the
-       constructor, which is exact when f has few significant bits (1.0, 2.5,
-       ..). a negative timedelta is negated first, so that the components all
-       have the same sign and cannot cancel out. */
-    timedelta_check_ratio(f);
-    timedelta *t = this;
-    if(days < 0) {
-        t = __neg__();
-        f = -f;
-    }
-    double df = (double)t->days * f, sf = (double)t->seconds * f, uf = (double)t->microseconds * f;
-    /* as cpython: days must fit a C int (the constructor then checks the
-       range); this also keeps the conversions to integers from overflowing */
-    if(std::fabs(df) + std::fabs(sf) / 86400 + std::fabs(uf) / 864e8 > 2147483647.0)
-        throw new OverflowError(new str("Python int too large to convert to C int"));
-    return new timedelta(df, sf, uf, 0, 0, 0, 0);
-}
-
-timedelta *timedelta::__truediv__(__ss_float f) {
-    timedelta_check_ratio(f);
-    if(f==0)
-        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
-    return __mul__(1/f);
-}
 
 /* Exact-integer floor division of timedelta(days,seconds,microseconds) by n,
  * without ever forming (days*86400+seconds)*1000000+microseconds as a single
@@ -1703,27 +1677,166 @@ __ss_float timedelta::__truediv__(timedelta *other) {
     return (aneg != bneg) ? -f : f;
 }
 
-timedelta *timedelta::__mul__(__ss_int n) {
-    /* exact, by double-and-add on the magnitude. as cpython: days must fit a
-       C int (checked along the way, which also keeps the sums in range), and
-       then the timedelta range */
-    bool neg;
-    timedelta_mag D = timedelta_magnitude(this, &neg);
+/* as cpython: the days of a product must fit a C int (also keeps the sums in range) */
+static const long long timedelta_mul_limit = 2147483648LL * 86400;
+
+static void timedelta_mul_check(timedelta_mag D) {
+    if(D.s >= timedelta_mul_limit)
+        throw new OverflowError(new str("Python int too large to convert to C int"));
+}
+
+/* D * m, exact, by double-and-add (checked along the way) */
+static timedelta_mag timedelta_mag_mul(timedelta_mag D, unsigned long long m) {
     timedelta_mag R = {0, 0};
-    unsigned long long m = n < 0 ? -(unsigned long long)n : (unsigned long long)n;
-    if(n < 0)
-        neg = !neg;
-    const long long limit = 2147483648LL * 86400;
     for(; m; m >>= 1) {
-        if(D.s >= limit)
-            throw new OverflowError(new str("Python int too large to convert to C int"));
+        timedelta_mul_check(D);
         if(m & 1)
             R = timedelta_mag_add(R, D);
         D = timedelta_mag_add(D, D);
     }
-    if(R.s >= limit)
-        throw new OverflowError(new str("Python int too large to convert to C int"));
-    timedelta *result = timedelta_from_magnitude(R, neg);
+    timedelta_mul_check(R);
+    return R;
+}
+
+timedelta *timedelta::__mul__(__ss_int n) {
+    /* exact. as cpython: days must fit a C int, and then the timedelta range */
+    bool neg;
+    timedelta_mag D = timedelta_magnitude(this, &neg);
+    unsigned long long m = n < 0 ? -(unsigned long long)n : (unsigned long long)n;
+    if(n < 0)
+        neg = !neg;
+    timedelta *result = timedelta_from_magnitude(timedelta_mag_mul(D, m), neg);
+    timedelta_check_days(result->days);
+    return result;
+}
+
+/* f = m / 2**k, with m odd (f finite and non-zero) */
+static unsigned long long timedelta_float_ratio(__ss_float f, int *k) {
+    int e;
+    unsigned long long m = (unsigned long long)std::ldexp(std::frexp(std::fabs(f), &e), 53);
+    *k = 53 - e;
+    for(; !(m & 1); m >>= 1)
+        (*k)--;
+    return m;
+}
+
+/* halve R n times, keeping the last bit halved off in *half, and whether any
+   other (non-zero) bits were, in *sticky */
+static timedelta_mag timedelta_mag_halve(timedelta_mag R, long n, bool *half, bool *sticky) {
+    for(; n > 0; n--) {
+        *sticky = *sticky || *half;
+        if(!R.s && !R.us) { /* only zero bits are left */
+            *half = false;
+            break;
+        }
+        *half = R.us & 1; /* 1000000 is even */
+        if(R.s & 1)
+            R.us += 1000000;
+        R.s >>= 1;
+        R.us >>= 1;
+    }
+    return R;
+}
+
+static timedelta_mag timedelta_mag_round(timedelta_mag R, bool half, bool sticky) {
+    if(half && (sticky || (R.us & 1))) {
+        timedelta_mag one = {0, 1};
+        R = timedelta_mag_add(R, one);
+    }
+    return R;
+}
+
+timedelta *timedelta::__mul__(__ss_float f) {
+    /* exact, like cpython, which multiplies the microseconds by the integer
+       ratio of f and rounds half to even. with f = m / 2**k, the integer part
+       of m / 2**k is handled as above, and the fractional part bit by bit
+       from the lowest bit, halving the accumulator each time (so it stays
+       below the magnitude). as in long division, the last bit halved off,
+       and whether any other bits were, decide the rounding. */
+    timedelta_check_ratio(f);
+    bool neg;
+    timedelta_mag D = timedelta_magnitude(this, &neg);
+    if(std::signbit(f))
+        neg = !neg;
+    timedelta_mag R = {0, 0};
+    if(f != 0.0 && (D.s || D.us)) {
+        int k;
+        unsigned long long m = timedelta_float_ratio(f, &k);
+        for(; k < 0; k++) { /* f is an integer >= 2**53 */
+            timedelta_mul_check(D);
+            D = timedelta_mag_add(D, D);
+        }
+        timedelta_mag acc = {0, 0};
+        bool half = false, sticky = false;
+        for(int i = 0; i < k && i < 53; i++) {
+            if((m >> i) & 1)
+                acc = timedelta_mag_add(acc, D);
+            acc = timedelta_mag_halve(acc, 1, &half, &sticky);
+        }
+        if(k > 53)
+            acc = timedelta_mag_halve(acc, k - 53, &half, &sticky);
+        R = timedelta_mag_add(timedelta_mag_mul(D, k < 53 ? m >> k : 0), acc);
+        R = timedelta_mag_round(R, half, sticky);
+        timedelta_mul_check(R);
+    }
+    timedelta *result = timedelta_from_magnitude(R, neg && (R.s || R.us));
+    timedelta_check_days(result->days);
+    return result;
+}
+
+timedelta *timedelta::__truediv__(__ss_float f) {
+    /* exact, like cpython, which multiplies the microseconds by the integer
+       ratio of 1/f and rounds half to even. with f = m / 2**k, this is binary
+       long division of D * 2**k by m, where the remainder stays below m (so
+       below 2**53). for k < 0, the quotient is halved -k times afterwards. */
+    timedelta_check_ratio(f);
+    if(f == 0.0)
+        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+    bool neg;
+    timedelta_mag D = timedelta_magnitude(this, &neg);
+    if(std::signbit(f))
+        neg = !neg;
+    timedelta_mag Q = {0, 0};
+    if(D.s || D.us) {
+        int k;
+        unsigned long long m = timedelta_float_ratio(f, &k);
+        /* the bits of D = s * 1000000 + us (< 2**68), as hi * 2**64 + lo */
+        unsigned long long s = (unsigned long long)D.s;
+        unsigned long long lo = (s & 0xffffffffULL) * 1000000ULL + (unsigned long long)D.us;
+        unsigned long long mid = (s >> 32) * 1000000ULL;
+        unsigned long long lo2 = lo + (mid << 32);
+        unsigned long long hi = (mid >> 32) + (lo2 < lo);
+        lo = lo2;
+        unsigned long long R = 0;
+        long nbits = 128 + (k > 0 ? k : 0);
+        for(long i = 0; i < nbits; i++) {
+            unsigned long long bit = 0;
+            if(i < 64)
+                bit = (hi >> (63 - i)) & 1;
+            else if(i < 128)
+                bit = (lo >> (127 - i)) & 1;
+            R = (R << 1) | bit;
+            timedelta_mul_check(Q);
+            Q = timedelta_mag_add(Q, Q);
+            if(R >= m) {
+                R -= m;
+                timedelta_mag one = {0, 1};
+                Q = timedelta_mag_add(Q, one);
+            }
+        }
+        if(k >= 0) {
+            if(2 * R > m) { /* m is odd, so there are no ties */
+                timedelta_mag one = {0, 1};
+                Q = timedelta_mag_add(Q, one);
+            }
+        } else {
+            bool half = false, sticky = R != 0;
+            Q = timedelta_mag_halve(Q, -(long)k, &half, &sticky);
+            Q = timedelta_mag_round(Q, half, sticky);
+        }
+        timedelta_mul_check(Q);
+    }
+    timedelta *result = timedelta_from_magnitude(Q, neg && (Q.s || Q.us));
     timedelta_check_days(result->days);
     return result;
 }

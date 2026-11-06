@@ -577,6 +577,77 @@ template<class A> typename __sumprod_type<A>::type sumprod(pyiter<A> *p, pyiter<
     return sum;
 }
 
+/* as cpython: float products are accumulated in triple-length precision
+   (error-free transformations, see "Accurate Sum and Dot Product" by Ogita,
+   Rump and Oishi), falling back to plain float arithmetic for the rest once
+   the total is no longer finite. this needs -ffp-contract=off */
+struct __sumprod_dl { __ss_float hi, lo; };
+struct __sumprod_tl { __ss_float hi, lo, tiny; };
+
+inline __sumprod_dl __sumprod_dl_sum(__ss_float a, __ss_float b) {
+    __ss_float x = a + b;
+    __ss_float z = x - a;
+    return {x, (a - (x - z)) + (b - z)};
+}
+
+inline __sumprod_tl __sumprod_tl_fma(__ss_float x, __ss_float y, __sumprod_tl total) {
+    __ss_float p = x * y;
+    __sumprod_dl pr = {p, std::fma(x, y, -p)};
+    __sumprod_dl sm = __sumprod_dl_sum(total.hi, pr.hi);
+    __sumprod_dl r1 = __sumprod_dl_sum(total.lo, pr.lo);
+    __sumprod_dl r2 = __sumprod_dl_sum(r1.hi, sm.lo);
+    return {sm.hi, r2.hi, total.tiny + r1.lo + r2.lo};
+}
+
+inline __ss_float __sumprod_tl_to_d(__sumprod_tl total) {
+    __sumprod_dl last = __sumprod_dl_sum(total.lo, total.hi);
+    return total.tiny + last.lo + last.hi;
+}
+
+inline __ss_float sumprod(pyiter<__ss_float> *p, pyiter<__ss_float> *q) {
+    __iter<__ss_float> *p_iter = p->__iter__();
+    __iter<__ss_float> *q_iter = q->__iter__();
+
+    __ss_float a = 0.0, b = 0.0, rest = 0.0;
+    __sumprod_tl total = {0.0, 0.0, 0.0};
+    bool flt_path = true;
+    size_t n_exhausted;
+
+    for(;;) {
+        n_exhausted = 0;
+
+        try  {
+            a = p_iter->__next__();
+        } catch (StopIteration *) {
+            n_exhausted += 1;
+        }
+        try  {
+            b = q_iter->__next__();
+        } catch (StopIteration *) {
+            n_exhausted += 1;
+        }
+        if(n_exhausted == 2)
+            break;
+        else if (n_exhausted > 0)
+            throw new ValueError(new str("Inputs are not the same length"));
+
+        if(flt_path) {
+            __sumprod_tl next = __sumprod_tl_fma(a, b, total);
+            if(std::isfinite(next.hi)) {
+                total = next;
+                continue;
+            }
+            rest = __sumprod_tl_to_d(total);
+            flt_path = false;
+        }
+        rest += a * b;
+    }
+
+    if(flt_path)
+        return __sumprod_tl_to_d(total);
+    return rest;
+}
+
 inline __ss_bool isclose(__ss_float a, __ss_float b, __ss_float rel_tol=1e-09, __ss_float abs_tol=0.0) {
     if (rel_tol < 0.0 || abs_tol < 0.0)
         throw new ValueError(new str("tolerances must be non-negative"));

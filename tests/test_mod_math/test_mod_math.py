@@ -660,6 +660,16 @@ def test_sumprod():
     assert math.sumprod((1,2), iter([3,4])) == 11
     assert math.sumprod([1j, 2j], [3j, 1+1j]) == -5+2j
 
+    # floats are accumulated in extended precision, as cpython (1024-D2)
+    xs = [1e20, 1.0, -1e20]
+    ys = [1.0] * 3
+    assert math.sumprod(xs, ys) == 1.0
+    assert math.sumprod([0.1] * 10, [1.0] * 10) == 1.0
+    assert math.sumprod([0.1, 0.2, 0.3], [3.0, -7.0, 11.0]) == 2.1999999999999997  # correctly rounded
+    assert math.sumprod([1e308, 1e308, 1.0], [10.0, 1.0, 1.0]) == float('inf')
+    assert math.isnan(math.sumprod([float('nan'), 1.0], [1.0, 2.0]))
+    assert str(math.sumprod([-0.0], [1.0])) == '0.0'
+
     # bools (1025-C4): products are ints, so the result is an int
     assert math.sumprod([True, True], [True, False]) == 1
     assert math.sumprod([True, True, True], [True, False, True]) == 2
