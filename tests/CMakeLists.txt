@@ -50,6 +50,47 @@ list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake")
 include(utils)
 include(fn_add_shedskin_product)
 
+# -----------------------------------------------------------------------------
+# dependency mgmt solutions
+
+if(ENABLE_SPM)
+    set(SPM_DEPS ${CMAKE_BINARY_DIR}/deps)
+    set(SPM_LIB_DIRS ${SPM_DEPS}/lib)
+    set(SPM_INCLUDE_DIRS ${SPM_DEPS}/include)
+    set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
+elseif(ENABLE_FETCH_CONTENT)
+    include(shedskin_deps)
+    set(FETCHCONTENT_INCLUDE_DIR ${SHEDSKIN_DEP_INCLUDE_DIR})
+    set(FETCHCONTENT_PCRE2_INCLUDE_DIR ${SHEDSKIN_PCRE2_INCLUDE_DIR})
+    set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR})
+elseif(ENABLE_LOCAL_DEPS)
+    if(NOT DEFINED LOCAL_DEPS_DIR)
+        message(FATAL_ERROR "LOCAL_DEPS_DIR must be defined when ENABLE_LOCAL_DEPS is ON")
+    endif()
+    message(STATUS "LOCAL_DEPS_DIR: ${LOCAL_DEPS_DIR}")
+    set(LOCAL_DEPS_LIB_DIRS ${LOCAL_DEPS_DIR}/lib)
+    set(LOCAL_DEPS_INCLUDE_DIRS ${LOCAL_DEPS_DIR}/include)
+    set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS})
+else()
+    # adding -lutil for every use of os is not a good idea should only be temporary
+    # better to just add it on demand if the two relevant pty functions are used
+    set(local_prefix "/usr/local")
+    if(CMAKE_HOST_APPLE) # i.e if is_macos check if homebrew is used aand if so get prefix
+        execute_process(
+            COMMAND brew --prefix
+            OUTPUT_VARIABLE homebrew_prefix
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        If(DEFINED homebrew_prefix)
+            set(local_prefix ${homebrew_prefix})
+        endif()
+    endif()
+
+    set(local_include "${local_prefix}/include")
+    set(LIB_INCLUDES ${local_include})
+endif()
+
+
 set(shedskin_lib_modules
     array
     base64
@@ -113,6 +154,13 @@ endforeach()
 
 add_library(shedskin_library_exe ${shedskin_library_sources})
 
+target_include_directories(shedskin_library_exe PRIVATE
+    ${SHEDSKIN_LIB}
+    ${CMAKE_SOURCE_DIR}
+    ${PROJECT_EXE_DIR}
+    ${LIB_INCLUDES}
+)
+
 target_compile_options(shedskin_library_exe PRIVATE
     ${SHEDSKIN_COMPILE_OPTIONS}
     ${SHEDSKIN_OPT_FLAGS}
@@ -153,7 +201,12 @@ add_library(shedskin_library_ext ${shedskin_library_sources})
 
 target_include_directories(shedskin_library_ext PRIVATE
     ${Python_INCLUDE_DIRS}
+    ${SHEDSKIN_LIB}
+    ${CMAKE_SOURCE_DIR}
+    ${PROJECT_EXE_DIR}
+    ${LIB_INCLUDES}
 )
+
 target_compile_options(shedskin_library_ext PRIVATE
     ${SHEDSKIN_COMPILE_OPTIONS}
     # common
@@ -200,28 +253,6 @@ target_compile_definitions(shedskin_library_ext PRIVATE
     $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
     $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
 )
-
-# -----------------------------------------------------------------------------
-# dependency mgmt solutions
-
-if(ENABLE_SPM)
-    set(SPM_DEPS ${CMAKE_BINARY_DIR}/deps)
-    set(SPM_LIB_DIRS ${SPM_DEPS}/lib)
-    set(SPM_INCLUDE_DIRS ${SPM_DEPS}/include)
-
-elseif(ENABLE_FETCH_CONTENT)
-    include(shedskin_deps)
-    set(FETCHCONTENT_INCLUDE_DIR ${SHEDSKIN_DEP_INCLUDE_DIR})
-    set(FETCHCONTENT_PCRE2_INCLUDE_DIR ${SHEDSKIN_PCRE2_INCLUDE_DIR})
-
-elseif(ENABLE_LOCAL_DEPS)
-    if(NOT DEFINED LOCAL_DEPS_DIR)
-        message(FATAL_ERROR "LOCAL_DEPS_DIR must be defined when ENABLE_LOCAL_DEPS is ON")
-    endif()
-    message(STATUS "LOCAL_DEPS_DIR: ${LOCAL_DEPS_DIR}")
-    set(LOCAL_DEPS_LIB_DIRS ${LOCAL_DEPS_DIR}/lib)
-    set(LOCAL_DEPS_INCLUDE_DIRS ${LOCAL_DEPS_DIR}/include)
-endif()
 
 # -----------------------------------------------------------------------
 # any 'test_*' folders are automatically treated as tests
