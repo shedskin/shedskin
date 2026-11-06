@@ -1225,6 +1225,8 @@ __exception = PermissionError('')
 __exception = ProcessLookupError('')
 __exception = TimeoutError('')
 __exception2 = SystemExit('')
+# so user subclasses inherit StopIteration.value instead of redeclaring it
+__exception = StopIteration('')
 # raised by the runtime (codecs, text files): make sure their attributes are typed
 __exception3 = UnicodeDecodeError('', b'', 0, 0, '')
 __exception4 = UnicodeEncodeError('', '', 0, 0, '')

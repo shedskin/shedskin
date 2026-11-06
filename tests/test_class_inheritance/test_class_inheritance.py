@@ -229,6 +229,21 @@ def test_virtual_cpp_keyword_formals():
     assert res == [('b', 5), ('a', 6)]
 
 
+class StopIterSub(StopIteration):
+    pass
+
+
+def test_builtin_attribute_not_shadowed():
+    # StopIteration itself is not instantiated here, so its 'value'
+    # attribute must not be redeclared in the subclass (1106-B8)
+    ok = False
+    try:
+        raise StopIterSub('ss')
+    except StopIterSub as e:
+        ok = e.value == 'ss'
+    assert ok
+
+
 def test_all():
     test_inheritance1()
     test_inheritance2()
@@ -239,6 +254,7 @@ def test_all():
     test_virtual_case()
     test_redundant_object_base()
     test_virtual_cpp_keyword_formals()
+    test_builtin_attribute_not_shadowed()
 
 
 if __name__ == '__main__':
