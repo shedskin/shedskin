@@ -188,6 +188,53 @@ def test_precision():
     # non-integer exponents still use polar form
     assert abs((1j) ** 0.5 - (0.7071067811865476 + 0.7071067811865475j)) < 1e-15
 
+    # overflow raises, for both the integer and the polar path
+    for base, exp in [(3 + 4j, 1000 + 0j), (1e200 + 0j, 2 + 0j), (3 + 4j, 1000.5 + 0j),
+                      (2 + 0j, 2000 + 0j), (1e154 + 1e154j, 2 + 0j),
+                      (1e-200 + 0j, -2.5 + 0j), (complex('inf'), 2.5 + 0j)]:
+        try:
+            base ** exp
+            assert False
+        except OverflowError as e:
+            assert str(e) == 'complex exponentiation'
+    try:
+        (1e200 + 0j) ** 2
+        assert False
+    except OverflowError:
+        pass
+    try:
+        (3 + 4j) ** 1000.5
+        assert False
+    except OverflowError:
+        pass
+    try:
+        10 ** (400 + 0j)
+        assert False
+    except OverflowError as e:
+        assert str(e) == 'complex exponentiation'
+    try:
+        pow(3 + 4j, 1000)
+        assert False
+    except OverflowError:
+        pass
+    x = 3 + 4j
+    try:
+        x **= 1000
+        assert False
+    except OverflowError:
+        pass
+    # nan or underflow is not an overflow
+    assert repr(complex('inf') ** 2) == '(nan+nanj)'
+    assert (2 + 0j) ** -2000 == 0
+    assert (1e-300 + 0j) ** 1.5 == 0
+    assert (1e300 + 1e300j) ** 1 == (1e300 + 1e300j)
+    # negative integer exponent of a power that underflows to zero
+    try:
+        (1e-200 + 0j) ** -2
+        assert False
+    except ZeroDivisionError as e:
+        assert str(e) == '0.0 to a negative or complex power'
+
 
 def test_all():
     test_complex()
