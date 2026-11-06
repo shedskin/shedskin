@@ -126,10 +126,12 @@ set(shedskin_lib_modules
     string
     struct
     sys
-    termios
     time
-    tty
 )
+
+if(NOT WIN32)
+    list(APPEND shedskin_lib_modules termios tty)
+endif()
 
 set(shedskin_library_sources)
 foreach(mod ${shedskin_lib_modules})
