@@ -167,8 +167,9 @@ public:
             units.clear();
             return this;
         }
-        /* only the last maxlen elements survive, so don't build the rest */
-        size_t total = len*(size_t)n;
+        /* only the last maxlen elements survive, so don't build the rest.
+           like CPython, a total that doesn't fit raises even with a maxlen */
+        size_t total = __ss_repeat_len(len, n, (size_t)PTRDIFF_MAX);
         size_t start = (maxlen != -1 && total > (size_t)maxlen) ? total-(size_t)maxlen : 0;
         auto orig = units;
         units.clear();

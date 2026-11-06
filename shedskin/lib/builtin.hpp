@@ -129,6 +129,19 @@ static inline __ss_uint __ss_magnitude(__ss_int i) {
     return (i < 0) ? ((__ss_uint)0 - (__ss_uint)i) : (__ss_uint)i;
 }
 
+/* Length of a sequence of len > 0 elements repeated n > 0 times (seq * n).
+ * Unchecked, len*n can wrap and the copy then writes past the allocation.
+ * Like CPython, a result the container cannot hold raises MemoryError; for
+ * str/bytes (too_long given) one exceeding PY_SSIZE_T_MAX raises OverflowError.
+ * This is one check per repetition before allocating, so the allocation path
+ * itself is untouched; the throwing part is out of line. */
+[[noreturn]] void __ss_repeat_error(size_t len, __ss_int n, const char *too_long);
+static inline size_t __ss_repeat_len(size_t len, __ss_int n, size_t max_size, const char *too_long=0) {
+    if ((__ss_uint)n > max_size / len)
+        __ss_repeat_error(len, n, too_long);
+    return len * (size_t)n;
+}
+
 /* |a-b| as __ss_uint, which always fits (unlike a-b itself) */
 static inline __ss_uint __ss_magnitude_diff(__ss_int a, __ss_int b) {
     return (a < b) ? ((__ss_uint)b - (__ss_uint)a) : ((__ss_uint)a - (__ss_uint)b);

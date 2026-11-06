@@ -327,23 +327,25 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
 
 template<class T> array<T> *array<T>::__mul__(__ss_int n) {
     array<T> *a = new array<T>(typecode);
-    if(n<=0) return a;
     size_t len = this->units.size();
-    a->units.resize(len*(size_t)n);
-    for(size_t i=0; i<(size_t)n; i++)
-        std::copy_n(this->units.begin(), len, a->units.begin() + i*len);
+    if(n<=0 || len==0) return a;
+    size_t total = __ss_repeat_len(len, n, a->units.max_size());
+    a->units.resize(total);
+    for(size_t i=0; i<total; i+=len)
+        std::copy_n(this->units.begin(), len, a->units.begin() + i);
     return a;
 }
 
 template<class T> array<T> *array<T>::__imul__(__ss_int n) {
-    if(n<=0) {
+    size_t len = this->units.size();
+    if(n<=0 || len==0) {
         this->units.clear();
         return this;
     }
-    size_t len = this->units.size();
-    this->units.resize(len*(size_t)n);
-    for(size_t i=1; i<(size_t)n; i++)
-        std::copy_n(this->units.begin(), len, this->units.begin() + i*len);
+    size_t total = __ss_repeat_len(len, n, this->units.max_size());
+    this->units.resize(total);
+    for(size_t i=len; i<total; i+=len)
+        std::copy_n(this->units.begin(), len, this->units.begin() + i);
     return this;
 }
 

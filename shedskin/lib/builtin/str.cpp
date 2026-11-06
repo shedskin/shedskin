@@ -762,17 +762,20 @@ str *str::__mul__(__ss_int n) { /* optimize */
     else if (n<=0)
         return __ss_empty_str;
 
-    str *r = new str();
-    size_t ns = (size_t)n;
-    __GC_STR &s = r->unit;
     size_t ulen = this->unit.size();
+    if(ulen == 0)
+        return __ss_empty_str;
+
+    str *r = new str();
+    __GC_STR &s = r->unit;
+    size_t total = __ss_repeat_len(ulen, n, s.max_size(), "repeated string is too long");
 
     if(ulen == 1)
-       r->unit = __GC_STR(ns, unit[0]);
+       s.assign(total, unit[0]);
     else {
-        s.resize(ulen*ns);
+        s.resize(total);
 
-        for(size_t i=0; i<ulen*ns; i+=ulen)
+        for(size_t i=0; i<total; i+=ulen)
             s.replace(i, ulen, unit);
     }
 

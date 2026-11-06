@@ -222,6 +222,11 @@ void __throw_zero_division(const char *msg) {
 void __throw_pow_overflow() {
     throw new OverflowError(new str("(34, 'Numerical result out of range')")); /* as CPython (ERANGE) */
 }
+void __ss_repeat_error(size_t len, __ss_int n, const char *too_long) {
+    if (too_long && (__ss_uint)n > (size_t)PTRDIFF_MAX / len)
+        throw new OverflowError(new str(too_long));
+    throw new MemoryError();
+}
 
 /* BaseException */
 

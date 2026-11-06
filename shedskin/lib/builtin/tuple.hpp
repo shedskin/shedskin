@@ -217,14 +217,15 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__iadd__(tuple2<T,T> *b) {
 template<class T> tuple2<T,T> *tuple2<T, T>::__mul__(__ss_int b) {
     tuple2<T,T> *c = new tuple2<T,T>();
     if(b<=0) return c;
-    __ss_int hop = this->__len__(); /* XXX merge with list */
-    if(hop==1)
-        c->units.insert(c->units.begin(), b, this->units[0]);
+    size_t len = this->units.size(); /* XXX merge with list */
+    if(len==0) return c;
+    size_t total = __ss_repeat_len(len, b, c->units.max_size());
+    if(len==1)
+        c->units.assign(total, this->units[0]);
     else {
-        c->units.resize(b * hop);
-        for(__ss_int i=0; i<b; i++)
-            for(__ss_int j=0; j<hop; j++)
-                c->units.at(i*hop+j) = this->units[j];
+        c->units.resize(total);
+        for(size_t i=0; i<total; i+=len)
+            std::copy(this->units.begin(), this->units.end(), c->units.begin()+i);
     }
     return c;
 }
