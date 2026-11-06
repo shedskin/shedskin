@@ -38,6 +38,7 @@ class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_compl
 
 class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_generatorexit, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_filenotfounderror, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror, *cl_unicodeerror, *cl_unicodedecodeerror, *cl_unicodeencodeerror, *cl_unicodetranslateerror;
 class_ *cl_recursionerror, *cl_unboundlocalerror, *cl_referenceerror, *cl_buffererror;
+class_ *cl_attributeerror, *cl_importerror, *cl_modulenotfounderror, *cl_stopasynciteration, *cl_indentationerror, *cl_taberror;
 class_ *cl_warning, *cl_byteswarning, *cl_deprecationwarning, *cl_encodingwarning, *cl_futurewarning, *cl_importwarning, *cl_pendingdeprecationwarning, *cl_resourcewarning, *cl_runtimewarning, *cl_syntaxwarning, *cl_unicodewarning, *cl_userwarning;
 class_ *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror;
 
@@ -262,6 +263,12 @@ void __init() {
     cl_unboundlocalerror = new class_("UnboundLocalError");
     cl_referenceerror = new class_("ReferenceError");
     cl_buffererror = new class_("BufferError");
+    cl_attributeerror = new class_("AttributeError");
+    cl_importerror = new class_("ImportError");
+    cl_modulenotfounderror = new class_("ModuleNotFoundError");
+    cl_stopasynciteration = new class_("StopAsyncIteration");
+    cl_indentationerror = new class_("IndentationError");
+    cl_taberror = new class_("TabError");
     cl_warning = new class_("Warning");
     cl_byteswarning = new class_("BytesWarning");
     cl_deprecationwarning = new class_("DeprecationWarning");

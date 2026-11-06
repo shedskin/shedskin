@@ -1109,9 +1109,23 @@ class SystemExit(BaseException):
 class Exception(BaseException): pass
 
 class AssertionError(Exception): pass
+
+class AttributeError(Exception):
+    def __init__(self, arg=None, name=None):
+        self.name = ''
+
 class BufferError(Exception): pass
 class EOFError(Exception): pass
 class MemoryError(Exception): pass
+
+class ImportError(Exception):
+    def __init__(self, arg=None, name=None, path=None):
+        self.msg = ''
+        self.name = ''
+        self.path = ''
+
+class ModuleNotFoundError(ImportError): pass
+
 class ReferenceError(Exception): pass
 
 class NameError(Exception):
@@ -1121,11 +1135,15 @@ class NameError(Exception):
 class UnboundLocalError(NameError): pass
 
 class SyntaxError(Exception): pass
+class IndentationError(SyntaxError): pass
+class TabError(IndentationError): pass
 class SystemError(Exception): pass
 
 class StopIteration(Exception):
     def __init__(self, arg=None):
         self.value = ''
+
+class StopAsyncIteration(Exception): pass
 
 class TypeError(Exception): pass
 class ValueError(Exception): pass
