@@ -926,6 +926,37 @@ def test_ioerror_alias():
         assert repr(e) == 'OSError()'
 
 
+class StopIterationSub(StopIteration):
+    pass
+
+
+class StopIterationSubInit(StopIteration):
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+def test_stopiteration_subclass_value():
+    # user subclasses keep .value (1106-B8)
+    ok = False
+    try:
+        raise StopIterationSub('ss')
+    except StopIterationSub as e:
+        ok = e.value == 'ss' and str(e) == 'ss'
+    assert ok
+    ok = False
+    try:
+        raise StopIterationSub()
+    except StopIterationSub as e2:
+        ok = e2.value is None
+    assert ok
+    ok = False
+    try:
+        raise StopIterationSubInit('ii')
+    except StopIteration as e3:
+        ok = e3.value == 'ii' and e3.args == ('ii',)
+    assert ok
+
+
 def test_all():
     test_repr_escapes_argument()
     test_oserror_str_repr_filename()
@@ -956,6 +987,7 @@ def test_all():
     test_raise_class()
     test_super_init_no_args()
     test_ioerror_alias()
+    test_stopiteration_subclass_value()
 
 
 if __name__ == '__main__':

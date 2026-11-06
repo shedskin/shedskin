@@ -145,6 +145,12 @@ class StopIteration : public Exception {
 public:
     str *value; /* only for explicit raises; generator return values are not tracked */
     StopIteration(str *msg=0) : Exception(msg) { this->__class__ = cl_stopiteration; this->value = msg; }
+    /* also used by user subclasses (and super().__init__(msg)) */
+    using BaseException::__init__;
+    void __init__(str *msg) {
+        BaseException::__init__(msg);
+        this->value = msg;
+    }
 #ifdef __SS_BIND
    virtual PyObject *__to_py__() { return PyExc_StopIteration; }
 #endif
