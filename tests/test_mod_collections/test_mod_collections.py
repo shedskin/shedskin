@@ -1127,6 +1127,17 @@ def test_counter_empty_accumulator():
     assert len(t) == 0
 
 
+def test_counter_none():
+    # Counter(None) is Counter()
+    c = Counter(None)
+    c['a'] += 1
+    c['a'] += 1
+    assert sorted(c.items()) == [('a', 2)]
+    d = Counter(None)
+    d.update('abb')
+    assert sorted(d.items()) == [('a', 1), ('b', 2)]
+
+
 def test_counter_delitem():
     c = Counter('abc')
     del c['z']  # missing key: no KeyError
@@ -1233,6 +1244,7 @@ def test_all():
     test_counter_inplace_mapping()
     test_counter_empty_accumulator()
     test_deque_user_eq()
+    test_counter_none()
 
 
 if __name__ == '__main__':
