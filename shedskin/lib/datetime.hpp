@@ -41,6 +41,7 @@ public:
 
     __IsoCalendarDate(__ss_int year, __ss_int week, __ss_int weekday);
     str *__repr__();
+    __SS_STRUCTSEQ_COPY(__IsoCalendarDate)
 };
 
 //class date

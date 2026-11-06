@@ -1,6 +1,7 @@
 # os functionality that is #ifndef WIN32 in lib/os (see CMakeLists.txt);
 # portable os tests live in test_mod_os
 
+import copy
 import os
 import stat
 import sys
@@ -128,6 +129,13 @@ def test_uname():
     assert [x for x in u] == [u.sysname, u.nodename, u.release, u.version, u.machine]
     assert u[:2] == (u.sysname, u.nodename)
     assert u.sysname in u
+
+    # copies keep the attributes (1106-A5)
+    for uc in (copy.copy(u), copy.deepcopy(u)):
+        assert uc is not u and uc == u
+        assert uc.sysname == u.sysname and uc.machine == u.machine
+        assert repr(uc) == repr(u)
+
     if sys.platform.startswith('linux'):
         assert u.sysname == 'Linux'
 
@@ -177,6 +185,12 @@ def test_statvfs():
     vf2 = os.fstatvfs(fd)
     os.close(fd)
     assert vf2.f_bsize == vf.f_bsize and len(vf2) == 10
+
+    # copies keep the attributes (1106-A5)
+    for vc in (copy.copy(vf), copy.deepcopy(vf)):
+        assert vc is not vf and vc == vf
+        assert vc.f_bsize == vf.f_bsize and vc.f_namemax == vf.f_namemax
+        assert repr(vc) == repr(vf)
 
 
 def test_popen_spawn():

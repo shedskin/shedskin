@@ -1,4 +1,8 @@
 import copy
+import os
+import time
+import datetime
+import sys
 from collections import deque
 
 class Person:
@@ -215,6 +219,42 @@ def test_copy_keyword():
     assert d == l and d[0] is not l[0]
 
 
+def test_copy_struct_seq():
+    # tuple subclasses with the items also as attributes (1106-A5)
+    ts = os.terminal_size((80, 24))
+    for tc in (copy.copy(ts), copy.deepcopy(ts)):
+        assert tc is not ts
+        assert (tc.columns, tc.lines) == (80, 24)
+        assert tc == ts
+        assert repr(tc) == 'os.terminal_size(columns=80, lines=24)'
+
+    st = time.gmtime(0)
+    for stc in (copy.copy(st), copy.deepcopy(st)):
+        assert (stc.tm_year, stc.tm_mon, stc.tm_mday, stc.tm_yday) == (1970, 1, 1, 1)
+        assert stc.tm_zone == st.tm_zone and stc.tm_zone in ('GMT', 'UTC') and stc.tm_gmtoff == 0
+        assert stc == st and repr(stc) == repr(st)
+    l = copy.deepcopy([time.gmtime(0), time.gmtime(86400)])
+    assert l[1].tm_mday == 2 and l[0].tm_zone == st.tm_zone
+
+    s = os.stat('.')
+    for sc in (copy.copy(s), copy.deepcopy(s)):
+        assert sc == s
+        assert sc.st_mode == s.st_mode and sc.st_ino == s.st_ino and sc.st_size == s.st_size
+        assert sc.st_mtime == s.st_mtime and sc.st_mtime_ns == s.st_mtime_ns
+
+    # (os.uname/os.statvfs are posix-only: see test_mod_os_posix)
+    t = os.times()
+    assert copy.copy(t).user == t.user and copy.deepcopy(t).elapsed == t.elapsed
+
+    ii = sys.int_info
+    assert copy.copy(ii).bits_per_digit == ii.bits_per_digit
+    assert copy.deepcopy(ii) == ii
+
+    # (CPython: plain tuple copies, so only check the items)
+    ic = datetime.date(2024, 1, 1).isocalendar()
+    assert copy.copy(ic) == (2024, 1, 1) and copy.deepcopy(ic) == (2024, 1, 1)
+
+
 def test_all():
     test_copy1()
     test_copy2()
@@ -228,6 +268,7 @@ def test_all():
     test_copy_obj_class()
     test_copy_attr_names()
     test_copy_keyword()
+    test_copy_struct_seq()
     test_error()
 
 if __name__ == '__main__':
