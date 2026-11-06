@@ -622,7 +622,13 @@ static inline __ss_bool __fd_seekable(FILE *f) {
     if (!f)
         return False;
 #ifdef WIN32
-    return ___bool(_lseeki64(_fileno(f), 0, SEEK_CUR) != -1);
+    /* the windows CRT's lseek() does not fail on a pipe or a character
+       device (it just returns 0), so only a regular file is seekable */
+    int fd = _fileno(f);
+    struct _stat64 st;
+    if (_fstat64(fd, &st) != 0 || (st.st_mode & _S_IFMT) != _S_IFREG)
+        return False;
+    return ___bool(_lseeki64(fd, 0, SEEK_CUR) != -1);
 #else
     return ___bool(lseek(fileno(f), 0, SEEK_CUR) != -1);
 #endif
