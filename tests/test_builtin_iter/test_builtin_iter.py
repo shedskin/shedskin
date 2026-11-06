@@ -475,6 +475,31 @@ def test_iter_returned_elem_type():
     assert list(IterUsesFloats()) == [1.5, 3.0, 4.5]
 
 
+class InIterEqOnly:  # __eq__ only reachable via 'in' on an iterator
+    def __init__(self, v):
+        self.v = v
+    def __eq__(self, o):
+        return self.v == o.v
+
+class InValuesEqOnly:
+    def __init__(self, v):
+        self.v = v
+    def __eq__(self, o):
+        return self.v == o.v
+
+def gen_in_iter_eq_only():
+    yield InIterEqOnly(1)
+    yield InIterEqOnly(2)
+
+def test_in_iter_user_eq():
+    assert InIterEqOnly(1) in iter([InIterEqOnly(1)])
+    assert InIterEqOnly(2) in gen_in_iter_eq_only()
+    assert InIterEqOnly(3) not in gen_in_iter_eq_only()
+    d = {1: InValuesEqOnly(1), 2: InValuesEqOnly(2)}
+    assert InValuesEqOnly(2) in d.values()
+    assert InValuesEqOnly(3) not in d.values()
+
+
 def test_all():
     test_iter1()
     test_iter2()
@@ -489,6 +514,7 @@ def test_all():
     test_exhausted_generator()
     test_generator_after_exception()
     test_iter_returned_elem_type()
+    test_in_iter_user_eq()
 
 
 if __name__ == '__main__':

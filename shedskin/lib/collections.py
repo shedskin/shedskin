@@ -23,14 +23,16 @@ class deque(pyiter):
         return self.unit
 
     def remove(self, e):
-        pass
+        e == self.unit
     def clear(self):
         pass
 
     def count(self, value):
+        value == self.unit
         return 1
 
     def index(self, value, start=None, stop=None):
+        value == self.unit
         return 1
 
     def reverse(self):
@@ -76,7 +78,7 @@ class deque(pyiter):
         return self
 
     def __contains__(self, e):
-        return True
+        return self.unit == e
 
     def __len__(self):
         return 1

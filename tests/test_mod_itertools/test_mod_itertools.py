@@ -566,6 +566,25 @@ def test_index_arrays_edge_cases():
     assert t == 12000
 
 
+class GroupEqOnly:  # __eq__ only reachable via groupby
+    def __init__(self, v):
+        self.v = v
+    def __eq__(self, o):
+        return self.v == o.v
+
+class GroupKeyEqOnly:
+    def __init__(self, v):
+        self.v = v
+    def __eq__(self, o):
+        return self.v == o.v
+
+def test_groupby_user_eq():
+    l = [GroupEqOnly(1), GroupEqOnly(1), GroupEqOnly(2)]
+    assert [len(list(g)) for k, g in itertools.groupby(l)] == [2, 1]
+    groups = itertools.groupby([1, 2, 3, 5], lambda x: GroupKeyEqOnly(x // 2))
+    assert [len(list(g)) for k, g in groups] == [1, 2, 1]
+
+
 def test_all():
     test_index_arrays_edge_cases()
     test_count()
@@ -578,6 +597,7 @@ def test_all():
     test_takewhile()
     test_groupby()
     test_groupby_stale_groups()
+    test_groupby_user_eq()
     test_islice()
     test_permutations()
     test_combinations()
