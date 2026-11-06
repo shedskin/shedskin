@@ -423,15 +423,45 @@ def find_module(
 
 
 # XXX ugly: find ancestor class that implements function 'ident'
-def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
+def lookup_implementor_class(cl: Class, ident: str) -> Optional[Class]:
     """Find the class that implements a given function"""
     while cl:
         if ident in cl.funcs and not cl.funcs[ident].inherited:
-            return cl.ident
+            return cl
         if cl.bases:
             cl = cl.bases[0]
         else:
             break
+    return None
+
+
+def lookup_implementor(cl: Class, ident: str) -> Optional[str]:
+    """Find the name of the class that implements a given function"""
+    implementor = lookup_implementor_class(cl, ident)
+    return implementor.ident if implementor else None
+
+
+def lookup_method_impl(cl: Class, ident: str) -> Optional["Function"]:
+    """Find the original function that implements a method for a class
+    (methods are copied to subclasses, see graph.py)"""
+    func = cl.funcs.get(ident)
+    if func and func.inherited_from:
+        return func.inherited_from
+    return func
+
+
+def lookup_ancestor_method(
+    cl: Class, ident: str, orig: str
+) -> Optional["Function"]:
+    """Find the target of a non-virtual call 'A.f(obj, ..)' for an obj of
+    class cl: ident is 'f' + implementor + '__', which names the copy of
+    the implementing method in subclasses (see graph.py), or the method
+    itself in the implementor"""
+    if ident in cl.funcs:
+        return cl.funcs[ident]
+    func = cl.funcs.get(orig)
+    if func and not func.inherited and ident == orig + cl.ident + "__":
+        return func
     return None
 
 

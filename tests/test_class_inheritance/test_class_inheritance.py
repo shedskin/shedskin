@@ -244,6 +244,75 @@ def test_builtin_attribute_not_shadowed():
     assert ok
 
 
+class CallA:  # 818: calling methods via the class, as in 'A.f(obj, ..)'
+    def __init__(self):
+        self.n = 1
+
+    def f(self, y=10):
+        return self.n + y
+
+    def g(self):
+        return CallA.f(self, 1)  # non-virtual, also in subclasses
+
+    def h(self, other):
+        return CallA.f(other, self.n)
+
+
+class CallB(CallA):
+    def f(self, y=20):
+        return 100 + CallA.f(self, y)
+
+
+class CallC(CallB):
+    def __init__(self):
+        self.n = 5
+
+
+class CallD(CallC):
+    def f(self, y=30):
+        return 1000 + CallB.f(self, y)
+
+
+class CallE:
+    def __init__(self):
+        self.n = 7
+
+    def f(self):
+        return self.n
+
+
+class CallF(CallE):
+    def f(self):
+        return 'f'
+
+
+class CallG:
+    def call(self, a):
+        return CallA.f(a, 2)
+
+
+def test_class_call():
+    a, b, c, d = CallA(), CallB(), CallC(), CallD()
+    assert CallA.f(a) == 11
+    assert CallA.f(a, 2) == 3
+    assert CallA.f(a, y=3) == 4
+    assert CallA.f(b) == 11
+    assert CallB.f(b, 1) == 102
+    assert CallC.f(c, 3) == 108  # inherited from CallB
+    assert CallD.f(d) == 1135
+    assert CallG().call(d) == 7
+    assert [o.g() for o in (a, b, c, d)] == [2, 2, 6, 6]
+    assert d.h(a) == 6
+
+    objs = [a, b, c, d]
+    assert [CallA.f(o, 2) for o in objs] == [3, 3, 7, 7]
+    assert [CallA.f(o) for o in objs] == [11, 11, 15, 15]
+
+    e, f = CallE(), CallF()
+    assert CallE.f(f) + 1 == 8  # different return types
+    assert CallF.f(f) + 'g' == 'fg'
+
+
 def test_all():
     test_inheritance1()
     test_inheritance2()
@@ -255,6 +324,7 @@ def test_all():
     test_redundant_object_base()
     test_virtual_cpp_keyword_formals()
     test_builtin_attribute_not_shadowed()
+    test_class_call()
 
 
 if __name__ == '__main__':
