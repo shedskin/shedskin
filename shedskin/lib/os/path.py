@@ -76,7 +76,7 @@ def isabs(s):
 def splitdrive(p):
     return ('', '')
 
-def splitroot(path):
+def splitroot(p):
     return ('', '', '')
 
 def basename(p):
@@ -91,7 +91,7 @@ def commonprefix(m):
 def abspath(path):
     return ''
 
-def realpath(path, strict=False):
+def realpath(filename, strict=False):
     return ''
 
 def normpath(path):

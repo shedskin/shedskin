@@ -680,10 +680,20 @@ def test_os_path_realpath_relative():
     os.system("rm -rf " + base)
 
 
+def test_os_path_keyword_names():
+    # keyword names must match CPython (posixpath)
+    assert splitroot(p="/a/b") == ("", "/", "a/b")
+    assert os.path.splitroot(p="a") == ("", "", "a")
+    if os.name != "nt":  # ntpath.realpath calls it 'path'
+        assert realpath(filename="/") == "/"
+        assert os.path.realpath(filename="/", strict=False) == "/"
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
     test_os_path_splitroot()
+    test_os_path_keyword_names()
     test_os_path_isjunction()
     test_os_path_samefile()
     test_os_path_ismount()
