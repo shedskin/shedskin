@@ -415,9 +415,16 @@ function(add_shedskin_product)
             file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${SHEDSKIN_EXTRA_LIB_DIR} DESTINATION ${PROJECT_EXE_DIR})
         endif()
 
+        set(USE_SHEDSKIN_LIB_EXE OFF)
+        set(sys_module_list_exe ${sys_module_list})
+        if (TARGET shedskin_library_exe)
+            set(USE_SHEDSKIN_LIB_EXE ON)
+            set(sys_module_list_exe "")
+        endif()
+
         add_executable(${EXE}
             ${translated_files}
-            ${sys_module_list}
+            ${sys_module_list_exe}
         )
 
         # for testing only genexpr complex cases
@@ -485,6 +492,7 @@ function(add_shedskin_product)
         )
 
         target_link_libraries(${EXE} PRIVATE
+            $<$<BOOL:${USE_SHEDSKIN_LIB_EXE}>:shedskin_library_exe>
             ${LIB_DEPS}
         )
 
@@ -562,9 +570,16 @@ function(add_shedskin_product)
             file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${SHEDSKIN_EXTRA_LIB_DIR} DESTINATION ${PROJECT_EXT_DIR})
         endif()
 
+        set(USE_SHEDSKIN_LIB_EXT OFF)
+        set(sys_module_list_ext ${sys_module_list})
+        if (TARGET shedskin_library_ext)
+            set(USE_SHEDSKIN_LIB_EXT ON)
+            set(sys_module_list_ext "")
+        endif()
+
         add_library(${EXT} MODULE
             ${translated_files}
-            ${sys_module_list}
+            ${sys_module_list_ext}
         )
 
         set_target_properties(${EXT} PROPERTIES
@@ -646,6 +661,7 @@ function(add_shedskin_product)
         )
 
         target_link_libraries(${EXT} PRIVATE
+            $<$<BOOL:${USE_SHEDSKIN_LIB_EXT}>:shedskin_library_ext>
             ${LIB_DEPS}
             $<$<BOOL:${WIN32}>:${Python_LIBRARIES}>
         )
