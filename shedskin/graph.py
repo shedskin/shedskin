@@ -849,7 +849,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         in_cnode = constraint[0]
         if (
             isinstance(in_cnode.thing, python.Variable)
-            and func
+            and isinstance(func, python.Function)
             and in_cnode.thing.parent == func
         ):
             assert False
@@ -3738,7 +3738,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     else:
                         var = infer.default_var(self.gx, node.id, None, mv=getmv())
                 if var:
-                    context.read(getmv(), node)
+                    if isinstance(func, python.Function):
+                        context.read(getmv(), node)
+                    else:
+                        self.add_constraint((infer.inode(self.gx, var), newnode), func)
 
         elif isinstance(node.ctx, ast.Store):
             # Adding vars for ast.Name store are handled elsewhere
