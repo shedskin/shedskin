@@ -214,21 +214,16 @@ __ss_int Random::randrange(__ss_int start, __ss_int stop, __ss_int step) {
     */
     if (step == 1)
         return this->randrange(start, stop);
-    __ss_int width = stop - start;
-    __ss_int n;
-    if (step > 0) {
-        n = __floordiv(width + step - 1, step);
-    }
-    else if (step < 0) {
-        n = __floordiv(width + step + 1, step);
-    }
-    else {
+    if (step == 0)
         throw (new ValueError(const_4));
-    }
-    if (n <= 0) {
+    /* the number of items, and start + step*i below, are computed in
+       unsigned arithmetic, as stop - start (and step*i) may exceed the
+       __ss_int range even though the result itself always fits */
+    __ss_uint n = range_ulen(start, stop, step);
+    if (n == 0)
         throw (new ValueError(__empty_range("randrange", start, stop, __str(step))));
-    }
-    return start + step * (__ss_int)this->_randbelow((uint64_t)n);
+    __ss_uint i = (__ss_uint)this->_randbelow((uint64_t)n);
+    return (__ss_int)((__ss_uint)start + (__ss_uint)step * i);
 }
 
 __ss_float Random::betavariate(__ss_float alpha, __ss_float beta) {
@@ -569,9 +564,11 @@ __ss_int Random::getrandbits(__ss_int k) {
        if 128-bit int mode is ever revived: it's currently unreachable
        (the --int128 flag is commented out in __init__.py, and was
        already documented there as unsupported on Windows), but should
-       that change, k > 62 will cleanly raise here rather than silently
-       truncating. */
-    unsigned acc_bits = sizeof(uint64_t)*8 - 2;
+       that change, k > 63 will cleanly raise here rather than silently
+       truncating. The result must also be non-negative, so at most
+       (bits in __ss_int) - 1 bits: 63 normally, 31 with --int32. */
+    size_t int_bits = sizeof(__ss_int)*8 < sizeof(uint64_t)*8 ? sizeof(__ss_int)*8 : sizeof(uint64_t)*8;
+    size_t acc_bits = int_bits - 1;
     if ((size_t)k > acc_bits) {
         throw (new ValueError(const_9));
     }
@@ -583,7 +580,7 @@ __ss_int Random::getrandbits(__ss_int k) {
        a result whose low (k-53) bits were zero.
 
        A plain uint64_t accumulator is enough here (k is capped above at
-       62), and it keeps this portable to MSVC, which has no __int128. */
+       63), and it keeps this portable to MSVC, which has no __int128. */
     uint64_t acc = 0;
     __ss_int remaining = k;
     int shift = 0;

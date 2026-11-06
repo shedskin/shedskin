@@ -145,6 +145,15 @@ def test_getrandbits():
             break
     assert saw_nonzero_low_bits
 
+    # regression test: k was capped at 62, though 63 bits always fit
+    saw_top_bit = False
+    for i in range(200):
+        b = random.getrandbits(63)
+        assert b >= 0
+        if b >= (1 << 62):
+            saw_top_bit = True
+    assert saw_top_bit
+
 
 def test_randbytes():
     assert len(random.randbytes(4)) == 4
@@ -328,6 +337,22 @@ def test_wide_ranges():
     lo = -(1 << 62) * 2
     hi = (1 << 62) - 1 + (1 << 62)
     assert random.randint(lo, hi) != random.randint(lo, hi)
+
+    # regression test: randrange() with step != 1 computed the item count
+    # in signed arithmetic, which overflowed for widths near the int maximum
+    imax = (1 << 62) - 1 + (1 << 62)
+    for i in range(100):
+        assert random.randrange(0, imax, 3) % 3 == 0
+        assert random.randrange(imax, 0, -3) % 3 == imax % 3
+        assert random.randrange(-imax, 0, 7) % 7 == -imax % 7
+        assert random.randrange(1, imax - 10, 1 << 61) in (1, 1 + (1 << 61), 1 + (2 << 61), 1 + (3 << 61))
+        assert random.randrange(-imax, imax, 5) % 5 == -imax % 5
+        assert random.randrange(imax, -imax, -imax) in (imax, 0)
+    saw_high = False
+    for i in range(100):
+        if random.randrange(0, imax, 3) > (1 << 62):
+            saw_high = True
+    assert saw_high
 
     for i in range(1000):
         assert random.randrange(-5, 5) in range(-5, 5)
