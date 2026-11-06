@@ -607,6 +607,27 @@ void *file::flush() {
     return NULL;
 }
 
+/* readable(), writable() and seekable(), as cpython: from the mode (also
+   'rwb' for a socket), while seekable() asks the os, so it is False for a
+   pipe, socket or terminal. on a closed file only the capabilities the mode
+   has raise ValueError (as cpython's buffered reader/writer: a closed 'r'
+   file is still just not writable) */
+static inline __ss_bool __mode_readable(str *mode) {
+    return ___bool(mode && mode->unit.find_first_of(__gcs("r+")) != std::string::npos);
+}
+static inline __ss_bool __mode_writable(str *mode) {
+    return ___bool(mode && mode->unit.find_first_of(__gcs("wax+")) != std::string::npos);
+}
+static inline __ss_bool __fd_seekable(FILE *f) {
+    if (!f)
+        return False;
+#ifdef WIN32
+    return ___bool(_lseeki64(_fileno(f), 0, SEEK_CUR) != -1);
+#else
+    return ___bool(lseek(fileno(f), 0, SEEK_CUR) != -1);
+#endif
+}
+
 __ss_int file::__ss_fileno() {
     __check_closed();
     if(f)
@@ -622,6 +643,10 @@ __ss_bool file::isatty()
     return ___bool(::isatty((int)__ss_fileno()));
 #endif // WIN32
 }
+
+__ss_bool file::readable() { if (!__mode_readable(mode)) return False; __check_closed(); return True; }
+__ss_bool file::writable() { if (!__mode_writable(mode)) return False; __check_closed(); return True; }
+__ss_bool file::seekable() { __check_closed(); return __fd_seekable(f); }
 
 __ss_int file::truncate(__ss_int size) {
     __check_closed();
@@ -862,6 +887,10 @@ __ss_bool file_binary::isatty()
     return ___bool(::isatty((int)__ss_fileno()));
 #endif // WIN32
 }
+
+__ss_bool file_binary::readable() { if (!__mode_readable(mode)) return False; __check_closed(); return True; }
+__ss_bool file_binary::writable() { if (!__mode_writable(mode)) return False; __check_closed(); return True; }
+__ss_bool file_binary::seekable() { __check_closed(); return __fd_seekable(f); }
 
 __ss_int file_binary::truncate(__ss_int size) {
     __check_closed();

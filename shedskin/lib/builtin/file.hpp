@@ -44,6 +44,9 @@ public:
     virtual void * flush();
     virtual __ss_int  __ss_fileno();
     virtual __ss_bool isatty();
+    virtual __ss_bool readable();
+    virtual __ss_bool writable();
+    virtual __ss_bool seekable();
     virtual str *  read(__ss_int n=-1);
     virtual str *  readline(__ss_int n=-1);
     virtual list<str *> *  readlines(__ss_int size_hint=-1);
@@ -95,6 +98,9 @@ public:
     virtual void * flush();
     virtual __ss_int  __ss_fileno();
     virtual __ss_bool isatty();
+    virtual __ss_bool readable();
+    virtual __ss_bool writable();
+    virtual __ss_bool seekable();
     virtual bytes *  read(__ss_int n=-1);
     virtual bytes *  readline(__ss_int n=-1);
     list<bytes *> *  readlines(__ss_int size_hint=-1);
