@@ -155,7 +155,7 @@ else()
 endif()
 endforeach()
 
-add_library(shedskin_library_exe ${shedskin_library_sources})
+add_library(shedskin_library_exe OBJECT ${shedskin_library_sources})
 
 target_include_directories(shedskin_library_exe PRIVATE
     ${SHEDSKIN_LIB}
@@ -200,7 +200,7 @@ target_compile_definitions(shedskin_library_exe PRIVATE
 )
 
 
-add_library(shedskin_library_ext ${shedskin_library_sources})
+add_library(shedskin_library_ext OBJECT ${shedskin_library_sources})
 
 target_include_directories(shedskin_library_ext PRIVATE
     ${Python_INCLUDE_DIRS}

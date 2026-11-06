@@ -424,6 +424,7 @@ function(add_shedskin_product)
 
         add_executable(${EXE}
             ${translated_files}
+            $<$<BOOL:${USE_SHEDSKIN_LIB_EXE}>:$<TARGET_OBJECTS:shedskin_library_exe>>
             ${sys_module_list_exe}
         )
 
@@ -492,7 +493,6 @@ function(add_shedskin_product)
         )
 
         target_link_libraries(${EXE} PRIVATE
-            $<$<BOOL:${USE_SHEDSKIN_LIB_EXE}>:shedskin_library_exe>
             ${LIB_DEPS}
         )
 
@@ -579,6 +579,7 @@ function(add_shedskin_product)
 
         add_library(${EXT} MODULE
             ${translated_files}
+            $<$<BOOL:${USE_SHEDSKIN_LIB_EXT}>:$<TARGET_OBJECTS:shedskin_library_ext>>
             ${sys_module_list_ext}
         )
 
@@ -661,7 +662,6 @@ function(add_shedskin_product)
         )
 
         target_link_libraries(${EXT} PRIVATE
-            $<$<BOOL:${USE_SHEDSKIN_LIB_EXT}>:shedskin_library_ext>
             ${LIB_DEPS}
             $<$<BOOL:${WIN32}>:${Python_LIBRARIES}>
         )
