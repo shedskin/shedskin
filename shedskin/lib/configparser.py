@@ -162,7 +162,8 @@ class RawConfigParser:
         pass
     def read_file(self, f, source=None):
         pass
-    def get(self, section, option, raw=False, vars=None, fallback=None): # XXX
+    def get(self, section, option, raw=False, vars=None, fallback=__void):
+        # __void: an explicit fallback=None must return None, not raise
         return ''
     def items(self, section, __kw_raw=False, __kw_vars=None):
         return [('', '')]

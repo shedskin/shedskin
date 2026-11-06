@@ -66,7 +66,7 @@ ConfigParser -- responsible for parsing a list of
         constructor and the DEFAULT section.  Additional substitutions may be
         provided using the `vars' argument, which must be a dictionary whose
         contents override any pre-existing defaults.  If the section/option
-        isn't found and `fallback' is given (non-None), it is returned
+        isn't found and `fallback' is given (even as None), it is returned
         instead of raising NoSectionError/NoOptionError.
 
     getint(section, options)
@@ -653,13 +653,24 @@ dict<str *, str *> *RawConfigParser::_unify_values(str *section, dict<str *, str
 }
 
 str *RawConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback) {
+    /* fallback given (possibly None): returned instead of raising */
+    try {
+        return this->get(section, option, raw, vars, __ss_void);
+    } catch (NoSectionError *) {
+        return fallback;
+    } catch (NoOptionError *) {
+        return fallback;
+    }
+}
+
+str *RawConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, __ss_void_struct) {
     /**
     Get an option value for a given section.
 
     If `vars' is provided, it must be a dictionary. The option is looked
     up in `vars' (if provided), `section', and in `DEFAULTSECT' in that
-    order. If the key is not found and `fallback' is given (non-None), it
-    is returned instead of raising NoSectionError/NoOptionError.
+    order. If the key is not found, NoSectionError/NoOptionError is raised
+    (the overload above returns a given `fallback' instead).
 
     Unless `raw' is true, the value is passed through the interpolation
     object's before_get(): a no-op for RawConfigParser's default dummy
@@ -669,20 +680,12 @@ str *RawConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, s
     str *value;
     dict<str *, str *> *d;
 
+    d = this->_unify_values(section, vars);
+    option = this->optionxform(option);
     try {
-        d = this->_unify_values(section, vars);
-        option = this->optionxform(option);
-        try {
-            value = d->__getitem__(option);
-        } catch (KeyError *) {
-            throw ((new NoOptionError(option,section)));
-        }
-    } catch (NoSectionError *) {
-        if (fallback != NULL) return fallback;
-        throw;
-    } catch (NoOptionError *) {
-        if (fallback != NULL) return fallback;
-        throw;
+        value = d->__getitem__(option);
+    } catch (KeyError *) {
+        throw ((new NoOptionError(option,section)));
     }
     if (raw || (value == NULL)) {   /* None: a valueless option (allow_no_value=True) */
         return value;
@@ -1412,7 +1415,7 @@ void ExtendedInterpolation::_interpolate_some(RawConfigParser *parser, str *opti
                 else if (len(path) == 2) {
                     sect = path->__getfast__(0);
                     opt = parser->optionxform(path->__getfast__(1));
-                    v = parser->get(sect, opt, 1, NULL, NULL);
+                    v = parser->get(sect, opt, 1, NULL, __ss_void);
                 }
                 else {
                     throw ((new InterpolationSyntaxError(option, section, __mod6(const_71, 1, rest))));
@@ -1470,7 +1473,7 @@ void *SectionProxy::__init__(RawConfigParser *parser_, str *name_) {
 
 str *RawConfigParser::_get_or_null(str *section, str *option, __ss_int raw, dict<str *, str *> *vars) {
     try {
-        return this->get(section, option, raw, vars, NULL);
+        return this->get(section, option, raw, vars, __ss_void);
     } catch (NoSectionError *) {
         return NULL;
     } catch (NoOptionError *) {
