@@ -642,32 +642,6 @@ inline int __ss_cint_i(__ss_int v) {
 #define ASSERT(x, y)
 #endif
 
-/* with statement */
-
-template<class T> class __With {
-public:
-    __With(T expr) : _expr(expr) {
-        _expr->__enter__();
-    }
-    ~__With() {
-        _expr->__exit__();
-    }
-    operator T() const {
-        return _expr;
-    }
-private:
-    T _expr;
-};
-
-#define WITH(e, n) {           \
-    __With<decltype(e)> __with##n(e); // TODO unique id
-
-#define WITH_VAR(e, v, n) {    \
-    __With<decltype(e)> __with##n(e);      \
-    v = __with##n; /* v is declared by the caller, so it stays bound after the block */
-
-#define END_WITH }
-
 /* and, or, not */
 
 #define __OR(a, b, t) ((___bool(__ ## t = a))?(__ ## t):(b))

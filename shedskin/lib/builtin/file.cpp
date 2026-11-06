@@ -38,10 +38,38 @@ static inline void __check_not_directory(FILE *f, str *file_name) {
 #define FEOF   feof_unlocked
 #endif // HAVE_STDIO_UNLOCKED
 
+/* the msvc crt calls its invalid parameter handler, which by default
+   terminates the process (0xc0000409), when fflush/fwrite/fclose meet a bad file
+   descriptor, e.g. after os.close(f.fileno()). like cpython
+   (_Py_BEGIN_SUPPRESS_IPH), suppress it so these fail with EBADF instead */
+#ifdef _MSC_VER
+static void __ss_file_noop_iph(const wchar_t *, const wchar_t *, const wchar_t *, unsigned int, uintptr_t) {}
+struct __ss_file_suppress_iph {
+    _invalid_parameter_handler old;
+    __ss_file_suppress_iph() { old = _set_thread_local_invalid_parameter_handler(__ss_file_noop_iph); }
+    ~__ss_file_suppress_iph() { _set_thread_local_invalid_parameter_handler(old); }
+};
+static int __ss_fflush(FILE *f) {
+    __ss_file_suppress_iph guard;
+    return fflush(f);
+}
+static size_t __ss_fwrite(const void *buf, size_t size, size_t n, FILE *f) {
+    __ss_file_suppress_iph guard;
+    return fwrite(buf, size, n, f);
+}
+#undef FFLUSH
+#define FFLUSH __ss_fflush
+#undef FWRITE
+#define FWRITE __ss_fwrite
+#else
+struct __ss_file_suppress_iph { __ss_file_suppress_iph() {} };
+#endif
+
 /* flush and close even when flushing fails, as CPython; returns the first
    errno (0 on success), leaving it in errno. this is a free function, as on
    macOS errno expands to (*__error()), which file::__error would shadow */
 static int __ss_fclose(FILE *f) {
+    __ss_file_suppress_iph guard;
     int err = FFLUSH(f) ? errno : 0;
     if(fclose(f) and not err)
         err = errno;

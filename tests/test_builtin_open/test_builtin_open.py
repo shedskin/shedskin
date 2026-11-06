@@ -680,6 +680,61 @@ def test_open_mode_order():
     os.remove('uorder.txt')
 
 
+def _with_close_fails(name: str) -> int:
+    with open(name, 'w') as f:
+        f.write('abc')
+        os.close(f.fileno())  # flush/close in __exit__ fails with EBADF
+        return 1
+    return 2
+
+
+def test_with_exit_raises():
+    # an exception from __exit__ (failing close/flush) can be caught
+    caught = 0
+    try:
+        with open(outputfile, 'w') as f:
+            f.write('abc')
+            os.close(f.fileno())
+    except OSError as e:
+        assert e.errno == 9
+        caught += 1
+    # also after return from inside the block
+    try:
+        _with_close_fails(outputfile)
+    except OSError as e:
+        assert e.errno == 9
+        caught += 1
+    # an exception from __exit__ replaces the one from the body
+    try:
+        with open(outputfile, 'w') as f:
+            f.write('abc')
+            os.close(f.fileno())
+            raise ValueError('body')
+    except ValueError:
+        assert False
+    except OSError as e:
+        assert e.errno == 9
+        caught += 1
+    # body exception still propagates when __exit__ succeeds
+    try:
+        with open(outputfile, 'w') as f:
+            raise ValueError('body')
+    except ValueError as e:
+        assert str(e) == 'body'
+        caught += 1
+    assert f.closed
+    if sys.platform.startswith('linux'):
+        try:
+            with open('/dev/full', 'w') as f:
+                f.write('abc')
+        except OSError as e:
+            assert e.errno == 28
+            caught += 1
+        assert caught == 5
+    else:
+        assert caught == 4
+
+
 def test_open_read_write_switch():
     # C stdio needs a seek between reading and writing (macOS, windows)
     with open('uswitch.bin', 'w+b') as g:
@@ -1150,6 +1205,7 @@ def test_all():
     test_open_mode_order()
     test_binary_mode_normalised()
     test_open_read_write_switch()
+    test_with_exit_raises()
 
 
 if __name__ == '__main__':
