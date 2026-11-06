@@ -76,6 +76,7 @@ public:
     void fill_er_up();
     void __set_items();
     str *__repr__();
+    __SS_STRUCTSEQ_COPY(stat_result)
 };
 
 stat_result *stat(str *path);
@@ -259,6 +260,7 @@ public:
     times_result(tuple<__ss_int> *t);
 
     str *__repr__();
+    __SS_STRUCTSEQ_COPY(times_result)
 };
 
 times_result *times();
@@ -281,6 +283,7 @@ public:
     terminal_size(tuple<__ss_int> *t);
 
     str *__repr__();
+    __SS_STRUCTSEQ_COPY(terminal_size)
 };
 
 terminal_size *get_terminal_size(__ss_int fd=1);
@@ -386,6 +389,7 @@ public:
     statvfs_result(__ss_int fd);
     void fill_er_up();
     str *__repr__();
+    __SS_STRUCTSEQ_COPY(statvfs_result)
 };
 
 statvfs_result *statvfs(str *path);
@@ -432,6 +436,7 @@ public:
     uname_result(tuple<str *> *t);
 
     str *__repr__();
+    __SS_STRUCTSEQ_COPY(uname_result)
 };
 
 uname_result *uname();

@@ -52,6 +52,7 @@ public:
 
     __version_info(__ss_int major, __ss_int minor, __ss_int micro, str *releaselevel, __ss_int serial);
     str *__repr__();
+    __SS_STRUCTSEQ_COPY(__version_info)
 };
 
 extern __version_info *version_info;
@@ -97,6 +98,7 @@ public:
 
     __int_info();
     str *__repr__();
+    __SS_STRUCTSEQ_COPY(__int_info)
 };
 
 class __hash_info : public pyobj {

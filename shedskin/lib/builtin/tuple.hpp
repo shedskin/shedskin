@@ -108,8 +108,9 @@ public:
 
     __ss_int __hash__() final;
 
-    tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo) final;
-    tuple2<T,T> *__copy__() final;
+    /* not final: struct sequences override these (see __SS_STRUCTSEQ_COPY) */
+    tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
+    tuple2<T,T> *__copy__();
 
     /* iteration */
 
@@ -121,6 +122,18 @@ public:
     PyObject *__to_py__();
 #endif
 };
+
+/* struct sequences (os.stat_result, time.struct_time..) subclass tuple2 to add attributes,
+   so copying them through tuple2 would give a plain tuple, without these attributes. all
+   their items and attributes are immutable, so a member-wise copy is also a deep copy */
+#define __SS_STRUCTSEQ_COPY(T) \
+    T *__copy__() override { return new T(*this); } \
+    T *__deepcopy__(dict<void *, pyobj *> *memo) override { \
+        T *c = new T(*this); \
+        memo->__setitem__(this, c); \
+        return c; \
+    }
+
 template<class T> void tuple2<T, T>::__init2__(T a, T b) {
     units.push_back(a);
     units.push_back(b);

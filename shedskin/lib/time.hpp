@@ -102,6 +102,7 @@ public:
 
     struct_time(tuple2<__ss_int, __ss_int> *_tuple);
     str *__repr__();
+    __SS_STRUCTSEQ_COPY(struct_time)
 };
 
 
