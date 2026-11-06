@@ -126,8 +126,15 @@ template<> complex __power(complex a, complex b) {
         long n = (long)b.real;
         if (n > 0)
             r = __complex_powu(a, n);
-        else
-            r = mcomplex(1.0, 0.0) / __complex_powu(a, -n);
+        else {
+            complex d = __complex_powu(a, -n);
+#ifndef __SS_NOZERO
+            /* the power underflowed to zero, as in (1e-200+0j)**-2 */
+            if (d.real == 0 and d.imag == 0)
+                __throw_zero_division("0.0 to a negative or complex power");
+#endif
+            r = mcomplex(1.0, 0.0) / d;
+        }
     }
     else {
         vabs = std::hypot(a.real, a.imag);
@@ -141,6 +148,10 @@ template<> complex __power(complex a, complex b) {
         r.real = len*std::cos(phase);
         r.imag = len*std::sin(phase);
     }
+    /* as in CPython (_Py_ADJUST_ERANGE2): an infinite component means the
+       result overflowed, as in (3+4j)**1000 or (1e200+0j)**2 */
+    if (std::isinf(r.real) || std::isinf(r.imag))
+        throw new OverflowError(new str("complex exponentiation"));
     return r;
 }
 
