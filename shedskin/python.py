@@ -619,8 +619,8 @@ def smart_lookup_var(
         return VarLookup(parent.vars[name], False)
     elif not (parent and local):
         # recursive lookup
-        chain: list[Function] = []
-        while isinstance(parent, Function):
+        chain: list[Union[Function, StaticClass]] = []
+        while isinstance(parent, (Function, StaticClass)):  # class body: 1021-C6
             if name in parent.vars:
                 for ancestor in chain:
                     if isinstance(ancestor, Function):  # XXX optimize
