@@ -35,6 +35,7 @@ EX_USAGE = 0
 F_OK = 0
 NGROUPS_MAX = 0
 O_APPEND = 0
+O_BINARY = 0  # (windows only)
 O_CREAT = 0
 O_DIRECT = 0
 O_DIRECTORY = 0
@@ -49,6 +50,7 @@ O_RDONLY = 0
 O_RDWR = 0
 O_RSYNC = 0
 O_SYNC = 0
+O_TEXT = 0  # (windows only)
 O_TRUNC = 0
 O_WRONLY = 0
 P_NOWAIT = 0
@@ -405,10 +407,10 @@ def readinto(fd, buffer):
 def reload_environ():
     pass
 
-def fdopen(fd, mode=None, buffering=-1):
+def fdopen(fd, mode=None, buffering=-1, encoding=None, errors=None, newline=None):
     return file('/bin/sh')
 
-def fdopen_binary(fd, mode=None, buffering=-1):  # fdopen(fd, 'rb'), see graph.py
+def fdopen_binary(fd, mode=None, buffering=-1, encoding=None, errors=None, newline=None):  # fdopen(fd, 'rb'), see graph.py
     return file_binary('/bin/sh')
 
 def pipe():
