@@ -229,10 +229,11 @@ bytes *bytes::__imul__(__ss_int n) {
     else {
         if(n <= 0)
             unit.clear();
-        else if(n > 1) {
+        else if(n > 1 && !unit.empty()) {
             __GC_STRING s = unit;
-            unit.reserve(s.size()*(size_t)n);
-            for(__ss_int i=0; i<n-1; i++)
+            size_t total = __ss_repeat_len(s.size(), n, unit.max_size());
+            unit.reserve(total);
+            while(unit.size() < total)
                 unit += s;
         }
         return this;
@@ -241,18 +242,19 @@ bytes *bytes::__imul__(__ss_int n) {
 
 bytes *bytes::__mul__(__ss_int n) { /* optimize */
     bytes *r = new bytes(frozen);
-    if(n<=0) return r;
-    size_t ns = (size_t)n;
+    size_t ulen = this->unit.size();
+    if(n<=0 || ulen==0) return r;
 
     __GC_STRING &s = r->unit;
-    size_t ulen = this->unit.size();
+    /* bytearray (not frozen) raises MemoryError, like CPython */
+    size_t total = __ss_repeat_len(ulen, n, s.max_size(), frozen ? "repeated bytes are too long" : 0);
 
     if(ulen == 1)
-        r->unit = __GC_STRING(ns, unit[0]);
+        s.assign(total, unit[0]);
     else {
-        s.resize(ulen*ns);
+        s.resize(total);
 
-        for(size_t i=0; i<ulen*ns; i+=ulen)
+        for(size_t i=0; i<total; i+=ulen)
             s.replace(i, ulen, unit);
     }
 

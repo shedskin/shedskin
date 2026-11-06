@@ -466,12 +466,14 @@ template<class T> list<T> *list<T>::__mul__(__ss_int b) {
     list<T> *c = new list<T>();
     if(b<=0) return c;
     size_t len = this->units.size();
+    if(len==0) return c;
+    size_t total = __ss_repeat_len(len, b, c->units.max_size());
     if(len==1)
-        c->units.assign((size_t)b, this->units[0]);
+        c->units.assign(total, this->units[0]);
     else {
-        c->units.resize((size_t)b*len);
-        for(size_t i=0; i<(size_t)b; i++)
-            std::copy(this->units.begin(), this->units.end(), c->units.begin()+i*len);
+        c->units.resize(total);
+        for(size_t i=0; i<total; i+=len)
+            std::copy(this->units.begin(), this->units.end(), c->units.begin()+i);
     }
     return c;
 }
@@ -482,14 +484,15 @@ template<class T> template<class U> list<T> *list<T>::__iadd__(U *iter) {
 }
 
 template<class T> list<T> *list<T>::__imul__(__ss_int n) {
-    if(n < 0 ) {
-        this->units.resize(0);
+    size_t len = this->units.size();
+    if(n <= 0 || len == 0) {
+        this->units.clear();
         return this;
     }
-    __ss_int l1 = this->__len__();
-    this->units.resize(l1*n);
-    for(__ss_int i = 1; i <= n-1; i++)
-        std::copy(this->units.begin(), this->units.begin()+l1, this->units.begin()+l1*i);
+    size_t total = __ss_repeat_len(len, n, this->units.max_size());
+    this->units.resize(total);
+    for(size_t i = len; i < total; i += len)
+        std::copy(this->units.begin(), this->units.begin()+len, this->units.begin()+i);
     return this;
 }
 
@@ -652,7 +655,7 @@ template<class T, class U> list<T> *__add_list_elt(list<T> *l, U u) {
 template<class T> list<T> *__mul_list_elt(T t, __ss_int n) {
     list<T> *c = new list<T>();
     if(n > 0)
-        c->units.assign((size_t)n, t);
+        c->units.assign(__ss_repeat_len(1, n, c->units.max_size()), t);
     return c;
 }
 
