@@ -35,7 +35,7 @@ class unix_dialect(Dialect):
     pass
 
 class reader:
-    def __init__(self, input_iter, dialect=__void, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+    def __init__(self, input_iter, dialect=__void, delimiter=__void, quotechar=__void, doublequote=-1, skipinitialspace=-1, lineterminator=__void, quoting=-1, escapechar=__void, strict=-1):
         self.dialect = Dialect()
         self.line_num = 0
 
@@ -46,7 +46,7 @@ class reader:
         return ['']
 
 class writer:
-    def __init__(self, output_file, dialect=__void, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+    def __init__(self, output_file, dialect=__void, delimiter=__void, quotechar=__void, doublequote=-1, skipinitialspace=-1, lineterminator=__void, quoting=-1, escapechar=__void, strict=-1):
         self.dialect = Dialect()
 
     def writerow(self, seq):
@@ -56,7 +56,7 @@ class writer:
         pass
 
 class DictReader:
-    def __init__(self, f, fieldnames=None, restkey=None, restval=None, dialect=__void, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+    def __init__(self, f, fieldnames=None, restkey=None, restval=None, dialect=__void, delimiter=__void, quotechar=__void, doublequote=-1, skipinitialspace=-1, lineterminator=__void, quoting=-1, escapechar=__void, strict=-1):
         # note: CPython stores the raw 'dialect' argument (name or instance);
         # here it is the resolved Dialect, identical to self.reader.dialect
         self.reader = reader(f)
@@ -79,7 +79,7 @@ class DictReader:
         return {'': ''}
 
 class DictWriter:
-    def __init__(self, f, fieldnames, restval=None, extrasaction=None, dialect=__void, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+    def __init__(self, f, fieldnames, restval=None, extrasaction=None, dialect=__void, delimiter=__void, quotechar=__void, doublequote=-1, skipinitialspace=-1, lineterminator=__void, quoting=-1, escapechar=__void, strict=-1):
         # self.dialect can be string or dialect instance
         self.writer = writer(f)
         self.fieldnames = ['']
@@ -114,7 +114,7 @@ def list_dialects():
 def get_dialect(name):
     return Dialect()
 
-def register_dialect(name, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+def register_dialect(name, dialect=None, delimiter=__void, quotechar=__void, doublequote=-1, skipinitialspace=-1, lineterminator=__void, quoting=-1, escapechar=__void, strict=-1):
     pass
 
 def unregister_dialect(name):
