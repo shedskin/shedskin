@@ -720,6 +720,8 @@ def test_text_encodings():
     assert gzip.decompress(buf.getvalue()) == b'\xef\xbb\xbfh\xc3\xa9'
     with gzip.open(io.BytesIO(buf.getvalue()), 'rt', encoding='utf-8-sig') as f:
         assert f.read() == 'hé'
+        f.seek(0)  # skips the bom again
+        assert f.read() == 'hé'
     with gzip.open(io.BytesIO(buf.getvalue()), 'rt') as f:
         assert f.read() == '﻿hé'
 

@@ -513,6 +513,49 @@ def test_open_utf8_sig():
     os.remove('usig.txt')
 
 
+def test_utf8_sig_seek():
+    # seek() resets the bom state, as cpython resets the codec
+    with open('usig2.txt', 'w+', encoding='utf-8-sig') as f:
+        f.write('hi\n')
+        f.seek(0)
+        assert f.read() == 'hi\n'
+    with open('usig2.txt', encoding='utf-8-sig') as f:
+        assert f.read() == 'hi\n'
+        f.seek(0)
+        assert f.read() == 'hi\n'
+    with open('usig2.txt', 'w', encoding='utf-8-sig') as f:
+        f.write('abc')
+        f.seek(0)
+        f.write('X')
+    assert rbytes('usig2.txt') == b'\xef\xbb\xbfXbc'
+    with open('usig2.txt', 'r+', encoding='utf-8-sig') as f:
+        f.seek(0)
+        f.write('Y')
+    assert rbytes('usig2.txt') == b'\xef\xbb\xbfYbc'
+    with open('usig2.txt', 'w', encoding='utf-8-sig') as f:
+        f.write('abc')
+        f.seek(0, 2)
+        f.write('d')
+    assert rbytes('usig2.txt') == b'\xef\xbb\xbfabcd'
+    os.remove('usig2.txt')
+
+
+def test_append_plus_starts_at_end():
+    with open('aplus.txt', 'w') as f:
+        f.write('hello')
+    with open('aplus.txt', 'a+') as f:
+        assert f.tell() == 5
+        assert f.read() == ''
+        f.seek(0)
+        assert f.read() == 'hello'
+    with open('aplus.txt', 'ab+') as g:
+        assert g.tell() == 5
+        assert g.read() == b''
+        g.seek(0)
+        assert g.read() == b'hello'
+    os.remove('aplus.txt')
+
+
 def test_open_bad_args():
     caught = 0
     try:
@@ -1119,6 +1162,8 @@ def test_all():
     test_open_unicode_name()
     test_open_encoding()
     test_open_utf8_sig()
+    test_utf8_sig_seek()
+    test_append_plus_starts_at_end()
     test_open_bad_args()
     test_open_invalid_mode()
     test_open_unknown_errors()

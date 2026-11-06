@@ -129,6 +129,12 @@ def test_bytesio_write_past_end():
     assert b.getvalue() == b'\x00\x00\x00\x00\x00hi'
     assert b.tell() == 7
 
+    # an empty write past the end does not pad
+    b = io.BytesIO()
+    b.seek(3)
+    assert b.write(b'') == 0
+    assert b.getvalue() == b''
+
     # writing exactly at the current end still works and needs no padding
     b2 = io.BytesIO(b'abc')
     b2.seek(3)
@@ -148,6 +154,11 @@ def test_stringio_write_past_end():
     assert s.write('hi') == 2
     assert s.getvalue() == '\x00\x00\x00\x00\x00hi'
     assert s.tell() == 7
+
+    s = io.StringIO()  # an empty write past the end does not pad
+    s.seek(3)
+    assert s.write('') == 0
+    assert s.getvalue() == ''
 
     s2 = io.StringIO(initial_value='abc')
     s2.seek(3)

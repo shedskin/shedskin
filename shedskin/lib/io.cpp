@@ -111,6 +111,8 @@ __ss_int BytesIO::write(bytes *data) {
     if(!data)
         throw new TypeError(new str("a bytes-like object is required, not 'NoneType'"));
     const size_t size = data->unit.size();
+    if(!size) /* (no padding) */
+        return 0;
     if((size_t)pos > s->unit.size())
         s->unit.resize((size_t)pos, '\0');
     s->unit.insert((size_t)pos, data->unit);
@@ -270,6 +272,8 @@ __ss_int StringIO::write(str *data) {
         throw new TypeError(new str("string argument expected, got 'NoneType'"));
     __GC_STR u = __translate(data);
     const size_t size = u.size();
+    if(!size) /* (no padding) */
+        return len(data);
     if((size_t)pos > s->unit.size())
         s->unit.resize((size_t)pos, '\0');
     s->unit.insert((size_t)pos, u);

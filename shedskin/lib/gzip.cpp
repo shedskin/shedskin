@@ -741,6 +741,7 @@ _GzipTextFile::_GzipTextFile(GzipFile *gz, str *mode, str *encoding, str *errors
     bom_check = false;
     if (__encoding == __SS_ENC_UTF8_SIG) {
         __encoding = __SS_ENC_UTF8;
+        __utf8_sig = true;
         if (gz->writing)
             __bom_pending = true;
         else
@@ -939,7 +940,10 @@ __ss_int _GzipTextFile::seek(__ss_int i, __ss_int w) {
     if (w == 1)
         return gz->tell();
     bom_check = false;
-    return gz->seek(i, w);
+    __ss_int pos = gz->seek(i, w);
+    if (__utf8_sig && !gz->writing && pos == 0)
+        bom_check = true; /* (as cpython, which resets the decoder) */
+    return pos;
 }
 
 __ss_int _GzipTextFile::tell() {
