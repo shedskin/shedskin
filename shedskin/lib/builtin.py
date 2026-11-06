@@ -1532,6 +1532,8 @@ class __iter(pyiter):
         return 1
     def __getitem__(self, i): # modeling shortcut
         return self.unit
+    def __contains__(self, x): # e.g. 'x in d.values()', 'x in map(..)'
+        return self.unit == x
 
 def iter(a):
     return a.__iter__()

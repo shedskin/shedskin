@@ -38,11 +38,15 @@ def dropwhile(predicate, iterable):
 
 def groupby(iterable, key):
     it = iter(iterable)
-    yield key(it.__next__()), it
+    k = key(it.__next__())
+    k == k  # group keys are compared with __eq__
+    yield k, it
 
 def __groupby1(iterable):
     it = iter(iterable)
-    yield it.__next__(), it
+    k = it.__next__()
+    k == k
+    yield k, it
 
 def filterfalse(predicate, iterable):
     yield __pred_elem(predicate, iterable)

@@ -1135,6 +1135,23 @@ def test_counter_delitem():
     assert sorted(c) == ['b', 'c']
 
 
+class DequeEqOnly:  # __eq__ only reachable via deque in/count/index/remove
+    def __init__(self, v):
+        self.v = v
+    def __eq__(self, o):
+        return self.v == o.v
+
+def test_deque_user_eq():
+    d = deque([DequeEqOnly(0), DequeEqOnly(1), DequeEqOnly(2), DequeEqOnly(1)])
+    assert DequeEqOnly(1) in d
+    assert DequeEqOnly(5) not in d
+    assert d.count(DequeEqOnly(1)) == 2
+    assert d.index(DequeEqOnly(2)) == 2
+    d.remove(DequeEqOnly(0))
+    assert len(d) == 3
+    assert d[0].v == 1
+
+
 def test_all():
     test_counter_delitem()
     test_defaultdict1()
@@ -1215,6 +1232,7 @@ def test_all():
     test_counter_values()
     test_counter_inplace_mapping()
     test_counter_empty_accumulator()
+    test_deque_user_eq()
 
 
 if __name__ == '__main__':
