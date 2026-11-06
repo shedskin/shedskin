@@ -57,12 +57,12 @@ if(ENABLE_SPM)
     set(SPM_DEPS ${CMAKE_BINARY_DIR}/deps)
     set(SPM_LIB_DIRS ${SPM_DEPS}/lib)
     set(SPM_INCLUDE_DIRS ${SPM_DEPS}/include)
-
+    set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
 elseif(ENABLE_FETCH_CONTENT)
     include(shedskin_deps)
     set(FETCHCONTENT_INCLUDE_DIR ${SHEDSKIN_DEP_INCLUDE_DIR})
     set(FETCHCONTENT_PCRE2_INCLUDE_DIR ${SHEDSKIN_PCRE2_INCLUDE_DIR})
-
+    set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR})
 elseif(ENABLE_LOCAL_DEPS)
     if(NOT DEFINED LOCAL_DEPS_DIR)
         message(FATAL_ERROR "LOCAL_DEPS_DIR must be defined when ENABLE_LOCAL_DEPS is ON")
@@ -70,7 +70,192 @@ elseif(ENABLE_LOCAL_DEPS)
     message(STATUS "LOCAL_DEPS_DIR: ${LOCAL_DEPS_DIR}")
     set(LOCAL_DEPS_LIB_DIRS ${LOCAL_DEPS_DIR}/lib)
     set(LOCAL_DEPS_INCLUDE_DIRS ${LOCAL_DEPS_DIR}/include)
+    set(LIB_INCLUDES ${LOCAL_DEPS_INCLUDE_DIRS})
+else()
+    # adding -lutil for every use of os is not a good idea should only be temporary
+    # better to just add it on demand if the two relevant pty functions are used
+    set(local_prefix "/usr/local")
+    if(CMAKE_HOST_APPLE) # i.e if is_macos check if homebrew is used aand if so get prefix
+        execute_process(
+            COMMAND brew --prefix
+            OUTPUT_VARIABLE homebrew_prefix
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        If(DEFINED homebrew_prefix)
+            set(local_prefix ${homebrew_prefix})
+        endif()
+    endif()
+
+    set(local_include "${local_prefix}/include")
+    set(LIB_INCLUDES ${local_include})
 endif()
+
+
+set(shedskin_lib_modules
+    array
+    base64
+    binascii
+    bisect
+    builtin
+    collections
+    colorsys
+    configparser
+    copy
+    csv
+    datetime
+    fnmatch
+    functools
+    gc
+    getopt
+    glob
+    gzip
+    heapq
+    io
+    itertools
+    math
+    math.integer
+    mmap
+    os
+    os.path
+    random
+    re
+    select
+    signal
+    socket
+    stat
+    string
+    struct
+    sys
+    time
+)
+
+if(NOT WIN32)
+    list(APPEND shedskin_lib_modules termios tty)
+endif()
+
+
+set(shedskin_library_sources)
+foreach(mod ${shedskin_lib_modules})
+# special case os, os.path
+if(mod STREQUAL "os")
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/os/__init__.cpp")
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/os/__init__.hpp")
+elseif(mod STREQUAL "os.path")
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/os/path.cpp")
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/os/path.hpp")
+elseif(mod STREQUAL "math")
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/math/__init__.cpp")
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/math/__init__.hpp")
+elseif(mod STREQUAL "math.integer")
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/math/integer.cpp")
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/math/integer.hpp")
+else()
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/${mod}.cpp")
+    list(APPEND shedskin_library_sources "${SHEDSKIN_LIB}/${mod}.hpp")
+endif()
+endforeach()
+
+add_library(shedskin_library_exe OBJECT ${shedskin_library_sources})
+
+target_include_directories(shedskin_library_exe PRIVATE
+    ${SHEDSKIN_LIB}
+    ${CMAKE_SOURCE_DIR}
+    ${PROJECT_EXE_DIR}
+    ${LIB_INCLUDES}
+)
+
+target_compile_options(shedskin_library_exe PRIVATE
+    ${SHEDSKIN_COMPILE_OPTIONS}
+    ${SHEDSKIN_OPT_FLAGS}
+    $<$<BOOL:${UNIX}>:-ffp-contract=off> # no FMA contraction: match CPython float results
+    $<$<BOOL:${UNIX}>:-Wno-unused-variable>
+    $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
+    $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
+    $<$<BOOL:${UNIX}>:-Wno-unused-result>
+    $<$<BOOL:${UNIX}>:-Wno-missing-field-initializers>
+    $<$<BOOL:${UNIX}>:-Wno-cast-function-type> # (PyCFunction) cast in extmods
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wextra>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wpedantic>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wconversion>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wsign-compare>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wformat=2>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wwrite-strings>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wredundant-decls>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wmissing-include-dirs>
+    # windows
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
+    $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
+)
+
+# GC_NOT_DLL is required on Windows when linking statically with bdwgc
+# PCRE2_STATIC is required on Windows when linking statically with pcre2
+# boost (bundled) containers are the default, as for 'shedskin build'
+target_compile_definitions(shedskin_library_exe PRIVATE
+    $<$<NOT:$<BOOL:${SHEDSKIN_NOBOOST}>>:__SS_BOOST>
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
+)
+
+
+add_library(shedskin_library_ext OBJECT ${shedskin_library_sources})
+
+target_include_directories(shedskin_library_ext PRIVATE
+    ${Python_INCLUDE_DIRS}
+    ${SHEDSKIN_LIB}
+    ${CMAKE_SOURCE_DIR}
+    ${PROJECT_EXE_DIR}
+    ${LIB_INCLUDES}
+)
+
+target_compile_options(shedskin_library_ext PRIVATE
+    ${SHEDSKIN_COMPILE_OPTIONS}
+    # common
+    "-D__SS_BIND"
+    # unix
+    $<$<BOOL:${UNIX}>:-DNDEBUG>
+    $<$<BOOL:${UNIX}>:-fPIC>
+    $<$<BOOL:${UNIX}>:-fwrapv>
+    $<$<BOOL:${UNIX}>:-g>
+    ${SHEDSKIN_OPT_FLAGS}
+    $<$<BOOL:${UNIX}>:-ffp-contract=off> # no FMA contraction: match CPython float results
+    # hide all symbols by default so shedskin's Boehm-GC-backed
+    # operator new/delete (and other runtime internals) don't leak
+    # into the process-global symbol table and interpose over the
+    # same symbols in other C++ extensions (e.g. numpy) loaded into
+    # the same host process; PyMODINIT_FUNC forces the entry point
+    # back to default visibility via Py_EXPORTED_SYMBOL, so the
+    # module still loads correctly
+    $<$<BOOL:${UNIX}>:-fvisibility=hidden>
+    $<$<BOOL:${UNIX}>:-fvisibility-inlines-hidden>
+    $<$<BOOL:${UNIX}>:-Wno-unused-result>
+    $<$<BOOL:${UNIX}>:-Wno-unused-variable>
+    $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
+    $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
+    $<$<BOOL:${UNIX}>:-Wno-missing-field-initializers>
+    $<$<BOOL:${UNIX}>:-Wno-cast-function-type> # (PyCFunction) cast in extmods
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wextra>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wconversion>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wsign-compare>
+    $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-pedantic>
+    # windows
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
+    $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
+    # $<$<BOOL:${WIN32}>:/LD>
+)
+
+# GC_NOT_DLL is required on Windows when linking statically with bdwgc
+# PCRE2_STATIC is required on Windows when linking statically with pcre2
+target_compile_definitions(shedskin_library_ext PRIVATE
+    $<$<NOT:$<BOOL:${SHEDSKIN_NOBOOST}>>:__SS_BOOST>
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
+    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
+)
 
 # -----------------------------------------------------------------------
 # any 'test_*' folders are automatically treated as tests
