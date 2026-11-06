@@ -239,6 +239,12 @@ def test_get_fallback():
     # a present option is returned normally; fallback is ignored
     assert config.get('a', 'x', fallback='unused') == '1'
 
+    # an explicit fallback=None is a real fallback: None is returned
+    assert config.get('a', 'missing', fallback=None) is None
+    assert config.get('nosuch', 'x', fallback=None) is None
+    assert config.get('a', 'x', fallback=None) == '1'
+    assert config.get('a', 'missing', raw=True, fallback=None) is None
+
     # omitting fallback still raises, as before
     ok = False
     try:
@@ -246,6 +252,23 @@ def test_get_fallback():
     except configparser.NoOptionError:
         ok = True
     assert ok
+    ok = False
+    try:
+        config.get('nosuch', 'x', raw=True)
+    except configparser.NoSectionError:
+        ok = True
+    assert ok
+
+    # ExtendedInterpolation ${sect:opt} to a missing option still errors
+    ext = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+    ext.read_string("[s]\nv = ${t:nope}\n[t]\n")
+    ok = False
+    try:
+        ext.get('s', 'v')
+    except configparser.InterpolationMissingOptionError:
+        ok = True
+    assert ok
+    assert ext.get('s', 'v', raw=True) == '${t:nope}'
 
 def test_duplicate_section_error():
     config = configparser.ConfigParser()

@@ -392,7 +392,12 @@ public:
        class's constructor body, where the dynamic type is already the
        derived class */
     virtual Interpolation *_default_interpolation();
-    virtual str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback=NULL);
+    /* get() without a fallback (the model's __void default): a missing
+       section/option raises NoSectionError/NoOptionError */
+    virtual str *get(str *section, str *option, __ss_int raw=0, dict<str *, str *> *vars=NULL, __ss_void_struct fallback=__ss_void);
+    /* get() with a fallback, returned for a missing section/option even
+       when it is None (NULL), as in CPython */
+    str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, str *fallback);
     /* virtual, so a C++-side subclass could keep option case (shedskin
        itself does not support subclassing lib classes) */
     virtual str *optionxform(str *optionstr);
@@ -432,7 +437,7 @@ public:
 
     template<class D> __ss_int getint(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, D fallback) {
         if constexpr (std::is_same_v<D, __ss_void_struct>)
-            return __int(this->get(section, option, raw, vars, NULL));
+            return __int(this->get(section, option, raw, vars, __ss_void));
         else {
             str *v = _get_or_null(section, option, raw, vars);
             return v ? __int(v) : (__ss_int)fallback;
@@ -440,7 +445,7 @@ public:
     }
     template<class D> __ss_float getfloat(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, D fallback) {
         if constexpr (std::is_same_v<D, __ss_void_struct>)
-            return __float(this->get(section, option, raw, vars, NULL));
+            return __float(this->get(section, option, raw, vars, __ss_void));
         else {
             str *v = _get_or_null(section, option, raw, vars);
             return v ? __float(v) : (__ss_float)fallback;
@@ -448,7 +453,7 @@ public:
     }
     template<class D> __ss_bool getboolean(str *section, str *option, __ss_int raw, dict<str *, str *> *vars, D fallback) {
         if constexpr (std::is_same_v<D, __ss_void_struct>)
-            return _to_boolean(this->get(section, option, raw, vars, NULL));
+            return _to_boolean(this->get(section, option, raw, vars, __ss_void));
         else {
             str *v = _get_or_null(section, option, raw, vars);
             return v ? _to_boolean(v) : ___bool(fallback);
