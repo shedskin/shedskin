@@ -95,6 +95,7 @@ static void print_traceback(FILE *out)
 
 extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_generatorexit, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception, *cl_pythonfinalizationerror, *cl_unicodeerror, *cl_unicodedecodeerror, *cl_unicodeencodeerror, *cl_unicodetranslateerror;
 extern class_ *cl_recursionerror, *cl_unboundlocalerror, *cl_referenceerror, *cl_buffererror;
+extern class_ *cl_attributeerror, *cl_importerror, *cl_modulenotfounderror, *cl_stopasynciteration, *cl_indentationerror, *cl_taberror;
 extern class_ *cl_warning, *cl_byteswarning, *cl_deprecationwarning, *cl_encodingwarning, *cl_futurewarning, *cl_importwarning, *cl_pendingdeprecationwarning, *cl_resourcewarning, *cl_runtimewarning, *cl_syntaxwarning, *cl_unicodewarning, *cl_userwarning;
 extern class_ *cl_filenotfounderror, *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror;
 
@@ -320,6 +321,42 @@ public:
 #endif
 };
 
+class AttributeError : public Exception {
+public:
+    str *name;
+    AttributeError(str *msg=0, str *name=0) : Exception(msg) { this->__class__ = cl_attributeerror; this->name = name; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_AttributeError; }
+#endif
+};
+
+class ImportError : public Exception {
+public:
+    str *msg;
+    str *name;
+    str *path;
+    ImportError(str *msg=0, str *name=0, str *path=0) : Exception(msg) { this->__class__ = cl_importerror; this->msg = msg; this->name = name; this->path = path; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ImportError; }
+#endif
+};
+
+class ModuleNotFoundError : public ImportError {
+public:
+    ModuleNotFoundError(str *msg=0, str *name=0, str *path=0) : ImportError(msg, name, path) { this->__class__ = cl_modulenotfounderror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ModuleNotFoundError; }
+#endif
+};
+
+class StopAsyncIteration : public Exception {
+public:
+    StopAsyncIteration(str *msg=0) : Exception(msg) { this->__class__ = cl_stopasynciteration; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_StopAsyncIteration; }
+#endif
+};
+
 class RuntimeError : public Exception {
 public:
     RuntimeError(str *msg=0) : Exception(msg) { this->__class__ = cl_runtimeerror; }
@@ -512,6 +549,22 @@ public:
     SyntaxError(str *msg=0) : Exception(msg) { this->__class__ = cl_syntaxerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SyntaxError; }
+#endif
+};
+
+class IndentationError : public SyntaxError {
+public:
+    IndentationError(str *msg=0) : SyntaxError(msg) { this->__class__ = cl_indentationerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_IndentationError; }
+#endif
+};
+
+class TabError : public IndentationError {
+public:
+    TabError(str *msg=0) : IndentationError(msg) { this->__class__ = cl_taberror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_TabError; }
 #endif
 };
 

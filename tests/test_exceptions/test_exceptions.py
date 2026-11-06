@@ -624,6 +624,81 @@ def test_more_builtin_exceptions():
     assert ok
 
 
+def raise_attribute_error(n):
+    if n > 5:
+        raise AttributeError('no attr')
+    return n
+
+
+def test_attribute_import_errors():
+    # AttributeError, raised from a function (1106-C2)
+    caught = ''
+    try:
+        print(raise_attribute_error(9))
+    except Exception as ae0:
+        caught = str(ae0)
+    assert caught == 'no attr'
+    assert raise_attribute_error(3) == 3
+
+    ok = False
+    try:
+        raise AttributeError('msg', name='foo')
+    except AttributeError as ae1:
+        ok = repr(ae1) == "AttributeError('msg')" and ae1.name == 'foo'
+    assert ok
+    assert AttributeError('x').name is None
+    assert AttributeError(name='y').name == 'y'
+    assert str(AttributeError(name='y')) == ''
+
+    # ImportError and ModuleNotFoundError
+    ok = False
+    try:
+        raise ModuleNotFoundError("No module named 'x'", name='x')
+    except ImportError as ie1:
+        ok = (repr(ie1) == "ModuleNotFoundError(\"No module named 'x'\")" and
+              ie1.msg == "No module named 'x'" and ie1.name == 'x' and
+              ie1.path is None)
+    assert ok
+    ie2 = ImportError(name='n', path='/p')
+    assert repr(ie2) == 'ImportError()'
+    assert str(ie2) == ''
+    assert ie2.msg is None
+    assert ie2.name == 'n'
+    assert ie2.path == '/p'
+    ie3 = ImportError('plain')
+    assert ie3.msg == 'plain' and ie3.name is None and ie3.path is None
+
+    ok = False
+    try:
+        raise ModuleNotFoundError('mnf')
+    except Exception as ex3:
+        ok = repr(ex3) == "ModuleNotFoundError('mnf')"
+    assert ok
+
+    # StopAsyncIteration
+    ok = False
+    try:
+        raise StopAsyncIteration('done')
+    except Exception as ex4:
+        ok = repr(ex4) == "StopAsyncIteration('done')"
+    assert ok
+
+    # IndentationError and TabError are SyntaxErrors
+    ok = False
+    try:
+        raise TabError('tabs')
+    except IndentationError as ie4:
+        ok = repr(ie4) == "TabError('tabs')"
+    assert ok
+
+    ok = False
+    try:
+        raise IndentationError('indent')
+    except SyntaxError as se4:
+        ok = str(se4) == 'indent'
+    assert ok
+
+
 def test_warnings():
     warnings = [UserWarning('a'), DeprecationWarning('b'),
                 PendingDeprecationWarning('c'), SyntaxWarning('d'),
@@ -949,6 +1024,7 @@ def test_all():
     test_builtin_exception_raise_catch()
     test_oserror_subclasses()
     test_more_builtin_exceptions()
+    test_attribute_import_errors()
     test_warnings()
     test_exception_attributes()
     test_keyerror_str()
