@@ -4,6 +4,7 @@
 import bisect
 import collections
 import io
+import itertools
 import random
 
 
@@ -86,6 +87,12 @@ def test_round():
     assert round(2.567, 1) == 2.6
 
 
+def test_itertools():
+    assert [k for k, g in itertools.groupby('aab', None)] == ['a', 'b']
+    assert [(k, list(g)) for k, g in itertools.groupby([1, 1, 2], key=None)] == [(1, [1, 1]), (2, [2])]
+    assert [k for k, g in itertools.groupby('xxy', lambda c: c == 'x')] == [True, False]
+
+
 def test_unchanged():
     # None meaning something other than 'omitted' must still work
     assert ' a b '.split(None) == ['a', 'b']
@@ -108,6 +115,7 @@ def test_all():
     test_random()
     test_deque()
     test_round()
+    test_itertools()
     test_unchanged()
 
 

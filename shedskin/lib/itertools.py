@@ -42,7 +42,7 @@ def groupby(iterable, key):
     k == k  # group keys are compared with __eq__
     yield k, it
 
-def __groupby1(iterable):
+def __groupby1(iterable, key=None):  # key: only an explicit None
     it = iter(iterable)
     k = it.__next__()
     k == k
