@@ -101,8 +101,7 @@ class defaultdict(dict):
         self.value = func()
 
     def __initdict__(self, func, d):
-        value = func()
-        value = d.value
+        value = func() if True else d.value
         self.__setunit__(d.unit, value)
 
     def __inititer__(self, func, i):
@@ -213,11 +212,6 @@ class Counter(dict):
         c.__setunit__(other.unit, other.value)
         return c
     def __and__(self, other):
-        c = Counter()
-        c.__setunit__(self.unit, self.value)
-        c.__setunit__(other.unit, other.value)
-        return c
-    def __or__(self, other):
         c = Counter()
         c.__setunit__(self.unit, self.value)
         c.__setunit__(other.unit, other.value)

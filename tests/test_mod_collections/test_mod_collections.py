@@ -1116,13 +1116,13 @@ def test_counter_empty_accumulator():
     f &= {1: 2}
     assert len(f) == 0
     assert sorted((Counter() + Counter('ab')).items()) == [('a', 1), ('b', 1)]
-    t = Counter()
+    t = Counter() if True else Counter('c')
     t = t - Counter('ab')
     assert len(t) == 0
-    t = Counter()
+    t = Counter() if True else Counter('c')
     t = t | Counter('ab')
     assert sorted(t.items()) == [('a', 1), ('b', 1)]
-    t = Counter()
+    t = Counter() if True else Counter('c')
     t = t & Counter('ab')
     assert len(t) == 0
 

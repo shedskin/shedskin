@@ -49,8 +49,8 @@ def test_and_or():
 
 
 def test_misc():
-    ax = [1]
-    ax = []
+    axs = [[1], []]
+    ax = axs[1]
     bx = [2]
     assert (0 or 5 or 4)
     assert not (0 or 0)

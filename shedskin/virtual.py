@@ -64,8 +64,8 @@ def virtuals(self: "cpp.GenerateVisitor", cl: "python.Class", declare: bool) -> 
                     sig_types.append(set())  # XXX
 
             for name in func.formals[1:]:
-                var = func.vars[name]
-                sig_types.append(self.mergeinh[var])
+                formal_node = func.formal_nodes[name]
+                sig_types.append(self.mergeinh[formal_node])
             formal_types.append(sig_types)
 
         merged = []

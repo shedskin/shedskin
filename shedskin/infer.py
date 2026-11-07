@@ -997,7 +997,7 @@ def connect_actual_formal(
     func: "python.Function",
     parent_constr: bool = False,
     merge: Optional[Merged] = None,
-) -> tuple[list[tuple[ast.AST, "python.Variable"]], int, bool]:
+) -> tuple[list[tuple[ast.AST, str, ast.expr]], int, bool]:
     """Connect actual and formal arguments"""
 
     pairs = []
@@ -1080,7 +1080,7 @@ def connect_actual_formal(
     for actual, formal in zip(actuals, formals):
         if not (isinstance(func.parent, python.Class) and formal == "self"):
             assert actual
-            pairs.append((actual, func.vars[formal]))
+            pairs.append((actual, formal, func.formal_nodes[formal]))
 
     return pairs, len(extra), _error
 
@@ -1120,7 +1120,7 @@ def actuals_formals(
             return
 
     for actual, formal, formaltype in zip(actuals, formals, types):
-        formalnode = gx.cnode[func.vars[formal], dcpa, cpa]
+        formalnode = gx.cnode[func.formal_nodes[formal], dcpa, cpa]
 
         if (
             formaltype[1] != 0
