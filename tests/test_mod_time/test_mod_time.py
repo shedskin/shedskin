@@ -364,6 +364,57 @@ def test_strptime_yday():
     assert tuple(time.strptime("Mon 366 2023", "%a %j %Y")) == (2024, 1, 1, 0, 0, 0, 0, 366, -1)
     assert tuple(time.strptime("2023-01-01 366", "%Y-%m-%d %j")) == (2024, 1, 1, 0, 0, 0, 0, 366, -1)
 
+def strptime_error(s, f):
+    try:
+        time.strptime(s, f)
+    except ValueError as e:
+        return str(e)
+    return ''
+
+def test_strptime_iso_week():
+    # regression test: %G %V %u gave 1900-01-01 with glibc
+    assert tuple(time.strptime("2024 10 3", "%G %V %u")) == (2024, 3, 6, 0, 0, 0, 2, 66, -1)
+    assert tuple(time.strptime("2024 Wed 10", "%G %a %V")) == (2024, 3, 6, 0, 0, 0, 2, 66, -1)
+    assert tuple(time.strptime("2020 53 5", "%G %V %u")) == (2021, 1, 1, 0, 0, 0, 4, 1, -1)
+    assert strptime_error("2021 53 5", "%G %V %u") == "Invalid week: 53"
+    assert strptime_error("2024 10", "%G %V").startswith("ISO year directive '%G' must be used with")
+    assert strptime_error("2024 10 3", "%Y %V %u").startswith("ISO week directive '%V' is incompatible")
+    assert strptime_error("2024 001 3", "%G %j %u").startswith("Day of the year directive '%j'")
+
+def test_strptime_week_of_year():
+    # %U/%W together with a weekday determine the date, as in CPython
+    assert tuple(time.strptime("2024 10 3", "%Y %W %w")) == (2024, 3, 6, 0, 0, 0, 2, 66, -1)
+    assert tuple(time.strptime("2024 0 3", "%Y %U %w")) == (2024, 1, 3, 0, 0, 0, 2, 3, -1)
+    assert tuple(time.strptime("2024 5 Mon", "%Y %U %a")) == (2024, 2, 5, 0, 0, 0, 0, 36, -1)
+    assert tuple(time.strptime("2023 52 6", "%Y %W %u")) == (2023, 12, 30, 0, 0, 0, 5, 364, -1)
+
+def test_strptime_matching():
+    # the format matches as CPython's regex does, also without separators
+    assert tuple(time.strptime("131", "%m%d"))[:3] == (1900, 1, 31)
+    assert tuple(time.strptime("2024123", "%Y%m%d"))[:3] == (2024, 12, 3)
+    assert tuple(time.strptime("12:30:15.5", "%H:%M:%S.%f"))[3:6] == (12, 30, 15)
+    assert tuple(time.strptime("Mon Jan  1 10:20:30 2024", "%c")) == (2024, 1, 1, 10, 20, 30, 0, 1, -1)
+    assert tuple(time.strptime("10:20:30 PM", "%r"))[3:6] == (22, 20, 30)
+    assert tuple(time.strptime("september 2024", "%B %Y"))[:2] == (2024, 9)
+    assert tuple(time.strptime("2024-01-01t10:20", "%Y-%m-%dT%H:%M"))[3:5] == (10, 20)
+    assert tuple(time.strptime(" 5", "%d"))[2] == 5
+    assert tuple(time.strptime("5", "%-d"))[2] == 5
+    assert strptime_error("2024", "%Y %m") == "time data '2024' does not match format '%Y %m'"
+    assert strptime_error("Sept 2024", "%b %Y") == "time data 'Sept 2024' does not match format '%b %Y'"
+    assert strptime_error("2024 junk", "%Y") == "unconverted data remains:  junk"
+    assert strptime_error("1", "%q") == "'q' is a bad directive in format '%q'"
+    assert strptime_error("1", "%Ey") == "'Ey' is a bad directive in format '%Ey'"
+    assert strptime_error("1", "%") == "stray % in format '%'"
+    assert strptime_error("0000", "%Y") == "year 0 is out of range"
+
+def test_strptime_zone():
+    assert time.strptime("+0100", "%z").tm_gmtoff == 3600
+    assert time.strptime("-01:30", "%z").tm_gmtoff == -5400
+    assert time.strptime("Z", "%z").tm_gmtoff == 0
+    assert strptime_error("+01:0030", "%z") == "Inconsistent use of : in +01:0030"
+    st = time.strptime("UTC", "%Z")
+    assert st.tm_isdst == 0 and st.tm_zone == "UTC"
+
 def test_strftime_range():
     # regression test: zero month/day/yday means the lowest valid value
     assert time.strftime("%Y %m %d %b %j", (2020, 0, 0, 0, 0, 0, 0, 0, 0)) == '2020 01 01 Jan 001'
@@ -606,6 +657,10 @@ def test_all():
     test_strptime_day_range()
     test_strptime_defaults()
     test_strptime_yday()
+    test_strptime_iso_week()
+    test_strptime_week_of_year()
+    test_strptime_matching()
+    test_strptime_zone()
     test_strftime_range()
     test_sleep_invalid()
     test_gmtime_out_of_range()

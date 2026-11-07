@@ -7,6 +7,8 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+#include <algorithm>
+#include <vector>
 
 namespace __time__ {
 
@@ -720,792 +722,593 @@ str *strftime(str *format, tuple2<__ss_int, __ss_int> *tuple) {
     return strftime(format, st);
 }
 
-#ifdef WIN32
-
 /******************************************************************************
- * STRPTIME FOR WINDOWS
+ * STRPTIME
+ *
+ * a port of CPython's _strptime for the C locale, used on every platform, so
+ * that results no longer depend on the system libc (glibc for example skips
+ * %G/%V/%u without using them, and nothing knows %f). the format is matched
+ * the way the regex CPython builds from it would match: each directive tries
+ * the alternatives of its regex in the same order, backtracking when the rest
+ * of the format does not match, literals and names ignore case, and white-
+ * space in the format matches one or more white-space characters. the
+ * fields found are then combined as in CPython's _strptime().
  *****************************************************************************/
 
-/*	$NetBSD: strptime.c,v 1.35 2009/12/14 20:45:02 matt Exp $	*/
+static const char *__ss_sp_day_abbr[7] = {"mon", "tue", "wed", "thu", "fri", "sat", "sun"};
+static const char *__ss_sp_day_name[7] = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"};
+static const char *__ss_sp_month_abbr[12] = {"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"};
+static const char *__ss_sp_month_name[12] = {"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"};
+static const char *__ss_sp_am_pm[2] = {"am", "pm"};
 
-/*-
- * Copyright (c) 1997, 1998, 2005, 2008 The NetBSD Foundation, Inc.
- * All rights reserved.
- *
- * This code was contributed to The NetBSD Foundation by Klaus Klein.
- * Heavily optimised by David Laight
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
- 
-/* Original code modified to work with MSVC May 2010 with help from
- http://www.opensource.apple.com/source/gdb/gdb-282/src/tcl/compat/strftime.c
-*/
-
-#include <ctype.h>
-#include <string.h>
-#include <time.h>
-
-typedef struct {
-    const char *abday[7];
-    const char *day[7];
-    const char *abmon[12];
-    const char *mon[12];
-    const char *am_pm[2];
-    const char *d_t_fmt;
-    const char *d_fmt;
-    const char *t_fmt;
-    const char *t_fmt_ampm;
-} _TimeLocale;
-
-/*
- * This is the C locale default.  On Windows, if we wanted to make this
- * localized, we would use GetLocaleInfo to get the correct values.
- * It may be acceptable to do localization of month/day names, as the
- * numerical values would be considered the locale-independent versions.
- */
-static const _TimeLocale _DefaultTimeLocale =
-{
-    {
-	"Sun","Mon","Tue","Wed","Thu","Fri","Sat",
-    },
-    {
-	"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
-	"Friday", "Saturday"
-    },
-    {
-	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    },
-    {
-	"January", "February", "March", "April", "May", "June", "July",
-	"August", "September", "October", "November", "December"
-    },
-    {
-	"AM", "PM"
-    },
-    "%a %b %d %H:%M:%S %Y",
-    "%m/%d/%y",
-    "%H:%M:%S",
-    "%I:%M:%S %p"
-};
-
-static const _TimeLocale *_CurrentTimeLocale = &_DefaultTimeLocale;
-#define TM_YEAR_BASE   1900
-#define IsLeapYear(x)   ((x % 4 == 0) && (x % 100 != 0 || x % 400 == 0))
-
-#define	_ctloc(x)		(_CurrentTimeLocale->x)
-
-#define u_char unsigned char
-#define uint unsigned int
-#define __UNCONST
-
-/*
- * We do not implement alternate representations. However, we always
- * check whether a given modifier is allowed for a certain conversion.
- */
-#define ALT_E			0x01
-#define ALT_O			0x02
-#define	LEGAL_ALT(x)		{ if (alt_format & ~(x)) return NULL; }
-
-static char gmt[] = { "GMT" };
-static char utc[] = { "UTC" };
-/* RFC-822/RFC-2822 */
-static const char * const nast[5] = {
-       "EST",    "CST",    "MST",    "PST",    "\0\0\0"
-};
-static const char * const nadt[5] = {
-       "EDT",    "CDT",    "MDT",    "PDT",    "\0\0\0"
-};
-
-static const u_char *conv_num(const unsigned char *, int *, uint, uint);
-static const u_char *find_string(const u_char *, int *, const char * const *,
-	const char * const *, int);
-
-
-char *
-strptime(const char *buf, const char *fmt, struct tm *tm)
-{
-	unsigned char c;
-	const unsigned char *bp, *ep;
-	int alt_format, i, split_year = 0, neg = 0, offs;
-	const char *new_fmt;
-
-	bp = (const u_char *)buf;
-
-	while (bp != NULL && (c = *fmt++) != '\0') {
-		/* Clear `alternate' modifier prior to new conversion. */
-		alt_format = 0;
-		i = 0;
-
-		/* Eat up white-space. */
-		if (isspace(c)) {
-			while (isspace(*bp))
-				bp++;
-			continue;
-		}
-
-		if (c != '%')
-			goto literal;
-
-
-again:		switch (c = *fmt++) {
-		case '%':	/* "%%" is converted to "%". */
-literal:
-			if (c != *bp++)
-				return NULL;
-			LEGAL_ALT(0);
-			continue;
-
-		/*
-		 * "Alternative" modifiers. Just set the appropriate flag
-		 * and start over again.
-		 */
-		case 'E':	/* "%E?" alternative conversion modifier. */
-			LEGAL_ALT(0);
-			alt_format |= ALT_E;
-			goto again;
-
-		case 'O':	/* "%O?" alternative conversion modifier. */
-			LEGAL_ALT(0);
-			alt_format |= ALT_O;
-			goto again;
-
-		/*
-		 * "Complex" conversion rules, implemented through recursion.
-		 */
-		case 'c':	/* Date and time, using the locale's format. */
-			new_fmt = _ctloc(d_t_fmt);
-			goto recurse;
-
-		case 'D':	/* The date as "%m/%d/%y". */
-			new_fmt = "%m/%d/%y";
-			LEGAL_ALT(0);
-			goto recurse;
-
-		case 'F':	/* The date as "%Y-%m-%d". */
-			new_fmt = "%Y-%m-%d";
-			LEGAL_ALT(0);
-			goto recurse;
-
-		case 'R':	/* The time as "%H:%M". */
-			new_fmt = "%H:%M";
-			LEGAL_ALT(0);
-			goto recurse;
-
-		case 'r':	/* The time in 12-hour clock representation. */
-			new_fmt =_ctloc(t_fmt_ampm);
-			LEGAL_ALT(0);
-			goto recurse;
-
-		case 'T':	/* The time as "%H:%M:%S". */
-			new_fmt = "%H:%M:%S";
-			LEGAL_ALT(0);
-			goto recurse;
-
-		case 'X':	/* The time, using the locale's format. */
-			new_fmt =_ctloc(t_fmt);
-			goto recurse;
-
-		case 'x':	/* The date, using the locale's format. */
-			new_fmt =_ctloc(d_fmt);
-		    recurse:
-			bp = (const u_char *)strptime((const char *)bp,
-							    new_fmt, tm);
-			LEGAL_ALT(ALT_E);
-			continue;
-
-		/*
-		 * "Elementary" conversion rules.
-		 */
-		case 'A':	/* The day of week, using the locale's form. */
-		case 'a':
-			bp = find_string(bp, &tm->tm_wday, _ctloc(day),
-					_ctloc(abday), 7);
-			LEGAL_ALT(0);
-			continue;
-
-		case 'B':	/* The month, using the locale's form. */
-		case 'b':
-		case 'h':
-			bp = find_string(bp, &tm->tm_mon, _ctloc(mon),
-					_ctloc(abmon), 12);
-			LEGAL_ALT(0);
-			continue;
-
-		case 'C':	/* The century number. */
-			i = 20;
-			bp = conv_num(bp, &i, 0, 99);
-
-			i = i * 100 - TM_YEAR_BASE;
-			if (split_year)
-				i += tm->tm_year % 100;
-			split_year = 1;
-			tm->tm_year = i;
-			LEGAL_ALT(ALT_E);
-			continue;
-
-		case 'd':	/* The day of month. */
-		case 'e':
-			bp = conv_num(bp, &tm->tm_mday, 1, 31);
-			LEGAL_ALT(ALT_O);
-			continue;
-
-		case 'k':	/* The hour (24-hour clock representation). */
-			LEGAL_ALT(0);
-			/* FALLTHROUGH */
-		case 'H':
-			bp = conv_num(bp, &tm->tm_hour, 0, 23);
-			LEGAL_ALT(ALT_O);
-			continue;
-
-		case 'l':	/* The hour (12-hour clock representation). */
-			LEGAL_ALT(0);
-			/* FALLTHROUGH */
-		case 'I':
-			bp = conv_num(bp, &tm->tm_hour, 1, 12);
-			if (tm->tm_hour == 12)
-				tm->tm_hour = 0;
-			LEGAL_ALT(ALT_O);
-			continue;
-
-		case 'j':	/* The day of year. */
-			i = 1;
-			bp = conv_num(bp, &i, 1, 366);
-			tm->tm_yday = i - 1;
-			LEGAL_ALT(0);
-			continue;
-
-		case 'M':	/* The minute. */
-			bp = conv_num(bp, &tm->tm_min, 0, 59);
-			LEGAL_ALT(ALT_O);
-			continue;
-
-		case 'm':	/* The month. */
-			i = 1;
-			bp = conv_num(bp, &i, 1, 12);
-			tm->tm_mon = i - 1;
-			LEGAL_ALT(ALT_O);
-			continue;
-
-		case 'p':	/* The locale's equivalent of AM/PM. */
-			bp = find_string(bp, &i, _ctloc(am_pm), NULL, 2);
-			if (tm->tm_hour > 11)
-				return NULL;
-			tm->tm_hour += i * 12;
-			LEGAL_ALT(0);
-			continue;
-
-		case 'S':	/* The seconds. */
-			bp = conv_num(bp, &tm->tm_sec, 0, 61);
-			LEGAL_ALT(ALT_O);
-			continue;
-
-		case 's':	/* seconds since the epoch */
-			{
-				time_t sse = 0;
-				uint64_t rulim = LLONG_MAX;
-                struct tm *tm2;
-
-				if (*bp < '0' || *bp > '9') {
-					bp = NULL;
-					continue;
-				}
-
-				do {
-					sse *= 10;
-					sse += *bp++ - '0';
-					rulim /= 10;
-				} while ((sse * 10 <= LLONG_MAX) &&
-					 rulim && *bp >= '0' && *bp <= '9');
-
-				if (sse < 0 || (uint64_t)sse > LLONG_MAX) {
-					bp = NULL;
-					continue;
-				}
-
-				if ((tm2 = ::localtime(&sse)) == NULL)
-					bp = NULL;
-                else
-                    *tm = *tm2;
-			}
-			continue;
-
-		case 'U':	/* The week of year, beginning on sunday. */
-		case 'W':	/* The week of year, beginning on monday. */
-			/*
-			 * XXX This is bogus, as we can not assume any valid
-			 * information present in the tm structure at this
-			 * point to calculate a real value, so just check the
-			 * range for now.
-			 */
-			 bp = conv_num(bp, &i, 0, 53);
-			 LEGAL_ALT(ALT_O);
-			 continue;
-
-		case 'w':	/* The day of week, beginning on sunday. */
-			bp = conv_num(bp, &tm->tm_wday, 0, 6);
-			LEGAL_ALT(ALT_O);
-			continue;
-
-		case 'u':	/* The day of week, monday = 1. */
-			bp = conv_num(bp, &i, 1, 7);
-			tm->tm_wday = i % 7;
-			LEGAL_ALT(ALT_O);
-			continue;
-
-		case 'g':	/* The year corresponding to the ISO week
-				 * number but without the century.
-				 */
-			bp = conv_num(bp, &i, 0, 99);
-			continue;
-
-		case 'G':	/* The year corresponding to the ISO week
-				 * number with century.
-				 */
-			do
-				bp++;
-			while (isdigit(*bp));
-			continue;
-
-		case 'V':	/* The ISO 8601:1988 week number as decimal */
-			bp = conv_num(bp, &i, 0, 53);
-			continue;
-
-		case 'Y':	/* The year. */
-			i = TM_YEAR_BASE;	/* just for data sanity... */
-			bp = conv_num(bp, &i, 0, 9999);
-			tm->tm_year = i - TM_YEAR_BASE;
-			LEGAL_ALT(ALT_E);
-			continue;
-
-		case 'y':	/* The year within 100 years of the epoch. */
-			/* LEGAL_ALT(ALT_E | ALT_O); */
-			bp = conv_num(bp, &i, 0, 99);
-
-			if (split_year)
-				/* preserve century */
-				i += (tm->tm_year / 100) * 100;
-			else {
-				split_year = 1;
-				if (i <= 68)
-					i = i + 2000 - TM_YEAR_BASE;
-				else
-					i = i + 1900 - TM_YEAR_BASE;
-			}
-			tm->tm_year = i;
-			continue;
-
-		case 'Z':
-			tzset();
-			if (strncmp((const char *)bp, gmt, 3) == 0) {
-				tm->tm_isdst = 0;
-#ifdef TM_GMTOFF
-				tm->TM_GMTOFF = 0;
-#endif
-#ifdef TM_ZONE
-				tm->TM_ZONE = gmt;
-#endif
-				bp += 3;
-			} else {
-				ep = find_string(bp, &i,
-					       	 (const char * const *)tzname,
-					       	  NULL, 2);
-				if (ep != NULL) {
-					tm->tm_isdst = i;
-#ifdef TM_GMTOFF
-					tm->TM_GMTOFF = -(timezone);
-#endif
-#ifdef TM_ZONE
-					tm->TM_ZONE = tzname[i];
-#endif
-				}
-				bp = ep;
-			}
-			continue;
-
-		case 'z':
-			/*
-			 * We recognize all ISO 8601 formats:
-			 * Z	= Zulu time/UTC
-			 * [+-]hhmm
-			 * [+-]hh:mm
-			 * [+-]hh
-			 * We recognize all RFC-822/RFC-2822 formats:
-			 * UT|GMT
-			 *          North American : UTC offsets
-			 * E[DS]T = Eastern : -4 | -5
-			 * C[DS]T = Central : -5 | -6
-			 * M[DS]T = Mountain: -6 | -7
-			 * P[DS]T = Pacific : -7 | -8
-			 *          Military
-			 * [A-IL-M] = -1 ... -9 (J not used)
-			 * [N-Y]  = +1 ... +12
-			 */
-			while (isspace(*bp))
-				bp++;
-
-			switch (*bp++) {
-			case 'G':
-				if (*bp++ != 'M')
-					return NULL;
-				/*FALLTHROUGH*/
-			case 'U':
-				if (*bp++ != 'T')
-					return NULL;
-				/*FALLTHROUGH*/
-			case 'Z':
-				tm->tm_isdst = 0;
-#ifdef TM_GMTOFF
-				tm->TM_GMTOFF = 0;
-#endif
-#ifdef TM_ZONE
-				tm->TM_ZONE = utc;
-#endif
-				continue;
-			case '+':
-				neg = 0;
-				break;
-			case '-':
-				neg = 1;
-				break;
-			default:
-				--bp;
-				ep = find_string(bp, &i, nast, NULL, 4);
-				if (ep != NULL) {
-#ifdef TM_GMTOFF
-					tm->TM_GMTOFF = -5 - i;
-#endif
-#ifdef TM_ZONE
-					tm->TM_ZONE = __UNCONST(nast[i]);
-#endif
-					bp = ep;
-					continue;
-				}
-				ep = find_string(bp, &i, nadt, NULL, 4);
-				if (ep != NULL) {
-					tm->tm_isdst = 1;
-#ifdef TM_GMTOFF
-					tm->TM_GMTOFF = -4 - i;
-#endif
-#ifdef TM_ZONE
-					tm->TM_ZONE = __UNCONST(nadt[i]);
-#endif
-					bp = ep;
-					continue;
-				}
-
-				if ((*bp >= 'A' && *bp <= 'I') ||
-				    (*bp >= 'L' && *bp <= 'Y')) {
-#ifdef TM_GMTOFF
-					/* Argh! No 'J'! */
-					if (*bp >= 'A' && *bp <= 'I')
-						tm->TM_GMTOFF =
-						    ('A' - 1) - (int)*bp;
-					else if (*bp >= 'L' && *bp <= 'M')
-						tm->TM_GMTOFF = 'A' - (int)*bp;
-					else if (*bp >= 'N' && *bp <= 'Y')
-						tm->TM_GMTOFF = (int)*bp - 'M';
-#endif
-#ifdef TM_ZONE
-					tm->TM_ZONE = NULL; /* XXX */
-#endif
-					bp++;
-					continue;
-				}
-				return NULL;
-			}
-			offs = 0;
-			for (i = 0; i < 4; ) {
-				if (isdigit(*bp)) {
-					offs = offs * 10 + (*bp++ - '0');
-					i++;
-					continue;
-				}
-				if (i == 2 && *bp == ':') {
-					bp++;
-					continue;
-				}
-				break;
-			}
-			switch (i) {
-			case 2:
-				offs *= 100;
-				break;
-			case 4:
-				i = offs % 100;
-				if (i >= 60)
-					return NULL;
-				/* Convert minutes into decimal */
-				offs = (offs / 100) * 100 + (i * 50) / 30;
-				break;
-			default:
-				return NULL;
-			}
-			if (neg)
-				offs = -offs;
-			tm->tm_isdst = 0;	/* XXX */
-#ifdef TM_GMTOFF
-			tm->TM_GMTOFF = offs;
-#endif
-#ifdef TM_ZONE
-			tm->TM_ZONE = NULL;	/* XXX */
-#endif
-			continue;
-
-		/*
-		 * Miscellaneous conversions.
-		 */
-		case 'n':	/* Any kind of white-space. */
-		case 't':
-			while (isspace(*bp))
-				bp++;
-			LEGAL_ALT(0);
-			continue;
-
-
-		default:	/* Unknown/unsupported conversion. */
-			return NULL;
-		}
-	}
-
-	return (char *)(bp);
+/* the C locale's %c, %x, %X and %r, as CPython's LocaleTime finds them */
+static const char *__ss_sp_composite(__ss_char d) {
+    switch (d) {
+        case 'c': return "%a %b %d %H:%M:%S %Y";
+        case 'x': return "%m/%d/%y";
+        case 'X': return "%H:%M:%S";
+        case 'r': return "%I:%M:%S %p";
+        case 'R': return "%H:%M";
+        case 'T': return "%H:%M:%S";
+    }
+    return NULL;
 }
 
-
-static const u_char *
-conv_num(const unsigned char *buf, int *dest, uint llim, uint ulim)
-{
-	uint result = 0;
-	unsigned char ch;
-
-	/* The limit also determines the number of valid digits. */
-	uint rulim = ulim;
-
-	ch = *buf;
-	if (ch < '0' || ch > '9')
-		return NULL;
-
-	do {
-		result *= 10;
-		result += ch - '0';
-		rulim /= 10;
-		ch = *++buf;
-	} while ((result * 10 <= ulim) && rulim && ch >= '0' && ch <= '9');
-
-	if (result < llim || result > ulim)
-		return NULL;
-
-	*dest = result;
-	return buf;
+/* the regex group a directive fills in ('\0' for %%) */
+static char __ss_sp_group(__ss_char d) {
+    switch (d) {
+        case 'e': return 'd';
+        case 'k': return 'H';
+        case 'l': return 'I';
+        case 'P': return 'p';
+        case '%': return '\0';
+    }
+    return (char)d;
 }
 
-int strncasecmp(char *s1, char *s2, size_t n)
-{
-    if (n == 0)
-        return 0;
+static inline __ss_char __ss_sp_lower(__ss_char c) {
+    if (c < 0x80)
+        return (c >= 'A' && c <= 'Z') ? c + 32 : c;
+    const __ss_char_record *r = __ss_char_rec(c);
+    if (r->flags & __SS_CHAR_EXTENDED_CASE)
+        return c;
+    return (__ss_char)((int)c + r->map[__SS_CHAR_LOWER_MAP]);
+}
 
-    while (n-- != 0 && tolower(*s1) == tolower(*s2))
-    {
-        if (n == 0 || *s1 == '\0' || *s2 == '\0')
-            break;
-        s1++;
-        s2++;
+/* the value of a decimal digit of any script, as \d and int() see it */
+static inline int __ss_sp_digit(__ss_char c) {
+    if (c < 0x80)
+        return (c >= '0' && c <= '9') ? (int)(c - '0') : -1;
+    return __ss_char_rec(c)->decimal;
+}
+
+struct __ss_sp_token {
+    char kind;   /* 'l' literal, 's' white-space, 'd' directive */
+    __ss_char c; /* the literal, or the directive */
+    bool alt;    /* %O form */
+};
+
+static ValueError *__ss_sp_bad_directive(__GC_STR d, str *format) {
+    return new ValueError(__add_strs(5, new str("'"), new str(d), new str("' is a bad directive in format '"), format, new str("'")));
+}
+
+/* split a format into tokens, as CPython's TimeRE.pattern(), checking the
+   directives (before any data is looked at, as CPython does when compiling
+   the regex) */
+static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_sp_token> &out, std::string &groups) {
+    size_t i = 0, n = fmt.size();
+    while (i < n) {
+        __ss_char c = fmt[i];
+        if (__ss_char_space(c)) {
+            while (i < n && __ss_char_space(fmt[i]))
+                i++;
+            out.push_back({'s', ' ', false});
+            continue;
+        }
+        if (c != '%') {
+            out.push_back({'l', c, false});
+            i++;
+            continue;
+        }
+        i++;
+        /* flags and a width, which CPython accepts and ignores */
+        while (i < n && fmt[i] < 0x80 && strchr("-_0^#", (char)fmt[i]))
+            i++;
+        while (i < n && fmt[i] >= '0' && fmt[i] <= '9')
+            i++;
+        __ss_char alt = 0;
+        if (i < n && (fmt[i] == 'O' || fmt[i] == 'E'))
+            alt = fmt[i++];
+        if (i == n || __ss_char_space(fmt[i])) {
+            if (!alt)
+                throw new ValueError(__add_strs(3, new str("stray % in format '"), format, new str("'")));
+            throw __ss_sp_bad_directive(__GC_STR(1, alt), format);
+        }
+        __ss_char d = fmt[i++];
+        const char *valid = alt == 'O' ? "dmyCHIMSwep" : (alt ? "" : "dfHkIlGjmMSUwuVyYzAaBbpZ%ePWTRrXxc");
+        if (d >= 0x80 || !*valid || !strchr(valid, (char)d))
+            throw __ss_sp_bad_directive(alt ? __GC_STR({alt, d}) : __GC_STR(1, d), format);
+        if (!alt && __ss_sp_composite(d)) {
+            __GC_STR sub;
+            for (const char *p = __ss_sp_composite(d); *p; p++)
+                sub += (__ss_char)*p;
+            __ss_sp_compile(sub, format, out, groups);
+            continue;
+        }
+        char g = __ss_sp_group(d);
+        if (g) {
+            if (groups.find(g) != std::string::npos) /* re.error in CPython */
+                throw new ValueError(__add_strs(3, new str("redefinition of group name '"), new str(__GC_STR(1, (__ss_char)g)), new str("'")));
+            groups += g;
+        }
+        out.push_back({'d', d, alt == 'O' && d != 'p'}); /* %Op is %p */
+    }
+}
+
+struct __ss_sp_found {
+    char group;
+    int val;          /* the number, or the index of the name */
+    size_t pos, len;  /* where in the data */
+};
+
+struct __ss_sp_matcher {
+    const std::vector<__ss_sp_token> *toks;
+    const __ss_char *s, *e;
+    std::vector<__ss_sp_found> found;
+    std::vector<__GC_STR> zones; /* %Z names, longest first */
+};
+
+static const __ss_char *__ss_sp_match(__ss_sp_matcher &m, size_t ti, const __ss_char *p);
+
+static const __ss_char *__ss_sp_try(__ss_sp_matcher &m, size_t ti, const __ss_char *p, const __ss_char *q, char group, int val) {
+    m.found.push_back({group, val, (size_t)(p - m.s), (size_t)(q - p)});
+    const __ss_char *r = __ss_sp_match(m, ti + 1, q);
+    if (!r)
+        m.found.pop_back();
+    return r;
+}
+
+/* the digits of a number of the given width at p, or -1 */
+static int __ss_sp_number(const __ss_sp_matcher &m, const __ss_char *p, int width) {
+    if (m.e - p < width)
+        return -1;
+    int v = 0;
+    for (int k = 0; k < width; k++) {
+        int dg = __ss_sp_digit(p[k]);
+        if (dg < 0)
+            return -1;
+        v = v * 10 + dg;
+    }
+    return v;
+}
+
+/* does a lower case name start at p, ignoring case */
+template<class T> static bool __ss_sp_name_at(const __ss_sp_matcher &m, const __ss_char *p, const T *name, size_t len) {
+    if ((size_t)(m.e - p) < len)
+        return false;
+    for (size_t k = 0; k < len; k++)
+        if (__ss_sp_lower(p[k]) != (__ss_char)name[k])
+            return false;
+    return true;
+}
+
+static const __ss_char *__ss_sp_names(__ss_sp_matcher &m, size_t ti, const __ss_char *p, char group, const char **names, int count, int base) {
+    /* no C locale name is a prefix of another in the same list, so at most
+       one matches */
+    for (int k = 0; k < count; k++)
+        if (__ss_sp_name_at(m, p, names[k], strlen(names[k])))
+            return __ss_sp_try(m, ti, p, p + strlen(names[k]), group, k + base);
+    return NULL;
+}
+
+/* %z: [+-]\d\d:?[0-5]\d(:?[0-5]\d(\.\d{1,6})?)?|Z */
+static const __ss_char *__ss_sp_zone(__ss_sp_matcher &m, size_t ti, const __ss_char *p) {
+    if (p < m.e && *p == 'Z') /* case-sensitive, even with IGNORECASE */
+        return __ss_sp_try(m, ti, p, p + 1, 'z', 0);
+    if (p == m.e || (*p != '+' && *p != '-') || __ss_sp_number(m, p + 1, 2) < 0)
+        return NULL;
+    const __ss_char *q = p + 3;
+    if (q < m.e && *q == ':')
+        q++;
+    if (q + 1 >= m.e || *q < '0' || *q > '5' || __ss_sp_digit(q[1]) < 0)
+        return NULL;
+    q += 2;
+    const __ss_char *ends[8];
+    int nends = 0;
+    const __ss_char *t = q;
+    if (t < m.e && *t == ':')
+        t++;
+    if (t + 1 < m.e && *t >= '0' && *t <= '5' && __ss_sp_digit(t[1]) >= 0) {
+        t += 2;
+        if (t < m.e && *t == '.') {
+            int digits = 0;
+            while (digits < 6 && t + 1 + digits < m.e && __ss_sp_digit(t[1 + digits]) >= 0)
+                digits++;
+            for (; digits > 0; digits--)
+                ends[nends++] = t + 1 + digits;
+        }
+        ends[nends++] = t;
+    }
+    ends[nends++] = q;
+    for (int k = 0; k < nends; k++) {
+        const __ss_char *r = __ss_sp_try(m, ti, p, ends[k], 'z', 0);
+        if (r)
+            return r;
+    }
+    return NULL;
+}
+
+static const __ss_char *__ss_sp_match(__ss_sp_matcher &m, size_t ti, const __ss_char *p) {
+    if (ti == m.toks->size())
+        return p;
+    const __ss_sp_token &tok = (*m.toks)[ti];
+
+    if (tok.kind == 'l' || (tok.kind == 'd' && tok.c == '%')) {
+        if (p == m.e)
+            return NULL;
+        if (tok.c == '\'' ? (*p != '\'' && *p != 0x2bc) : __ss_sp_lower(*p) != __ss_sp_lower(tok.c))
+            return NULL;
+        return __ss_sp_match(m, ti + 1, p + 1);
+    }
+    if (tok.kind == 's') { /* \s+, greedy */
+        const __ss_char *q = p;
+        while (q < m.e && __ss_char_space(*q))
+            q++;
+        for (; q > p; q--) {
+            const __ss_char *r = __ss_sp_match(m, ti + 1, q);
+            if (r)
+                return r;
+        }
+        return NULL;
     }
 
-    return tolower(*(unsigned char *) s1) - tolower(*(unsigned char *) s2);
+    char g = __ss_sp_group(tok.c);
+    if (tok.alt) {
+        /* the %O forms of the C locale: \d\d|\d| \d (%Ow: \d) */
+        int maxw = tok.c == 'w' ? 1 : 2;
+        for (int w = maxw; w > 0; w--) {
+            int v = __ss_sp_number(m, p, w);
+            if (v >= 0) {
+                const __ss_char *r = __ss_sp_try(m, ti, p, p + w, g, v);
+                if (r)
+                    return r;
+            }
+        }
+        if (maxw == 2 && p < m.e && *p == ' ') {
+            int v = __ss_sp_number(m, p + 1, 1);
+            if (v >= 0)
+                return __ss_sp_try(m, ti, p, p + 2, g, v);
+        }
+        return NULL;
+    }
+
+    /* numbers: the widest alternative first, the lowest value allowed for
+       more than one digit and for one digit, the highest, and whether the
+       regex also takes a space and one digit */
+    int maxw = 2, minw = 1, lo = 0, lo1 = 0, hi = 0;
+    bool space = false;
+    switch (tok.c) {
+        case 'd': case 'e': lo = lo1 = 1; hi = 31; space = true; break;
+        case 'H': case 'k': hi = 23; space = true; break;
+        case 'I': case 'l': lo = lo1 = 1; hi = 12; space = true; break;
+        case 'j': maxw = 3; lo = lo1 = 1; hi = 366; break;
+        case 'm': lo = lo1 = 1; hi = 12; break;
+        case 'M': hi = 59; break;
+        case 'S': hi = 61; break;
+        case 'U': case 'W': hi = 53; break;
+        case 'V': lo = 1; hi = 53; break;
+        case 'w': maxw = 1; hi = 6; break;
+        case 'u': maxw = 1; lo1 = 1; hi = 7; break;
+        case 'y': minw = 2; hi = 99; break;
+        case 'Y': case 'G': maxw = minw = 4; hi = 9999; break;
+        case 'f': maxw = 6; hi = 999999; break;
+        case 'a': return __ss_sp_names(m, ti, p, 'a', __ss_sp_day_abbr, 7, 0);
+        case 'A': return __ss_sp_names(m, ti, p, 'A', __ss_sp_day_name, 7, 0);
+        case 'b': return __ss_sp_names(m, ti, p, 'b', __ss_sp_month_abbr, 12, 1);
+        case 'B': return __ss_sp_names(m, ti, p, 'B', __ss_sp_month_name, 12, 1);
+        case 'p': case 'P': return __ss_sp_names(m, ti, p, 'p', __ss_sp_am_pm, 2, 0);
+        case 'z': return __ss_sp_zone(m, ti, p);
+        case 'Z':
+            for (size_t k = 0; k < m.zones.size(); k++)
+                if (__ss_sp_name_at(m, p, m.zones[k].data(), m.zones[k].size())) {
+                    const __ss_char *r = __ss_sp_try(m, ti, p, p + m.zones[k].size(), 'Z', 0);
+                    if (r)
+                        return r;
+                }
+            return NULL;
+    }
+    for (int w = maxw; w >= minw; w--) {
+        int v = __ss_sp_number(m, p, w);
+        if (v < 0 || v < (w > 1 ? lo : lo1) || v > hi)
+            continue;
+        if (tok.c == 'f')
+            for (int k = w; k < 6; k++)
+                v *= 10;
+        const __ss_char *r = __ss_sp_try(m, ti, p, p + w, g, v);
+        if (r)
+            return r;
+    }
+    if (space && p < m.e && *p == ' ') {
+        int v = __ss_sp_number(m, p + 1, 1);
+        if (v >= lo1)
+            return __ss_sp_try(m, ti, p, p + 2, g, v);
+    }
+    return NULL;
 }
 
-static const u_char *
-find_string(const u_char *bp, int *tgt, const char * const *n1,
-		const char * const *n2, int c)
-{
-	int i;
-	unsigned int len;
-
-	/* check full name - then abbreviated ones */
-	for (; n1 != NULL; n1 = n2, n2 = NULL) {
-		for (i = 0; i < c; i++, n1++) {
-			len = strlen(*n1);
-			if (strncasecmp((char *)*n1, (char *)bp, len) == 0) {
-				*tgt = i;
-				return bp + len;
-			}
-		}
-	}
-
-	/* Nothing matched */
-	return NULL;
-}
-
-/******************************************************************************
- * END OF STRPTIME FOR WINDOWS
- *****************************************************************************/
-
-#endif 
-
+/* proleptic gregorian calendar helpers, as in CPython's datetime */
 static inline bool __ss_isleap(int year) {
     return (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0);
 }
 
-/* does a strptime format contain one of the given conversion directives? */
-static bool __ss_strptime_has(const char *fmt, const char *directives) {
-    for (; *fmt; fmt++) {
-        if (*fmt != '%')
-            continue;
-        fmt++;
-        if (*fmt == 'E' || *fmt == 'O')
-            fmt++;
-        if (!*fmt)
-            break;
-        if (strchr(directives, *fmt))
-            return true;
-    }
-    return false;
+static int __ss_sp_days_in_month(int year, int month) {
+    static const int mdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    return mdays[month - 1] + (month == 2 && __ss_isleap(year));
 }
 
-/* the day of year (0-based) given to the %j directive of a format that was
-   already parsed successfully, or -1 if there is none. we read it ourselves
-   rather than trust tm_yday: BSD libc (macOS) normalizes day 366 of a common
-   year into January 1st of the next year on its own, leaving no trace of the
-   parsed value. the format up to %j is parsed once more into a scratch
-   struct tm just to locate the field in the input. */
-static int __ss_strptime_yday(const char *string, const char *fmt) {
-    const char *p = fmt;
-    for (; *p; p++) {
-        if (*p != '%')
-            continue;
-        const char *d = p + 1;
-        if (*d == 'E' || *d == 'O')
-            d++;
-        if (!*d)
-            return -1;
-        if (*d == 'j')
-            break;
-        p = d;
-    }
-    if (!*p)
-        return -1;
+static int __ss_sp_ordinal(int year, int month, int day) {
+    /* like datetime.date(year, month, day).toordinal() */
+    if (year < 1 || year > 9999)
+        throw new ValueError(__add_strs(3, new str("year "), __str((__ss_int)year), new str(" is out of range")));
+    if (month < 1 || month > 12)
+        throw new ValueError(new str("month must be in 1..12"));
+    if (day < 1 || day > __ss_sp_days_in_month(year, month))
+        throw new ValueError(new str("day is out of range for month"));
+    int y = year - 1;
+    int ord = y * 365 + y / 4 - y / 100 + y / 400 + day;
+    for (int m = 1; m < month; m++)
+        ord += __ss_sp_days_in_month(year, m);
+    return ord;
+}
 
-    std::string prefix(fmt, (size_t)(p - fmt));
-    tm scratch = {};
-    scratch.tm_mday = 1;
-    scratch.tm_isdst = -1;
-#ifdef WIN32
-    const char *pos = strptime(string, prefix.c_str(), &scratch);
-#else
-    const char *pos = ::strptime(string, prefix.c_str(), &scratch);
-#endif
-    if (!pos)
-        return -1;
-    while (*pos == ' ')  /* glibc allows leading spaces before the digits */
-        pos++;
-    int j = 0, n = 0;
-    for (; n < 3 && *pos >= '0' && *pos <= '9'; pos++, n++)
-        j = j * 10 + (*pos - '0');
-    return n ? j - 1 : -1;
+static void __ss_sp_from_ordinal(int ord, int &year, int &month, int &day) {
+    /* like datetime.date.fromordinal(ord) */
+    if (ord < 1)
+        throw new ValueError(new str("ordinal must be >= 1"));
+    int n = ord - 1;
+    int n400 = n / 146097; n %= 146097;
+    int n100 = n / 36524; n %= 36524;
+    int n4 = n / 1461; n %= 1461;
+    int n1 = n / 365; n %= 365;
+    year = n400 * 400 + n100 * 100 + n4 * 4 + n1 + 1;
+    if (n1 == 4 || n100 == 4) {
+        year--;
+        month = 12;
+        day = 31;
+    } else {
+        month = 1;
+        while (n >= __ss_sp_days_in_month(year, month))
+            n -= __ss_sp_days_in_month(year, month++);
+        day = n + 1;
+    }
+    if (year > 9999)
+        throw new ValueError(__add_strs(3, new str("year "), __str((__ss_int)year), new str(" is out of range")));
+}
+
+static void __ss_sp_from_isocalendar(int year, int week, int day, int &y, int &m, int &d) {
+    /* like datetime.date.fromisocalendar() */
+    if (year < 1 || year > 9999)
+        throw new ValueError(__add_strs(2, new str("year must be in 1..9999, not "), __str((__ss_int)year)));
+    int first = __ss_sp_ordinal(year, 1, 1);
+    if (week <= 0 || week >= 53) {
+        int first_weekday = first % 7; /* sunday == 0 */
+        if (week != 53 || !(first_weekday == 4 || (first_weekday == 3 && __ss_isleap(year))))
+            throw new ValueError(__add_strs(2, new str("Invalid week: "), __str((__ss_int)week)));
+    }
+    if (day <= 0 || day >= 8)
+        throw new ValueError(__add_strs(3, new str("Invalid weekday: "), __str((__ss_int)day), new str(" (range is [1, 7])")));
+    /* the monday of week 1 */
+    int monday = first - ((first + 6) % 7);
+    if ((first + 6) % 7 > 3)
+        monday += 7;
+    __ss_sp_from_ordinal(monday + (week - 1) * 7 + (day - 1), y, m, d);
+}
+
+void __ss_strptime(str *string, str *format, __ss_strptime_result &res) {
+    std::vector<__ss_sp_token> toks;
+    std::string groups;
+    __ss_sp_compile(format->unit, format, toks, groups);
+
+    __ss_sp_matcher m;
+    m.toks = &toks;
+    m.s = string->unit.data();
+    m.e = m.s + string->unit.size();
+    if (groups.find('Z') != std::string::npos) {
+        /* CPython's LocaleTime.timezone: utc, gmt and tzname[0], then
+           tzname[1] when there is daylight saving time */
+        m.zones = {(new str("utc"))->unit, (new str("gmt"))->unit, tzname->__getfirst__()->lower()->unit};
+        if (daylight)
+            m.zones.push_back(tzname->__getsecond__()->lower()->unit);
+        std::stable_sort(m.zones.begin(), m.zones.end(), [](const __GC_STR &a, const __GC_STR &b) { return a.size() > b.size(); });
+    }
+
+    const __ss_char *end = __ss_sp_match(m, 0, m.s);
+    if (!end)
+        throw new ValueError(__add_strs(4, new str("time data "), repr(string), new str(" does not match format "), repr(format)));
+    if (end != m.e)
+        throw new ValueError(__add_strs(2, new str("unconverted data remains: "), new str(__GC_STR(end, m.e))));
+
+    int iso_year = -1, year = -1, month = 1, day = 1;
+    int hour = 0, minute = 0, second = 0, fraction = 0;
+    int tz = -1, gmtoff = 0, gmtoff_fraction = 0;
+    bool has_gmtoff = false;
+    int iso_week = -1, week_of_year = -1, weekday = -1, julian = -1;
+    bool week_starts_mon = false;
+    str *zone = NULL;
+
+    int century = -1, ampm = -1;
+    for (const __ss_sp_found &f : m.found) {
+        if (f.group == 'C')
+            century = f.val;
+        else if (f.group == 'p')
+            ampm = f.val;
+    }
+
+    for (const __ss_sp_found &f : m.found) {
+        switch (f.group) {
+            case 'y':
+                year = f.val;
+                if (century != -1)
+                    year += century * 100;
+                else
+                    year += year <= 68 ? 2000 : 1900;
+                break;
+            case 'Y': year = f.val; break;
+            case 'G': iso_year = f.val; break;
+            case 'm': case 'b': case 'B': month = f.val; break;
+            case 'd': day = f.val; break;
+            case 'H': hour = f.val; break;
+            case 'I':
+                hour = f.val;
+                if (ampm == 1) {
+                    if (hour != 12)
+                        hour += 12;
+                } else if (hour == 12)
+                    hour = 0;
+                break;
+            case 'M': minute = f.val; break;
+            case 'S': second = f.val; break;
+            case 'f': fraction = f.val; break;
+            case 'a': case 'A': weekday = f.val; break;
+            case 'w': weekday = f.val == 0 ? 6 : f.val - 1; break;
+            case 'u': weekday = f.val - 1; break;
+            case 'j': julian = f.val; break;
+            case 'U': case 'W':
+                week_of_year = f.val;
+                week_starts_mon = f.group == 'W';
+                break;
+            case 'V': iso_week = f.val; break;
+            case 'z': {
+                std::string z;
+                for (size_t k = 0; k < f.len; k++) {
+                    __ss_char c = m.s[f.pos + k];
+                    int dg = __ss_sp_digit(c);
+                    z += dg >= 0 ? (char)('0' + dg) : (char)c;
+                }
+                has_gmtoff = true;
+                if (z == "Z") {
+                    gmtoff = 0;
+                    break;
+                }
+                if (z[3] == ':') {
+                    z.erase(3, 1);
+                    if (z.size() > 5) {
+                        if (z[5] != ':')
+                            throw new ValueError(__add_strs(2, new str("Inconsistent use of : in "), new str(__GC_STR(m.s + f.pos, f.len))));
+                        z.erase(5, 1);
+                    }
+                }
+                if (z.size() > 5 && z[5] == ':') /* int(':3') in CPython */
+                    throw new ValueError(__add_strs(3, new str("invalid literal for int() with base 10: '"), new str(z.substr(5, 2).c_str()), new str("'")));
+                int secs = z.size() > 5 ? atoi(z.substr(5, 2).c_str()) : 0;
+                gmtoff = atoi(z.substr(1, 2).c_str()) * 3600 + atoi(z.substr(3, 2).c_str()) * 60 + secs;
+                if (z.size() > 8) {
+                    std::string rem = z.substr(8);
+                    rem.append(6 - rem.size(), '0');
+                    gmtoff_fraction = atoi(rem.c_str());
+                }
+                if (z[0] == '-') {
+                    gmtoff = -gmtoff;
+                    gmtoff_fraction = -gmtoff_fraction;
+                }
+                break;
+            }
+            case 'Z': {
+                zone = new str(__GC_STR(m.s + f.pos, f.len));
+                __GC_STR found = zone->lower()->unit;
+                bool utc = found == (new str("utc"))->unit || found == (new str("gmt"))->unit;
+                int value = -1;
+                if (utc || found == tzname->__getfirst__()->lower()->unit)
+                    value = 0;
+                else if (daylight && found == tzname->__getsecond__()->lower()->unit)
+                    value = 1;
+                /* too ambiguous when both names are the same */
+                if (value != -1 && !(tzname->__getfirst__()->unit == tzname->__getsecond__()->unit && daylight && !utc))
+                    tz = value;
+                break;
+            }
+        }
+    }
+
+    /* the ISO week directives need each other and a weekday */
+    if (iso_year != -1) {
+        if (julian != -1)
+            throw new ValueError(new str("Day of the year directive '%j' is not compatible with ISO year directive '%G'. Use '%Y' instead."));
+        if (iso_week == -1 || weekday == -1)
+            throw new ValueError(new str("ISO year directive '%G' must be used with the ISO week directive '%V' and a weekday directive ('%A', '%a', '%w', or '%u')."));
+    } else if (iso_week != -1) {
+        if (year == -1 || weekday == -1)
+            throw new ValueError(new str("ISO week directive '%V' must be used with the ISO year directive '%G' and a weekday directive ('%A', '%a', '%w', or '%u')."));
+        throw new ValueError(new str("ISO week directive '%V' is incompatible with the year directive '%Y'. Use the ISO year '%G' instead."));
+    }
+
+    bool leap_year_fix = false;
+    if (year == -1) {
+        if (month == 2 && day == 29) {
+            year = 1904; /* the first leap year of the 20th century */
+            leap_year_fix = true;
+        } else
+            year = 1900;
+    }
+
+    if (julian == -1 && weekday != -1) {
+        if (week_of_year != -1) {
+            /* the day of the year from %U or %W and the weekday */
+            int first_weekday = (__ss_sp_ordinal(year, 1, 1) + 6) % 7;
+            int dow = weekday;
+            if (!week_starts_mon) {
+                first_weekday = (first_weekday + 1) % 7;
+                dow = (dow + 1) % 7;
+            }
+            if (week_of_year == 0)
+                julian = 1 + dow - first_weekday;
+            else
+                julian = 1 + (7 - first_weekday) % 7 + 7 * (week_of_year - 1) + dow;
+        } else if (iso_year != -1 && iso_week != -1)
+            __ss_sp_from_isocalendar(iso_year, iso_week, weekday + 1, year, month, day);
+        if (julian != -1 && julian <= 0) {
+            year--;
+            julian += 365 + __ss_isleap(year);
+        }
+    }
+
+    if (julian == -1)
+        julian = __ss_sp_ordinal(year, month, day) - __ss_sp_ordinal(year, 1, 1) + 1;
+    else
+        __ss_sp_from_ordinal(julian - 1 + __ss_sp_ordinal(year, 1, 1), year, month, day);
+    if (weekday == -1)
+        weekday = (__ss_sp_ordinal(year, month, day) + 6) % 7;
+
+    if (leap_year_fix) /* no year was given, but february 29th was */
+        year = 1900;
+
+    res.year = year;
+    res.month = month;
+    res.day = day;
+    res.hour = hour;
+    res.minute = minute;
+    res.second = second;
+    res.weekday = weekday;
+    res.julian = julian;
+    res.isdst = tz;
+    res.microsecond = fraction;
+    res.has_gmtoff = has_gmtoff;
+    res.gmtoff = gmtoff;
+    res.gmtoff_fraction = gmtoff_fraction;
+    res.zone = zone;
 }
 
 struct_time *strptime(str *string, str *format) {
-    /* CPython defaults: 1900-01-01 00:00:00, tm_isdst -1. tm_wday/tm_yday
-       start out as -1 so we can tell whether the platform strptime filled
-       them in (glibc does whenever a date field was parsed, others may not)
-       and derive them from the date otherwise, as CPython's _strptime does. */
-    tm time_tuple = {};
-    time_tuple.tm_mday = 1;
-    time_tuple.tm_wday = -1;
-    time_tuple.tm_yday = -1;
-    time_tuple.tm_isdst = -1;
-
-    const char *end;
-#ifdef WIN32
-    end = strptime(string->c_str(), format->c_str(), &time_tuple);
-#else
-    end = ::strptime(string->c_str(), format->c_str(), &time_tuple);
-#endif
-    if (!end)
-        throw new ValueError(__add_strs(4, new str("time data "), repr(string), new str(" does not match format "), repr(format)));
-    if (*end)
-        throw new ValueError(__add_strs(2, new str("unconverted data remains: "), new str(end)));
-
-    static const int mdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    int year = time_tuple.tm_year + 1900;
-
-    if (__ss_strptime_has(format->c_str(), "j") && time_tuple.tm_yday != -1) {
-        /* a parsed day of year (%j) determines month and day, as in CPython
-           (where it takes precedence over %m/%d). the bundled strptime used
-           on Windows only stores tm_yday for %j, and glibc keeps a
-           conflicting %m/%d, so derive tm_mon/tm_mday from it here. we go by
-           the format rather than by tm_yday having been set, since glibc
-           also fills that in from %m/%d (even for an invalid date). as in
-           CPython, day 366 of a common year rolls over into January of the
-           next year while tm_yday keeps its value. */
-        int yday = time_tuple.tm_yday;
-        int parsed = __ss_strptime_yday(string->c_str(), format->c_str());
-        if (parsed != -1 && parsed != yday) {
-            /* BSD libc (macOS) already moved day 366 of a common year into
-               the next year and reset tm_yday; go back to what was parsed
-               so the rollover below produces the same result everywhere */
-            yday = parsed;
-            time_tuple.tm_yday = parsed;
-            year--;
-            time_tuple.tm_year--;
-        }
-        if (yday >= 365 + __ss_isleap(year)) {
-            yday -= 365 + __ss_isleap(year);
-            year++;
-            time_tuple.tm_year++;
-        }
-        int m = 0;
-        while (m < 11 && yday >= mdays[m] + (m == 1 && __ss_isleap(year))) {
-            yday -= mdays[m] + (m == 1 && __ss_isleap(year));
-            m++;
-        }
-        time_tuple.tm_mon = m;
-        time_tuple.tm_mday = yday + 1;
-    } else {
-        int mon = time_tuple.tm_mon;
-        int ndays = mdays[mon] + (mon == 1 && __ss_isleap(year));
-        if (time_tuple.tm_mday > ndays)
-            throw new ValueError(new str("day is out of range for month"));
-
-        int yday = time_tuple.tm_mday - 1;
-        for (int m = 0; m < mon; m++)
-            yday += mdays[m] + (m == 1 && __ss_isleap(year));
-        time_tuple.tm_yday = yday;
-    }
-    int mon = time_tuple.tm_mon;
-    if (time_tuple.tm_wday == -1 || !__ss_strptime_has(format->c_str(), "aAwuc")) {
-        /* the weekday is kept only when the format parsed one (%a %A %w %u,
-           or %c which expands to %a), as in CPython. otherwise derive it from
-           the final date: glibc fills it in itself, but from the parsed %m/%d,
-           which %j may have just overridden. Sakamoto's method, Sunday == 0
-           like struct tm */
-        static const int t[12] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-        int y = year - (mon < 2);
-        int w = (y + y/4 - y/100 + y/400 + t[mon] + time_tuple.tm_mday) % 7;
-        time_tuple.tm_wday = w < 0 ? w + 7 : w;
-    }
-    return tm2tuple(&time_tuple);
+    __ss_strptime_result r;
+    __ss_strptime(string, format, r);
+    struct_time *st = new struct_time(new tuple2<__ss_int, __ss_int>(9,
+        (__ss_int)r.year, (__ss_int)r.month, (__ss_int)r.day,
+        (__ss_int)r.hour, (__ss_int)r.minute, (__ss_int)r.second,
+        (__ss_int)r.weekday, (__ss_int)r.julian, (__ss_int)r.isdst));
+    if (r.has_gmtoff)
+        st->tm_gmtoff = r.gmtoff;
+    st->tm_zone = r.zone;
+    return st;
 }
 
 void __init_clock_ids() {

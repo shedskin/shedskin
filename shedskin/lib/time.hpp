@@ -133,9 +133,19 @@ str *strftime(str *format);
 str *strftime(str *format, tuple2<__ss_int, __ss_int> *tuple);
 
 struct_time *strptime(str *string, str *format);
-#ifdef WIN32
-char *strptime(const char *, const char *, struct tm *);
-#endif
+
+/* what CPython's _strptime() returns, shared with datetime.strptime */
+struct __ss_strptime_result {
+    int year, month, day, hour, minute, second;
+    int weekday; /* monday == 0 */
+    int julian;  /* day of the year, 1-based */
+    int isdst;   /* from %Z, else -1 */
+    int microsecond;
+    bool has_gmtoff; /* %z was given */
+    int gmtoff, gmtoff_fraction;
+    str *zone;   /* %Z as given, or NULL */
+};
+void __ss_strptime(str *string, str *format, __ss_strptime_result &result);
 
 void __init();
 
