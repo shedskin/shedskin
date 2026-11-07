@@ -39,6 +39,7 @@ public:
 
     file(FILE *g=0, str *name=0, str *mode=0);
     file(str *name, str *mode=0, str *encoding=0, str *errors=0, str *newline=0, __ss_int buffering=-1);
+    file(FILE *g, str *name, str *mode, str *encoding, str *errors, str *newline, __ss_int buffering); /* os.fdopen */
 
     virtual void * close();
     virtual void * flush();
@@ -73,6 +74,8 @@ public:
     void __make_buffer();
     void __sig_reset();
     void __close_buffer();
+    void __init_text(str *encoding, str *errors, str *newline);
+    void __init_opened(__ss_int buffering);
 };
 
 /* TODO file<bytes *> template? */
@@ -159,6 +162,8 @@ inline std::wstring __ss_wpath(str *s, const char *func = 0, const char *arg = "
 void __check_open_mode(str *mode);
 str *__c_open_mode(str *mode, bool excl);
 str *__fileio_mode(str *mode);
+void __set_buffering(FILE *f, __ss_int buffering, bool text);
+void __check_binary_args(str *encoding, str *errors, str *newline);
 
 file *open(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
 file *open(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);

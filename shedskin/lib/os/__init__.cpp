@@ -1140,23 +1140,32 @@ static FILE *__fdopen(__ss_int fd, str *mode) {
         throw new TypeError(new str("expected str, bytes or os.PathLike object, not int"));
     if(fd < 0)
         throw new ValueError(new str("negative file descriptor"));
-    /* C fdopen() does not know 'x' (and never creates or truncates) */
-    FILE* fp = ::fdopen((int)fd, __c_open_mode(mode, false)->c_str());
+    /* C fdopen() does not know 'x' (and never creates or truncates). like
+       open(), a text file is opened in binary mode: we translate newlines
+       ourselves */
+    str *cmode = __c_open_mode(mode, false);
+    if(cmode->unit.find('b') == std::string::npos)
+        cmode->unit += 'b';
+    FILE* fp = ::fdopen((int)fd, cmode->c_str());
     if(fp == NULL)
         __throw_oserror();
     return fp;
 }
 
-file* fdopen(__ss_int fd, str* mode, __ss_int) {
+file* fdopen(__ss_int fd, str* mode, __ss_int buffering, str *encoding, str *errors, str *newline) {
     if(!mode)
         mode = new str("r");
-    return new file(__fdopen(fd, mode), new str("<fdopen>"), mode);
+    return new file(__fdopen(fd, mode), new str("<fdopen>"), mode, encoding, errors, newline, buffering);
 }
 
-file_binary* fdopen_binary(__ss_int fd, str* mode, __ss_int) {
+file_binary* fdopen_binary(__ss_int fd, str* mode, __ss_int buffering, str *encoding, str *errors, str *newline) {
     if(!mode)
         mode = new str("rb");
-    return new file_binary(__fdopen(fd, mode), new str("<fdopen>"), mode);
+    __check_open_mode(mode); /* (as cpython: before the other arguments) */
+    __check_binary_args(encoding, errors, newline); /* (as cpython: the fd stays open) */
+    FILE *fp = __fdopen(fd, mode);
+    __set_buffering(fp, buffering, false);
+    return new file_binary(fp, new str("<fdopen>"), mode);
 }
 
 bytes *read(__ss_int fd, __ss_int n) {

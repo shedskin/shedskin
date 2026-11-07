@@ -1648,6 +1648,126 @@ def test_fdopen_buffering():
     os.remove(path)
 
 
+def test_fdopen_encoding():
+    # as open(): encoding, errors and newline (1106-B1: these were dropped)
+    path = 'shedskin_test_fdopen_enc.txt'
+    # (on windows, os.open() gives a text-mode fd by default, where the C
+    # runtime translates '\r\n' below us, in cpython too: so use O_BINARY)
+    BIN = os.O_BINARY if os.name == 'nt' else 0
+    fd = os.open(path, os.O_CREAT | os.O_WRONLY | os.O_TRUNC | BIN, 0o644)
+    f = os.fdopen(fd, 'w', encoding='latin-1')
+    assert f.encoding == 'latin-1'
+    f.write('caf\xe9')
+    f.close()
+    with open(path, 'rb') as g:
+        assert g.read() == b'caf\xe9'
+    fd = os.open(path, os.O_RDONLY | BIN)
+    with os.fdopen(fd, 'r', -1, 'latin-1') as f:  # (positionally)
+        assert f.read() == 'caf\xe9'
+    fd = os.open(path, os.O_RDONLY | BIN)
+    with os.fdopen(fd, errors='replace') as f:  # (not utf-8)
+        assert f.encoding == 'utf-8'
+        assert f.errors == 'replace'
+        assert f.read() == 'caf\ufffd'
+    fd = os.open(path, os.O_WRONLY | os.O_TRUNC | BIN)
+    with os.fdopen(fd, 'w', encoding='ascii', errors='replace') as f:
+        f.write('caf\xe9')
+    with open(path, 'rb') as g:
+        assert g.read() == b'caf?'
+
+    # defaults as open(): utf-8, strict and universal newlines
+    with open(path, 'wb') as g:
+        g.write(b'a\r\nb\rc\n')
+    fd = os.open(path, os.O_RDONLY | BIN)
+    with os.fdopen(fd) as f:
+        assert f.encoding == 'utf-8'
+        assert f.errors == 'strict'
+        assert f.read() == 'a\nb\nc\n'
+    fd = os.open(path, os.O_RDONLY | BIN)
+    with os.fdopen(fd, newline='') as f:
+        assert f.readlines() == ['a\r\n', 'b\r', 'c\n']
+    fd = os.open(path, os.O_WRONLY | os.O_TRUNC | BIN)
+    with os.fdopen(fd, 'w', newline='\n') as f:
+        f.write('x\ny\n')
+    with open(path, 'rb') as g:
+        assert g.read() == b'x\ny\n'
+
+    # utf-8-sig, also at an offset
+    fd = os.open(path, os.O_WRONLY | os.O_TRUNC | BIN)
+    with os.fdopen(fd, 'w', encoding='utf-8-sig') as f:
+        f.write('hi')
+    with open(path, 'rb') as g:
+        assert g.read() == b'\xef\xbb\xbfhi'
+    fd = os.open(path, os.O_RDONLY | BIN)
+    with os.fdopen(fd, encoding='utf-8-sig') as f:
+        assert f.read() == 'hi'
+    with open(path, 'wb') as g:
+        g.write(b'abhi')
+    fd = os.open(path, os.O_RDONLY | BIN)
+    os.lseek(fd, 2, os.SEEK_SET)
+    with os.fdopen(fd, encoding='utf-8-sig') as f:
+        assert f.read() == 'hi'
+
+    # append: as cpython, starts at the end (so no bom), also for an fd at 0
+    fd = os.open(path, os.O_WRONLY | os.O_APPEND | BIN)
+    with os.fdopen(fd, 'a', encoding='utf-8-sig') as f:
+        assert f.tell() == 4
+        f.write('!')
+    fd = os.open(path, os.O_RDWR | BIN)
+    with os.fdopen(fd, 'a+') as f:
+        assert f.tell() == 5
+        assert f.read() == ''
+        f.write('?')
+    with open(path, 'rb') as g:
+        assert g.read() == b'abhi!?'
+    with open(path, 'wb') as g:
+        g.write(b'abhi')
+
+    # as cpython: a bad text argument closes the fd
+    for case in range(3):
+        fd = os.open(path, os.O_RDONLY | BIN)
+        try:
+            if case == 0:
+                os.fdopen(fd, encoding='bogus')
+            elif case == 1:
+                os.fdopen(fd, newline='x')
+            else:
+                os.fdopen(fd, 'r', 0)
+            assert False
+        except LookupError as e:
+            assert str(e) == 'unknown encoding: bogus'
+        except ValueError as e:
+            assert str(e) in ('illegal newline value: x', "can't have unbuffered text I/O")
+        try:
+            os.fstat(fd)
+            assert False
+        except OSError:
+            pass
+
+    # .. while a binary fdopen refuses them, and leaves the fd open
+    msgs = []
+    for case in range(3):
+        fd = os.open(path, os.O_RDONLY | BIN)
+        try:
+            if case == 0:
+                os.fdopen(fd, 'rb', encoding='latin-1')
+            elif case == 1:
+                os.fdopen(fd, 'rb', errors='strict')
+            else:
+                os.fdopen(fd, 'rb', newline='')
+        except ValueError as e:
+            msgs.append(str(e))
+        os.fstat(fd)
+        os.close(fd)
+    assert msgs == ["binary mode doesn't take an encoding argument",
+                    "binary mode doesn't take an errors argument",
+                    "binary mode doesn't take a newline argument"]
+    fd = os.open(path, os.O_RDONLY | BIN)
+    with os.fdopen(fd, 'rb', 0) as g:  # (unbuffered is fine for binary)
+        assert g.read() == b'abhi'
+    os.remove(path)
+
+
 def test_process_constants():
     assert os.P_WAIT == 0
     assert os.P_NOWAIT == 1
@@ -1889,6 +2009,7 @@ def test_all():
     test_reload_environ()
     test_getlogin()
     test_fdopen_buffering()
+    test_fdopen_encoding()
     test_process_constants()
     test_process_compile_only()
     test_urandom()

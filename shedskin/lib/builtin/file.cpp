@@ -162,7 +162,7 @@ static FILE *__ss_fopen(str *file_name, str *flags) {
    (text only: in binary mode cpython warns and uses the default), n > 1 a
    buffer of n bytes (a hint: glibc picks its own size), and < 0 the default.
    setvbuf() must come before any other operation on the stream */
-static void __set_buffering(FILE *f, __ss_int buffering, bool text) {
+void __set_buffering(FILE *f, __ss_int buffering, bool text) {
     if (buffering == 0)
         setvbuf(f, NULL, _IONBF, 0);
     else if (buffering == 1) {
@@ -172,10 +172,10 @@ static void __set_buffering(FILE *f, __ss_int buffering, bool text) {
         setvbuf(f, NULL, _IOFBF, (size_t)std::min<__ss_int>(buffering, INT_MAX));
 }
 
-file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline, __ss_int buffering) : closed(False) {
-    __check_open_mode(flags);
+/* encoding, errors and newline, as for open() and os.fdopen() */
+void file::__init_text(str *encoding, str *errors, str *newline) {
     options.universal_mode = true;
-    __encoding = __lookup_encoding(encoding); /* LookupError before touching the file */
+    __encoding = __lookup_encoding(encoding);
     __errors = __lookup_errors(errors);
     this->encoding = encoding ? encoding : new str("utf-8");
     this->errors = errors ? errors : new str("strict");
@@ -197,26 +197,18 @@ file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline,
         else
             throw new ValueError(__add_strs(2, new str("illegal newline value: "), newline));
     }
+}
 
-    if (!flags)
-        flags = __char_cache['r'];
-    str *cflags = flags;
-    if (cflags->unit.find('b') == std::string::npos)
-        cflags = new str(cflags->unit + __gcs("b"));
-    f = __ss_fopen(file_name, cflags);
-    if(f == 0)
-        __throw_oserror(file_name);
-    __check_not_directory(f, file_name);
-    if (cflags->unit.find('a') != std::string::npos)
-        fseek(f, 0, SEEK_END); /* (as cpython: tell() and reads start at the end) */
+/* buffering, a utf-8-sig bom and .buffer, once f is open (and name/mode set) */
+void file::__init_opened(__ss_int buffering) {
     if (buffering == 0) { /* (as cpython: after opening, so 'w' truncates) */
         fclose(f);
         f = 0;
         throw new ValueError(new str("can't have unbuffered text I/O"));
     }
     __set_buffering(f, buffering, true);
-    name = file_name;
-    mode = flags;
+    if (mode->unit.find('a') != std::string::npos) /* (as cpython, also for an fd: */
+        fseek(f, 0, SEEK_END);                      /*  tell() and reads start at the end) */
 
     if (__encoding == __SS_ENC_UTF8_SIG) {
         __encoding = __SS_ENC_UTF8;
@@ -241,6 +233,37 @@ void file::__sig_reset() {
             return;
     }
     __bom_pending = mode->unit.find_first_of(__gcs("wax+")) != std::string::npos;
+}
+
+file::file(str *file_name, str *flags, str *encoding, str *errors, str *newline, __ss_int buffering) : closed(False) {
+    __check_open_mode(flags);
+    __init_text(encoding, errors, newline); /* LookupError before touching the file */
+
+    if (!flags)
+        flags = __char_cache['r'];
+    str *cflags = flags;
+    if (cflags->unit.find('b') == std::string::npos)
+        cflags = new str(cflags->unit + __gcs("b"));
+    f = __ss_fopen(file_name, cflags);
+    if(f == 0)
+        __throw_oserror(file_name);
+    __check_not_directory(f, file_name);
+    name = file_name;
+    mode = flags;
+    __init_opened(buffering);
+}
+
+/* os.fdopen(): as cpython, a bad encoding, newline or buffering closes g
+   (and so the fd), as io.open() closes its FileIO */
+file::file(FILE *g, str *name, str *mode, str *encoding, str *errors, str *newline, __ss_int buffering) : name(name), mode(mode), f(g), buffer(0), closed(False) {
+    try {
+        __init_text(encoding, errors, newline);
+    } catch (...) {
+        fclose(f);
+        f = 0;
+        throw;
+    }
+    __init_opened(buffering);
 }
 
 file::file(FILE *g, str *name, str *mode) : name(name), mode(mode), f(g), buffer(0), closed(False) {
@@ -693,7 +716,7 @@ file_binary::file_binary(str *file_name, str *flags, __ss_int buffering) : close
 
 file_binary::file_binary(FILE *g, str *name, str *mode) : name(name), mode(mode ? __fileio_mode(mode) : 0), f(g), closed(False) {}
 
-static void __check_binary_args(str *encoding, str *errors, str *newline) {
+void __check_binary_args(str *encoding, str *errors, str *newline) {
     if (encoding)
         throw new ValueError(new str("binary mode doesn't take an encoding argument"));
     if (errors)
