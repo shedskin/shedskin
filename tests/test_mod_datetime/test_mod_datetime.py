@@ -678,6 +678,18 @@ def test_class_attributes():
     assert datetime.date.min <= datetime.date(2024, 1, 1) <= datetime.date.max
     assert datetime.timedelta.min < datetime.timedelta() < datetime.timedelta.max
 
+    # 1021-C8: a lib class attribute assigned to a variable was 'void *'
+    d = datetime.date.max
+    assert str(d) == '9999-12-31' and d.year == 9999
+    dt = datetime.datetime.min
+    assert dt.month == 1 and dt.hour == 0
+    td = datetime.timedelta.resolution
+    assert td.microseconds == 1
+    t = datetime.time.max
+    assert t.second == 59
+    days = [datetime.date.min, datetime.date.max]
+    assert days[1].day == 31
+
 
 def test_timedelta_bool():
     # timedelta had no __bool__, so 'if delta:' was always taken
