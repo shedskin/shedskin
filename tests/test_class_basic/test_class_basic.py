@@ -119,6 +119,17 @@ def test_class_attrs():
     assert ReprableChild.__name__ == 'ReprableChild'
     assert foo.__class__.__name__ == Foo.__name__
 
+def test_class_name_expr():  # 1027-B5: __class__.__name__ used inside an expression
+    foo = Foo()
+    assert [foo.__class__.__name__] == ['Foo']
+    assert {foo.__class__.__name__: 1} == {'Foo': 1}
+    assert [[].__class__.__name__, 'x'.__class__.__name__] == ['list', 'str']
+    assert [x.__class__.__name__ for x in [Foo(), Foo()]] == ['Foo', 'Foo']
+    names = [foo.__class__.__name__]
+    names.append(Baz().__class__.__name__)
+    assert names == ['Foo', 'Baz']
+    assert ','.join(names) == 'Foo,Baz'
+
 class Baz:
     def __init__(self):
         a = None
@@ -276,6 +287,7 @@ def test_all():
     test_class_person()
     test_class_edge()
     test_class_attrs()
+    test_class_name_expr()
     test_class_instance_attrs()
     test_instance_str()
     test_instance_repr()
