@@ -276,32 +276,126 @@ class ExtensionModule:
             and len(cl.funcs[name].formals) == 2
         ]
 
-    def _add_global(self, var: "python.Variable", ssmod: str) -> None:
-        """Emit a single PyModule_AddObject call with its return value checked.
+    def exported_globals(self) -> list["python.Variable"]:
+        """Supported global variables of the module
 
-        Unlike class-type registration further down (which already checks
-        this), the unchecked call previously used here would leave a Python
-        exception silently set (PyModule_AddObject raises on failure) while
-        module init carried on as if nothing had gone wrong.
+        A name that is also a function or class is left out, as the getset
+        descriptor would hide that.
         """
-        params = {
-            "name": var.name,
-            "var": "__" + self.gv.module.ident + "__::" + self.gv.cpp_name(var),
-            "ssmod": ssmod,
-        }
-        self.write(
-            '    if (PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s)) < 0) {'
-            % params
-        )
-        self.write("        Py_DECREF(%s);" % ssmod)
-        self.write("        return NULL;")
-        self.write("    }")
+        mv = self.gv.module.mv
+        return [
+            var
+            for var in self.supported_vars(self.gv.mv.globals.values())
+            if var.name not in mv.funcs and var.name not in mv.classes
+        ]
 
-    def do_add_globals(self, classes: list["python.Class"], ssmod: str) -> None:
-        """Add global variables to the module"""
-        # global variables
-        for var in self.supported_vars(self.gv.mv.globals.values()):
-            self._add_global(var, ssmod)
+    def do_module_type(self, gvars: list["python.Variable"]) -> None:
+        """Generate the module type, carrying the global variables
+
+        The global variables used to be copied into the module dict at import
+        time, so changes on either side were not seen by the other (0921-B4,
+        #1676). Instead, the module object gets a subtype of the module type,
+        with a getset descriptor for each global variable. As data descriptors
+        of the type come before the module dict, 'mod.var' converts the current
+        value, and 'mod.var = value' changes the C++ global.
+        """
+        write = self.write
+        mod = "_".join(self.gv.module.name_list)
+
+        for var in gvars:
+            cpp_var = "__%s__::%s" % (self.gv.module.ident, self.gv.cpp_name(var))
+            write(
+                "PyObject *__ss_gget_%s_%s(PyObject *self, void *closure) {"
+                % (mod, var.name)
+            )
+            write("    (void)self;")
+            write("    (void)closure;")
+            write("    if (__ss_wrong_thread())")
+            write("        return NULL;")
+            write("    return __to_py(%s);" % cpp_var)
+            write("}\n")
+
+            write(
+                "int __ss_gset_%s_%s(PyObject *self, PyObject *value, void *closure) {"
+                % (mod, var.name)
+            )
+            write("    (void)self;")
+            write("    (void)closure;")
+            write("    if (__ss_wrong_thread())")
+            write("        return -1;")
+            write("    if(value == NULL) {")
+            write(
+                "        PyErr_SetString(PyExc_AttributeError, %s);"
+                % c_string(
+                    "global variable '%s' of module '%s' cannot be deleted"
+                    % (var.name, self.gv.module.ident)
+                )
+            )
+            write("        return -1;")
+            write("    }")
+            write("    try {")
+            typ = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
+            write("        %s = __to_ss<%s>(value);" % (cpp_var, typ))
+            write("    } catch (BaseException *e) {")
+            write("        __ss_raise_py(e);")
+            write("        return -1;")
+            write("    }")
+            write("    return 0;")
+            write("}\n")
+
+        write("static PyGetSetDef __ss_%s_ModuleGetSet[] = {" % mod)
+        for var in gvars:
+            write(
+                '    {(char *)%s, (getter)__ss_gget_%s_%s, (setter)__ss_gset_%s_%s, (char *)"", NULL},'
+                % (c_string(var.name), mod, var.name, mod, var.name)
+            )
+        write("    {NULL}\n};\n")
+
+        # dir(mod) only lists the module dict, which no longer has them
+        write("static PyObject *__ss_%s_ModuleDir(PyObject *self, PyObject *args) {" % mod)
+        write("    (void)args;")
+        write("    PyObject *dict = PyModule_GetDict(self);")
+        write("    PyObject *names = dict ? PyDict_Keys(dict) : NULL;")
+        write("    if (!names)")
+        write("        return NULL;")
+        write("    for (PyGetSetDef *d = __ss_%s_ModuleGetSet; d->name; d++) {" % mod)
+        write("        PyObject *name = PyUnicode_FromString(d->name);")
+        write("        if (!name || PyList_Append(names, name) < 0) {")
+        write("            Py_XDECREF(name);")
+        write("            Py_DECREF(names);")
+        write("            return NULL;")
+        write("        }")
+        write("        Py_DECREF(name);")
+        write("    }")
+        write("    return names;")
+        write("}\n")
+
+        write("static PyMethodDef __ss_%s_ModuleMethods[] = {" % mod)
+        write(
+            '    {"__dir__", (PyCFunction)__ss_%s_ModuleDir, METH_NOARGS, NULL},' % mod
+        )
+        write("    {NULL}\n};\n")
+
+        write("static PyTypeObject __ss_%s_ModuleType = {" % mod)
+        write("    PyVarObject_HEAD_INIT(NULL, 0)")
+        write('    "%s.module",' % self.gv.module.ident)
+        write("};\n")
+
+        write("static int __ss_%s_ModuleTypeReady(PyObject *m) {" % mod)
+        write("    __ss_%s_ModuleType.tp_flags = Py_TPFLAGS_DEFAULT;" % mod)
+        write(
+            '    __ss_%s_ModuleType.tp_doc = PyDoc_STR("module type of %s");'
+            % (mod, self.gv.module.ident)
+        )
+        write("    __ss_%s_ModuleType.tp_getset = __ss_%s_ModuleGetSet;" % (mod, mod))
+        write("    __ss_%s_ModuleType.tp_methods = __ss_%s_ModuleMethods;" % (mod, mod))
+        write("    __ss_%s_ModuleType.tp_base = &PyModule_Type;" % mod)
+        write("    if (PyType_Ready(&__ss_%s_ModuleType) < 0)" % mod)
+        write("        return -1;")
+        # same layout, as the type adds no fields (like assigning __class__)
+        write("    Py_SET_TYPE(m, &__ss_%s_ModuleType);" % mod)
+        write("    return 0;")
+        write("}\n")
 
     def do_reduce_setstate(
         self, cl: "python.Class", vars: list["python.Variable"]
@@ -884,6 +978,11 @@ class ExtensionModule:
             "Global_" + "_".join(self.gv.module.name_list), funcs, None
         )
 
+        # global variables
+        gvars = self.exported_globals()
+        if gvars:
+            self.do_module_type(gvars)
+
         # module init function
         write(
             "static struct PyModuleDef Module_%s = {"
@@ -919,9 +1018,12 @@ class ExtensionModule:
         write("    if (m == NULL)")
         write("        return NULL;\n")
 
-        write("    // add global variables")
-        self.do_add_globals(classes, "m")
-        write("")
+        if gvars:
+            write("    // global variables")
+            write("    if (__ss_%s_ModuleTypeReady(m) < 0) {" % __ss_mod)
+            write("        Py_DECREF(m);")
+            write("        return NULL;")
+            write("    }\n")
 
         write("    // add type objects")
         for cl in classes:
