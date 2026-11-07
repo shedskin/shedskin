@@ -5605,7 +5605,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         checkcls.extend(t[0].ancestors(True))
                 for cl in checkcls:
                     if (
-                        node.attr not in t[0].funcs and node.attr in cl.parent.vars
+                        node.attr not in cl.funcs and node.attr in cl.parent.vars
                     ):  # XXX
                         error.error(
                             "class attribute '"
