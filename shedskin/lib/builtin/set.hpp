@@ -42,32 +42,38 @@ public:
     void *clear();
     set<T> *copy();
 
+    void *update(int);
     void *update(int, set<T> *s);
     void *update(int, list<T> *l);
     template <class U> void *update(int, U *other);
     template <class U, class V> void *update(int, U *other, V *other2);
     template <class U, class V, class W> void *update(int, U *other, V *other2, W *other3);
 
+    set<T> *intersection(int);
     set<T> *intersection(int, set<T> *s);
     template <class U> set<T> *intersection(int, U *other);
     template <class U, class V> set<T> *intersection(int, U *iter, V *iter2);
     template <class U, class V, class W> set<T> *intersection(int, U *iter, V *iter2, W *iter3);
 
+    void *intersection_update(int);
     void *intersection_update(int, set<T> *s);
     template <class U> void *intersection_update(int, U *other);
     template <class U, class V> void *intersection_update(int, U *other, V *other2);
     template <class U, class V, class W> void *intersection_update(int, U *other, V *other2, W *other3);
 
+    set<T> *difference(int);
     set<T> *difference(int, set<T> *s);
     template <class U> set<T> *difference(int, U *other);
     template <class U, class V> set<T> *difference(int, U *other, V *other2);
     template <class U, class V, class W> set<T> *difference(int, U *other, V *other2, W *other3);
 
+    void *difference_update(int);
     void *difference_update(int, set<T> *s);
     template <class U> void *difference_update(int, U *other);
     template <class U, class V> void *difference_update(int, U *other, V *other2);
     template <class U, class V, class W> void *difference_update(int, U *other, V *other2, W *other3);
 
+    set<T> *__ss_union(int);
     set<T> *__ss_union(int, set<T> *s);
     template <class U> set<T> *__ss_union(int, U *other);
     template <class U, class V> set<T> *__ss_union(int, U *other, V *other2);
@@ -607,6 +613,15 @@ template<class T> template<class U, class V, class W> void *set<T>::intersection
     intersection_update(1, new set<T>(iter3));
     return NULL;
 }
+
+/* zero-argument forms: union(), intersection() and difference() return a copy; the _update forms do nothing */
+
+template<class T> set<T> *set<T>::__ss_union(int) { return copy(); }
+template<class T> set<T> *set<T>::intersection(int) { return copy(); }
+template<class T> set<T> *set<T>::difference(int) { return copy(); }
+template<class T> void *set<T>::update(int) { return NULL; }
+template<class T> void *set<T>::intersection_update(int) { return NULL; }
+template<class T> void *set<T>::difference_update(int) { return NULL; }
 
 template<class T> set<T> *set<T>::copy() {
     set<T> *c = new set<T>(this->frozen);
