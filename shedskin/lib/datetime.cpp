@@ -131,33 +131,6 @@ static __ss_int ymd_to_ord(__ss_int year, __ss_int month, __ss_int day);
 static __ss_int iso_week1_monday(__ss_int year);
 static int64_t floordivmod(int64_t a, int64_t b, int64_t *r);
 
-/* Parse the (already-isolated) fractional-seconds digits of an ISO 8601
- * time string into microseconds, e.g. "5" -> 500000, "123456" -> 123456,
- * "1234567" -> 123456 (truncated, extra digits dropped). Non-digit/missing
- * positions are treated as 0, so shorter fractions are implicitly
- * right-padded with zeros. */
-static __ss_int iso_fraction_to_microseconds(const char *frac) {
-    /* right-pad the fraction to 6 digits; stop at the first non-digit (which
-       includes the terminating '\0'), so a fraction shorter than 6 digits does
-       not read past the end of the buffer */
-    __ss_int us = 0;
-    bool ended = false;
-    for (int i = 0; i < 6; i++) {
-        us *= 10;
-        if (!ended) {
-            char c = frac[i];
-            if (c >= '0' && c <= '9')
-                us += c - '0';
-            else
-                ended = true;
-        }
-    }
-    return us;
-}
-
-/* true iff s[start..start+len) exists and consists only of ASCII digits;
- * used to enforce the fixed zero-padded field widths cpython requires
- * (e.g. rejects '2020-1-1', which sscanf's "%2d" would happily accept). */
 /* inverse of isocalendar(): ordinal of ISO (year, week, day), copied from
  * cpython's _isoweek_to_gregorian / iso_week1_monday logic */
 static __ss_int isoweek_to_ord(__ss_int year, __ss_int week, __ss_int day) {
@@ -201,12 +174,134 @@ static str *iso_time_string(__ss_int hour, __ss_int minute, __ss_int second, __s
     throw new ValueError(new str("Unknown timespec value"));
 }
 
-static bool iso_all_digits(const __GC_STR &s, size_t start, size_t len) {
-    if (start + len > s.size())
+/* fromisoformat parsing, following CPython's C implementation
+ * (parse_isoformat_date, parse_hh_mm_ss_ff and
+ * _find_isoformat_datetime_separator). the parsers return false where
+ * CPython says "Invalid isoformat string"; values out of range are left to
+ * the date and time constructors, which raise their own errors, as in
+ * CPython. there is no datetime.timezone yet, so a string with a time zone
+ * offset is rejected. */
+
+static ValueError *iso_invalid(str *s) {
+    return new ValueError(__add_strs(2, new str("Invalid isoformat string: "), repr(s)));
+}
+
+/* n ascii digits at pos */
+static bool iso_digits(const __GC_STR &s, size_t pos, size_t n, __ss_int &v) {
+    if (pos + n > s.size())
         return false;
-    for (size_t i = 0; i < len; i++)
-        if (s[start+i] < '0' || s[start+i] > '9')
+    v = 0;
+    for (size_t i = pos; i < pos + n; i++) {
+        if (s[i] < '0' || s[i] > '9')
             return false;
+        v = v * 10 + (__ss_int)(s[i] - '0');
+    }
+    return true;
+}
+
+/* YYYY-MM-DD, YYYYMMDD, YYYY-Www, YYYYWww, YYYY-Www-D or YYYYWwwD */
+static bool iso_parse_date(const __GC_STR &s, __ss_int &year, __ss_int &month, __ss_int &day) {
+    size_t n = s.size();
+    if (!iso_digits(s, 0, 4, year))
+        return false;
+    bool sep = n > 4 && s[4] == '-';
+    size_t pos = 4 + sep;
+    if (pos < n && s[pos] == 'W') {
+        __ss_int week, wday = 1;
+        if (!iso_digits(s, pos + 1, 2, week))
+            return false;
+        pos += 3;
+        if (pos < n) {
+            if (sep && s[pos++] != '-')
+                return false;
+            if (!iso_digits(s, pos, 1, wday))
+                return false;
+        }
+        /* as date.fromisocalendar(), but a week or weekday out of range
+         * makes the string invalid */
+        if (year < MINYEAR || year > MAXYEAR || week < 1 || week > 53 || wday < 1 || wday > 7)
+            return false;
+        if (week == 53) {
+            __ss_int first_weekday = ymd_to_ord(year, 1, 1) % 7;
+            if (!(first_weekday == 4 || (first_weekday == 3 && is_leap(year))))
+                return false;
+        }
+        ord_to_ymd(iso_week1_monday(year) + (week - 1) * 7 + (wday - 1), &year, &month, &day);
+        return true;
+    }
+    if (!iso_digits(s, pos, 2, month))
+        return false;
+    pos += 2;
+    if (sep && (pos >= n || s[pos++] != '-'))
+        return false;
+    return iso_digits(s, pos, 2, day);
+}
+
+/* HH[:MM[:SS[{.,}fff[fff]]]] or HH[MM[SS[{.,}fff[fff]]]] */
+static bool iso_parse_time(const __GC_STR &s, __ss_int *comps) {
+    size_t n = s.size(), p = 0;
+    comps[0] = comps[1] = comps[2] = comps[3] = 0;
+    if (n < 2) /* "Isoformat time too short" */
+        return false;
+    for (size_t i = 0; i < n; i++) /* a time zone offset: +HH:MM, -HH:MM or Z */
+        if (s[i] == '+' || s[i] == '-' || s[i] == 'Z')
+            return false;
+    bool sep = true;
+    for (int i = 0; i < 3; i++) {
+        if (!iso_digits(s, p, 2, comps[i]))
+            return false;
+        p += 2;
+        __ss_char c = p < n ? s[p] : 0;
+        p++;
+        if (i == 0)
+            sep = c == ':';
+        if (p >= n)
+            return c == 0;
+        if (sep && c == ':')
+            continue;
+        if (c == '.' || c == ',')
+            break;
+        if (sep)
+            return false; /* malformed time separator */
+        p--;
+    }
+    /* the fraction; digits after the sixth are dropped */
+    size_t digits = std::min(n - p, (size_t)6);
+    if (!iso_digits(s, p, digits, comps[3]))
+        return false;
+    for (size_t i = digits; i < 6; i++)
+        comps[3] *= 10;
+    for (p += digits; p < n; p++)
+        if (s[p] < '0' || s[p] > '9')
+            return false;
+    return true;
+}
+
+/* where the date ends in a datetime string of at least 7 characters */
+static bool iso_datetime_separator(const __GC_STR &s, size_t &loc) {
+    size_t n = s.size();
+    if (n == 7)
+        loc = 7;
+    else if (s[4] == '-') {
+        if (s[5] != 'W')
+            loc = 10;                    /* YYYY-MM-DD */
+        else if (n > 8 && s[8] == '-') { /* YYYY-Www-D */
+            if (n == 9)
+                return false;
+            /* YYYY-Www-HH... rather than YYYY-Www-D, best effort */
+            loc = (n > 10 && s[10] >= '0' && s[10] <= '9') ? 8 : 10;
+        } else
+            loc = 8;                     /* YYYY-Www */
+    } else if (s[4] == 'W') {            /* YYYYWww or YYYYWwwD */
+        size_t idx = 7;
+        while (idx < n && s[idx] >= '0' && s[idx] <= '9')
+            idx++;
+        if (idx < 9)
+            loc = idx;
+        else
+            loc = idx % 2 == 0 ? 7 : 8;  /* an even number of digits after Www: no D */
+    } else
+        loc = 8;                         /* YYYYMMDD */
     return true;
 }
 
@@ -326,16 +421,11 @@ date *date::strptime(str *date_string, str *format) {
 }
 
 date *date::fromisoformat(str *date_string) {
-    //supports the plain zero-padded 'YYYY-MM-DD' form (no timezone offsets)
     const __GC_STR &s = date_string->unit;
-    if (s.size() != 10 || s[4] != '-' || s[7] != '-' ||
-            !iso_all_digits(s, 0, 4) || !iso_all_digits(s, 5, 2) || !iso_all_digits(s, 8, 2))
-        throw new ValueError(new str(__gcs("Invalid isoformat string: '")+s+__gcs("'")));
-
-    int y, m, d;
-    std::string ns = __narrow_std(s);
-    sscanf(ns.c_str(), "%4d-%2d-%2d", &y, &m, &d);
-    return new date((__ss_int)y, (__ss_int)m, (__ss_int)d);
+    __ss_int y, m, d;
+    if ((s.size() != 7 && s.size() != 8 && s.size() != 10) || !iso_parse_date(s, y, m, d))
+        throw iso_invalid(date_string);
+    return new date(y, m, d);
 }
 
 date *date::__add__(timedelta *other) {
@@ -720,42 +810,22 @@ datetime *datetime::combine(date *d, time *t) {
 }
 
 datetime *datetime::strptime(str *date_string, str *format) {
-#ifdef WIN32
-    struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1};
-    char *e = __time__::strptime(date_string->c_str(), format->c_str(), &t);
-#else
-    struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
-    char *e = ::strptime(date_string->c_str(), format->c_str(), &t);
-#endif
-    if(!e)
-        throw new ValueError(new str(__gcs("time data did not match format:  data=")+date_string->unit+__gcs(" fmt=")+format->unit));
-    if((*e)!='\0')
-        throw new ValueError((new str("ValueError: unconverted data remains: "))->__add__(new str(e)));
-    return new datetime(t.tm_year + 1900,
-        t.tm_mon + 1,
-        t.tm_mday,
-        t.tm_hour,
-        t.tm_min,
-        t.tm_sec);
+    /* like cpython's _strptime_datetime. there is no datetime.timezone yet,
+     * so a %z offset does not make the result aware */
+    __time__::__ss_strptime_result r;
+    __time__::__ss_strptime(date_string, format, r);
+    return new datetime(r.year, r.month, r.day, r.hour, r.minute, r.second, r.microsecond);
 }
 
 datetime *datetime::fromisoformat(str *date_string) {
-    //supports 'YYYY-MM-DD[*HH:MM:SS[.ffffff]]' (no timezone offsets), where
-    //'*' is any single separator character, matching cpython (>=3.11)
     const __GC_STR &s = date_string->unit;
-    if (s.size() < 10)
-        throw new ValueError(new str(__gcs("Invalid isoformat string: '")+s+__gcs("'")));
-
-    str *date_part = new str(s.substr(0, 10));
-    if (s.size() == 10) {
-        date *d = date::fromisoformat(date_part);
-        return new datetime(d->year, d->month, d->day);
-    }
-
-    str *time_part = new str(s.substr(11));
-    date *d = date::fromisoformat(date_part);
-    time *t = time::fromisoformat(time_part);
-    return combine(d, t);
+    size_t loc;
+    __ss_int y, m, d, t[4] = {0, 0, 0, 0};
+    if (s.size() < 7 || !iso_datetime_separator(s, loc) || !iso_parse_date(s.substr(0, loc), y, m, d))
+        throw iso_invalid(date_string);
+    if (loc < s.size() && !iso_parse_time(s.substr(loc + 1), t))
+        throw iso_invalid(date_string);
+    return new datetime(y, m, d, t[0], t[1], t[2], t[3]);
 }
 
 datetime *datetime::__add__(timedelta *other) {
@@ -1122,25 +1192,12 @@ time *time::strptime(str *time_string, str *format) {
 }
 
 time *time::fromisoformat(str *time_string) {
-    //supports zero-padded 'HH:MM:SS' and 'HH:MM:SS.ffffff' (no timezone
-    //offsets); a fractional part longer than 6 digits is truncated, same
-    //as cpython
     const __GC_STR &s = time_string->unit;
-    if (s.size() < 8 || s[2] != ':' || s[5] != ':' ||
-            !iso_all_digits(s, 0, 2) || !iso_all_digits(s, 3, 2) || !iso_all_digits(s, 6, 2))
-        throw new ValueError(new str(__gcs("Invalid isoformat string: '")+s+__gcs("'")));
-
-    int h, mi, sec;
-    std::string ns = __narrow_std(s);
-    sscanf(ns.c_str(), "%2d:%2d:%2d", &h, &mi, &sec);
-
-    __ss_int us = 0;
-    if (s.size() > 8) {
-        if (s[8] != '.' || s.size() == 9 || !iso_all_digits(s, 9, s.size()-9))
-            throw new ValueError(new str(__gcs("Invalid isoformat string: '")+s+__gcs("'")));
-        us = iso_fraction_to_microseconds(ns.c_str()+9);
-    }
-    return new time((__ss_int)h, (__ss_int)mi, (__ss_int)sec, us);
+    __ss_int t[4];
+    /* the T of a time-only string is optional */
+    if (!iso_parse_time(s.size() > 0 && s[0] == 'T' ? s.substr(1) : s, t))
+        throw iso_invalid(time_string);
+    return new time(t[0], t[1], t[2], t[3]);
 }
 
 time *time::replace(__ss_int __args, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo, __ss_int fold_) {

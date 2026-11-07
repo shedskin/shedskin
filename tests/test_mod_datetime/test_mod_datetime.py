@@ -210,6 +210,19 @@ def test_date_fromisoformat():
         error = str(e)
     assert error == 'day is out of range for month'
 
+    # regression test: the 3.11+ forms were rejected
+    assert datetime.date.fromisoformat('20240229') == datetime.date(2024, 2, 29)
+    assert datetime.date.fromisoformat('2024-W01') == datetime.date(2024, 1, 1)
+    assert datetime.date.fromisoformat('2024W012') == datetime.date(2024, 1, 2)
+    assert datetime.date.fromisoformat('2020-W53-5') == datetime.date(2021, 1, 1)
+    for s in ['2021-W53-5', '2024-W01-8', '2024-0101', '2024-W012', '2024-01-01 ']:
+        error = ''
+        try:
+            datetime.date.fromisoformat(s)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'Invalid isoformat string: ' + repr(s)
+
 
 def test_time_fromisoformat():
     assert datetime.time.fromisoformat('12:30:15') == datetime.time(12, 30, 15)
@@ -241,6 +254,22 @@ def test_time_fromisoformat():
         error = str(e)
     assert error == "Invalid isoformat string: '12:30:15.'"
 
+    # regression test: the 3.11+ forms were rejected
+    assert datetime.time.fromisoformat('12') == datetime.time(12)
+    assert datetime.time.fromisoformat('12:30') == datetime.time(12, 30)
+    assert datetime.time.fromisoformat('1230') == datetime.time(12, 30)
+    assert datetime.time.fromisoformat('123015') == datetime.time(12, 30, 15)
+    assert datetime.time.fromisoformat('T12:30') == datetime.time(12, 30)
+    assert datetime.time.fromisoformat('12:30:15,5') == datetime.time(12, 30, 15, 500000)
+    assert datetime.time.fromisoformat('12.5') == datetime.time(12, 0, 0, 500000)
+    for s in ['1', '123', '12:', '12:3015', '1230:15', '12:30:1']:
+        error = ''
+        try:
+            datetime.time.fromisoformat(s)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'Invalid isoformat string: ' + repr(s)
+
 
 def test_datetime_fromisoformat():
     assert datetime.datetime.fromisoformat('2020-01-01T12:30:15.500000') == \
@@ -271,6 +300,21 @@ def test_datetime_fromisoformat():
     except ValueError as e:
         error = str(e)
     assert error == 'hour must be in 0..23'
+
+    # regression test: 1024-B14, the 3.11+ forms were rejected
+    assert datetime.datetime.fromisoformat('2024-01-01T10:20') == datetime.datetime(2024, 1, 1, 10, 20)
+    assert datetime.datetime.fromisoformat('20240101T102030') == datetime.datetime(2024, 1, 1, 10, 20, 30)
+    assert datetime.datetime.fromisoformat('2024-01-01T10') == datetime.datetime(2024, 1, 1, 10)
+    assert datetime.datetime.fromisoformat('2024-W01-2T10:20') == datetime.datetime(2024, 1, 2, 10, 20)
+    assert datetime.datetime.fromisoformat('2024W012T1020') == datetime.datetime(2024, 1, 2, 10, 20)
+    assert datetime.datetime.fromisoformat('20240101') == datetime.datetime(2024, 1, 1)
+    for s in ['2024-01-01T', '2024-01', '2024-01-0110:20', '2024-01-01T1:20']:
+        error = ''
+        try:
+            datetime.datetime.fromisoformat(s)
+        except ValueError as e:
+            error = str(e)
+        assert error == 'Invalid isoformat string: ' + repr(s)
 
 class UTC0(datetime.tzinfo):
     def utcoffset(self, dt):
@@ -909,6 +953,14 @@ def test_date_time_strptime():
     except ValueError as e:
         error = 'err'
     assert error == 'err'
+
+    # regression test: %f and %G %V %u were not supported
+    assert datetime.datetime.strptime('2024-01-01 10:20:30.123', '%Y-%m-%d %H:%M:%S.%f') == \
+        datetime.datetime(2024, 1, 1, 10, 20, 30, 123000)
+    assert datetime.datetime.strptime('2024 10 3', '%G %V %u') == datetime.datetime(2024, 3, 6)
+    assert datetime.date.strptime('2024 10 3', '%G %V %u') == datetime.date(2024, 3, 6)
+    assert datetime.time.strptime('10:20:30.000001', '%H:%M:%S.%f') == datetime.time(10, 20, 30, 1)
+    assert datetime.datetime.strptime('20240229', '%Y%m%d') == datetime.datetime(2024, 2, 29)
 
 def test_isoformat_timespec():
     dt = datetime.datetime(2024, 3, 6, 13, 45, 7, 123456)
