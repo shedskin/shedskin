@@ -979,6 +979,131 @@ class ExtensionModule:
         for cl in classes + self.exception_classes():
             self.convert_methods(cl, False)
 
+    def do_seqmap_slots(
+        self, cl: "python.Class", funcs: list["python.Function"]
+    ) -> bool:
+        """Generate the sequence and mapping slots of a class, for len(),
+        obj[key], obj[key] = value, del obj[key], 'in' and bool(). Without
+        them, CPython raised TypeError for these, even though the methods
+        themselves were exported (and bool() ignored __len__)."""
+        write = self.write
+        ident = clname(cl)
+        has = {
+            name: self.has_exported_method(cl, name, funcs)
+            for name in ("__len__", "__getitem__", "__setitem__", "__delitem__", "__contains__")
+        }
+        if not any(has.values()):
+            return False
+
+        def call(method: str, nargs: int, argnames: str) -> None:
+            write("    PyObject *__ss_args = PyTuple_Pack(%d, %s);" % (nargs, argnames))
+            write("    if (!__ss_args)")
+            write("        return %s;" % ("NULL" if method == "__getitem__" else "-1"))
+            write("    PyObject *__ss_r = %s_%s(self, __ss_args, NULL);" % (ident, method))
+            write("    Py_DECREF(__ss_args);")
+
+        # lenfunc: Py_ssize_t (*)(PyObject *), for both sq_length and mp_length
+        if has["__len__"]:
+            write("static Py_ssize_t %s_mp_length(PyObject *self) {" % ident)
+            write("    PyObject *__ss_r = %s___len__(self, NULL, NULL);" % ident)
+            write("    if (!__ss_r)")
+            write("        return -1;")
+            write("    Py_ssize_t __ss_n = PyLong_AsSsize_t(__ss_r);")
+            write("    Py_DECREF(__ss_r);")
+            write("    if (__ss_n < 0 && !PyErr_Occurred())")
+            write('        PyErr_SetString(PyExc_ValueError, "__len__() should return >= 0");')
+            write("    return __ss_n;")
+            write("}\n")
+
+        # binaryfunc mp_subscript, and ssizeargfunc sq_item, which CPython
+        # uses to iterate over a class without __iter__, and for reversed()
+        if has["__getitem__"]:
+            write("static PyObject *%s_mp_subscript(PyObject *self, PyObject *key) {" % ident)
+            call("__getitem__", 1, "key")
+            write("    return __ss_r;")
+            write("}\n")
+            write("static PyObject *%s_sq_item(PyObject *self, Py_ssize_t i) {" % ident)
+            write("    PyObject *key = PyLong_FromSsize_t(i);")
+            write("    if (!key)")
+            write("        return NULL;")
+            write("    PyObject *__ss_r = %s_mp_subscript(self, key);" % ident)
+            write("    Py_DECREF(key);")
+            write("    return __ss_r;")
+            write("}\n")
+
+        # objobjargproc: int (*)(PyObject *, PyObject *, PyObject *), where a
+        # NULL value means deletion
+        if has["__setitem__"] or has["__delitem__"]:
+            write(
+                "static int %s_mp_ass_subscript(PyObject *self, PyObject *key, PyObject *value) {"
+                % ident
+            )
+            write("    if (value) {")
+            if has["__setitem__"]:
+                call("__setitem__", 2, "key, value")
+                write("    if (!__ss_r)")
+                write("        return -1;")
+                write("    Py_DECREF(__ss_r);")
+                write("    return 0;")
+            else:
+                write(
+                    "        PyErr_SetString(PyExc_TypeError, %s);"
+                    % c_string("'%s' object does not support item assignment" % cl.ident)
+                )
+                write("        return -1;")
+            write("    } else {")
+            if has["__delitem__"]:
+                call("__delitem__", 1, "key")
+                write("    if (!__ss_r)")
+                write("        return -1;")
+                write("    Py_DECREF(__ss_r);")
+                write("    return 0;")
+            else:
+                write(
+                    "        PyErr_SetString(PyExc_TypeError, %s);"
+                    % c_string("'%s' object doesn't support item deletion" % cl.ident)
+                )
+                write("        return -1;")
+            write("    }")
+            write("}\n")
+
+        # objobjproc: int (*)(PyObject *, PyObject *)
+        if has["__contains__"]:
+            write("static int %s_sq_contains(PyObject *self, PyObject *value) {" % ident)
+            call("__contains__", 1, "value")
+            write("    if (!__ss_r)")
+            write("        return -1;")
+            write("    int __ss_truth = PyObject_IsTrue(__ss_r);")
+            write("    Py_DECREF(__ss_r);")
+            write("    return __ss_truth;")
+            write("}\n")
+
+        def slot(name: str, func: str) -> str:
+            return "    %s_%s," % (ident, func) if has[name] else "    0,"
+
+        write("static PySequenceMethods %s_as_sequence = {" % ident)
+        write(slot("__len__", "mp_length"))  # sq_length
+        write("    0,")  # sq_concat
+        write("    0,")  # sq_repeat
+        write(slot("__getitem__", "sq_item"))
+        write("    0,")  # was_sq_slice
+        write("    0,")  # sq_ass_item
+        write("    0,")  # was_sq_ass_slice
+        write(slot("__contains__", "sq_contains"))
+        write("    0,")  # sq_inplace_concat
+        write("    0,")  # sq_inplace_repeat
+        write("};\n")
+
+        write("static PyMappingMethods %s_as_mapping = {" % ident)
+        write(slot("__len__", "mp_length"))
+        write(slot("__getitem__", "mp_subscript"))
+        if has["__setitem__"] or has["__delitem__"]:
+            write("    %s_mp_ass_subscript," % ident)
+        else:
+            write("    0,")
+        write("};\n")
+        return True
+
     def do_extmod_class(self, cl: "python.Class") -> None:
         """Generates a python c-api extension type."""
         write = self.write
@@ -1089,6 +1214,8 @@ class ExtensionModule:
             write("static Py_hash_t %s_tp_hash(PyObject *self) {" % clname(cl))
             write("    return %sObjectType.tp_base->tp_hash(self);" % clname(cl))
             write("}\n")
+
+        has_seqmap = self.do_seqmap_slots(cl, funcs)
 
         # tp_new
         write(
@@ -1216,8 +1343,12 @@ class ExtensionModule:
         else:
             write("    0,")
         write("    &%s_as_number," % clname(cl))
-        write("    0,")
-        write("    0,")
+        if has_seqmap:
+            write("    &%s_as_sequence," % clname(cl))
+            write("    &%s_as_mapping," % clname(cl))
+        else:
+            write("    0,")
+            write("    0,")
         if self.has_exported_method(cl, "__hash__", funcs) or inherit_hash:
             write("    %s_tp_hash," % clname(cl))
         else:
