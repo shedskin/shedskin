@@ -116,6 +116,8 @@ def test_groupby():
     assert [k for k, g in itertools.groupby(words, key=lambda s: s.lower())] == ['apple', 'bob', 'cat']
 
     # no key function: identity
+    assert [k for k, g in itertools.groupby('aabbbc', None)] == ['a', 'b', 'c']
+    assert [list(g) for k, g in itertools.groupby([2, 2, 5], key=None)] == [[2, 2], [5]]
     res3 = []
     for k, g in itertools.groupby([1, 1, 2, 3, 3, 3, 1]):
         res3.append((k, list(g)))

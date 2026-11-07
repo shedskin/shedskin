@@ -518,7 +518,7 @@ template<class T> inline T __groupby_identity(T x) {
     return x;
 }
 
-template<class T> inline groupbyiter<T, T> *groupby(pyiter<T> *iterable) {
+template<class T> inline groupbyiter<T, T> *groupby(pyiter<T> *iterable, void * = NULL) { /* groupby(it, None) */
     return new groupbyiter<T, T>(iterable, __groupby_identity<T>);
 }
 

@@ -710,6 +710,13 @@ def redirect_func(
         kwarg = {'groupby': 'key', 'reduce': 'initial'}.get(func.ident)  # TODO avoid special cases..
         if kwarg:
             nargs += len([a for a in callfunc.keywords if a.arg == kwarg])
+        # groupby(it, None) and groupby(it, key=None) mean no key function
+        if func.ident == 'groupby' and nargs == 2:
+            key = [a.value for a in callfunc.keywords if a.arg == 'key']
+            if len(callfunc.args) == 2:
+                key.append(callfunc.args[1])
+            if key and ast_utils.is_none(key[0]):
+                nargs = 1
         redir = "__%s%d" % (func.ident, nargs)
         func = funcs.get(redir, func)
     return func
