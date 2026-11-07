@@ -4495,8 +4495,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.gx, self.gx.item_rvalue[item], func, mv=self.mv
                 )
                 self.output(
-                    "%s = __ss_unpack_star<%s>(%s, %s, %d);"
-                    % (temp_star, ts[:-2], temp, temp_loop, after)
+                    "%s = __ss_unpack_star<%s>(%s, %s, %d, %d);"
+                    % (temp_star, ts[:-2], temp, temp_loop, i, after)
                 )
                 selector = temp_star
                 if after:
@@ -4505,7 +4505,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif temp_star:
                 selector = "%s->__getfast__(%d)" % (temp_star, i - len(nodes))
             elif temp_loop:
-                selector = "__ss_unpack_next(%s, %s)" % (temp, temp_loop)
+                if ast_utils.has_starred(lvalue):  # a, b, *c = ..
+                    selector = "__ss_unpack_next(%s, %s, %d, %d, true)" % (
+                        temp, temp_loop, i, len(nodes) - 1)
+                else:
+                    selector = "__ss_unpack_next(%s, %s, %d, %d)" % (
+                        temp, temp_loop, i, len(nodes))
             else:
                 selector = self.get_selector(temp, item, i)
 
@@ -4524,7 +4529,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if temp_loop:
             if not temp_star:
-                self.output("__ss_unpack_end(%s, %s);" % (temp, temp_loop))
+                self.output(
+                    "__ss_unpack_end(%s, %s, %d);" % (temp, temp_loop, len(nodes))
+                )
             self.deindent()
             self.output("}")
 
