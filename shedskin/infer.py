@@ -577,11 +577,20 @@ def analyze_callfunc(
                     anon_func,
                 )
 
-            # ancestor call
-            elif ident not in ["__setattr__", "__getattr__"] and cnode.parent:
-                thiscl = cnode.parent.parent
-                if isinstance(thiscl, python.Class) and cl.ident in (
-                    x.ident for x in thiscl.ancestors_upto(None)
+            # ancestor call, such as 'A.f(self, ..)' in a method of a
+            # subclass, or 'A.f(obj, ..)' for user class A: both are
+            # non-virtual calls with the first argument as receiver
+            elif ident not in ["__setattr__", "__getattr__"]:
+                thiscl = cnode.parent.parent if cnode.parent else None
+                if (
+                    isinstance(thiscl, python.Class)
+                    and cl.ident in (x.ident for x in thiscl.ancestors_upto(None))
+                ) or (
+                    not cl.mv.module.builtin
+                    and ident != "__init__"
+                    and ident in cl.funcs
+                    and node.args
+                    and not isinstance(node.args[0], ast.Starred)
                 ):  # XXX
                     implementor = python.lookup_implementor(cl, ident)
                     if implementor:
@@ -762,13 +771,12 @@ def callfunc_targets(
             funcs = [constructor.funcs["__init__"]]
 
     elif parent_constr:
-        if ident != "__init__":
-            func = inode(gx, node).parent
-            assert isinstance(func, python.Function)
-            cl = func.parent
-            assert isinstance(cl, python.Class)
-            assert isinstance(ident, str)
-            funcs = [cl.funcs[ident]]
+        assert isinstance(node.func, ast.Attribute)
+        cl = python.lookup_class(node.func.value, inode(gx, node).mv)
+        assert cl
+        implementor = python.lookup_implementor_class(cl, node.func.attr)
+        assert implementor
+        funcs = [implementor.funcs[node.func.attr]]
 
     elif direct_call:
         funcs = [direct_call]
@@ -1492,13 +1500,14 @@ def possible_functions(
         ]
 
     elif parent_constr:
-        assert node.mv
-        objtypes = gx.cnode[
-            python.lookup_var("self", node.parent, node.mv), node.dcpa, node.cpa
-        ].types()
-        funcs = [
-            (t[0].funcs[ident], t[1], None) for t in objtypes if ident in t[0].funcs
-        ]
+        assert isinstance(expr.func, ast.Attribute) and ident
+        objtypes = gx.cnode[expr.args[0], node.dcpa, node.cpa].types()
+        funcs = []
+        for t in objtypes:
+            if isinstance(t[0], python.Class):
+                target = python.lookup_ancestor_method(t[0], ident, expr.func.attr)
+                if target:
+                    funcs.append((target, t[1], None))
 
     elif direct_call:
         funcs = [(direct_call, 0, None)]

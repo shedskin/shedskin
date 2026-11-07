@@ -2812,6 +2812,55 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             error.error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
         return None
 
+    def builtin_class_call(
+        self, node: ast.Call, func: Optional["python.Function"]
+    ) -> None:
+        """Rewrite 'str.zfill(s, 5)' as 's.zfill(5)' for library classes
+
+        This is only equivalent if the receiver does not override the
+        method, so virtual and non-virtual dispatch give the same result.
+        This is checked after type inference (cpp.py). Calls via user
+        classes are non-virtual instead (see infer.analyze_callfunc)."""
+        attr = node.func
+        assert isinstance(attr, ast.Attribute)
+        ident = attr.attr
+        if (
+            not node.args
+            or isinstance(node.args[0], ast.Starred)
+            or ident in ("__init__", "__getattr__", "__setattr__")
+        ):
+            return
+        if (
+            isinstance(attr.value, ast.Name)
+            and attr.value.id == "str"
+            and not python.lookup_var("str", func, getmv())
+        ):
+            cl: Optional[python.Class] = python.def_class(self.gx, "str_")
+        else:
+            cl, _ = python.lookup_class_module(attr.value, getmv(), func, ident)
+        if (
+            not cl
+            or not cl.mv.module.builtin
+            or ident not in cl.funcs
+            or ident in cl.staticmethods
+            or ident in cl.classmethods
+        ):
+            return
+
+        # ancestor call, such as Exception.__init__(self, ..)
+        if (
+            func
+            and isinstance(func.parent, python.Class)
+            and cl in func.parent.ancestors_upto(None)
+        ):
+            return
+
+        impl = python.lookup_method_impl(cl, ident)
+        assert impl
+        self.gx.class_method_calls[node] = (impl, ast.unparse(attr))
+        attr.value = node.args[0]
+        node.args = node.args[1:]
+
     def visit_Pass(
         self, node: ast.Pass, func: Optional["python.Function"] = None
     ) -> None:
@@ -2842,6 +2891,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 module = python.lookup_module(node.func.value, getmv())
                 if module and module.ident == "gzip":
                     node.func.attr = "open_text"
+
+            # 'str.zfill(s, 5)' -> 's.zfill(5)'
+            if not fake_attr:
+                self.builtin_class_call(node, func)
 
             # classmethod: insert 'cls' arg (None for now)
             if not fake_attr and isinstance(node.func.value, ast.Name):

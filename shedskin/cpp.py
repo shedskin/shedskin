@@ -3565,6 +3565,32 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Visit a pass statement"""
         pass
 
+    def check_class_call(
+        self,
+        node: ast.Call,
+        name: str,
+        receiver: ast.expr,
+        valid: Callable[["python.Class"], bool],
+    ) -> None:
+        """Check the receiver types of a call via a class, such as
+        'A.f(obj, ..)': each must resolve to the method that is called
+        (an error if none does, else a warning, as types may be imprecise)"""
+        classes = [
+            t[0]
+            for t in self.mergeinh.get(receiver, ())
+            if isinstance(t[0], python.Class) and t[0].ident != "none"
+        ]
+        invalid = sorted(cl.ident for cl in classes if not valid(cl))
+        if invalid:
+            error.error(
+                "unsupported call '%s(..)' with argument of type %s"
+                % (name, ", ".join("'%s'" % c for c in invalid)),
+                self.gx,
+                node,
+                warning=len(invalid) < len(classes),
+                mv=self.mv,
+            )
+
     def visit_Call(
         self,
         node: ast.Call,
@@ -3588,6 +3614,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             anon_func,
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
         funcs = infer.callfunc_targets(self.gx, node, self.gx.merged_inh)
+
+        # 'str.zfill(s, 5)', rewritten as 's.zfill(5)' (see graph.py)
+        if node in self.gx.class_method_calls:
+            assert isinstance(node.func, ast.Attribute)
+            impl, name = self.gx.class_method_calls[node]
+            assert isinstance(impl.parent, python.Class)
+            implcl = impl.parent.ident
+
+            def valid(cl: "python.Class") -> bool:
+                if cl.ident in ("tuple2", "tuple3"):  # fixed-length tuple
+                    return implcl in ("tuple", "pyseq", "pyiter")
+                return python.lookup_method_impl(cl, impl.ident) is impl
+
+            self.check_class_call(node, name, node.func.value, valid)
 
         # a literal pattern without '(' cannot have groups
         if self.library_func(funcs, "re", "Pattern", "findall") or (
@@ -3737,7 +3777,26 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert isinstance(node.func, ast.Attribute)
             cl = python.lookup_class(node.func.value, self.mv)
             assert cl
-            self.append(self.namer.namespace_class(cl) + "::" + node.func.attr + "(")
+            assert isinstance(ident, str)
+            attr, copy_ident = node.func.attr, ident
+            receiver = node.args[0]
+            self.check_class_call(
+                node,
+                ast.unparse(node.func),
+                receiver,
+                lambda c: bool(python.lookup_ancestor_method(c, copy_ident, attr)),
+            )
+            clname = self.namer.namespace_class(cl)
+            if not (
+                isinstance(receiver, ast.Name)
+                and receiver.id == "self"
+                and isinstance(func, python.Function)
+                and isinstance(func.parent, python.Class)
+            ):  # non-virtual call: '((A *)(obj))->A::f(..)'
+                self.append("((" + clname + " *)(")
+                self.visit(receiver, func)
+                self.append("))->")
+            self.append(clname + "::" + attr + "(")
 
         elif direct_call:  # XXX no namespace (e.g., math.pow), check nr of args
             if (

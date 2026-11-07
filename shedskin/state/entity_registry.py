@@ -4,7 +4,7 @@
 
 import ast
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Set, Tuple, Union
 
 if TYPE_CHECKING:
     from shedskin import python
@@ -26,6 +26,9 @@ class EntityRegistry:
         inheritance_temp_vars: Maps variables to their inherited versions.
         inherited: Set of AST nodes that are inherited.
         lambdawrapper: Dictionary mapping lambda expressions to wrapper names.
+        class_method_calls: Calls such as 'str.zfill(s, 5)', rewritten as
+            's.zfill(5)', mapped to the method that must be called and the
+            original call ('str.zfill').
         class_def_order: Counter for class definition ordering.
         import_order: Counter for module import ordering.
     """
@@ -43,5 +46,8 @@ class EntityRegistry:
     )
     inherited: Set[ast.AST] = field(default_factory=set)
     lambdawrapper: Dict[Any, str] = field(default_factory=dict)
+    class_method_calls: Dict[ast.Call, Tuple["python.Function", str]] = field(
+        default_factory=dict
+    )
     class_def_order: int = 0
     import_order: int = 0

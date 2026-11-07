@@ -372,6 +372,10 @@ class GlobalInfo:
         return self._registry.lambdawrapper
 
     @property
+    def class_method_calls(self) -> dict["ast.Call", tuple["python.Function", str]]:
+        return self._registry.class_method_calls
+
+    @property
     def class_def_order(self) -> int:
         return self._registry.class_def_order
 

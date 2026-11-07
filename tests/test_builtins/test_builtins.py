@@ -900,6 +900,33 @@ def test_print_none():
     assert s.getvalue() == 'a b\n'
 
 
+def test_class_method_call():  # 818: 'str.zfill(s, 5)' as 's.zfill(5)'
+    assert str.zfill('abc', 5) == '00abc'
+    assert str.upper('abc') == 'ABC'
+    assert str.split('a b') == ['a', 'b']
+    assert str.join(',', ['x', 'y']) == 'x,y'
+    assert str.replace('aaa', 'a', 'b', 2) == 'bba'
+    assert str.startswith('abc', ('x', 'a'))
+    assert bytes.upper(b'ab') == b'AB'
+    assert int.bit_count(12345) == 6
+    assert int.bit_length(255) == 8
+    assert float.is_integer(2.0)
+    assert complex.conjugate(1+2j) == 1-2j
+    assert tuple.count((1, 1, 2), 1) == 2
+    assert tuple.index((1, 2, 3), 2) == 1
+    assert set.union({1}, {2}) == {1, 2}
+    l = [1, 2]
+    list.append(l, 3)
+    list.extend(l, [4])
+    assert l == [1, 2, 3, 4]
+    assert list.index(l, 2) == 1
+    d = {1: 2}
+    assert dict.get(d, 1) == 2
+    assert dict.get(d, 5, 7) == 7
+    assert sorted(dict.keys(d)) == [1]
+    assert dict.fromkeys([1], 0) == {1: 0}  # classmethod: unchanged
+
+
 def test_all():
     test_abs()
     test_print_none()
@@ -949,6 +976,7 @@ def test_all():
     test_tuple()
     # test_type()
     test_zip()
+    test_class_method_call()
 
 
 if __name__ == '__main__':

@@ -1163,7 +1163,21 @@ def test_deque_user_eq():
     assert d[0].v == 1
 
 
+def test_class_method_call():  # 818: 'dict.get(d, k)' as 'd.get(k)'
+    dd = defaultdict(int)
+    dd[1] = 2
+    assert dict.get(dd, 1) == 2  # not overridden by defaultdict
+    assert defaultdict.get({1: 3}, 1) == 3  # is dict.get
+    assert sorted(dict.keys(dd)) == [1]
+    c = Counter('aab')
+    Counter.update(c, 'a')
+    assert Counter.total(c) == 4
+    assert dict.get(c, 'a') == 3
+    assert Counter.most_common(c, 1) == [('a', 3)]
+
+
 def test_all():
+    test_class_method_call()
     test_counter_delitem()
     test_defaultdict1()
     test_defaultdict2()
