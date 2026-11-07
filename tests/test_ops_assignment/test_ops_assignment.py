@@ -472,6 +472,37 @@ def test_augassign_attr_sidefx():
     assert (objs[0].n, objs[1].n, pos[0]) == (7, 4, 1)
 
 
+def unpack_msg(n, kind):
+    try:
+        if kind == 0:
+            a, b, c = list(range(n))
+        elif kind == 1:
+            d, e, f = (i for i in range(n))
+        elif kind == 2:
+            g, *h, i, j = list(range(n))
+        else:
+            k, l, *m = iter(range(n))
+    except ValueError as exc:
+        return str(exc)
+    return ''
+
+
+def test_unpack_msgs():
+    for kind in range(2):
+        assert unpack_msg(2, kind) == 'not enough values to unpack (expected 3, got 2)'
+        # python 3.14+ adds 'got N' for sized sequences
+        assert unpack_msg(4, kind).startswith('too many values to unpack (expected 3')
+    assert unpack_msg(2, 2) == 'not enough values to unpack (expected at least 3, got 2)'
+    assert unpack_msg(1, 3) == 'not enough values to unpack (expected at least 2, got 1)'
+    assert unpack_msg(3, 3) == ''
+    a, b = 'ab'
+    try:
+        a, b = 'abc'
+        assert False
+    except ValueError as e:
+        assert str(e).startswith('too many values to unpack (expected 2')
+
+
 def test_all():
     test_assign_int()
     test_assign_list()
@@ -503,6 +534,7 @@ def test_all():
     test_walrus6()
     test_augassign_dict_inplace()
     test_augassign_attr_sidefx()
+    test_unpack_msgs()
 
 
 if __name__ == '__main__':
