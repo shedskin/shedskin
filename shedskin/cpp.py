@@ -2284,7 +2284,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         for child in node.body:
             self.visit(child, func)
         if func.fakeret:
-            self.visit(func.fakeret, func)
+            if ast_utils.is_none(func.fakeret.value):
+                self.visit(func.fakeret, func)
+            else:  # a raising dunder (graph.fake_return_value): never reached
+                assert func.retnode
+                self.output(
+                    "return %s;" % self.nothing(self.mergeinh[func.retnode.thing])
+                )
 
         # --- add Return(None) (sort of) if function doesn't already end with a Return
         if node.body:
