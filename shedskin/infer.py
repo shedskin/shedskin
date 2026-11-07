@@ -140,6 +140,7 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
         if cl.ident == "class_":
             var = default_var(gx, "__name__", cl)
             gx.types[inode(gx, var)] = {(python.def_class(gx, "str_"), 0)}
+            inode(gx, var).copymetoo = True  # each class object gets a copy
 
     # --- copy classes for each allocation site
     for cl in gx.allclasses:
