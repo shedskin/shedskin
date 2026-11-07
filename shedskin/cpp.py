@@ -4421,8 +4421,31 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         assert node.value  # added in graph.py
         assert func
         assert func.retnode
-        self.impl_visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
+        rettypes = self.mergeinh[func.retnode.thing]
+        # a virtual method is declared with the return type merged over the
+        # overrides: build a new container as that type directly, if this only
+        # upcasts class instances (1029-C3, 1030-C3)
+        if (
+            func.ftypes
+            and self.builds_new_container(node.value)
+            and typestr.upcast_only(self.gx, self.mergeinh[node.value], func.ftypes[0])
+        ):
+            rettypes = func.ftypes[0]
+        self.impl_visit_conv(node.value, rettypes, func)
         self.eol()
+
+    def builds_new_container(self, node: ast.AST) -> bool:
+        """Check if impl_visit_conv builds node as a new container of the
+        types it is converted to, rather than casting it"""
+        if node in self.mv.tempcount:
+            return False
+        if isinstance(node, (ast.List, ast.Tuple, ast.Dict)):
+            return True
+        return (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id in ("list", "tuple", "dict", "set")
+        )
 
     def impl_visit_return(
         self, value: Optional[str], func: Optional["python.Function"]
