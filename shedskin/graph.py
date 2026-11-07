@@ -3333,6 +3333,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 [],
             )
             self.visit(node.value, func)
+            # 'date.max': a lib class receiver is the static class, not a wrapper (1021-C8)
+            lcl = python.lookup_class(node.value, getmv())
+            if lcl and lcl.mv.module.builtin and not (
+                isinstance(node.value, ast.Name)
+                and python.lookup_var(node.value.id, func, getmv())
+            ):
+                self.gx.types[infer.inode(self.gx, node.value)] = {(lcl.parent, 0)}
             self.visit_Call(fakefunc, func, fake_attr=True)
             self.add_constraint((self.gx.cnode[fakefunc, 0, 0], newnode), func)
 
