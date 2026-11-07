@@ -1340,6 +1340,12 @@ class file(pyiter):
 
     def isatty(self):
         return False
+    def readable(self):
+        return False
+    def writable(self):
+        return False
+    def seekable(self):
+        return False
 
     def truncate(self, size=-1):
         return 1
@@ -1390,6 +1396,12 @@ class file_binary(pyiter):
         return ''
 
     def isatty(self):
+        return False
+    def readable(self):
+        return False
+    def writable(self):
+        return False
+    def seekable(self):
         return False
 
     def truncate(self, size=-1):

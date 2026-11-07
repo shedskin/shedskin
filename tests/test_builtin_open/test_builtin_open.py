@@ -1203,7 +1203,112 @@ def test_enter_closed():
     os.remove('ectest.txt')
 
 
+def _rws_text(f):
+    return (f.readable(), f.writable(), f.seekable())
+
+
+def _rws_binary(f):
+    return (f.readable(), f.writable(), f.seekable())
+
+
+def _rws_closed_text(f):
+    result = []
+    for i in range(3):
+        try:
+            if i == 0:
+                result.append(str(f.readable()))
+            elif i == 1:
+                result.append(str(f.writable()))
+            else:
+                result.append(str(f.seekable()))
+        except ValueError as e:
+            assert str(e) == 'I/O operation on closed file'
+            result.append('VE')
+    return ' '.join(result)
+
+
+def _rws_closed_binary(f):
+    result = []
+    for i in range(3):
+        try:
+            if i == 0:
+                result.append(str(f.readable()))
+            elif i == 1:
+                result.append(str(f.writable()))
+            else:
+                result.append(str(f.seekable()))
+        except ValueError as e:
+            assert str(e) == 'I/O operation on closed file'
+            result.append('VE')
+    return ' '.join(result)
+
+
+def test_readable_writable_seekable():
+    # as cpython: from the mode, and seekable() asks the os
+    name = 'rwstest.txt'
+    f = open(name, 'w')
+    assert _rws_text(f) == (False, True, True)
+    assert _rws_binary(f.buffer) == (False, True, True)
+    f.close()
+    assert _rws_closed_text(f) == 'False VE VE'
+    f = open(name, 'r')
+    assert _rws_text(f) == (True, False, True)
+    assert _rws_binary(f.buffer) == (True, False, True)
+    f.close()
+    assert _rws_closed_text(f) == 'VE False VE'
+    f = open(name, 'r+')
+    assert _rws_text(f) == (True, True, True)
+    f.close()
+    assert _rws_closed_text(f) == 'VE VE VE'
+    f = open(name, 'a')
+    assert _rws_text(f) == (False, True, True)
+    f.close()
+    f = open(name, 'a+')
+    assert _rws_text(f) == (True, True, True)
+    f.close()
+    f = open(name, 'w+')
+    assert _rws_text(f) == (True, True, True)
+    f.close()
+
+    g = open(name, 'rb')
+    assert _rws_binary(g) == (True, False, True)
+    g.close()
+    assert _rws_closed_binary(g) == 'VE False VE'
+    g = open(name, 'wb')
+    assert _rws_binary(g) == (False, True, True)
+    g.close()
+    assert _rws_closed_binary(g) == 'False VE VE'
+    g = open(name, 'r+b')
+    assert _rws_binary(g) == (True, True, True)
+    g.close()
+    assert _rws_closed_binary(g) == 'VE VE VE'
+    g = open(name, 'ab')
+    assert _rws_binary(g) == (False, True, True)
+    g.close()
+    g = open(name, 'w+b')
+    assert _rws_binary(g) == (True, True, True)
+    g.close()
+    os.remove(name)
+
+    x = open(name, 'x')
+    assert _rws_text(x) == (False, True, True)
+    x.close()
+    os.remove(name)
+
+    # a pipe is not seekable
+    rfd, wfd = os.pipe()
+    pr = os.fdopen(rfd)
+    pw = os.fdopen(wfd, 'wb')
+    assert _rws_text(pr) == (True, False, False)
+    assert _rws_binary(pw) == (False, True, False)
+    pw.close()
+    pr.close()
+
+    assert sys.stdin.readable() and not sys.stdin.writable()
+    assert sys.stdout.writable() and not sys.stdout.readable()
+
 def test_all():
+    test_readable_writable_seekable()
     test_open_buffering()
     test_utf8_sig()
     test_seek_returns_position()

@@ -19,6 +19,8 @@
 #ifdef WIN32
 #include <io.h> // for _isatty
 #include <malloc.h> // for _aligned_malloc
+#include <sys/types.h>
+#include <sys/stat.h> // for _fstat64 (file::seekable)
 #else
 #include <unistd.h>
 #include <fcntl.h>
