@@ -443,6 +443,32 @@ def test_print_user_repr():
     assert f.getvalue() == '{SetReprElem(1)}\nfrozenset({SetReprElem(2)})\n'
 
 
+def test_zero_args():
+    s = {1, 2, 3}
+    u = s.union()
+    u.add(4)
+    assert sorted(s) == [1, 2, 3]
+    assert sorted(u) == [1, 2, 3, 4]
+    i = s.intersection()
+    i.discard(1)
+    assert sorted(i) == [2, 3]
+    d = s.difference()
+    d.clear()
+    assert sorted(s) == [1, 2, 3]
+    assert s.update() is None
+    assert s.intersection_update() is None
+    assert s.difference_update() is None
+    assert sorted(s) == [1, 2, 3]
+
+    f = frozenset([5, 6])
+    fu = f.union()
+    assert sorted(fu) == [5, 6]
+    assert sorted(f.intersection()) == [5, 6]
+    assert sorted(f.difference()) == [5, 6]
+    assert hash(fu) == hash(f)
+    assert {fu: 1}[f] == 1
+
+
 def test_all():
     test_set_churn()
     test_set1()
@@ -465,6 +491,7 @@ def test_all():
     test_eq()
     test_set_literal_in_method()
     test_print_user_repr()
+    test_zero_args()
 
 if __name__ == "__main__":
     test_all()
