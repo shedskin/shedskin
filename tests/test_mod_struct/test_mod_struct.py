@@ -914,6 +914,40 @@ def test_dangling_repeat_count():
     assert struct.calcsize('2i ') == 8
 
 
+def test_bytes_format():
+    # a bytes format string works like the equivalent str one
+    assert struct.pack(b'<h', 1) == b'\x01\x00'
+    assert struct.pack(b'<hi?', 1, -2, True) == struct.pack('<hi?', 1, -2, True)
+    assert struct.pack(b'>3s2x', b'ab') == b'ab\x00\x00\x00'
+    assert struct.calcsize(b'<hh') == 4
+    assert struct.calcsize(b'!c3q2b3d') == 51
+    a, b = struct.unpack(b'<hh', b'\x01\x00\x02\x00')
+    assert (a, b) == (1, 2)
+
+    # not only literals
+    fmt = b'<' + b'H' * 2
+    assert struct.pack(fmt, 3, 4) == b'\x03\x00\x04\x00'
+    assert struct.calcsize(fmt) == 4
+
+    buf = bytearray(6)
+    struct.pack_into(b'<H', buf, 2, 0x1234)
+    assert buf == bytearray(b'\x00\x00\x34\x12\x00\x00')
+
+    error = ''
+    try:
+        struct.pack(b'<hh', 1)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'pack expected 2 items for packing (got 1)'
+
+    for fmt in [b'<\xe9', b'i<', b'3']:  # cpython: UnicodeEncodeError for b'\xe9'
+        try:
+            struct.calcsize(fmt)
+            assert False
+        except Exception:
+            pass
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
@@ -950,6 +984,7 @@ def test_all():
     test_f_overflow()
     test_float_bool()
     test_dangling_repeat_count()
+    test_bytes_format()
 
 
 if __name__ == '__main__':
