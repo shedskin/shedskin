@@ -243,6 +243,26 @@ public:
 };
 
 //class timedelta
+
+/* a timedelta constructor argument: an int is kept exact, as converting it to
+   a double would lose the bits beyond 53 (timedelta(microseconds=2**53+1)) */
+struct timedelta_arg {
+    bool is_int;
+    int64_t i;
+    double f;
+    timedelta_arg(double x) : is_int(false), i(0), f(x) {}
+    timedelta_arg(__ss_bool b) : is_int(true), i(b.value), f(0) {}
+    template<class T> requires (!std::is_floating_point_v<T> && std::is_convertible_v<T, int64_t>) /* also __int128 */
+    timedelta_arg(T x) : is_int(true), i((int64_t)x), f(0) {
+        if constexpr (sizeof(T) > sizeof(int64_t)) { /* --int128: far too large anyway */
+            if(x > INT64_MAX || x < INT64_MIN) {
+                is_int = false;
+                f = (double)x;
+            }
+        }
+    }
+};
+
 extern class_ *cl_timedelta;
 class timedelta : public pyobj {
 public:
@@ -250,7 +270,7 @@ public:
     __ss_int seconds;
     __ss_int microseconds;
 
-    timedelta(double days=0., double seconds=0., double microseconds=0., double milliseconds=0., double minutes=0., double hours=0., double weeks=0.);
+    timedelta(timedelta_arg days=0, timedelta_arg seconds=0, timedelta_arg microseconds=0, timedelta_arg milliseconds=0, timedelta_arg minutes=0, timedelta_arg hours=0, timedelta_arg weeks=0);
     timedelta(timedelta *c):days(c->days),seconds(c->seconds),microseconds(c->microseconds){__class__=cl_timedelta;}
     static timedelta *min, *max, *resolution;
     str *__str__();

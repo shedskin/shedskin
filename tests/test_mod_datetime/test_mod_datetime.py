@@ -1539,6 +1539,43 @@ def test_timedelta_modulo():
             assert error == 'integer division or modulo by zero'
 
 
+def test_timedelta_exact_ints():
+    # t // n and t / n by a large int (r * 1000000 overflowed 64 bits)
+    assert str(datetime.timedelta(days=200000000) // 20000000000000) == '0:00:00.864000'
+    assert str(datetime.timedelta(days=200000000) / 20000000000000) == '0:00:00.864000'
+    assert str(datetime.timedelta(days=-200000000) // 20000000000000) == '-1 day, 23:59:59.136000'
+    assert str(datetime.timedelta(days=-200000000) / 20000000000000) == '-1 day, 23:59:59.136000'
+    assert str(datetime.timedelta.max // 9223372036854775807) == '0:00:00.000009'
+    assert str(datetime.timedelta.min / 9223372036854775807) == '-1 day, 23:59:59.999991'
+    assert str(datetime.timedelta.min // -9223372036854775807) == '0:00:00.000009'
+    assert str(datetime.timedelta(days=1, microseconds=1) // -86400000000) == '-1 day, 23:59:59.999998'  # floor
+    assert str(datetime.timedelta(microseconds=3) / 2) == '0:00:00.000002'  # ties to even
+    assert str(datetime.timedelta(microseconds=5) / 2) == '0:00:00.000002'
+    assert str(datetime.timedelta(microseconds=-5) / 2) == '-1 day, 23:59:59.999998'
+    assert str(datetime.timedelta(days=999999999, microseconds=1) / 2**44) == '0:00:04.911271'
+
+    # int arguments are exact, not converted to a double first
+    assert str(datetime.timedelta(microseconds=9007199254740993)) == '104249 days, 23:47:34.740993'
+    assert str(datetime.timedelta(milliseconds=9007199254740993)) == '104249991 days, 8:59:00.993000'
+    assert str(datetime.timedelta(microseconds=-9223372036854775807, seconds=1)) == '-106751992 days, 19:59:06.224193'
+    assert str(datetime.timedelta(1, 2, 3, 4, 5, 6, 7)) == '50 days, 6:05:02.004003'
+    assert str(datetime.timedelta(1.5, 2, 3)) == '1 day, 12:00:02.000003'
+    assert str(datetime.timedelta(True, False, True)) == '1 day, 0:00:00.000001'
+    error = ''
+    try:
+        datetime.timedelta(weeks=9223372036854775807)
+    except OverflowError as e:
+        error = str(e)
+    assert error == 'Python int too large to convert to C int'
+
+    # total_seconds is the exact microsecond count / 10**6, correctly rounded
+    assert datetime.timedelta(microseconds=-1).total_seconds() == -1e-06
+    assert datetime.timedelta(days=-1, microseconds=999999).total_seconds() == -86399.000001
+    assert datetime.timedelta(days=123456789, microseconds=7).total_seconds() == 10666666569600.0
+    assert datetime.timedelta(days=104249, seconds=85654, microseconds=740993).total_seconds() == 9007199254.740993
+    assert datetime.timedelta(days=999999999, hours=23, minutes=59, seconds=59, microseconds=999999).total_seconds() == 86400000000000.0
+
+
 def test_staticmethod_via_instance():
     # alternate constructors may also be called via an instance; such calls
     # used to be silently dropped ('called without using class name')
@@ -1558,6 +1595,7 @@ def test_all():
         test_timedelta_multiplication()
         test_timedelta_float_exact()
         test_timedelta_modulo()
+        test_timedelta_exact_ints()
         test_timedelta_float_range()
         test_date()
         test_date_ctime()
