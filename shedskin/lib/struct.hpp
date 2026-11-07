@@ -45,9 +45,12 @@ static inline bool is_big_endian_order(char o) {
     return not little_endian;
 }
 
+/* the format may be a str or a bytes object; both are scanned in place, without conversion */
 __ss_int calcsize(str *fmt);
+__ss_int calcsize(bytes *fmt);
 __ss_int calcsize(const char *fmt);
 __ss_int calcitems(str *fmt);
+__ss_int calcitems(bytes *fmt);
 __ss_int padding(char o, __ss_int pos, unsigned int itemsize);
 
 /* 'base' is the start position of the unpacked data, used for native alignment */
@@ -176,7 +179,7 @@ template<> inline void __pack_pascal(char, bytes *t, bytes *result, size_t &pos,
 
 /* pack single arg */
 
-template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, char &order, bytes *result, size_t base, size_t &pos, __ss_int &ndigits, T arg) {
+template<class F, class T> void __pack_one(F *fmt, unsigned int fmtlen, unsigned int &j, char &order, bytes *result, size_t base, size_t &pos, __ss_int &ndigits, T arg) {
     unsigned int itemsize;
     __ss_int pad;
     __ss_int n;
@@ -335,7 +338,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
 /* pack multiple args */
 
-template<class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigits, int, str *fmt, Args ... args) {
+template<class F, class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigits, int, F *fmt, Args ... args) {
     char order = '@';
     (void)result; /* unused when there are no args */
 
@@ -348,7 +351,7 @@ template<class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigi
 
 /* python API */
 
-template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
+template<class F, class ... Args> bytes *pack(int n, F *fmt, Args ... args) {
     bytes *result = new bytes();
     __ss_int result_size = calcsize(fmt);
     result->unit.resize(result_size);
@@ -365,7 +368,7 @@ template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
     return result;
 }
 
-template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, Args ... args) {
+template<class F, class ... Args> void *pack_into(int n, F *fmt, bytes *buffer, __ss_int offset, Args ... args) {
     __ss_int ndigits = -1;
 
     __ss_int expected_args = calcitems(fmt);

@@ -370,6 +370,10 @@ __ss_int calcsize(str *fmt) {
     return calcsize_impl(fmt->unit, (size_t)len(fmt));
 }
 
+__ss_int calcsize(bytes *fmt) {
+    return calcsize_impl(fmt->unit, (size_t)len(fmt));
+}
+
 __ss_int calcsize(const char *fmt) {
     return calcsize_impl(fmt, strlen(fmt));
 }
@@ -398,13 +402,13 @@ __ss_int unpack_from_pos(const char *fmt, bytes *data, __ss_int offset) {
     return offset;
 }
 
-__ss_int calcitems(str *fmt) {
+template<class S> static __ss_int calcitems_impl(const S &fmt, size_t fmtlen) {
     __ss_int result = 0;
     __ss_int n = 0;
     __ss_int ndigits = -1;
 
-    for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
-        __ss_char c = fmt->unit[i];
+    for(size_t i=0; i<fmtlen; i++) {
+        __ss_char c = (__ss_char)fmt[i];
         switch(c) {
             case '@':
             case '=':
@@ -480,6 +484,14 @@ __ss_int calcitems(str *fmt) {
     if(ndigits != -1) /* e.g. '3' or 'i3', as CPython */
         throw new error(new str("repeat count given without format specifier"));
     return result;
+}
+
+__ss_int calcitems(str *fmt) {
+    return calcitems_impl(fmt->unit, (size_t)len(fmt));
+}
+
+__ss_int calcitems(bytes *fmt) {
+    return calcitems_impl(fmt->unit, (size_t)len(fmt));
 }
 
 /* CPython's _struct range-checks every integer field before packing it;
