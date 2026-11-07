@@ -181,6 +181,38 @@ class ExtensionModule:
             supported.append(var)
         return python.stable_vars(supported)
 
+    def class_vars(self, cl: "python.Class") -> list["python.Variable"]:
+        """Supported class-level variables of a class (static C++ members)
+
+        A name that is also an instance variable is left out: the instance
+        getset for it already takes that name on instances.
+        """
+        return [
+            var
+            for var in self.supported_vars(cl.parent.vars.values())
+            if var.name not in cl.vars
+        ]
+
+    def exported_base(self, cl: "python.Class") -> Optional["python.Class"]:
+        """The base class whose type object is tp_base, if any"""
+        if cl.bases and not cl.bases[0].mv.module.builtin:
+            return cl.bases[0]
+        return None
+
+    def has_metatype(self, cl: "python.Class") -> bool:
+        """Does the type object of cl get its own metatype
+
+        Class variables are exposed through getset descriptors on a metatype
+        (a subclass of 'type'), as attributes of a static type cannot be
+        written otherwise. A subclass of such a class gets one as well, with
+        the base's metatype as its tp_base, so inherited class variables are
+        found and type(sub) stays a subclass of type(base).
+        """
+        if self.class_vars(cl):
+            return True
+        base = self.exported_base(cl)
+        return base is not None and self.has_metatype(base)
+
     def supported_funcs(
         self, funcs: Iterable["python.Function"]
     ) -> list["python.Function"]:
@@ -1007,6 +1039,9 @@ class ExtensionModule:
         write("    PyObject *m;\n")
 
         for cl in classes:
+            if self.has_metatype(cl):
+                write("    if (%sMetaReady() < 0)" % clname(cl))
+                write("        return NULL;")
             write("    if (PyType_Ready(&%sObjectType) < 0)" % clname(cl))
             write("        return NULL;\n")
 
@@ -1205,6 +1240,65 @@ class ExtensionModule:
             write("    0,")
         write("};\n")
         return True
+
+    def do_metatype(self, cl: "python.Class", cvars: list["python.Variable"]) -> None:
+        """Generate the metatype carrying the class variables of a class
+
+        The type objects are static, and type_setattro refuses to set any
+        attribute of an immutable type before it looks for a descriptor, so the
+        metatype has its own tp_setattro: it sets the class variables of this
+        class, and leaves any other name to type itself, which raises the usual
+        error. Inherited class variables can be read through a subclass, but
+        only be set through the class that defines them.
+        """
+        write = self.write
+        name = clname(cl)
+        base = self.exported_base(cl)
+        if base is not None and self.has_metatype(base):
+            meta_base = "&%sMetaType" % clname(base)
+        else:
+            meta_base = "&PyType_Type"
+
+        write("static PyGetSetDef %sMetaGetSet[] = {" % name)
+        for var in cvars:
+            write(
+                '    {(char *)"%s", (getter)__ss_cget_%s_%s, (setter)__ss_cset_%s_%s, (char *)"", NULL},'
+                % (var.name, name, var.name, name, var.name)
+            )
+        write("    {NULL}\n};\n")
+
+        write("PyTypeObject %sMetaType = {" % name)
+        write("    PyVarObject_HEAD_INIT(NULL, 0)")
+        write('    "%s.%s_type",' % (cl.module.ident, cl.ident))
+        write("};\n")
+
+        write(
+            "static int %sMetaSetattro(PyObject *self, PyObject *attr, PyObject *value) {"
+            % name
+        )
+        write("    if (PyUnicode_Check(attr)) {")
+        write("        for (PyGetSetDef *d = %sMetaGetSet; d->name; d++)" % name)
+        write("            if (PyUnicode_CompareWithASCIIString(attr, d->name) == 0)")
+        write("                return d->set(self, value, d->closure);")
+        write("    }")
+        # not via meta_base: setting an inherited class variable through a
+        # subclass would change it for the base too, where CPython would give
+        # the subclass its own attribute. Refuse it (immutable type) instead.
+        write("    return PyType_Type.tp_setattro(self, attr, value);")
+        write("}\n")
+
+        write("extern PyTypeObject %sObjectType;\n" % name)
+        write("int %sMetaReady() {" % name)
+        write("    %sMetaType.tp_flags = Py_TPFLAGS_DEFAULT;" % name)
+        write('    %sMetaType.tp_doc = PyDoc_STR("metatype of %s.%s");' % (name, cl.module.ident, cl.ident))
+        write("    %sMetaType.tp_getset = %sMetaGetSet;" % (name, name))
+        write("    %sMetaType.tp_setattro = %sMetaSetattro;" % (name, name))
+        write("    %sMetaType.tp_base = %s;" % (name, meta_base))
+        write("    if (PyType_Ready(&%sMetaType) < 0)" % name)
+        write("        return -1;")
+        write("    Py_SET_TYPE(&%sObjectType, &%sMetaType);" % (name, name))
+        write("    return 0;")
+        write("}\n")
 
     def do_extmod_class(self, cl: "python.Class") -> None:
         """Generates a python c-api extension type."""
@@ -1421,13 +1515,67 @@ class ExtensionModule:
             write("    return 0;")
             write("}\n")
 
+        # class variables (static members): read and written through the
+        # metatype as C.var; read-only through instances, like CPython for a
+        # class attribute of an instance without __dict__
+        cvars = self.class_vars(cl)
+        for var in cvars:
+            cpp_var = "%s::%s::%s" % (
+                cl.module.full_path(),
+                self.gv.cpp_name(cl),
+                self.gv.cpp_name(var),
+            )
+            write(
+                "PyObject *__ss_cget_%s_%s(PyObject *self, void *closure) {"
+                % (clname(cl), var.name)
+            )
+            write("    (void)self;")
+            write("    (void)closure;")
+            write("    if (__ss_wrong_thread())")
+            write("        return NULL;")
+            write("    return __to_py(%s);" % cpp_var)
+            write("}\n")
+
+            write(
+                "int __ss_cset_%s_%s(PyObject *self, PyObject *value, void *closure) {"
+                % (clname(cl), var.name)
+            )
+            write("    (void)self;")
+            write("    (void)closure;")
+            write("    if (__ss_wrong_thread())")
+            write("        return -1;")
+            write("    if(value == NULL) {")
+            write(
+                '        PyErr_SetString(PyExc_AttributeError, "class attribute \'%s\' of \'%s.%s\' cannot be deleted");'
+                % (var.name, cl.module.ident, cl.ident)
+            )
+            write("        return -1;")
+            write("    }")
+            write("    try {")
+            typ = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
+            write("        %s = __to_ss<%s>(value);" % (cpp_var, typ))
+            write("    } catch (BaseException *e) {")
+            write("        __ss_raise_py(e);")
+            write("        return -1;")
+            write("    }")
+            write("    return 0;")
+            write("}\n")
+
         write("PyGetSetDef %sGetSet[] = {" % clname(cl))
         for var in vars:
             write(
                 '    {(char *)"%s", (getter)__ss_get_%s_%s, (setter)__ss_set_%s_%s, (char *)"", NULL},'
                 % (var.name, clname(cl), var.name, clname(cl), var.name)
             )
+        for var in cvars:
+            write(
+                '    {(char *)"%s", (getter)__ss_cget_%s_%s, NULL, (char *)"", NULL},'
+                % (var.name, clname(cl), var.name)
+            )
         write("    {NULL}\n};\n")
+
+        if self.has_metatype(cl):
+            self.do_metatype(cl, cvars)
 
         # python type (new)
         write("PyTypeObject %sObjectType = {" % clname(cl))
@@ -1537,6 +1685,8 @@ class ExtensionModule:
 
         for cl in self.exported_classes():
             write('extern "C" PyTypeObject %sObjectType;' % clname(cl))
+            if self.has_metatype(cl):
+                write('extern "C" PyTypeObject %sMetaType;' % clname(cl))
 
         write("namespace __shedskin__ {\n")
         for cl in self.exported_classes():
