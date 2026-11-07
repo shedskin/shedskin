@@ -797,39 +797,47 @@ template<class T> T __seqiter<T>::__get_next() { /* no exception at the end (see
 
 /* tuple unpacking */
 
+/* got > expected: too many values (CPython doesn't report 'got' then) */
+[[noreturn]] inline void __throw_unpack_error(__ss_int expected, __ss_int got, bool star=false) {
+    char buf[96];
+    if(got > expected && !star)
+        snprintf(buf, sizeof(buf), "too many values to unpack (expected %lld)", (long long)expected);
+    else
+        snprintf(buf, sizeof(buf), "not enough values to unpack (expected %s%lld, got %lld)", star ? "at least " : "", (long long)expected, (long long)got);
+    throw new ValueError(new str(buf));
+}
+
 #ifdef __SS_NOBOUNDS
     #define __SS_UNPACK_CHECK(t, expected)
 #else
 #define __SS_UNPACK_CHECK(t, expected) \
-    if(len(t) > (__ss_int)expected) \
-        throw new ValueError(new str("too many values to unpack")); \
-    else if(len(t) < (__ss_int)expected) \
-        throw new ValueError(new str("not enough values to unpack"));
+    if(len(t) != (__ss_int)expected) \
+        __throw_unpack_error(expected, len(t));
 #endif
 
 /* unpacking of arbitrary iterables, using the same for_in_* protocol as
    for-loops (so e.g. classes without __iter__ work) */
-template<class P> inline typename P::for_in_unit __ss_unpack_next(P *p, typename P::for_in_loop &l) {
+template<class P> inline typename P::for_in_unit __ss_unpack_next(P *p, typename P::for_in_loop &l, __ss_int got, __ss_int expected, bool star=false) {
     if(!p->for_in_has_next(l))
-        throw new ValueError(new str("not enough values to unpack"));
+        __throw_unpack_error(expected, got, star);
     return p->for_in_next(l);
 }
 
-template<class P> inline void __ss_unpack_end(P *p, typename P::for_in_loop &l) {
+template<class P> inline void __ss_unpack_end(P *p, typename P::for_in_loop &l, __ss_int expected) {
 #ifndef __SS_NOBOUNDS
     if(p->for_in_has_next(l))
-        throw new ValueError(new str("too many values to unpack"));
+        __throw_unpack_error(expected, expected+1);
 #endif
 }
 
 /* extended unpacking (a, *b, c = ..): collect the remaining items into a new
    list, which must hold at least the 'after' items for the targets after *b */
-template<class L, class P> inline L *__ss_unpack_star(P *p, typename P::for_in_loop &l, __ss_int after) {
+template<class L, class P> inline L *__ss_unpack_star(P *p, typename P::for_in_loop &l, __ss_int before, __ss_int after) {
     L *r = new L();
     while(p->for_in_has_next(l))
         r->append(p->for_in_next(l));
     if(r->__len__() < after)
-        throw new ValueError(new str("not enough values to unpack"));
+        __throw_unpack_error(before + after, before + r->__len__(), true);
     return r;
 }
 
