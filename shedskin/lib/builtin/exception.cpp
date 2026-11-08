@@ -33,6 +33,18 @@ str *OSError::__repr__() {
     return __add_strs(5, this->__class__->__name__, new str("("), __str(__ss_errno), new str(", "), repr(strerror), new str(")"));
 }
 
+#ifdef __SS_BIND
+/* OSError(errno, strerror, filename, winerror, filename2), so CPython sets
+   the attributes and str() as for its own OSError (1025-B9) */
+PyObject *OSError::__py_args__() {
+    if(!__ss_errno || !strerror)
+        return 0; /* use message */
+    if(!filename)
+        return Py_BuildValue("(iN)", (int)__ss_errno, __to_py(strerror));
+    return Py_BuildValue("(iNNON)", (int)__ss_errno, __to_py(strerror), __to_py(filename), Py_None, __to_py(filename2));
+}
+#endif
+
 /* errno is snapshotted by the caller, as allocation may clobber it */
 template<class T> [[noreturn]] static void __throw_errno(int e, str *fname, str *fname2) {
     T *exc = new T();

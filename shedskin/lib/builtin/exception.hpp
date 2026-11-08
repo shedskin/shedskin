@@ -413,6 +413,7 @@ public:
 
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_OSError; }
+    PyObject *__py_args__();
 #endif
 };
 

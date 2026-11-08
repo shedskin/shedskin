@@ -4,6 +4,7 @@
 # '--py' to run the same checks against exceptions.py under CPython, to verify
 # the checks themselves.
 
+import errno
 import os
 import pickle
 import sys
@@ -83,6 +84,35 @@ def test_attributes():
     assert isinstance(e, exceptions.CodeError)
     assert e.code == 43 and e.where == ['here'] and e.extra == 1.5
     assert str(e) == 'subcode'
+
+
+def test_oserror():
+    # errno, strerror and filename are passed on (1025-B9)
+    missing = os.path.join(HERE, 'no-such-file')
+    try:
+        exceptions.read_missing(missing)
+    except OSError as e:
+        assert type(e) is FileNotFoundError
+        assert e.errno == errno.ENOENT and e.strerror == os.strerror(errno.ENOENT)
+        assert e.filename == missing and e.filename2 is None
+        assert e.args == (errno.ENOENT, os.strerror(errno.ENOENT))
+        assert str(e) == '[Errno %d] %s: %r' % (errno.ENOENT, e.strerror, missing)
+    else:
+        assert False
+    try:
+        exceptions.rename_missing(missing, missing + '2')
+    except OSError as e:
+        assert type(e) is FileNotFoundError
+        assert e.filename == missing and e.filename2 == missing + '2'
+        assert str(e).endswith(': %r -> %r' % (missing, missing + '2'))
+    else:
+        assert False
+    # but a user OSError subclass without errno does not get errno=0,
+    # filename=None etc. (1030-B7)
+    e = caught(5)
+    assert type(e) is exceptions.MyOSError and str(e) == 'os'
+    assert e.errno is None and e.strerror is None
+    assert e.filename is None and e.filename2 is None
 
 
 def test_str_repr():
