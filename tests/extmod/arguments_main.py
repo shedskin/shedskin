@@ -93,6 +93,50 @@ def test_missing():
     assert error(arguments.unicode_name) == "unicode_name() missing 1 required positional argument: 'größe'"
 
 
+def test_keyword_only():
+    assert arguments.kwonly(1) == 12
+    assert arguments.kwonly(1, b=5) == 15
+    assert arguments.kwonly(a=1, b=5) == 15
+    assert arguments.kwonly_req(1, c=2, e=3) == 11243
+    assert arguments.kwonly_req(1, 2, c=3, d=4, e=5) == 12345
+    assert arguments.kwonly_req(e=5, d=4, c=3, b=2, a=1) == 12345
+    assert error(arguments.kwonly, 1, 5) == 'kwonly() takes 1 positional argument but 2 were given'
+    assert error(arguments.kwonly, 1, 5, b=2) == 'kwonly() takes 1 positional argument but 2 positional arguments (and 1 keyword-only argument) were given'
+    assert error(arguments.kwonly_req, 1, 2, 3) == 'kwonly_req() takes from 1 to 2 positional arguments but 3 were given'
+    assert error(arguments.kwonly_req, 1, 2, 3, c=1, e=1) == 'kwonly_req() takes from 1 to 2 positional arguments but 3 positional arguments (and 2 keyword-only arguments) were given'
+    assert error(arguments.kwonly_req, 1) == "kwonly_req() missing 2 required keyword-only arguments: 'c' and 'e'"
+    assert error(arguments.kwonly_req, 1, 2, c=1) == "kwonly_req() missing 1 required keyword-only argument: 'e'"
+    # missing positional arguments are reported first
+    assert error(arguments.kwonly_req, c=1) == "kwonly_req() missing 1 required positional argument: 'a'"
+    assert error(arguments.kwonly, 1, c=1) == "kwonly() got an unexpected keyword argument 'c'"
+
+
+def test_positional_only():
+    assert arguments.posonly(1) == 13
+    assert arguments.posonly(1, 2) == 12
+    assert arguments.posonly(1, b=2) == 12
+    assert arguments.posonly2(1, 2, 3) == 123
+    assert arguments.posonly2(1, 2, c=3) == 123
+    assert arguments.mixed(1, 2, c=3) == 123
+    assert arguments.mixed(1, b=2, c=3) == 123
+    assert error(arguments.posonly, a=1) == "posonly() got some positional-only arguments passed as keyword arguments: 'a'"
+    assert error(arguments.posonly, 1, a=2) == "posonly() got some positional-only arguments passed as keyword arguments: 'a'"
+    assert error(arguments.posonly2, a=1, b=2, c=3) == "posonly2() got some positional-only arguments passed as keyword arguments: 'a, b'"
+    assert error(arguments.posonly2, 1, zz=2, b=1) == "posonly2() got some positional-only arguments passed as keyword arguments: 'b'"
+    assert error(arguments.posonly2, 1, 2, zz=2) == "posonly2() got an unexpected keyword argument 'zz'"
+    assert error(arguments.posonly2, 1, 2, 3, 4) == 'posonly2() takes 3 positional arguments but 4 were given'
+    assert error(arguments.posonly2, 1, 2) == "posonly2() missing 1 required positional argument: 'c'"
+    assert error(arguments.mixed, 1, 2, 3) == 'mixed() takes 2 positional arguments but 3 were given'
+    assert error(arguments.mixed, 1, 2) == "mixed() missing 1 required keyword-only argument: 'c'"
+    assert error(arguments.mixed, 1, c=3) == "mixed() missing 1 required positional argument: 'b'"
+    # methods ('self' counts, as in CPython)
+    p = arguments.Point(2, 0)
+    assert p.scale(3) == 6
+    assert p.scale(3, offset=1) == 7
+    assert error(p.scale, f=3) == "Point.scale() got some positional-only arguments passed as keyword arguments: 'f'"
+    assert error(p.scale, 3, 1) == 'Point.scale() takes 2 positional arguments but 3 were given'
+
+
 def test_methods():
     p = arguments.Point(1, 2)
     assert p.move(1) == 202

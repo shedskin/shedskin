@@ -889,17 +889,30 @@ class ExtensionModule:
                 fname = func.parent.ident + "." + func.ident
             else:
                 fname = func.ident
-            names = ", ".join(c_string(formal) for formal in formals)
+            # the names in the original order: positional, then keyword-only
+            nrequired = len(formals) - len(func.defaults)
+            pos_names = [f for f in formals if f not in func.kwonly]
+            kw_names = [f for f in formals if f in func.kwonly]
+            kw_names.sort(key=func.kwonly.index)
+            nposonly = func.posonly - int(is_method) if func.posonly else 0
+            nposrequired = len([f for f in formals[:nrequired] if f not in func.kwonly])
+            kwrequired = "".join(
+                "1" if formals.index(f) < nrequired else "0" for f in kw_names
+            )
+            names = ", ".join(c_string(name) for name in pos_names + kw_names)
             if formals:
                 write("        static const char *const __ss_names[] = {%s};" % names)
             write(
-                "        __ss_check_args(%s, %d, %d, %d, %s, args, kwargs);"
+                "        __ss_check_args(%s, %d, %d, %d, %d, %d, %s, %s, args, kwargs);"
                 % (
                     c_string(fname),
                     int(is_method),
-                    len(formals),
-                    len(formals) - len(func.defaults),
+                    nposonly,
+                    len(pos_names),
+                    nposrequired,
+                    len(kw_names),
                     "__ss_names" if formals else "NULL",
+                    c_string(kwrequired) if kw_names else "NULL",
                 )
             )
 
@@ -959,9 +972,15 @@ class ExtensionModule:
                     % {"type": typ, "num": i}
                 )
                 continue
+            # the position in the args tuple: the formals were reordered (see
+            # graph.remove_poskw_only_args), and keyword-only ones have none
+            if formal in func.kwonly:
+                pos = -1
+            else:
+                pos = [f for f in formals if f not in func.kwonly].index(formal)
             self.gv.append(
-                '        %(type)sarg_%(num)d = __ss_arg<%(type)s>("%(name)s", %(num)d, '
-                % {"type": typ, "num": i, "name": formal}
+                '        %(type)sarg_%(num)d = __ss_arg<%(type)s>("%(name)s", %(pos)d, '
+                % {"type": typ, "num": i, "name": formal, "pos": pos}
             )
             if i >= len(formals) - len(func.defaults):
                 self.gv.append("1, ")

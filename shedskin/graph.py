@@ -1059,6 +1059,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def remove_poskw_only_args(self, node: ast.FunctionDef) -> None:
         """Ignore /, * (pos-only, keyword-only) arguments"""
         if node.args.posonlyargs or node.args.kwonlyargs:
+            # remember them for extension modules, which have to check how
+            # they are passed from Python (see python.Function, extmod.py)
+            setattr(node, "_ss_posonly", len(node.args.posonlyargs))
+            setattr(node, "_ss_kwonly", [arg.arg for arg in node.args.kwonlyargs])
             # keyword-only arguments are never bound positionally, so we can
             # move those without a default forward, keeping defaults trailing
             args = node.args.posonlyargs + node.args.args

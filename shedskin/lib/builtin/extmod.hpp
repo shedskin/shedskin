@@ -159,15 +159,32 @@ inline bool __ss_wrong_thread() {
 /* check the arguments of a call against the formals, as CPython does for a
    Python function (same order of checks, same messages), before __ss_arg
    picks them up: otherwise extra positional arguments and unknown or
-   duplicate keywords were silently ignored. 'names' holds the 'nformals'
-   names of the formals (without 'self'), the first 'nrequired' of which have
-   no default. args/kwargs may be NULL (e.g. when called from tp_hash). */
-inline void __ss_check_args(const char *fname, int is_method, int nformals, int nrequired, const char *const *names, PyObject *args, PyObject *kwargs) {
+   duplicate keywords were silently ignored. 'names' holds the names of the
+   formals (without 'self') in their original order: the 'npositional'
+   positional ones, the first 'nposonly' of which are positional-only and the
+   first 'nrequired' of which have no default, followed by the 'nkwonly'
+   keyword-only ones, for which 'kwrequired' holds '1' when it has no default
+   ('0' otherwise). args/kwargs may be NULL (e.g. when called from tp_hash). */
+inline std::string __ss_names_list(const std::vector<std::string>& names) {
+    std::string msg;
+    size_t n = names.size();
+    for (size_t i = 0; i < n; i++) {
+        if (i > 0)
+            msg += n == 2 ? " and " : (i == n - 1 ? ", and " : ", ");
+        msg += "'" + names[i] + "'";
+    }
+    return msg;
+}
+
+inline void __ss_check_args(const char *fname, int is_method, int nposonly, int npositional, int nrequired, int nkwonly, const char *const *names, const char *kwrequired, PyObject *args, PyObject *kwargs) {
     Py_ssize_t nargs = args ? PyTuple_Size(args) : 0;
     std::string prefix = std::string(fname) + "() ";
+    int nformals = npositional + nkwonly;
+    bool have_kwargs = kwargs && PyDict_Check(kwargs);
+    int kwonly_given = 0;
 
     /* keywords */
-    if (kwargs && PyDict_Check(kwargs)) {
+    if (have_kwargs) {
         PyObject *key, *value;
         Py_ssize_t pos = 0;
         while (PyDict_Next(kwargs, &pos, &key, &value)) {
@@ -178,53 +195,75 @@ inline void __ss_check_args(const char *fname, int is_method, int nformals, int 
             if (!utf8)
                 PyErr_Clear(); /* e.g. a lone surrogate: matches no formal */
             else {
-                for (int i = 0; i < nformals; i++) {
+                for (int i = nposonly; i < nformals; i++) {
                     if (strcmp(utf8, names[i]) == 0) {
                         index = i;
                         break;
                     }
                 }
             }
-            if (index == -1 || index < nargs) {
+            if (index == -1) {
+                /* positional-only arguments passed as keywords: all of them */
+                std::string posonly;
+                for (int i = 0; i < nposonly; i++) {
+                    if (PyDict_GetItemString(kwargs, names[i])) {
+                        if (!posonly.empty())
+                            posonly += ", ";
+                        posonly += names[i];
+                    }
+                }
+                if (!posonly.empty())
+                    throw new TypeError(new str((prefix + "got some positional-only arguments passed as keyword arguments: '" + posonly + "'").c_str()));
+            }
+            if (index == -1 || (index < npositional && index < nargs)) {
                 str *name = new str(key);
                 const char *what = index == -1 ? "got an unexpected keyword argument '" : "got multiple values for argument '";
                 throw new TypeError((new str((prefix + what).c_str()))->__add__(name)->__add__(new str("'")));
             }
+            if (index >= npositional)
+                kwonly_given++;
         }
     }
 
     /* too many positional arguments ('self' counts, as in CPython) */
-    if (nargs > nformals) {
+    if (nargs > npositional) {
         std::string msg = prefix + "takes ";
-        if (nrequired == nformals)
-            msg += std::to_string(nformals + is_method) + " positional argument" + (nformals + is_method == 1 ? "" : "s");
+        if (nrequired == npositional)
+            msg += std::to_string(npositional + is_method) + " positional argument" + (npositional + is_method == 1 ? "" : "s");
         else
-            msg += "from " + std::to_string(nrequired + is_method) + " to " + std::to_string(nformals + is_method) + " positional arguments";
-        msg += " but " + std::to_string(nargs + is_method) + (nargs + is_method == 1 ? " was" : " were") + " given";
+            msg += "from " + std::to_string(nrequired + is_method) + " to " + std::to_string(npositional + is_method) + " positional arguments";
+        Py_ssize_t given = nargs + is_method;
+        msg += " but " + std::to_string(given);
+        if (kwonly_given)
+            msg += std::string(" positional argument") + (given == 1 ? "" : "s") + " (and " + std::to_string(kwonly_given) + " keyword-only argument" + (kwonly_given == 1 ? "" : "s") + ")";
+        msg += (given == 1 && !kwonly_given) ? " was given" : " were given";
         throw new TypeError(new str(msg.c_str()));
     }
 
-    /* missing arguments */
+    /* missing positional arguments */
     std::vector<std::string> missing;
     for (int i = (int)nargs; i < nrequired; i++)
-        if (!kwargs || !PyDict_Check(kwargs) || !PyDict_GetItemString(kwargs, names[i]))
-            missing.push_back(std::string("'") + names[i] + "'");
+        if (!have_kwargs || !PyDict_GetItemString(kwargs, names[i]))
+            missing.push_back(names[i]);
     if (!missing.empty()) {
         size_t n = missing.size();
-        std::string msg = prefix + "missing " + std::to_string(n) + " required positional argument" + (n == 1 ? "" : "s") + ": ";
-        for (size_t i = 0; i < n; i++) {
-            if (i > 0)
-                msg += n == 2 ? " and " : (i == n - 1 ? ", and " : ", ");
-            msg += missing[i];
-        }
-        throw new TypeError(new str(msg.c_str()));
+        throw new TypeError(new str((prefix + "missing " + std::to_string(n) + " required positional argument" + (n == 1 ? "" : "s") + ": " + __ss_names_list(missing)).c_str()));
+    }
+
+    /* missing keyword-only arguments */
+    for (int i = 0; i < nkwonly; i++)
+        if (kwrequired[i] == '1' && (!have_kwargs || !PyDict_GetItemString(kwargs, names[npositional + i])))
+            missing.push_back(names[npositional + i]);
+    if (!missing.empty()) {
+        size_t n = missing.size();
+        throw new TypeError(new str((prefix + "missing " + std::to_string(n) + " required keyword-only argument" + (n == 1 ? "" : "s") + ": " + __ss_names_list(missing)).c_str()));
     }
 }
 
 template<class T> T __ss_arg(const char *name, int pos, int has_default, T default_value, PyObject *args, PyObject *kwargs) {
     PyObject *kwarg;
     Py_ssize_t nrofargs = PyTuple_Size(args);
-    if (pos < (int)nrofargs)
+    if (pos >= 0 && pos < (int)nrofargs) /* pos is -1 for keyword-only arguments */
         return __to_ss<T>(PyTuple_GetItem(args, pos));
     else if (kwargs && (kwarg = PyDict_GetItemString(kwargs, name)))
         return __to_ss<T>(kwarg);

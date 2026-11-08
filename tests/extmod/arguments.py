@@ -37,6 +37,26 @@ def unicode_name(größe, b=1):
     return größe + b
 
 
+def kwonly(a, *, b=2):
+    return a * 10 + b
+
+
+def kwonly_req(a, b=1, *, c, d=4, e):  # reordered internally: a, c, e, b, d
+    return a * 10000 + b * 1000 + c * 100 + d * 10 + e
+
+
+def posonly(a, /, b=3):
+    return a * 10 + b
+
+
+def posonly2(a, b, /, c):
+    return a * 100 + b * 10 + c
+
+
+def mixed(a, /, b, *, c):
+    return a * 100 + b * 10 + c
+
+
 # classes
 
 class Point:
@@ -48,6 +68,9 @@ class Point:
         self.x += dx
         self.y += dy
         return self.x * 100 + self.y
+
+    def scale(self, f, /, *, offset=0):
+        return self.x * f + offset
 
     def norm1(self):
         return abs(self.x) + abs(self.y)
@@ -107,11 +130,21 @@ if __name__ == '__main__':
     flag(1, True)
     unicode_name(1)
     unicode_name(1, 2)
+    kwonly(1)
+    kwonly(1, b=5)
+    kwonly_req(1, c=2, e=3)
+    kwonly_req(1, 2, c=3, d=4, e=5)
+    posonly(1)
+    posonly(1, 2)
+    posonly2(1, 2, 3)
+    mixed(1, 2, c=3)
     p = Point(1, 2)
     Point(1)
     p.move(1)
     p.move(1, 2)
     p.norm1()
+    p.scale(2)
+    p.scale(2, offset=1)
     repr(p)
     str(p)
     -p
