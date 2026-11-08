@@ -567,3 +567,35 @@ def incompatible_assignment_rec(
         if incompatible_assignment_rec(gx, argvartypes, formalvartypes, depth + 1):
             return True
     return False
+
+
+def upcast_only(
+    gx: "config.GlobalInfo", argtypes: Types, formaltypes: Types, depth: int = 0
+) -> bool:
+    """Check if a new container of argtypes can be built as formaltypes instead,
+    only upcasting user class instances (so not converting int to float, say)"""
+    if not argtypes:  # nothing to convert, as for an empty container
+        return True
+    if depth == MAX_TYPE_DEPTH:
+        return False
+    if any(not isinstance(t[0], python.Class) for t in argtypes | formaltypes):
+        return False
+    argclasses = types_classes(argtypes)
+    formalclasses = types_classes(formaltypes)
+    lcp = lowest_common_parents(formalclasses)
+    if len(lcp) != 1:
+        return False
+    target = lcp[0]
+    if not target.mv.module.builtin:
+        return all(target in cl.ancestors(inclusive=True) for cl in argclasses)
+    if argclasses != {target} or formalclasses != {target}:
+        return False
+    return all(
+        upcast_only(
+            gx,
+            types_var_types(gx, argtypes, tvar),
+            types_var_types(gx, formaltypes, tvar),
+            depth + 1,
+        )
+        for tvar in target.tvar_names()
+    )

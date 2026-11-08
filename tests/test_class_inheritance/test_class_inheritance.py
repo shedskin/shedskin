@@ -229,6 +229,57 @@ def test_virtual_cpp_keyword_formals():
     assert res == [('b', 5), ('a', 6)]
 
 
+class RetE:
+    def name(self):
+        return 'E'
+
+
+class RetN(RetE):
+    def name(self):
+        return 'N'
+
+
+class RetV(RetE):
+    def name(self):
+        return 'V'
+
+
+class RetBase:  # 1029-C3, 1030-C3: new containers returned by overrides
+    def empty_list(self):
+        return []
+
+    def empty_dict(self):
+        return {}
+
+    def empty_set(self):
+        return set()
+
+    def objs(self):
+        return [RetN(), RetN()]
+
+
+class RetSub(RetBase):
+    def empty_list(self):
+        return [1, 2]
+
+    def empty_dict(self):
+        return {1: 2}
+
+    def empty_set(self):
+        return {1, 2}
+
+    def objs(self):
+        return [RetV()]
+
+
+def test_virtual_return_new_container():
+    objs = [RetBase(), RetSub()]
+    assert [o.empty_list() for o in objs] == [[], [1, 2]]
+    assert [o.empty_dict() for o in objs] == [{}, {1: 2}]
+    assert [sorted(o.empty_set()) for o in objs] == [[], [1, 2]]
+    assert [[x.name() for x in o.objs()] for o in objs] == [['N', 'N'], ['V']]
+
+
 class StopIterSub(StopIteration):
     pass
 
@@ -323,6 +374,7 @@ def test_all():
     test_virtual_case()
     test_redundant_object_base()
     test_virtual_cpp_keyword_formals()
+    test_virtual_return_new_container()
     test_builtin_attribute_not_shadowed()
     test_class_call()
 
