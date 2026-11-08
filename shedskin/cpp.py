@@ -4222,6 +4222,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
                 return
 
+        # defaults and keywords are resolved once, against target
+        omitted = len(target.formals) - method_call > len(node.args) + len(node.keywords)
+        if len({(tuple(f.formals) if node.keywords else (),
+                 tuple(ast.dump(d) for d in f.node.args.defaults) if omitted else ())
+                for f in funcs if f.node}) > 1:
+            error.error(
+                "overriding methods have different defaults/parameter order",
+                self.gx,
+                node,
+                warning=True,
+                mv=self.mv,
+            )
+
         assert isinstance(target, python.Function)
         if target.inherited_from:
             target = target.inherited_from
