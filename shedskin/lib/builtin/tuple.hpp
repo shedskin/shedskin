@@ -3,6 +3,15 @@
 #ifndef SS_TUPLE_HPP
 #define SS_TUPLE_HPP
 
+/* an element of a heterogeneous tuple2/tuple3, as returned by for_in_next. it
+   converts to the type of the loop variable, which merges the element types
+   (e.g. to a common base class), so the tuple type itself stays precise */
+template<class U> struct __ss_hetero_elem {
+    U *t;
+    size_t i;
+    template<class T> operator T() const { return t->template __ss_elem<T>(i); }
+};
+
 /* final: users cannot subclass builtins (see graph.py), so the C++ compiler may devirtualize */
 template<class A, class B> class tuple2 final : public pyobj {
 public:
@@ -25,6 +34,16 @@ public:
 
     tuple2<A,B> *__copy__();
     tuple2<A,B> *__deepcopy__(dict<void *, pyobj *> *memo);
+
+    /* iteration (FOR_IN) */
+    typedef size_t for_in_loop;
+    inline size_t for_in_init() { return 0; }
+    inline bool for_in_has_next(size_t i) { return i < 2; }
+    inline __ss_hetero_elem<tuple2<A,B> > for_in_next(size_t &i) { return {this, i++}; }
+    template<class T> inline T __ss_elem(size_t i) {
+        if(i == 0) return static_cast<T>(first);
+        return static_cast<T>(second);
+    }
 
 #ifdef __SS_BIND
     tuple2(PyObject *p);
@@ -55,6 +74,17 @@ public:
 
     tuple3<A,B,C> *__copy__();
     tuple3<A,B,C> *__deepcopy__(dict<void *, pyobj *> *memo);
+
+    /* iteration (FOR_IN) */
+    typedef size_t for_in_loop;
+    inline size_t for_in_init() { return 0; }
+    inline bool for_in_has_next(size_t i) { return i < 3; }
+    inline __ss_hetero_elem<tuple3<A,B,C> > for_in_next(size_t &i) { return {this, i++}; }
+    template<class T> inline T __ss_elem(size_t i) {
+        if(i == 0) return static_cast<T>(first);
+        if(i == 1) return static_cast<T>(second);
+        return static_cast<T>(third);
+    }
 
 #ifdef __SS_BIND
     tuple3(PyObject *p);
