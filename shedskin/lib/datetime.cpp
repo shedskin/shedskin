@@ -1385,7 +1385,18 @@ static bool timedelta_split_days(double w, uint64_t per_day, int64_t *days, int6
  * large; as in cpython the OverflowError only comes after all the arguments
  * have been checked for NaN and infinity. (unlike cpython, two such arguments
  * that cancel out still overflow) */
-static inline void timedelta_accum(double arg, uint64_t per_day, int64_t days_per_unit, int64_t us_per_unit, int64_t *days_acc, int64_t *us_acc, double *leftover_us, bool *overflow) {
+static inline void timedelta_accum(timedelta_arg a, uint64_t per_day, int64_t days_per_unit, int64_t us_per_unit, int64_t *days_acc, int64_t *us_acc, double *leftover_us, bool *overflow) {
+    if(a.is_int) { /* exact: no fraction, and no detour through a double */
+        int64_t rem, d = floordivmod(a.i, (int64_t)per_day, &rem);
+        if(d > (int64_t)TIMEDELTA_ACC_LIMIT || d < -(int64_t)TIMEDELTA_ACC_LIMIT) {
+            *overflow = true;
+            return;
+        }
+        *days_acc += d * days_per_unit;
+        *us_acc += rem * us_per_unit;
+        return;
+    }
+    double arg = a.f;
     if(std::isnan(arg))
         throw new ValueError(new str("cannot convert float NaN to integer"));
     if(std::isinf(arg))
@@ -1417,7 +1428,7 @@ static void timedelta_check_days(int64_t days) {
     }
 }
 
-timedelta::timedelta(double days_, double seconds_, double microseconds_, double milliseconds, double minutes, double hours, double weeks) {
+timedelta::timedelta(timedelta_arg days_, timedelta_arg seconds_, timedelta_arg microseconds_, timedelta_arg milliseconds, timedelta_arg minutes, timedelta_arg hours, timedelta_arg weeks) {
     __class__ = cl_timedelta;
 
     /* Same algorithm as cpython: whole parts of the arguments are accumulated
@@ -1509,14 +1520,6 @@ static void timedelta_check_ratio(__ss_float f) {
 }
 
 
-/* Exact-integer floor division of timedelta(days,seconds,microseconds) by n,
- * without ever forming (days*86400+seconds)*1000000+microseconds as a single
- * value (which overflows a 64-bit integer for large day counts, and which is
- * why the old floating-point implementation below produced off-by-one
- * microsecond/second errors in timedelta // n and timedelta / n).
- * *out_remainder is the exact remainder of the division (Python divmod sign
- * convention), used by __truediv__ below to implement round-half-to-even
- * like cpython. */
 static int64_t floordivmod(int64_t a, int64_t b, int64_t *r) {
     int64_t q = a / b;
     int64_t rem = a - q * b;
@@ -1526,60 +1529,6 @@ static int64_t floordivmod(int64_t a, int64_t b, int64_t *r) {
     }
     *r = rem;
     return q;
-}
-
-static void timedelta_floordivmod(int64_t days, int64_t seconds, int64_t microseconds, int64_t n,
-                                   int64_t *out_days, int64_t *out_seconds, int64_t *out_microseconds,
-                                   int64_t *out_remainder) {
-    int64_t A = days * 86400 + seconds;           /* exact, fits comfortably in 64 bits */
-    int64_t r1;
-    int64_t qhigh = floordivmod(A, n, &r1);        /* |r1| < |n| */
-    int64_t combined = r1 * 1000000 + microseconds;
-    int64_t r2;
-    int64_t qlow = floordivmod(combined, n, &r2);  /* |qlow| stays small, no overflow */
-    int64_t qlow_hi, qlow_lo;
-    qlow_hi = floordivmod(qlow, 1000000, &qlow_lo);
-    int64_t total_seconds = qhigh + qlow_hi;
-    int64_t seconds_final;
-    int64_t days_final = floordivmod(total_seconds, 86400, &seconds_final);
-
-    *out_days = days_final;
-    *out_seconds = seconds_final;
-    *out_microseconds = qlow_lo;
-    *out_remainder = r2;
-}
-
-timedelta *timedelta::__truediv__(__ss_int n) {
-    if(n==0) {
-        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
-    }
-    int64_t d, s, us, rem;
-    timedelta_floordivmod(days, seconds, microseconds, n, &d, &s, &us, &rem);
-
-    /* round-half-to-even, matching cpython's _divide_and_round */
-    int64_t rr = rem * 2;
-    bool greater_than_half = n > 0 ? rr > n : rr < n;
-    bool tie = (rr == n);
-    if(greater_than_half || (tie && (us % 2 != 0))) {
-        us += 1;
-        if(us == 1000000) {
-            us = 0;
-            s += 1;
-            if(s == 86400) {
-                s = 0;
-                d += 1;
-            }
-        }
-    }
-
-    if(d>999999999 || d<(-999999999)) {
-        throw new OverflowError();
-    }
-    timedelta *result = new timedelta(0.,0.,0.,0.,0.,0.,0.);
-    result->days = (__ss_int)d;
-    result->seconds = (__ss_int)s;
-    result->microseconds = (__ss_int)us;
-    return result;
 }
 
 static bool timedelta_is_zero(timedelta *t) {
@@ -1742,6 +1691,75 @@ static void timedelta_mul_check(timedelta_mag D) {
         throw new OverflowError(new str("Python int too large to convert to C int"));
 }
 
+/* Q = floor(D * 2**k / m), and *rem the remainder, for k >= 0 and
+   1 <= m <= 2**63, by binary long division of the 128 bits of D * 2**k (as
+   hi * 2**64 + lo). D < 2**68 microseconds, so this needs no wider type; the
+   remainder stays below m, so doubling it does not overflow. */
+static timedelta_mag timedelta_mag_div(timedelta_mag D, unsigned long long m, long k, unsigned long long *rem) {
+    timedelta_mag Q = {0, 0};
+    /* the bits of D = s * 1000000 + us (< 2**68), as hi * 2**64 + lo */
+    unsigned long long s = (unsigned long long)D.s;
+    unsigned long long lo = (s & 0xffffffffULL) * 1000000ULL + (unsigned long long)D.us;
+    unsigned long long mid = (s >> 32) * 1000000ULL;
+    unsigned long long lo2 = lo + (mid << 32);
+    unsigned long long hi = (mid >> 32) + (lo2 < lo);
+    lo = lo2;
+    unsigned long long R = 0;
+    long nbits = 128 + (k > 0 ? k : 0);
+    for(long i = 0; i < nbits; i++) {
+        unsigned long long bit = 0;
+        if(i < 64)
+            bit = (hi >> (63 - i)) & 1;
+        else if(i < 128)
+            bit = (lo >> (127 - i)) & 1;
+        R = (R << 1) | bit;
+        timedelta_mul_check(Q);
+        Q = timedelta_mag_add(Q, Q);
+        if(R >= m) {
+            R -= m;
+            timedelta_mag one = {0, 1};
+            Q = timedelta_mag_add(Q, one);
+        }
+    }
+    *rem = R;
+    return Q;
+}
+
+/* t // n and t / n (rounded half to even), exact (for n that fits 64 bits) */
+static timedelta *timedelta_div_int(timedelta *t, __ss_int n, bool round) {
+    if(n == 0)
+        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+    bool neg;
+    timedelta_mag D = timedelta_magnitude(t, &neg);
+    unsigned long long m = n < 0 ? -(unsigned long long)n : (unsigned long long)n;
+    if(n < 0)
+        neg = !neg;
+    unsigned long long R;
+    timedelta_mag Q;
+    if(m < (1ULL << 43)) { /* the common case: R * 1000000 + us fits 64 bits */
+        unsigned long long s = (unsigned long long)D.s;
+        unsigned long long x = (s % m) * 1000000 + (unsigned long long)D.us;
+        Q.s = (long long)(s / m);
+        Q.us = (long long)(x / m); /* < 1000000, as x < m * 1000000 */
+        R = x % m;
+    } else
+        Q = timedelta_mag_div(D, m, 0, &R);
+    /* R < m <= 2**63, so 2 * R does not overflow */
+    if(round ? (2 * R > m || (2 * R == m && (Q.us & 1))) : (neg && R)) { /* floor of a negative quotient: away from zero */
+        timedelta_mag one = {0, 1};
+        Q = timedelta_mag_add(Q, one);
+    }
+    return timedelta_from_magnitude(Q, neg && (Q.s || Q.us));
+}
+
+timedelta *timedelta::__truediv__(__ss_int n) {
+    return timedelta_div_int(this, n, true);
+}
+
+timedelta *timedelta::__floordiv__(__ss_int n) {
+    return timedelta_div_int(this, n, false);
+}
+
 /* D * m, exact, by double-and-add (checked along the way) */
 static timedelta_mag timedelta_mag_mul(timedelta_mag D, unsigned long long m) {
     timedelta_mag R = {0, 0};
@@ -1857,30 +1875,8 @@ timedelta *timedelta::__truediv__(__ss_float f) {
     if(D.s || D.us) {
         int k;
         unsigned long long m = timedelta_float_ratio(f, &k);
-        /* the bits of D = s * 1000000 + us (< 2**68), as hi * 2**64 + lo */
-        unsigned long long s = (unsigned long long)D.s;
-        unsigned long long lo = (s & 0xffffffffULL) * 1000000ULL + (unsigned long long)D.us;
-        unsigned long long mid = (s >> 32) * 1000000ULL;
-        unsigned long long lo2 = lo + (mid << 32);
-        unsigned long long hi = (mid >> 32) + (lo2 < lo);
-        lo = lo2;
-        unsigned long long R = 0;
-        long nbits = 128 + (k > 0 ? k : 0);
-        for(long i = 0; i < nbits; i++) {
-            unsigned long long bit = 0;
-            if(i < 64)
-                bit = (hi >> (63 - i)) & 1;
-            else if(i < 128)
-                bit = (lo >> (127 - i)) & 1;
-            R = (R << 1) | bit;
-            timedelta_mul_check(Q);
-            Q = timedelta_mag_add(Q, Q);
-            if(R >= m) {
-                R -= m;
-                timedelta_mag one = {0, 1};
-                Q = timedelta_mag_add(Q, one);
-            }
-        }
+        unsigned long long R;
+        Q = timedelta_mag_div(D, m, k > 0 ? k : 0, &R);
         if(k >= 0) {
             if(2 * R > m) { /* m is odd, so there are no ties */
                 timedelta_mag one = {0, 1};
@@ -1924,23 +1920,6 @@ timedelta *timedelta::__pos__() {
     return new timedelta(this);
 }
 
-timedelta *timedelta::__floordiv__(__ss_int n) {
-    if(n==0) {
-       throw new ZeroDivisionError(new str("integer division or modulo by zero"));
-    }
-    int64_t d, s, us, rem;
-    timedelta_floordivmod(days, seconds, microseconds, n, &d, &s, &us, &rem);
-
-    if(d>999999999 || d<(-999999999)) {
-        throw new OverflowError();
-    }
-    timedelta *result = new timedelta(0.,0.,0.,0.,0.,0.,0.);
-    result->days = (__ss_int)d;
-    result->seconds = (__ss_int)s;
-    result->microseconds = (__ss_int)us;
-    return result;
-}
-
 timedelta *timedelta::__abs__() {
     if(days>=0)
         return new timedelta(this);
@@ -1949,7 +1928,12 @@ timedelta *timedelta::__abs__() {
 }
 
 __ss_float timedelta::total_seconds() {
-    return ((__ss_float)days*24*3600 + (__ss_float)seconds) + (__ss_float)microseconds/(__ss_float)1000000.0;
+    /* as cpython, the microseconds divided by 10**6, correctly rounded: summing
+       the parts in floating point cancels (timedelta(microseconds=-1) is
+       -1 day, 86399.999999 seconds), and above 2**53 microseconds a double
+       of the total would round twice */
+    timedelta one_second(0, 1);
+    return __truediv__(&one_second);
 }
 
 __ss_int timedelta::__cmp__(timedelta *other) {
