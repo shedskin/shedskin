@@ -176,3 +176,8 @@ add_shedskin_product(
     NAME seqslots
     MAIN_MODULE seqslots.py
 )
+add_shedskin_product(
+    BUILD_EXTENSION
+    NAME properties
+    MAIN_MODULE properties.py
+)
