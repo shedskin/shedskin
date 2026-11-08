@@ -5648,7 +5648,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         break
 
                     if node not in self.gx.called and [
-                        cl for cl in checkcls if node.attr in cl.funcs
+                        cl
+                        for cl in checkcls
+                        if node.attr in cl.funcs and node.attr not in cl.properties
                     ]:
                         error.error(
                             "method passing is not supported",
