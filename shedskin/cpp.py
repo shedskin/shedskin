@@ -55,7 +55,7 @@ from collections.abc import Callable, Iterator
 from . import ast_utils, error, extmod, infer, loopidiom, python, typestr, virtual
 
 if TYPE_CHECKING:
-    from . import config
+    from . import config, graph
 
 Types: TypeAlias = set[tuple["python.Class", int]]
 Parent: TypeAlias = Union["python.Class", "python.Function"]
@@ -285,18 +285,35 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             f.writelines(newlines)
 
     def fwd_class_refs(self) -> list[str]:
-        """Forward declare classes from included modules"""
+        """Forward declare classes and function pointer typedefs from included modules"""
+        # the function pointer typedefs may refer to classes from yet other
+        # modules, so collect the transitive closure (generating the typedefs
+        # updates prop_includes of the module they belong to)
+        typedefs: dict["python.Module", list[str]] = {}
+        todo = [m for m in self.module.prop_includes if not m.builtin]
+        while todo:
+            _module = todo.pop()
+            if _module in typedefs or _module is self.module:
+                continue
+            typedefs[_module] = self.func_pointer_lines(_module.mv)
+            todo.extend(m for m in _module.prop_includes if not m.builtin)
+
         lines = []
         # sorted: prop_includes is a set (see include_files)
-        for _module in sorted(
-            self.module.prop_includes, key=lambda module: module.include_path()
-        ):
-            if _module.builtin:
-                continue
+        modules = sorted(typedefs, key=lambda module: module.include_path())
+        for _module in modules:
             for name in _module.name_list:
                 lines.append("namespace __%s__ {\n" % name)
             for cl in _module.mv.classes.values():
                 lines.append("class %s;\n" % self.cpp_name(cl))
+            for name in _module.name_list:
+                lines.append("}\n")
+        for _module in modules:
+            if not typedefs[_module]:
+                continue
+            for name in _module.name_list:
+                lines.append("namespace __%s__ {\n" % name)
+            lines.extend(line + "\n" for line in typedefs[_module])
             for name in _module.name_list:
                 lines.append("}\n")
         if lines:
@@ -2097,24 +2114,29 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def func_pointers(self) -> None:
         """Generate function pointers for lambdas"""
-        for func in self.mv.lambdas.values():
+        for line in self.func_pointer_lines(self.mv):
+            self.print(line)
+        self.print()
+
+    def func_pointer_lines(self, mv: "graph.ModuleVisitor") -> list[str]:
+        """Generate function pointer typedefs for the lambdas of a module"""
+        lines = []
+        for func in mv.lambdas.values():
             argtypes = [
-                typestr.nodetypestr(
-                    self.gx, func.vars[formal], func, mv=self.mv
-                ).rstrip()
+                typestr.nodetypestr(self.gx, func.vars[formal], func, mv=mv).rstrip()
                 for formal in func.formals
             ]
             if func.largs is not None:
                 argtypes = argtypes[: func.largs]
             assert func.retnode
-            rettype = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)
+            rettype = typestr.nodetypestr(self.gx, func.retnode.thing, func, mv=mv)
             assert isinstance(func.lambdanr, int)
-            self.print(
+            lines.append(
                 "typedef %s(*lambda%d)(" % (rettype, func.lambdanr)
                 + ", ".join(argtypes)
                 + ");"
             )
-        self.print()
+        return lines
 
     def single_module(self) -> bool:
         """Check if the program consists of a single (non-builtin) module"""
