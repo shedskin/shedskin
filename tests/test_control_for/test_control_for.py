@@ -215,6 +215,74 @@ def test_for_choice_none():
     assert lens == [1, -1, 2]
 
 
+class HeteroBase:
+    def name(self):
+        return 'base'
+
+
+class HeteroLeft(HeteroBase):
+    def name(self):
+        return 'left'
+
+
+class HeteroRight(HeteroBase):
+    def name(self):
+        return 'right'
+
+
+class HeteroMid(HeteroBase):
+    def name(self):
+        return 'mid'
+
+
+def hetero_pair():
+    return (HeteroLeft(), HeteroRight())
+
+
+def hetero_gen(tup):
+    for t in tup:
+        yield t.name()
+
+
+def test_for_hetero_tuple():
+    # a tuple with elements of different classes (with a common base) is a
+    # tuple2/tuple3 in C++, which could not be iterated over (E2)
+    names = []
+    for t in (HeteroLeft(), HeteroRight()):
+        names.append(t.name())
+    assert names == ['left', 'right']
+    pair = (HeteroLeft(), HeteroRight())
+    names = []
+    for t in pair:
+        names.append(t.name())
+    for t in pair:
+        names.append(t.name())
+    assert names == ['left', 'right', 'left', 'right']
+    triple = (HeteroLeft(), HeteroMid(), HeteroRight())
+    assert [t.name() for t in triple] == ['left', 'mid', 'right']
+    assert [t.name() for t in hetero_pair()] == ['left', 'right']
+    assert sorted(t.name() for t in triple) == ['left', 'mid', 'right']
+    assert list(hetero_gen(pair)) == ['left', 'right']
+    assert list(hetero_gen(hetero_pair())) == ['left', 'right']
+    found = ''
+    for t in triple:
+        if t.name() == 'mid':
+            found = t.name()
+            break
+    else:
+        found = 'none'
+    assert found == 'mid'
+    for t in pair:
+        pass
+    else:
+        found = t.name()
+    assert found == 'right'
+    names = []
+    for u in (HeteroLeft(), None):
+        names.append(u.name() if u else '-')
+    assert names == ['left', '-']
+
+
 zip_calls: list[int] = []
 
 
@@ -290,6 +358,7 @@ def test_all():
     test_for_choice_mixed_numeric()
     test_for_choice_mixed_subclass()
     test_for_choice_none()
+    test_for_hetero_tuple()
 
 if __name__ == '__main__':
     test_all() 
