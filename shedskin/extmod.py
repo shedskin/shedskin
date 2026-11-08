@@ -944,7 +944,14 @@ class ExtensionModule:
         # call
         if is_method:
             assert isinstance(func.parent, python.Class)
-            where = "((%sObject *)self)->__ss_object->" % clname(func.parent)
+            # CPython has already chosen the method (via the MRO), so call
+            # it non-virtually: 'A.f(B())' must call A's f, as in a program
+            cl = func.parent
+            where = "((%sObject *)self)->__ss_object->%s::%s::" % (
+                clname(cl),
+                cl.module.full_path(),
+                self.gv.cpp_name(cl),
+            )
         else:
             where = "__" + self.gv.module.ident + "__::"
         write(

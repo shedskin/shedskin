@@ -131,6 +131,16 @@ def test_iter():
     assert list(basics.Countdown(3)) == [2, 1, 0]
 
 
+def test_inheritance():
+    animals = [basics.Animal(), basics.Dog(), basics.Puppy()]
+    assert basics.chorus(animals) == ['generic', 'woof', 'woof']
+    assert [a.speak() for a in animals] == ['generic', 'woof', 'woof']
+    # a call via the class calls that class's method, not the override
+    assert basics.Animal.speak(basics.Dog()) == 'generic'
+    assert basics.Animal.speak(basics.Puppy()) == 'generic'
+    assert basics.Dog.speak(basics.Puppy()) == 'woof'
+
+
 def test_pickle():
     v = pickle.loads(pickle.dumps(basics.Vector(3, 4)))
     assert repr(v) == 'Vector(3, 4)'
