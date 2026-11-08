@@ -42,7 +42,7 @@ class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerr
 class_ *cl_recursionerror, *cl_unboundlocalerror, *cl_referenceerror, *cl_buffererror;
 class_ *cl_attributeerror, *cl_importerror, *cl_modulenotfounderror, *cl_stopasynciteration, *cl_indentationerror, *cl_taberror;
 class_ *cl_warning, *cl_byteswarning, *cl_deprecationwarning, *cl_encodingwarning, *cl_futurewarning, *cl_importwarning, *cl_pendingdeprecationwarning, *cl_resourcewarning, *cl_runtimewarning, *cl_syntaxwarning, *cl_unicodewarning, *cl_userwarning;
-class_ *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror;
+class_ *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror, *cl_unsupportedoperation;
 
 str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 bytes *bsp;
@@ -250,6 +250,7 @@ void __init() {
     cl_permissionerror = new class_("PermissionError");
     cl_processlookuperror = new class_("ProcessLookupError");
     cl_timeouterror = new class_("TimeoutError");
+    cl_unsupportedoperation = new class_("UnsupportedOperation");
     cl_overflowerror = new class_("OverflowError");
     cl_runtimeerror = new class_("RuntimeError");
     cl_syntaxerror = new class_("SyntaxError");

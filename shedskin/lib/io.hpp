@@ -8,23 +8,9 @@
 using namespace __shedskin__;
 namespace __io__ {
 
+/* (defined in builtin, as the builtin file objects raise it too) */
+using __shedskin__::UnsupportedOperation;
 extern class_ *cl_UnsupportedOperation;
-class UnsupportedOperation : public OSError {
-public:
-    UnsupportedOperation(str *msg=0) : OSError(msg) {
-        __class__ = cl_UnsupportedOperation;
-        /* plain message, like CPython's UnsupportedOperation('fileno') */
-        this->__init__(msg);
-        __ss_errno = 0;
-        strerror = 0;
-        filename = 0;
-    }
-    str *__str__() { return BaseException::__str__(); }
-    str *__repr__() { return BaseException::__repr__(); }
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_OSError; }
-#endif
-};
 
 class BytesIO : public file_binary {
 public:

@@ -65,6 +65,12 @@ static size_t __ss_fwrite(const void *buf, size_t size, size_t n, FILE *f) {
 struct __ss_file_suppress_iph { __ss_file_suppress_iph() {} };
 #endif
 
+/* as CPython: most file methods end the closed-file message with a period,
+   the ones inherited from io.IOBase (fileno, isatty, readable..) do not.
+   (StringIO, GzipFile.. use the header's __check_closed(), without one) */
+#define __SS_CLOSED_MSG "I/O operation on closed file."
+#define __SS_CLOSED_MSG_IOBASE "I/O operation on closed file"
+
 /* flush and close even when flushing fails, as CPython; returns the first
    errno (0 on success), leaving it in errno. this is a free function, as on
    macOS errno expands to (*__error()), which file::__error would shadow */
@@ -384,9 +390,36 @@ static inline void __switch_op(FILE *f, __file_options &options, char op,
     }
 }
 
+/* readable(), writable() and seekable(), as cpython: from the mode (also
+   'rwb' for a socket), while seekable() asks the os, so it is False for a
+   pipe, socket or terminal. on a closed file only the capabilities the mode
+   has raise ValueError (as cpython's buffered reader/writer: a closed 'r'
+   file is still just not writable) */
+static inline __ss_bool __mode_readable(str *mode) {
+    /* (a socket's makefile('') is read-only, as is anything without w, a or x) */
+    return ___bool(mode && (mode->unit.find_first_of(__gcs("r+")) != std::string::npos ||
+                            mode->unit.find_first_of(__gcs("wax")) == std::string::npos));
+}
+static inline __ss_bool __mode_writable(str *mode) {
+    return ___bool(mode && mode->unit.find_first_of(__gcs("wax+")) != std::string::npos);
+}
+/* reading a file not opened for reading (or writing one not opened for
+   writing) raises io.UnsupportedOperation, as cpython, instead of the EBADF
+   the C library gives. objects without a mode (BytesIO, StringIO, sockets,
+   pipes) are left alone */
+static inline void __check_mode_readable(str *mode, const char *msg) {
+    if(mode && !__mode_readable(mode))
+        throw new UnsupportedOperation(new str(msg));
+}
+static inline void __check_mode_writable(str *mode, const char *msg) {
+    if(mode && !__mode_writable(mode))
+        throw new UnsupportedOperation(new str(msg));
+}
+
 __ss_int file::write(str *s) {
     __ss_int size = -1;
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
+    __check_mode_writable(mode, "not writable");
     __switch_op(f, options, 'w', __encoding, __errors);
     if(f) {
         __GC_BYTES b;
@@ -418,7 +451,7 @@ __ss_int file::write(str *s) {
 }
 
 void *file::writelines(pyiter<str *> *iter) {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     str *e;
     int __2;
     pyiter<str *> *__1;
@@ -430,14 +463,13 @@ void *file::writelines(pyiter<str *> *iter) {
 }
 
 __ss_int file::seek(__ss_int i, __ss_int w) {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     /* text files only allow seeking to a tell() position or to the end, as
-       in cpython (which raises io.UnsupportedOperation, a subclass of both
-       OSError and ValueError, for the first two) */
+       in cpython */
     if(w == 1 && i != 0)
-        throw new OSError(new str("can't do nonzero cur-relative seeks"));
+        throw new UnsupportedOperation(new str("can't do nonzero cur-relative seeks"));
     if(w == 2 && i != 0)
-        throw new OSError(new str("can't do nonzero end-relative seeks"));
+        throw new UnsupportedOperation(new str("can't do nonzero end-relative seeks"));
     if(w < 0 || w > 2)
         throw new ValueError(__add_strs(3, new str("invalid whence ("), __str(w), new str(", should be 0, 1 or 2)")));
     if(i < 0)
@@ -454,7 +486,7 @@ __ss_int file::seek(__ss_int i, __ss_int w) {
 }
 
 __ss_int file::tell() {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     if(f) {
         __settle_cr(f, options, __encoding, __errors);
         long status = ftell(f);
@@ -480,7 +512,8 @@ static void __give_back(FILE *f, __GC_VECTOR(char) &cache, size_t k) {
 }
 
 str *file::readline(__ss_int n) {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
+    __check_mode_readable(mode, "not readable");
     __switch_op(f, options, 'r', __encoding, __errors);
     __read_cache.clear();
     __char_counter cc(__encoding, __errors);
@@ -540,7 +573,8 @@ static void __throw_io_error() {
 }
 
 str *file::read(__ss_int n) {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
+    __check_mode_readable(mode, "not readable");
     __switch_op(f, options, 'r', __encoding, __errors);
     __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
@@ -596,7 +630,7 @@ str *file::read(__ss_int n) {
 }
 
 list<str *> *file::readlines(__ss_int size_hint) {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     list<str *> *lines = new list<str *>();
     __ss_int total = 0;
     while(not __eof()) {
@@ -623,24 +657,13 @@ void *file::close() {
 }
 
 void *file::flush() {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     if(f)
         if(FFLUSH(f))
             __throw_oserror();
     return NULL;
 }
 
-/* readable(), writable() and seekable(), as cpython: from the mode (also
-   'rwb' for a socket), while seekable() asks the os, so it is False for a
-   pipe, socket or terminal. on a closed file only the capabilities the mode
-   has raise ValueError (as cpython's buffered reader/writer: a closed 'r'
-   file is still just not writable) */
-static inline __ss_bool __mode_readable(str *mode) {
-    return ___bool(mode && mode->unit.find_first_of(__gcs("r+")) != std::string::npos);
-}
-static inline __ss_bool __mode_writable(str *mode) {
-    return ___bool(mode && mode->unit.find_first_of(__gcs("wax+")) != std::string::npos);
-}
 static inline __ss_bool __fd_seekable(FILE *f) {
     if (!f)
         return False;
@@ -658,14 +681,14 @@ static inline __ss_bool __fd_seekable(FILE *f) {
 }
 
 __ss_int file::__ss_fileno() {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG_IOBASE);
     if(f)
         return fileno(f);
     return -1;
 }
 __ss_bool file::isatty()
 {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG_IOBASE);
 #ifdef WIN32
     return ___bool(_isatty((int)__ss_fileno()));
 #else // WIN32
@@ -673,12 +696,13 @@ __ss_bool file::isatty()
 #endif // WIN32
 }
 
-__ss_bool file::readable() { if (!__mode_readable(mode)) return False; __check_closed(); return True; }
-__ss_bool file::writable() { if (!__mode_writable(mode)) return False; __check_closed(); return True; }
-__ss_bool file::seekable() { __check_closed(); return __fd_seekable(f); }
+__ss_bool file::readable() { if (!__mode_readable(mode)) return False; __check_closed(__SS_CLOSED_MSG_IOBASE); return True; }
+__ss_bool file::writable() { if (!__mode_writable(mode)) return False; __check_closed(__SS_CLOSED_MSG_IOBASE); return True; }
+__ss_bool file::seekable() { __check_closed(__SS_CLOSED_MSG_IOBASE); return __fd_seekable(f); }
 
 __ss_int file::truncate(__ss_int size) {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
+    __check_mode_writable(mode, "truncate");
     flush();
     if(size == -1)
         size = tell();
@@ -697,7 +721,7 @@ str *file::__repr__() {
 }
 
 file *file::__enter__() {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     return this;
 }
 
@@ -711,7 +735,7 @@ bool file::__error() {
 }
 
 bool file::__eof() {
-    __check_closed(); /* (before touching f, which may be fclosed) */
+    __check_closed(__SS_CLOSED_MSG); /* (before touching f, which may be fclosed) */
     return (FEOF(f) != 0);
 }
 
@@ -770,7 +794,8 @@ file_binary *open_binary(bytes *name, str *flags, __ss_int buffering, str *encod
 
 __ss_int file_binary::write(bytes *s) {
     __ss_int size = -1;
-    __check_closed();
+    __check_mode_writable(mode, "write"); /* (as cpython, before the closed check) */
+    __check_closed("write to closed file");
     __switch_op(f, options, 'w');
     if(f) {
         size_t s_size = s->unit.size();
@@ -782,7 +807,7 @@ __ss_int file_binary::write(bytes *s) {
 }
 
 void *file_binary::writelines(pyiter<bytes *> *iter) {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     bytes *e;
     int __2;
     pyiter<bytes *> *__1;
@@ -794,7 +819,7 @@ void *file_binary::writelines(pyiter<bytes *> *iter) {
 }
 
 __ss_int file_binary::seek(__ss_int i, __ss_int w) {
-    __check_closed();
+    __check_closed("seek of closed file");
     if(f) {
         if(fseek(f, i, (int)w) == -1)
             __throw_oserror();
@@ -804,7 +829,7 @@ __ss_int file_binary::seek(__ss_int i, __ss_int w) {
 }
 
 __ss_int file_binary::tell() {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG_IOBASE);
     if(f) {
         long status = ftell(f);
         if(status == -1)
@@ -815,7 +840,8 @@ __ss_int file_binary::tell() {
 }
 
 bytes *file_binary::readline(__ss_int n) {
-    __check_closed();
+    __check_mode_readable(mode, "read"); /* (as cpython, before the closed check) */
+    __check_closed("readline of closed file");
     __switch_op(f, options, 'r');
     __read_cache.clear();
     for(size_t i = 0; i < size_t(n); ++i) {
@@ -837,7 +863,8 @@ bytes *file_binary::readline(__ss_int n) {
 bytes *file_binary::read(__ss_int n) {
     if(n < -1)
         throw new ValueError(new str("read length must be non-negative or -1"));
-    __check_closed();
+    __check_mode_readable(mode, "read"); /* (as cpython, before the closed check) */
+    __check_closed("read of closed file");
     __switch_op(f, options, 'r');
     if(n == 1) {
         const int c = GETC(f);
@@ -863,7 +890,7 @@ bytes *file_binary::read(__ss_int n) {
 }
 
 list<bytes *> *file_binary::readlines(__ss_int size_hint) {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     list<bytes *> *lines = new list<bytes *>();
     __ss_int total = 0;
     while(not __eof()) {
@@ -894,7 +921,7 @@ void *file_binary::close() {
 }
 
 void *file_binary::flush() {
-    __check_closed();
+    __check_closed(__mode_writable(mode) ? "flush of closed file" : __SS_CLOSED_MSG);
     if(f)
         if(FFLUSH(f))
             __throw_oserror();
@@ -902,14 +929,14 @@ void *file_binary::flush() {
 }
 
 __ss_int file_binary::__ss_fileno() {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG_IOBASE);
     if(f)
         return fileno(f);
     return -1;
 }
 __ss_bool file_binary::isatty()
 {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG_IOBASE);
 #ifdef WIN32
     return ___bool(_isatty((int)__ss_fileno()));
 #else // WIN32
@@ -917,12 +944,13 @@ __ss_bool file_binary::isatty()
 #endif // WIN32
 }
 
-__ss_bool file_binary::readable() { if (!__mode_readable(mode)) return False; __check_closed(); return True; }
-__ss_bool file_binary::writable() { if (!__mode_writable(mode)) return False; __check_closed(); return True; }
-__ss_bool file_binary::seekable() { __check_closed(); return __fd_seekable(f); }
+__ss_bool file_binary::readable() { if (!__mode_readable(mode)) return False; __check_closed(__SS_CLOSED_MSG_IOBASE); return True; }
+__ss_bool file_binary::writable() { if (!__mode_writable(mode)) return False; __check_closed(__SS_CLOSED_MSG_IOBASE); return True; }
+__ss_bool file_binary::seekable() { __check_closed(__SS_CLOSED_MSG_IOBASE); return __fd_seekable(f); }
 
 __ss_int file_binary::truncate(__ss_int size) {
-    __check_closed();
+    __check_closed("truncate of closed file");
+    __check_mode_writable(mode, "truncate");
     flush();
     if(size == -1)
         size = tell();
@@ -941,7 +969,7 @@ str *file_binary::__repr__() {
 }
 
 file_binary *file_binary::__enter__() {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     return this;
 }
 
@@ -955,7 +983,7 @@ bool file_binary::__error() {
 }
 
 bool file_binary::__eof() {
-    __check_closed();
+    __check_closed(__SS_CLOSED_MSG);
     return (FEOF(f) != 0);
 }
 

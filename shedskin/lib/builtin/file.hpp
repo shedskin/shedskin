@@ -67,9 +67,13 @@ public:
     virtual bool __eof();
     virtual bool __error();
 
-    inline void __check_closed() {
+    inline void __check_closed() { /* (used as is by StringIO, GzipFile..) */
         if(closed)
             throw new ValueError(new str("I/O operation on closed file"));
+    }
+    inline void __check_closed(const char *msg) { /* (CPython's message varies a little per method) */
+        if(closed)
+            throw new ValueError(new str(msg));
     }
 
     str *__decode_cache();
@@ -122,9 +126,13 @@ public:
     virtual bool __eof();
     virtual bool __error();
 
-    inline void __check_closed() {
+    inline void __check_closed() { /* (used as is by StringIO, GzipFile..) */
         if(closed)
             throw new ValueError(new str("I/O operation on closed file"));
+    }
+    inline void __check_closed(const char *msg) { /* (CPython's message varies a little per method) */
+        if(closed)
+            throw new ValueError(new str(msg));
     }
 };
 

@@ -605,8 +605,16 @@ def test_makefile_modes():
     f.close()
     b.sendall(b'abc\n')
     g = a.makefile('')
+    assert g.readable() and not g.writable()
     assert g.readline() == 'abc\n'
     g.close()
+    t = a.makefile('w')
+    try:
+        t.read()
+    except OSError as e:
+        errors.append(e.__class__.__name__ + ': ' + str(e))
+    t.close()
+    assert errors[-1] == 'UnsupportedOperation: not readable'
     h = a.makefile('rwb')
     h.write(b'x\n')
     h.flush()

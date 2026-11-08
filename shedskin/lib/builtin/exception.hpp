@@ -97,7 +97,7 @@ extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingp
 extern class_ *cl_recursionerror, *cl_unboundlocalerror, *cl_referenceerror, *cl_buffererror;
 extern class_ *cl_attributeerror, *cl_importerror, *cl_modulenotfounderror, *cl_stopasynciteration, *cl_indentationerror, *cl_taberror;
 extern class_ *cl_warning, *cl_byteswarning, *cl_deprecationwarning, *cl_encodingwarning, *cl_futurewarning, *cl_importwarning, *cl_pendingdeprecationwarning, *cl_resourcewarning, *cl_runtimewarning, *cl_syntaxwarning, *cl_unicodewarning, *cl_userwarning;
-extern class_ *cl_filenotfounderror, *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror;
+extern class_ *cl_filenotfounderror, *cl_blockingioerror, *cl_childprocesserror, *cl_connectionerror, *cl_brokenpipeerror, *cl_connectionabortederror, *cl_connectionrefusederror, *cl_connectionreseterror, *cl_fileexistserror, *cl_interruptederror, *cl_isadirectoryerror, *cl_notadirectoryerror, *cl_permissionerror, *cl_processlookuperror, *cl_timeouterror, *cl_unsupportedoperation;
 
 class BaseException : public pyobj {
 public:
@@ -536,6 +536,26 @@ public:
     TimeoutError(str *msg=0) : OSError(msg) { this->__class__ = cl_timeouterror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_TimeoutError; }
+#endif
+};
+
+/* io.UnsupportedOperation (re-exported by the io module): here, as the builtin
+   file objects raise it too. CPython's derives from both OSError and
+   ValueError; shedskin exceptions are single-inheritance, so only OSError */
+class UnsupportedOperation : public OSError {
+public:
+    UnsupportedOperation(str *msg=0) : OSError(msg) {
+        __class__ = cl_unsupportedoperation;
+        /* plain message, like CPython's UnsupportedOperation('fileno') */
+        this->__init__(msg);
+        __ss_errno = 0;
+        strerror = 0;
+        filename = 0;
+    }
+    str *__str__() { return BaseException::__str__(); }
+    str *__repr__() { return BaseException::__repr__(); }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_OSError; }
 #endif
 };
 

@@ -296,7 +296,7 @@ str *text_encoding(str *encoding, __ss_int) {
 }
 
 void __init() {
-    cl_UnsupportedOperation = new class_("UnsupportedOperation");
+    cl_UnsupportedOperation = cl_unsupportedoperation;
 
 }
 

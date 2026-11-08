@@ -902,13 +902,13 @@ def test_text_seek_restrictions():
                 elif i == 2: f.seek(-1)
                 else: f.seek(0, 3)
             except OSError as e:
-                error = 'OSError: ' + str(e)
+                error = e.__class__.__name__ + ': ' + str(e)
             except ValueError as e:
                 error = 'ValueError: ' + str(e)
             if i == 0:
-                assert error == "OSError: can't do nonzero end-relative seeks"
+                assert error == "UnsupportedOperation: can't do nonzero end-relative seeks"
             elif i == 1:
-                assert error == "OSError: can't do nonzero cur-relative seeks"
+                assert error == "UnsupportedOperation: can't do nonzero cur-relative seeks"
             elif i == 2:
                 assert error == 'ValueError: negative seek position -1'
             else:
@@ -1307,6 +1307,116 @@ def test_readable_writable_seekable():
     assert sys.stdin.readable() and not sys.stdin.writable()
     assert sys.stdout.writable() and not sys.stdout.readable()
 
+
+def _text_op_error(f, op):
+    try:
+        if op == 0: f.read()
+        elif op == 1: f.readline()
+        elif op == 2: f.readlines()
+        elif op == 3: next(iter(f))
+        elif op == 4: f.write('x')
+        elif op == 5: f.writelines(['x'])
+        elif op == 6: f.truncate(0)
+        elif op == 7: f.flush()
+        elif op == 8: f.seek(0)
+        elif op == 9: f.tell()
+        elif op == 10: f.fileno()
+        elif op == 11: f.isatty()
+        else: f.__enter__()
+    except StopIteration:
+        return 'StopIteration'
+    except OSError as e:
+        return e.__class__.__name__ + ': ' + str(e)
+    except ValueError as e:
+        return 'ValueError: ' + str(e)
+    return ''
+
+
+def _binary_op_error(f, op):
+    try:
+        if op == 0: f.read()
+        elif op == 1: f.readline()
+        elif op == 2: f.readlines()
+        elif op == 3: next(iter(f))
+        elif op == 4: f.write(b'x')
+        elif op == 5: f.writelines([b'x'])
+        elif op == 6: f.truncate(0)
+        elif op == 7: f.flush()
+        elif op == 8: f.seek(0)
+        elif op == 9: f.tell()
+        elif op == 10: f.fileno()
+        elif op == 11: f.isatty()
+        else: f.__enter__()
+    except StopIteration:
+        return 'StopIteration'
+    except OSError as e:
+        return e.__class__.__name__ + ': ' + str(e)
+    except ValueError as e:
+        return 'ValueError: ' + str(e)
+    return ''
+
+
+def test_unsupported_operation():
+    # as CPython: reading a file not opened for reading (or writing one not
+    # opened for writing) raises io.UnsupportedOperation (an OSError) instead
+    # of '[Errno 9] Bad file descriptor', and the closed-file messages match
+    us = 'UnsupportedOperation: '
+    cl = 'ValueError: I/O operation on closed file.'
+    cl2 = 'ValueError: I/O operation on closed file'
+    with open('unsup.txt', 'w') as f:
+        f.write('hello\n')
+
+    # text, open
+    f = open('unsup.txt')
+    errors = [_text_op_error(f, op) for op in range(13)]
+    assert errors == ['', '', '', 'StopIteration', us + 'not writable', us + 'not writable', us + 'truncate'] + [''] * 6, str(errors)
+    f.close()
+    for i in range(3):
+        if i == 0: f = open('unsup.txt', 'w')
+        elif i == 1: f = open('unsup.txt', 'a')
+        else: f = open('unsup.txt', 'r+')
+        errors = [_text_op_error(f, op) for op in range(6)]
+        if i < 2:
+            assert errors == [us + 'not readable'] * 4 + ['', ''], str(errors)
+        else:
+            assert errors == ['', '', '', 'StopIteration', '', ''], str(errors)
+        f.close()
+    # text, closed
+    for i in range(2):
+        if i == 0: f = open('unsup.txt')
+        else: f = open('unsup.txt', 'w')
+        f.close()
+        errors = [_text_op_error(f, op) for op in range(13)]
+        assert errors == [cl] * 10 + [cl2, cl2, cl], str(errors)
+
+    # binary, open
+    b = open('unsup.txt', 'rb')
+    errors = [_binary_op_error(b, op) for op in range(13)]
+    assert errors[4:7] == [us + 'write', us + 'write', us + 'truncate'], str(errors)
+    assert errors[7:] == [''] * 6, str(errors)
+    b.close()
+    for i in range(2):
+        if i == 0: b = open('unsup.txt', 'wb')
+        else: b = open('unsup.txt', 'ab')
+        errors = [_binary_op_error(b, op) for op in range(6)]
+        assert errors == [us + 'read'] * 4 + ['', ''], str(errors)
+        b.close()
+    # binary, closed (the mode check comes first for read and write)
+    b = open('unsup.txt', 'rb')
+    b.close()
+    errors = [_binary_op_error(b, op) for op in range(13)]
+    assert errors == ['ValueError: read of closed file', 'ValueError: readline of closed file', cl, cl,
+                      us + 'write', cl, 'ValueError: truncate of closed file', cl,
+                      'ValueError: seek of closed file', cl2, cl2, cl2, cl], str(errors)
+    b = open('unsup.txt', 'wb')
+    b.close()
+    errors = [_binary_op_error(b, op) for op in range(13)]
+    assert errors == [us + 'read', us + 'read', cl, cl,
+                      'ValueError: write to closed file', cl, 'ValueError: truncate of closed file',
+                      'ValueError: flush of closed file', 'ValueError: seek of closed file', cl2, cl2, cl2, cl], str(errors)
+    os.remove('unsup.txt')
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1356,6 +1466,7 @@ def test_all():
     test_binary_mode_normalised()
     test_open_read_write_switch()
     test_with_exit_raises()
+    test_unsupported_operation()
 
 
 if __name__ == '__main__':
