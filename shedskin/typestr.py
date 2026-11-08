@@ -362,6 +362,9 @@ def typestrnew(
         assert isinstance(f, python.Function)
         assert f.lambdanr is not None
         if f.mv != mv:
+            if cplusplus:
+                assert mv
+                mv.module.prop_includes.add(f.mv.module)
             return f.mv.module.full_path() + "::" + "lambda%d" % f.lambdanr
         return "lambda%d" % f.lambdanr
 

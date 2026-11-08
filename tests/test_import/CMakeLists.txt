@@ -17,4 +17,5 @@ add_shedskin_product(
     	pak/sub/subsub/insubsub
         foo
         spam
+        util_funcs
 )
