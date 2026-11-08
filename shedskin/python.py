@@ -277,6 +277,8 @@ class Function:
         self.inherited: Optional[ast.FunctionDef] = None
         self.ident: str
         self.parent = parent
+        self.posonly: int = 0
+        self.kwonly: list[str] = []
         if node:
             ident = node.name
             if (inherited_from
@@ -288,6 +290,10 @@ class Function:
                 ident += inherited_from.parent.ident + "__"
             self.ident = ident
             self.formals = extract_argnames(node.args)
+            # positional-only/keyword-only arguments become regular ones (see
+            # graph.remove_poskw_only_args), so remember them for extmod.py
+            self.posonly = getattr(node, "_ss_posonly", 0)
+            self.kwonly = getattr(node, "_ss_kwonly", [])
             self.flags = None
             self.doc = ast.get_docstring(node)
         self.returnexpr: list[ast.AST] = []
