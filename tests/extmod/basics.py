@@ -110,6 +110,24 @@ class Countdown:
         return self.n
 
 
+class Animal:
+    def speak(self):
+        return 'generic'
+
+
+class Dog(Animal):
+    def speak(self):
+        return 'woof'
+
+
+class Puppy(Dog):  # inherits speak
+    pass
+
+
+def chorus(animals):  # makes speak() virtual in the C++
+    return [a.speak() for a in animals]
+
+
 if __name__ == '__main__':
     # make sure everything is called with the types used from basics_main.py
     add(1, 2)
@@ -138,3 +156,6 @@ if __name__ == '__main__':
     v(3)
     for i in Countdown(3):
         pass
+    chorus([Animal(), Dog(), Puppy()])
+    Animal.speak(Dog())
+    Dog.speak(Puppy())
