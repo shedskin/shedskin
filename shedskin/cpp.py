@@ -3626,6 +3626,58 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         argtypes: Optional[Types] = None,
     ) -> None:
         """Visit a call node"""
+        cast = self.call_downcast(node)
+        if cast:
+            self.append("((%s)(" % cast)
+        self.impl_visit_call(node, func, argtypes)
+        if cast:
+            self.append("))")
+
+    def call_downcast(self, node: ast.Call) -> Optional[str]:
+        """Return the cast needed when a user function is declared to return a
+        class instance, while at this call it returns a subclass instance:
+        the declared type merges over all calls (0921-E3)"""
+        if node not in self.mergeinh:
+            return None
+        nodeclasses = typestr.types_classes(self.mergeinh[node])
+        if len(nodeclasses) != 1:
+            return None
+        (nodecl,) = nodeclasses
+        if nodecl.mv.module.builtin:
+            return None
+        if infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)[4]:
+            return None  # constructor
+        funcs = infer.callfunc_targets(self.gx, node, self.gx.merged_inh)
+        if not funcs:
+            return None
+        declclasses: set["python.Class"] = set()
+        for target in funcs:
+            while target.inherited_from:  # copied method: C++ uses original
+                target = target.inherited_from
+            if target.mv.module.builtin or not target.returnexpr:
+                return None
+            assert target.retnode
+            if target.ftypes:
+                rettypes = target.ftypes[0]
+            else:
+                rettypes = self.mergeinh[target.retnode.thing]
+            if any(not isinstance(t[0], python.Class) for t in rettypes):
+                return None
+            declclasses.update(typestr.types_classes(rettypes))
+        lcp = typestr.lowest_common_parents(declclasses)
+        if len(lcp) != 1 or lcp[0] is nodecl:
+            return None
+        if lcp[0] not in nodecl.ancestors():
+            return None
+        return typestr.typestr(self.gx, self.mergeinh[node], mv=self.mv).strip()
+
+    def impl_visit_call(
+        self,
+        node: ast.Call,
+        func: Optional["python.Function"],
+        argtypes: Optional[Types],
+    ) -> None:
+        """Visit a call node, without casting its result"""
 
         # sum/min/max(lc/genexpr)
         if node in self.gx.fuse_reduce:
