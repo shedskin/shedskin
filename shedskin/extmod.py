@@ -599,7 +599,18 @@ class ExtensionModule:
                 write("        Py_DECREF(v);")
                 write("    } catch (Exception *) {")
                 write("    }")
+            # attributes of builtin bases (args, errno, ..) are passed through
+            # the constructor arguments instead (see __py_args__): copying
+            # e.g. OSError.filename as None would make str() show it (1030-B7)
+            builtin_names = {
+                name
+                for base in cl.ancestors()
+                if base.mv.module.builtin
+                for name in base.vars
+            }
             for var in self.supported_vars(cl.vars.values()):
+                if var.name in builtin_names:
+                    continue
                 write("    v = __to_py(this->%s);" % self.gv.cpp_name(var))
                 write(
                     '    if (!v || PyObject_SetAttrString(p, "%s", v) < 0) {'

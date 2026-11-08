@@ -1,3 +1,4 @@
+import os
 import sys
 
 # exception subclasses defined in an extension module are exported as Python
@@ -97,6 +98,13 @@ def catch_inside(n):
         return 'OSError ' + str(e)
     return 'none'
 
+def read_missing(name):
+    # OSError attributes are passed on (1025-B9)
+    return open(name).read()
+
+def rename_missing(a, b):
+    os.rename(a, b)
+
 def stop(n):
     # exceptions that do not derive from Exception (1025-A3)
     if n == 0:
@@ -128,6 +136,14 @@ if __name__ == '__main__':
             stop(i)
         except BaseException:
             pass
+    try:
+        read_missing('missing')
+    except OSError:
+        pass
+    try:
+        rename_missing('missing', 'missing2')
+    except OSError:
+        pass
     # __str__/__repr__ are only exported when called
     for e in [StrError(1), SubStrError(2), OtherStrError(3), ReprError('r')]:
         str(e), repr(e)
