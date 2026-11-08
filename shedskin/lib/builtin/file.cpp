@@ -396,7 +396,9 @@ static inline void __switch_op(FILE *f, __file_options &options, char op,
    has raise ValueError (as cpython's buffered reader/writer: a closed 'r'
    file is still just not writable) */
 static inline __ss_bool __mode_readable(str *mode) {
-    return ___bool(mode && mode->unit.find_first_of(__gcs("r+")) != std::string::npos);
+    /* (a socket's makefile('') is read-only, as is anything without w, a or x) */
+    return ___bool(mode && (mode->unit.find_first_of(__gcs("r+")) != std::string::npos ||
+                            mode->unit.find_first_of(__gcs("wax")) == std::string::npos));
 }
 static inline __ss_bool __mode_writable(str *mode) {
     return ___bool(mode && mode->unit.find_first_of(__gcs("wax+")) != std::string::npos);
