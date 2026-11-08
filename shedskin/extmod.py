@@ -181,6 +181,25 @@ class ExtensionModule:
             supported.append(var)
         return python.stable_vars(supported)
 
+    def instance_vars(self, cl: "python.Class") -> list["python.Variable"]:
+        """Supported instance variables of a class, as their C++ field
+
+        An inherited attribute is declared once, in the topmost class that has
+        it, and typed in that class (see cpp.py, class_variables). A subclass
+        holds its own Variable for it, whose type comes only from the code run
+        in the subclass context (e.g. just None from an inherited __init__),
+        so converting through that type can mismatch the field (1023-C4).
+        """
+        declared = []
+        for var in cl.vars.values():
+            base = self.exported_base(cl)
+            while base is not None:  # keep the topmost match
+                if var.name in base.vars:
+                    var = base.vars[var.name]
+                base = self.exported_base(base)
+            declared.append(var)
+        return self.supported_vars(declared)
+
     def class_vars(self, cl: "python.Class") -> list["python.Variable"]:
         """Supported class-level variables of a class (static C++ members)
 
@@ -628,7 +647,7 @@ class ExtensionModule:
                 if base.mv.module.builtin
                 for name in base.vars
             }
-            for var in self.supported_vars(cl.vars.values()):
+            for var in self.instance_vars(cl):
                 if var.name in builtin_names:
                     continue
                 write("    v = __to_py(this->%s);" % self.gv.cpp_name(var))
@@ -1377,7 +1396,7 @@ class ExtensionModule:
 
         # determine methods, vars to expose
         funcs = self.supported_funcs(cl.funcs.values())
-        vars = self.supported_vars(cl.vars.values())
+        vars = self.instance_vars(cl)
 
         # python object
         write("/* class %s */\n" % cl.ident)
