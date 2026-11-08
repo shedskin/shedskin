@@ -297,6 +297,26 @@ class ExtensionModule:
         """Check if a class has a method that is actually exported"""
         return self.has_method(cl, name) and cl.funcs[name] in funcs
 
+    def property_funcs(
+        self, cl: "python.Class", funcs: list["python.Function"]
+    ) -> list[tuple[str, "python.Function", Optional["python.Function"]]]:
+        """Properties of a class, with their exported getter and setter
+
+        A property is exposed through a getset descriptor when this class
+        defines its getter itself (an inherited one is found through the base
+        type). Its setter is only used when this class defines it too: a
+        property redefined in a subclass without a setter is read-only, as in
+        CPython."""
+        props = []
+        for name, (getter, setter) in cl.properties.items():
+            if not self.has_exported_method(cl, getter, funcs):
+                continue
+            setfunc = None
+            if setter and self.has_exported_method(cl, setter, funcs):
+                setfunc = cl.funcs[setter]
+            props.append((name, cl.funcs[getter], setfunc))
+        return props
+
     def richcmp_funcs(
         self, cl: "python.Class", funcs: list["python.Function"]
     ) -> list["python.Function"]:
@@ -815,6 +835,17 @@ class ExtensionModule:
                 % ident
             )
         for func in funcs:
+            # the getter and setter of a '@property' are only reached
+            # through its getset descriptor (see do_extmod_class); with
+            # 'x = property(get_x, set_x)', get_x and set_x stay methods
+            if cl and (
+                func.ident in cl.properties
+                or (
+                    func.ident.endswith("__setter__")
+                    and func.ident[: -len("__setter__")] in cl.properties
+                )
+            ):
+                continue
             if isinstance(func.parent, python.Class):
                 id = clname(func.parent) + "_" + func.ident
             else:
@@ -1579,7 +1610,56 @@ class ExtensionModule:
             write("    return 0;")
             write("}\n")
 
+        # properties: call the wrappers of the getter and setter methods
+        props = self.property_funcs(cl, funcs)
+        for name, getfunc, setfunc in props:
+            write(
+                "PyObject *__ss_pget_%s_%s(PyObject *self, void *closure) {"
+                % (clname(cl), name)
+            )
+            write("    (void)closure;")
+            write("    return %s_%s(self, NULL, NULL);" % (clname(cl), getfunc.ident))
+            write("}\n")
+
+            write(
+                "int __ss_pset_%s_%s(PyObject *self, PyObject *value, void *closure) {"
+                % (clname(cl), name)
+            )
+            write("    (void)closure;")
+            write("    if (value == NULL) {")
+            write(
+                "        PyErr_SetString(PyExc_AttributeError, %s);"
+                % c_string("property '%s' of '%s' object has no deleter" % (name, cl.ident))
+            )
+            write("        return -1;")
+            write("    }")
+            if setfunc:
+                write("    PyObject *__ss_args = PyTuple_Pack(1, value);")
+                write("    if (!__ss_args)")
+                write("        return -1;")
+                write(
+                    "    PyObject *__ss_r = %s_%s(self, __ss_args, NULL);"
+                    % (clname(cl), setfunc.ident)
+                )
+                write("    Py_DECREF(__ss_args);")
+                write("    if (!__ss_r)")
+                write("        return -1;")
+                write("    Py_DECREF(__ss_r);")
+                write("    return 0;")
+            else:
+                write(
+                    "    PyErr_SetString(PyExc_AttributeError, %s);"
+                    % c_string("property '%s' of '%s' object has no setter" % (name, cl.ident))
+                )
+                write("    return -1;")
+            write("}\n")
+
         write("PyGetSetDef %sGetSet[] = {" % clname(cl))
+        for name, getfunc, setfunc in props:
+            write(
+                '    {(char *)"%s", (getter)__ss_pget_%s_%s, (setter)__ss_pset_%s_%s, (char *)"", NULL},'
+                % (name, clname(cl), name, clname(cl), name)
+            )
         for var in vars:
             write(
                 '    {(char *)"%s", (getter)__ss_get_%s_%s, (setter)__ss_set_%s_%s, (char *)"", NULL},'
