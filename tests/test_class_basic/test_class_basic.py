@@ -283,6 +283,66 @@ def test_modelled_eq():
     assert {1: EqDict(1)} == {1: EqDict(1)} and {1: EqDict(1)} != {1: EqDict(2)}
 
 
+class Unhashable:  # a dunder with a fixed C++ return type that only raises
+    def __hash__(self):
+        raise TypeError("unhashable type: 'Unhashable'")
+    def __eq__(self, other):
+        return True
+
+class AbstractShape:
+    def __len__(self):
+        raise NotImplementedError('len')
+    def __str__(self):
+        raise NotImplementedError('str')
+    def __lt__(self, other):
+        raise NotImplementedError('lt')
+
+class Square(AbstractShape):
+    def __init__(self, n):
+        self.n = n
+    def __len__(self):
+        return self.n
+    def __str__(self):
+        return 'Square(%d)' % self.n
+    def __lt__(self, other):
+        return self.n < other.n
+
+class Blob(AbstractShape):
+    pass
+
+def test_raising_dunders():
+    u = Unhashable()
+    errors = []
+    try:
+        hash(u)
+    except TypeError as e:
+        errors.append(str(e))
+    try:
+        set().add(u)
+    except TypeError as e:
+        errors.append(str(e))
+    assert errors == ["unhashable type: 'Unhashable'"] * 2
+
+    assert [len(s) for s in [Square(3), Square(1)]] == [3, 1]
+    assert str(sorted([Square(3), Square(1)])[0]) == 'Square(1)'
+    errors = []
+    for s in [Square(2), Blob()]:
+        try:
+            errors.append(str(len(s)))
+        except NotImplementedError as e:
+            errors.append(str(e))
+    a = AbstractShape()
+    try:
+        errors.append(str(a))
+    except NotImplementedError as e:
+        errors.append(str(e))
+    try:
+        errors.append(str(a < AbstractShape()))
+    except NotImplementedError as e:
+        errors.append(str(e))
+    assert errors == ['2', 'len', 'str', 'lt']
+
+
 def test_all():
     test_class_person()
     test_class_edge()
@@ -293,6 +353,7 @@ def test_all():
     test_instance_repr()
     test_identity_eq()
     test_modelled_eq()
+    test_raising_dunders()
 
 
 

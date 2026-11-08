@@ -1433,7 +1433,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- add implicit 'return None' if no return expressions
         if not func.returnexpr:
-            func.fakeret = ast.Return(ast.Name("None", ast.Load()))
+            func.fakeret = ast.Return(self.fake_return_value(node, parent))
             self.visit(func.fakeret, func)
 
         # --- register function
@@ -1444,6 +1444,40 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             ):  # XXX use flag
                 infer.default_var(self.gx, "self", func)
             parent.funcs[func.ident] = func
+
+    # dunders with a fixed C++ return type (see class pyobj in builtin.hpp)
+    FIXED_DUNDER_RETURNS: dict[str, Any] = {
+        "__hash__": 0,
+        "__len__": 0,
+        "__bool__": False,
+        "__eq__": False,
+        "__ne__": False,
+        "__lt__": False,
+        "__le__": False,
+        "__gt__": False,
+        "__ge__": False,
+        "__str__": "",
+        "__repr__": "",
+    }
+
+    def fake_return_value(
+        self, node: ast.FunctionDef, parent: Optional["python.Class"]
+    ) -> ast.expr:
+        """The value of the implicit return at the end of a function without
+        return statements: None, unless the function is a dunder with a fixed
+        C++ return type that ends by raising (an 'unhashable' __hash__, an
+        abstract __len__..). The return then just gives it its proper type,
+        as it is never reached. (node.name, as an inherited copy of a method
+        may be renamed, such as __len__Shape__)"""
+        if (
+            isinstance(parent, python.Class)
+            and not getmv().module.builtin
+            and node.name in self.FIXED_DUNDER_RETURNS
+            and node.body
+            and isinstance(node.body[-1], ast.Raise)
+        ):
+            return ast.Constant(self.FIXED_DUNDER_RETURNS[node.name])
+        return ast.Name("None", ast.Load())
 
     def visit_AsyncFunctionDef(
         self, node: ast.AsyncFunctionDef, func: Optional["python.Function"] = None
