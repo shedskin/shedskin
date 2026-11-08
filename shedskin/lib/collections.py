@@ -218,9 +218,11 @@ class Counter(dict):
         c.__setunit__(other.unit, other.value)
         return c
     def __or__(self, other):
-        c = Counter()
+        # Counter | Counter gives a Counter; with a non-Counter on the right,
+        # CPython falls back to its __ror__, which gives a plain dict (or a
+        # defaultdict for a defaultdict)
+        c = other.__ror_counter__()
         c.__setunit__(self.unit, self.value)
-        c.__setunit__(other.unit, other.value)
         return c
     def __xor__(self, other):
         c = Counter()

@@ -771,6 +771,14 @@ public:
         END_FOR
         return result;
     }
+    /* Counter | non-Counter: see __or_dict__ (a plain dict, or a defaultdict
+       for a defaultdict) */
+    dict<K, V> *__or__(dict<K, V> *other) {
+        return __or_dict__(other);
+    }
+    defaultdict<K, V> *__or__(defaultdict<K, V> *other) {
+        return (defaultdict<K, V> *)__or_dict__(other);
+    }
 
     /* symmetric difference: absolute difference of the counts. unlike
        +, -, & and |, negative counts survive (as their absolute value);

@@ -798,6 +798,21 @@ def test_counter_or_operator():
     assert sorted((a | b).items()) == [('a', 1), ('b', 2), ('c', 3), ('d', 1)]
 
 
+def test_counter_or_non_counter():
+    # with a non-Counter on the right, the result is a plain dict update
+    # (no dropping of non-positive counts), or a defaultdict for a defaultdict
+    c = Counter({'a': 1, 'b': 2})
+    r = c | {'a': 0, 'c': -1}
+    assert repr(r).startswith('{') and r == {'a': 0, 'b': 2, 'c': -1}
+    r2 = c | defaultdict(int, {'a': 0, 'c': -1})
+    assert repr(r2).startswith('defaultdict') and r2 == {'a': 0, 'b': 2, 'c': -1}
+    assert r2['zz'] == 0
+    r3 = c | frozendict({'a': 0, 'c': -1})
+    assert repr(r3).startswith('{') and r3 == {'a': 0, 'b': 2, 'c': -1}
+    r4 = c | Counter({'a': 0, 'c': -1})
+    assert repr(r4).startswith('Counter') and sorted(r4.items()) == [('a', 1), ('b', 2)]
+
+
 def test_counter_unary_pos():
     c = Counter()
     c['x'] = 3
@@ -1232,6 +1247,7 @@ def test_all():
     test_counter_sub_operator()
     test_counter_and_operator()
     test_counter_or_operator()
+    test_counter_or_non_counter()
     test_counter_unary_pos()
     test_counter_unary_neg()
     test_counter_iadd()

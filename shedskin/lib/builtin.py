@@ -891,6 +891,8 @@ class dict(pyiter):
         pass
     def copy(self):
         return {self.unit: self.value}
+    def __ror_counter__(self): # Counter | self (model only, see Counter.__or__)
+        return self.copy()
     def get(self, u, v=None):  # TODO v -> default.. breaks plcfrs??
         self.__key__(u)
         return self.value
@@ -942,6 +944,8 @@ class frozendict(dict):
 
     def copy(self):
         return frozendict({self.unit: self.value})
+    def __ror_counter__(self): # Counter | frozendict gives a plain dict
+        return {self.unit: self.value}
 
 class pyset(pyiter):
     def __inititer__(self, i):
