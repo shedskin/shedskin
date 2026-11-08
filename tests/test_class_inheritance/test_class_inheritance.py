@@ -280,6 +280,37 @@ def test_virtual_return_new_container():
     assert [[x.name() for x in o.objs()] for o in objs] == [['N', 'N'], ['V']]
 
 
+class SelfBase:  # 0921-E3: return type widened by a polymorphic call
+    def me(self):
+        return self
+
+
+class SelfDeep(SelfBase):
+    def val(self):
+        return 1
+
+
+class SelfDeeper(SelfDeep):
+    def val(self):
+        return 2
+
+
+def self_ident(x):
+    return x
+
+
+def test_downcast_return():
+    for o in [SelfBase(), SelfDeep()]:
+        o.me()
+    d = SelfDeep()
+    m = d.me()
+    assert m.val() == 1
+    assert d.me().val() == 1
+    assert SelfDeeper().me().val() == 2
+    assert self_ident(SelfBase()).me() is not None
+    assert self_ident(SelfDeep()).val() == 1
+
+
 class StopIterSub(StopIteration):
     pass
 
@@ -375,6 +406,7 @@ def test_all():
     test_redundant_object_base()
     test_virtual_cpp_keyword_formals()
     test_virtual_return_new_container()
+    test_downcast_return()
     test_builtin_attribute_not_shadowed()
     test_class_call()
 
