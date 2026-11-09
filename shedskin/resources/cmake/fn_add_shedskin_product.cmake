@@ -567,9 +567,14 @@ function(add_shedskin_product)
             ${sys_module_list}
         )
 
+        # DEFINE_SYMBOL: no per-target <target>_EXPORTS define (which we
+        # don't use): it prevents sharing compiled library modules between
+        # extension modules with ccache under MSVC, as ccache (4.14) hashes
+        # /D options in preprocessor mode (it only skips -D options)
         set_target_properties(${EXT} PROPERTIES
             OUTPUT_NAME ${name}
             PREFIX ""
+            DEFINE_SYMBOL ""
         )
 
         if(${WIN32})
