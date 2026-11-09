@@ -12,9 +12,6 @@ function(common)
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.cpp")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.hpp")
         else()
-            if(mod STREQUAL "re")
-                set(IMPORTS_RE_MODULE TRUE)
-            endif()
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.cpp")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.hpp")
         endif()
@@ -23,24 +20,20 @@ function(common)
     # Platform-specific library names
     if (UNIX)
         set(LIBGC libgc.a)
-        set(LIBPCRE2 libpcre2-32.a)
     else() # i.e windows
         set(LIBGC gc.lib)
-        set(LIBPCRE2 pcre2-32-static.lib)
     endif ()
 
     if(ENABLE_FETCH_CONTENT)
         # FetchContent targets - link to targets directly
         set(LIB_DEPS
             gc
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-32-static>
         )
         set(LIB_DIRS)
-        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR})
+        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR})
     elseif(ENABLE_SPM)
         set(LIB_DEPS
             ${SPM_LIB_DIRS}/${LIBGC}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
@@ -64,7 +57,6 @@ function(common)
 
         set(LIB_DEPS 
             "-lgc"
-            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-32>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             ${SHEDSKIN_LINK_LIBS}
         )

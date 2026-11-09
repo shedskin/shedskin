@@ -3,16 +3,15 @@
 #
 # shedskin_deps.cmake - Centralized dependency management via FetchContent
 #
-# This module sets up bdwgc and pcre2 dependencies using FetchContent with
+# This module sets up the bdwgc dependency using FetchContent with
 # a platform-specific user cache directory for persistent downloads.
 #
 # Usage:
 #   include(shedskin_deps)
 #
 # After including, the following variables are available:
-#   SHEDSKIN_DEP_LIBS        - Libraries to link (gc, pcre2-32-static)
+#   SHEDSKIN_DEP_LIBS        - Libraries to link (gc)
 #   SHEDSKIN_DEP_INCLUDE_DIR - Include directory for gc/ headers
-#   SHEDSKIN_PCRE2_INCLUDE_DIR - Include directory for pcre2.h
 #
 
 # Guard against multiple inclusion
@@ -60,22 +59,7 @@ FetchContent_Declare(
     GIT_SUBMODULES_RECURSE TRUE
 )
 
-# Configure pcre2 options before fetching
-set(PCRE2_BUILD_PCRE2_8 OFF CACHE BOOL "" FORCE)
-set(PCRE2_BUILD_PCRE2_16 OFF CACHE BOOL "" FORCE)
-set(PCRE2_BUILD_PCRE2_32 ON CACHE BOOL "" FORCE)
-set(PCRE2_SUPPORT_JIT OFF CACHE BOOL "" FORCE)
-set(PCRE2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(PCRE2_BUILD_PCRE2GREP OFF CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-    pcre2
-    GIT_REPOSITORY https://github.com/PCRE2Project/pcre2.git
-    GIT_TAG        pcre2-10.44
-    GIT_SHALLOW    TRUE
-)
-
-FetchContent_MakeAvailable(bdwgc pcre2)
+FetchContent_MakeAvailable(bdwgc)
 
 # Create gc/ subdirectory structure for includes (shedskin expects gc/gc_allocator.h)
 set(SHEDSKIN_DEP_INCLUDE_DIR ${FETCHCONTENT_BASE_DIR}/includes)
@@ -83,8 +67,5 @@ file(MAKE_DIRECTORY ${SHEDSKIN_DEP_INCLUDE_DIR}/gc)
 file(GLOB _BDWGC_HEADERS "${bdwgc_SOURCE_DIR}/include/*.h")
 file(COPY ${_BDWGC_HEADERS} DESTINATION ${SHEDSKIN_DEP_INCLUDE_DIR}/gc)
 
-# pcre2.h is generated in the build directory
-set(SHEDSKIN_PCRE2_INCLUDE_DIR ${pcre2_BINARY_DIR})
-
 # Export library targets for linking
-set(SHEDSKIN_DEP_LIBS gc pcre2-32-static)
+set(SHEDSKIN_DEP_LIBS gc)

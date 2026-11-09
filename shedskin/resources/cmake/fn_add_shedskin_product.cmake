@@ -136,7 +136,6 @@ function(add_shedskin_product)
 
     # module-specific cases
     set(IMPORTS_OS_MODULE OFF)
-    set(IMPORTS_RE_MODULE OFF)
     set(IMPORTS_SOCKET_MODULE OFF)
 
     # if ${name} starts_with test_ then set IS_TEST to ON
@@ -215,9 +214,7 @@ function(add_shedskin_product)
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/math/integer.cpp")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/math/integer.hpp")
         else()
-            if(mod STREQUAL "re")
-                set(IMPORTS_RE_MODULE ON)
-            elseif(mod STREQUAL "socket")
+            if(mod STREQUAL "socket")
                 set(IMPORTS_SOCKET_MODULE ON)
             endif()
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.cpp")
@@ -227,10 +224,8 @@ function(add_shedskin_product)
 
     if (UNIX)
         set(LIBGC libgc.a)
-        set(LIBPCRE2 libpcre2-32.a)
     else() # i.e windows
         set(LIBGC gc.lib)
-        set(LIBPCRE2 pcre2-32-static.lib)
     endif ()
 
     # Track if we're using static GC libraries (needed for Windows GC_NOT_DLL)
@@ -241,15 +236,14 @@ function(add_shedskin_product)
         # FetchContent targets - link to targets directly
         set(LIB_DEPS
             gc
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:pcre2-32-static>
             ${SHEDSKIN_LINK_LIBS}
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:iphlpapi>
         )
         set(LIB_DIRS ${SHEDSKIN_LINK_DIRS})
-        # Use the wrapper include dirs for gc/ structure and pcre2, plus any
+        # Use the wrapper include dir for gc/ structure, plus any
         # product-specific include dirs (e.g. a local headers-only shim lib)
-        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${FETCHCONTENT_PCRE2_INCLUDE_DIR} ${SHEDSKIN_INCLUDE_DIRS})
+        set(LIB_INCLUDES ${FETCHCONTENT_INCLUDE_DIR} ${SHEDSKIN_INCLUDE_DIRS})
     elseif(ENABLE_SPM)
         set(USING_STATIC_GC ON)
         # NOTE: libgccpp (bdwgc's global operator new/delete replacement) is
@@ -260,7 +254,6 @@ function(add_shedskin_product)
             ${SPM_LIB_DIRS}/${LIBGC}
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops.lib>
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE2}>
             ${SHEDSKIN_LINK_LIBS}
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:iphlpapi>
@@ -272,7 +265,6 @@ function(add_shedskin_product)
         # NOTE: see libgccpp comment above (ENABLE_SPM branch).
         set(LIB_DEPS
             ${LOCAL_DEPS_LIB_DIRS}/${LIBGC}
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${LOCAL_DEPS_LIB_DIRS}/${LIBPCRE2}>
             ${SHEDSKIN_LINK_LIBS}
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:iphlpapi>
@@ -299,7 +291,6 @@ function(add_shedskin_product)
 
         set(LIB_DEPS
             "-lgc"
-            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre2-32>"
             # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:ws2_32>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${IMPORTS_SOCKET_MODULE}>>:iphlpapi>
@@ -457,12 +448,10 @@ function(add_shedskin_product)
         )
 
         # GC_NOT_DLL is required on Windows when linking statically with bdwgc
-        # PCRE2_STATIC is required on Windows when linking statically with pcre2
         # boost (bundled) containers are the default, as for 'shedskin build'
         target_compile_definitions(${EXE} PRIVATE
             $<$<NOT:$<BOOL:${SHEDSKIN_NOBOOST}>>:__SS_BOOST>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
-            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
         )
 
         target_include_directories(${EXE} PRIVATE
@@ -626,11 +615,9 @@ function(add_shedskin_product)
         )
 
         # GC_NOT_DLL is required on Windows when linking statically with bdwgc
-        # PCRE2_STATIC is required on Windows when linking statically with pcre2
         target_compile_definitions(${EXT} PRIVATE
             $<$<NOT:$<BOOL:${SHEDSKIN_NOBOOST}>>:__SS_BOOST>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>>:GC_NOT_DLL>
-            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USING_STATIC_GC}>,$<BOOL:${IMPORTS_RE_MODULE}>>:PCRE2_STATIC>
         )
 
         target_link_options(${EXT} PRIVATE

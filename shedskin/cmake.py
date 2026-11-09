@@ -157,19 +157,16 @@ class ShedskinDependencyManager:
     def targets_exist(self) -> bool:
         """Check if required targets exist"""
         libgc = self.lib_dir / f"libgc{self.lib_suffix}"
-        libpcre2 = self.lib_dir / f"libpcre2-32{self.lib_suffix}"
         gc_h = self.include_dir / "gc.h"
         gc_cpp_h = self.include_dir / "gc_cpp.h"
-        pcre2_h = self.include_dir / "pcre2.h"
 
-        targets = [libgc, libpcre2, gc_h, gc_cpp_h, pcre2_h]
+        targets = [libgc, gc_h, gc_cpp_h]
         return all(t.exists() for t in targets)
 
     def install_all(self) -> None:
         """Install all dependencies"""
         if not self.targets_exist():
             self.install_bdwgc()
-            self.install_pcre2()
         else:
             print(f"{WHITE}SPM:{RESET} targets exist, no need to run.")
 
@@ -222,69 +219,12 @@ class ShedskinDependencyManager:
         self.cmake_build(bdwgc_build)
         self.cmake_install(bdwgc_build)
 
-    # def install_pcre(self):
-    #         """download / build / install pcre"""
-    #         pcre_url = (
-    #             "https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz"
-    #         )
-    #         pcre_archive = self.downloads_dir / "pcre-8.45.tar.gz"
-    #         pcre_src = self.src_dir / "pcre-8.45"
-    #         pcre_build = pcre_src / "build"
-
-    #         print("download / build / install pcre")
-    #         self.wget(pcre_url, self.downloads_dir)
-    #         self.tar(pcre_archive, self.src_dir)
-    #         # pcre_archive.unlink()
-    #         pcre_build.mkdir(parents=True, exist_ok=True)
-    #         self.cmake_generate(
-    #             pcre_src,
-    #             pcre_build,
-    #             prefix=self.deps_dir,
-    #             BUILD_SHARED_LIBS=False,
-    #             PCRE_BUILD_PCREGREP=False,
-    #             PCRE_BUILD_PCRECPP=True,
-    #             PCRE_SUPPORT_LIBREADLINE=False,
-    #             PCRE_SUPPORT_LIBEDIT=False,
-    #             PCRE_SUPPORT_LIBZ=False,
-    #             PCRE_SUPPORT_LIBBZ2=False,
-    #             PCRE_BUILD_TESTS=False,
-    #             PCRE_SHOW_REPORT=False,
-    #         )
-    #         self.cmake_build(pcre_build)
-    #         self.cmake_install(pcre_build)
-
-    def install_pcre2(self) -> None:
-        """Download / build / install pcre2"""
-        pcre2_repo = "https://github.com/PCRE2Project/pcre2.git"
-        pcre2_src = self.src_dir / "pcre2"
-        pcre2_build = pcre2_src / "build"
-        print("download / build / install pcre2")
-        self.git_clone(pcre2_repo, pcre2_src)
-        pcre2_build.mkdir(parents=True, exist_ok=True)
-        self.cmake_generate(
-            pcre2_src,
-            pcre2_build,
-            prefix=self.deps_dir,
-            BUILD_SHARED_LIBS=False,
-            PCRE2_BUILD_PCRE2GREP=False,
-            PCRE2_SUPPORT_LIBREADLINE=False,
-            PCRE2_SUPPORT_LIBEDIT=False,
-            PCRE2_SUPPORT_LIBZ=False,
-            PCRE2_SUPPORT_LIBBZ2=False,
-            PCRE2_BUILD_TESTS=False,
-            PCRE2_SHOW_REPORT=False,
-            PCRE2_BUILD_PCRE2_8=False,
-            PCRE2_BUILD_PCRE2_32=True,
-        )
-        self.cmake_build(pcre2_build)
-        self.cmake_install(pcre2_build)
-
 
 class LocalDependencyManager:
     """Dependency manager that builds from embedded ext/ zip archives.
 
     This manager uses compressed zip archives bundled in shedskin/ext/
-    (bdwgc.zip, pcre2.zip). On first use, archives are extracted to the
+    (bdwgc.zip). On first use, archives are extracted to the
     platform-specific cache directory and built as static libraries.
 
     Supported platforms: Linux, macOS, Windows
@@ -295,10 +235,8 @@ class LocalDependencyManager:
         %LOCALAPPDATA%/shedskin/    (Windows)
             src/
                 bdwgc/              (extracted sources)
-                pcre2/
             build/
                 bdwgc/              (cmake build dir)
-                pcre2/
             include/                (installed headers)
             lib/                    (installed static libs)
     """
@@ -309,7 +247,6 @@ class LocalDependencyManager:
         # ext/ directory contains zip archives
         self.ext_dir = config.get_pkg_path() / "ext"
         self.bdwgc_zip = self.ext_dir / "bdwgc.zip"
-        self.pcre2_zip = self.ext_dir / "pcre2.zip"
 
         # Cache directories (platform-specific)
         self.deps_dir = config.get_user_cache_dir()
@@ -320,7 +257,6 @@ class LocalDependencyManager:
 
         # Extracted source directories (in cache)
         self.bdwgc_src = self.src_dir / "bdwgc"
-        self.pcre2_src = self.src_dir / "pcre2"
 
         # Platform-specific library names
         # On Windows, MSVC produces libs without 'lib' prefix
@@ -328,11 +264,9 @@ class LocalDependencyManager:
         if sys.platform == "win32":
             self.lib_suffix = ".lib"
             self.libgc_name = "gc.lib"
-            self.libpcre2_name = "pcre2-32-static.lib"
         else:
             self.lib_suffix = ".a"
             self.libgc_name = "libgc.a"
-            self.libpcre2_name = "libpcre2-32.a"
 
         if self.reset_on_run and self.deps_dir.exists():
             shutil.rmtree(self.deps_dir)
@@ -406,15 +340,9 @@ class LocalDependencyManager:
         gc_cpp_h = self.include_dir / "gc_cpp.h"
         return all(t.exists() for t in [libgc, gc_h, gc_cpp_h])
 
-    def pcre2_targets_exist(self) -> bool:
-        """Check if pcre2 targets are already built."""
-        libpcre2 = self.lib_dir / self.libpcre2_name
-        pcre2_h = self.include_dir / "pcre2.h"
-        return all(t.exists() for t in [libpcre2, pcre2_h])
-
     def targets_exist(self) -> bool:
         """Check if all required targets exist."""
-        return self.bdwgc_targets_exist() and self.pcre2_targets_exist()
+        return self.bdwgc_targets_exist()
 
     def install_bdwgc(self, force: bool = False) -> bool:
         """Build and install bdwgc from ext/bdwgc.zip.
@@ -459,55 +387,6 @@ class LocalDependencyManager:
         self._log(f"{GREEN}bdwgc installed successfully{RESET}")
         return True
 
-    def install_pcre2(self, force: bool = False) -> bool:
-        """Build and install pcre2 from ext/pcre2.zip.
-
-        Returns True if build was performed, False if skipped (already exists).
-        """
-        if not force and self.pcre2_targets_exist():
-            self._log(f"pcre2 already installed in {self.lib_dir}")
-            return False
-
-        # Extract zip if needed
-        self._extract_zip(self.pcre2_zip, self.pcre2_src)
-
-        if not self.pcre2_src.exists():
-            raise FileNotFoundError(
-                f"pcre2 source not found at {self.pcre2_src}. "
-                f"Zip archive: {self.pcre2_zip}"
-            )
-
-        self._log(f"Building pcre2 from {self.pcre2_src}")
-
-        # Use a separate build directory in cache (out-of-source build)
-        build_dir = self.build_cache_dir / "pcre2"
-        if build_dir.exists():
-            shutil.rmtree(build_dir)
-        build_dir.mkdir(parents=True, exist_ok=True)
-
-        # Configure with minimal options for shedskin
-        self._cmake_generate(
-            self.pcre2_src,
-            build_dir,
-            BUILD_SHARED_LIBS=False,
-            PCRE2_BUILD_PCRE2GREP=False,
-            PCRE2_SUPPORT_LIBREADLINE=False,
-            PCRE2_SUPPORT_LIBEDIT=False,
-            PCRE2_SUPPORT_LIBZ=False,
-            PCRE2_SUPPORT_LIBBZ2=False,
-            PCRE2_BUILD_TESTS=False,
-            PCRE2_SHOW_REPORT=False,
-            PCRE2_BUILD_PCRE2_8=False,
-            PCRE2_BUILD_PCRE2_32=True,
-            CMAKE_POSITION_INDEPENDENT_CODE=True,
-        )
-
-        self._cmake_build(build_dir)
-        self._cmake_install(build_dir)
-
-        self._log(f"{GREEN}pcre2 installed successfully{RESET}")
-        return True
-
     def install_all(self, force: bool = False) -> None:
         """Install all dependencies from ext/ zip archives."""
         if not force and self.targets_exist():
@@ -515,7 +394,6 @@ class LocalDependencyManager:
             return
 
         self.install_bdwgc(force=force)
-        self.install_pcre2(force=force)
 
     def get_include_dir(self) -> pathlib.Path:
         """Return the include directory for compiled headers."""
@@ -531,11 +409,8 @@ class LocalDependencyManager:
             "ext_dir": str(self.ext_dir),
             "cache_dir": str(self.deps_dir),
             "bdwgc_zip_exists": self.bdwgc_zip.exists(),
-            "pcre2_zip_exists": self.pcre2_zip.exists(),
             "bdwgc_extracted": self.bdwgc_src.exists(),
-            "pcre2_extracted": self.pcre2_src.exists(),
             "bdwgc_built": self.bdwgc_targets_exist(),
-            "pcre2_built": self.pcre2_targets_exist(),
             "platform": platform.system(),
             "lib_suffix": self.lib_suffix,
         }
