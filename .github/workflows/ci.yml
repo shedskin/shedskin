@@ -58,6 +58,9 @@ jobs:
         if (-not $ccache) { throw "ccache.exe not found" }
         $ccache.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         & $ccache.FullName --version
+        # TEMPORARY: record what ccache hashes, to see why it misses
+        "CCACHE_DEBUG=1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        "CCACHE_DEBUGDIR=$env:RUNNER_TEMP\ccache-debug" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     # on windows, /W4 repeats the same library warnings for every test
     # (~75k log lines, which makes the live log lag far behind, and
@@ -76,3 +79,33 @@ jobs:
     - name: Show ccache statistics
       if: always()
       run: ccache --show-stats -v
+
+    # TEMPORARY: compare what ccache hashed for builtin.cpp of two targets
+    - name: ccache diagnostics (windows)
+      if: always() && runner.os == 'Windows'
+      shell: python
+      run: |
+        import glob, os, subprocess
+        d = os.path.join(os.environ["RUNNER_TEMP"], "ccache-debug")
+        texts = sorted(glob.glob(os.path.join(d, "**", "builtin.obj.*.ccache-input-text"), recursive=True))
+        print(len(texts), "builtin.obj input-text files")
+        def log_of(t):
+            return t[: -len("input-text")] + "log"
+        def lines_of(path, words):
+            if not os.path.exists(path):
+                return ["(no " + os.path.basename(path) + ")"]
+            with open(path, errors="replace") as f:
+                return [l.rstrip()[:400] for l in f if any(w in l for w in words)]
+        for t in texts[:30]:
+            print(os.path.relpath(t, d), lines_of(log_of(t), ["Result:"])[:2])
+        exes = [t for t in texts if "-exe.dir" in t]
+        if len(exes) >= 2:
+            a, b = exes[0], exes[1]
+            for t in (a, b):
+                print("=== log of", os.path.relpath(t, d))
+                for l in lines_of(log_of(t), ["Command line", "Working directory", "Hashing", "Executing", "Object file", "Source file", "Result", "Config:", "hash_dir", "base_dir"])[:40]:
+                    print("  ", l)
+            out = subprocess.run(["git", "diff", "--no-index", "--no-color", "-U2", a, b], capture_output=True, text=True, errors="replace").stdout.splitlines()
+            print("=== diff of the input-text files:", len(out), "lines")
+            for l in out[:250]:
+                print(l[:300])
