@@ -12,6 +12,10 @@ concurrency:
 
 env:
   BUILD_TYPE: Release
+  # extensions are compiled with -g, which makes ccache include the
+  # (per-test) build directory in its hash: don't, so tests can share
+  # their compiled library modules
+  CCACHE_NOHASHDIR: 1
 
 jobs:
   test:
@@ -33,12 +37,27 @@ jobs:
     - name: Install shedskin
       run: uv sync --python ${{ matrix.python-version }}
 
+    # ccache lets tests reuse the library modules compiled by earlier
+    # tests (not yet on windows: cmake ignores the compiler launcher
+    # with the visual studio generator)
+    - name: Install ccache (linux)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y ccache
+
+    - name: Install ccache (macos)
+      if: runner.os == 'macOS'
+      run: brew install ccache
+
     - name: Test shedskin
       run: |
         cd tests
-        uv run shedskin runtests  --build-type Release
+        uv run shedskin runtests --build-type Release --jobs 4 ${{ runner.os != 'Windows' && '--ccache' || '' }}
 
     - name: Test shedskin examples
       run: |
         cd examples
-        uv run shedskin runtests  --build-type Release
+        uv run shedskin runtests --build-type Release --jobs 4 ${{ runner.os != 'Windows' && '--ccache' || '' }}
+
+    - name: Show ccache statistics
+      if: always() && runner.os != 'Windows'
+      run: ccache --show-stats
