@@ -38,8 +38,8 @@ jobs:
       run: uv sync --python ${{ matrix.python-version }}
 
     # ccache lets tests reuse the library modules compiled by earlier
-    # tests (not yet on windows: cmake ignores the compiler launcher
-    # with the visual studio generator)
+    # tests (on windows, via a copy of ccache.exe named cl.exe, as cmake
+    # ignores the compiler launcher with the visual studio generator)
     - name: Install ccache (linux)
       if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y ccache
@@ -48,16 +48,31 @@ jobs:
       if: runner.os == 'macOS'
       run: brew install ccache
 
+    # put the real ccache.exe in PATH, before the chocolatey shim, as
+    # ccache must see itself invoked as cl.exe
+    - name: Install ccache (windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install ccache -y --no-progress
+        $ccache = Get-ChildItem "$env:ChocolateyInstall\lib\ccache" -Recurse -Filter ccache.exe | Select-Object -First 1
+        if (-not $ccache) { throw "ccache.exe not found" }
+        $ccache.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        & $ccache.FullName --version
+
+    # on windows, /W4 repeats the same library warnings for every test
+    # (~75k log lines, which makes the live log lag far behind, and
+    # ccache replays them on cache hits): leave warnings to the other
+    # platforms there
     - name: Test shedskin
       run: |
         cd tests
-        uv run shedskin runtests --build-type Release --jobs 4 ${{ runner.os != 'Windows' && '--ccache' || '' }}
+        uv run shedskin runtests --build-type Release --jobs 4 --ccache ${{ runner.os == 'Windows' && '--nowarnings' || '' }}
 
     - name: Test shedskin examples
       run: |
         cd examples
-        uv run shedskin runtests --build-type Release --jobs 4 ${{ runner.os != 'Windows' && '--ccache' || '' }}
+        uv run shedskin runtests --build-type Release --jobs 4 --ccache ${{ runner.os == 'Windows' && '--nowarnings' || '' }}
 
     - name: Show ccache statistics
-      if: always() && runner.os != 'Windows'
-      run: ccache --show-stats
+      if: always()
+      run: ccache --show-stats -v
