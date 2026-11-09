@@ -217,6 +217,26 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Generate a C++ name for an object"""
         return self.namer.name(obj)
 
+    def class_ref(self, cl: "python.Class", node: ast.expr) -> str:
+        """Class name for static access ('cl.attr'), qualified when the class
+        was imported under another name ('from m import C as D')"""
+        if (
+            isinstance(node, ast.Name)
+            and node.id != cl.ident
+            and cl.mv.module.ident != "builtin"
+        ):
+            return self.namer.namespace_class(cl)
+        return self.cpp_name(cl)
+
+    def aliased_func(self, name: str) -> Optional["python.Function"]:
+        """Function imported under another name ('from m import f as g')"""
+        if name in self.mv.funcs:
+            return None
+        func = self.mv.ext_funcs.get(name)
+        if func and func.ident != name and func.mv.module.ident != "builtin":
+            return func
+        return None
+
     def get_output_file(self, ext: str = ".cpp", mode: str = "w") -> IO[Any]:
         """Get an output file for writing C++ code"""
         if self.analyze:
@@ -654,9 +674,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         for cl in module.mv.classes.values():
                             self.print(using + self.cpp_name(cl) + ";")
                     elif pseudonym not in self.module.mv.globals:
+                        # 'from m import x as y': references to y are
+                        # qualified (see aliased_func, class_ref), as
+                        # 'using m::x' could clash with another x
+                        aliased = pseudonym != name
+                        if aliased and name in module.mv.classes:
+                            continue
                         if name in module.mv.funcs:
                             func = module.mv.funcs[name]
-                            if func.cp or module.builtin:
+                            if (func.cp or module.builtin) and not aliased:
                                 self.print(using + self.cpp_name(func) + ";")
                             # fdopen(fd, 'rb') becomes fdopen_binary, gzip's
                             # open(f, 'rt') becomes open_text (see graph.py)
@@ -3944,6 +3970,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         and ident in func.parent.funcs
                     ):  # masked by method
                         self.append(funcs[0].mv.module.full_path() + "::")
+                    elif self.aliased_func(node.func.id):
+                        self.append(funcs[0].mv.module.full_path() + "::")
                     self.append(self.cpp_name(funcs[0]))
                 else:
                     self.visit(node.func)
@@ -5646,7 +5674,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 elif cl.ident == "str_":
                     self.append("str::")
                 else:
-                    self.append(ident + "::")
+                    self.append(self.class_ref(cl, node.value) + "::")
 
             # class.attr
             elif cl:  # XXX merge above?
@@ -5658,7 +5686,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     assert submodule
                     self.append(submodule.full_path() + "::" + ident + "::")
                 else:
-                    self.append(ident + "::")
+                    self.append(self.class_ref(cl, node.value) + "::")
 
             # obj.attr
             else:
@@ -5787,7 +5815,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     assert submodule
                     self.append(submodule.full_path() + "::" + self.cpp_name(cl) + "::")
                 else:
-                    self.append(self.cpp_name(cl) + "::")
+                    self.append(self.class_ref(cl, node.value) + "::")
 
             # obj.attr
             else:
@@ -5901,7 +5929,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                                 self.append(self.module.full_path() + "::")
                             self.append(self.cpp_name(var.var))
                         else:
-                            self.append(self.cpp_name(node.id))  # XXX
+                            aliased = self.aliased_func(node.id)
+                            if aliased:  # function reference via import alias
+                                self.append(
+                                    aliased.mv.module.full_path()
+                                    + "::"
+                                    + self.cpp_name(aliased)
+                                )
+                            else:
+                                self.append(self.cpp_name(node.id))  # XXX
         else:
             error.error(
                 "unknown ctx type for Name, " + str(type(node.ctx)),

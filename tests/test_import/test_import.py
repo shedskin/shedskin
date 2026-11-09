@@ -19,6 +19,9 @@ import os.path as op # aliased dotted module ('import x.y as z')
 import util_funcs
 from util_funcs import shout
 
+from alias_a import Item as AItem, f as fa # same names in both modules
+from alias_b import Item as BItem, f as fb
+
 
 
 class Eggs:
@@ -86,6 +89,30 @@ def test_imported_function_as_value():
     assert apply_spam(util_funcs.spam_name, util_funcs.make_spam()) == 'hello!'
 
 
+class Item: # also same name as the aliased imports
+    def val(self):
+        return 'local'
+
+
+def apply_fn(fn, x):
+    return fn(x)
+
+
+def test_import_from_as_same_name():
+    '''same-named classes/functions from different modules, aliased'''
+
+    assert AItem().val() == 'a'
+    assert BItem().val() == 'b'
+    assert Item().val() == 'local'
+    assert AItem.count == 1 and BItem.count == 2
+    assert AItem.twice(3) == 6 and BItem.twice(3) == 60
+    BItem.count = 3
+    assert BItem.count == 3 and AItem.count == 1
+    assert fa(1) == 2 and fb(1) == 3
+    assert apply_fn(fa, 10) == 11 and apply_fn(fb, 10) == 12
+    assert list(map(fb, [1, 2])) == [3, 4]
+
+
 def test_all():
     test_imports()
     test_relative_imports()
@@ -93,6 +120,7 @@ def test_all():
     test_import_from_nested()
     test_import_submodule_as()
     test_imported_function_as_value()
+    test_import_from_as_same_name()
 
 
 if __name__ == "__main__":

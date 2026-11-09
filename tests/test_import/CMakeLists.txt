@@ -5,6 +5,8 @@ add_shedskin_product(
         os.path
         stat
     APP_MODULES
+        alias_a
+        alias_b
         bar
         boo/__init__
         boo/quotes
