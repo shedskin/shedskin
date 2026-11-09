@@ -17,7 +17,7 @@ directory — in a fresh remote container `/home/user/shedskin` has not existed:
 ```bash
 [ -d /home/user/shedskin ] || git clone https://github.com/shedskin/shedskin.git /home/user/shedskin
 cd /home/user/shedskin
-./.claude/setup.sh      # installs libgc/pcre, pip install -e .
+./.claude/setup.sh      # installs libgc, pip install -e .
 ```
 
 **Do not trust setup.sh's exit code or its "ready" line.** Its install guard is

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Demo script for LocalDependencyManager.
 
-This script demonstrates building bdwgc and pcre2 from the embedded
+This script demonstrates building bdwgc from the embedded
 ext/ sources and caching them in platform-specific directories.
 
 Usage:
@@ -11,7 +11,6 @@ Options:
     --force     Force rebuild even if targets exist
     --status    Show status only, don't build
     --bdwgc     Build only bdwgc
-    --pcre2     Build only pcre2
 """
 
 import argparse
@@ -35,7 +34,6 @@ def main() -> int:
         "--status", action="store_true", help="Show status only, don't build"
     )
     parser.add_argument("--bdwgc", action="store_true", help="Build only bdwgc")
-    parser.add_argument("--pcre2", action="store_true", help="Build only pcre2")
     parser.add_argument(
         "--reset", action="store_true", help="Reset cache before building"
     )
@@ -59,8 +57,6 @@ def main() -> int:
     try:
         if args.bdwgc:
             ldm.install_bdwgc(force=args.force)
-        elif args.pcre2:
-            ldm.install_pcre2(force=args.force)
         else:
             ldm.install_all(force=args.force)
 
@@ -72,7 +68,6 @@ def main() -> int:
         print(f"  Include dir: {ldm.get_include_dir()}")
         print(f"  Library dir: {ldm.get_lib_dir()}")
         print(f"  bdwgc built: {status['bdwgc_built']}")
-        print(f"  pcre2 built: {status['pcre2_built']}")
         print()
 
         return 0

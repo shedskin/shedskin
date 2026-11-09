@@ -159,7 +159,7 @@ At the moment, the following 33 modules are (partially) supported:
 * `os`
 * `os.path`
 * `random`
-* `re` (PCRE2-compatible syntax)
+* `re`
 * `select`
 * `signal` (constants only)
 * `socket`
@@ -203,14 +203,13 @@ pip install .
 To compile and run programs produced by shedskin the following libraries are needed:
 
 * g++, the C++ compiler
-* pcre2 development files
 * Python development files
 * Boehm garbage collection
 
 To install these libraries under Ubuntu, type:
 
 ```bash
-sudo apt-get install g++ libpcre2-dev python-all-dev libgc-dev
+sudo apt-get install g++ python-all-dev libgc-dev
 ```
 
 If the Boehm garbage collector is not available via your package manager, the following is known to work. Download for example version 7.2alpha6 from the [website](http://www.hboehm.info/gc/), unpack it, and install it as follows:
@@ -219,14 +218,6 @@ If the Boehm garbage collector is not available via your package manager, the fo
 ./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus --enable-thread-local-alloc --enable-large-config
 make
 make check
-sudo make install
-```
-
-If the PCRE2 library is not available via your package manager, the following is known to work. Download for example version 10.44 from the [website](http://www.pcre.org/), unpack it, and build as follows:
-
-```bash
-./configure --prefix=/usr/local
-make
 sudo make install
 ```
 
@@ -248,7 +239,6 @@ pip install .
 To compile and run programs produced by shedskin the following libraries are needed:
 
 * g++, the C++ compiler
-* pcre2 development files
 * Python development files
 * Boehm garbage collection
 
@@ -258,14 +248,6 @@ If the Boehm garbage collector is not available via your package manager, the fo
 ./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus --enable-thread-local-alloc --enable-large-config
 make
 make check
-sudo make install
-```
-
-If the PCRE2 library is not available via your package manager, the following is known to work. Download for example version 10.44 from the [website](http://www.pcre.org/), unpack it, and build as follows:
-
-```bash
-./configure --prefix=/usr/local
-make
 sudo make install
 ```
 
@@ -385,14 +367,12 @@ After compiling this module as an extension module with Shed Skin, we can pass i
 
 ## Distributing Binaries
 
-To use a generated (linux/OSX) binary on another system, make sure `libgc` and `libpcre2-8-0` are installed there. If they are not, and you cannot install them globally, you can place copies of these libraries into the same directory as the binary, using the following approach:
+To use a generated (linux/OSX) binary on another system, make sure `libgc` is installed there. If it is not, and you cannot install it globally, you can place a copy of this library into the same directory as the binary, using the following approach:
 
 ```bash
 $ ldd test
 libgc.so.1 => /usr/lib/libgc.so.1
-libpcre2-8.so.0 => /lib/x86_64-linux-gnu/libpcre2-8.so.0
 $ cp /usr/lib/libgc.so.1 .
-$ cp /lib/x86_64-linux-gnu/libpcre2-8.so.0 .
 $ LD_LIBRARY_PATH=. ./test
 ```
 
