@@ -1165,7 +1165,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # --- init constructor
         if need_init:
-            self.func_header(initfunc, declare=True, is_init=True)
+            # an inherited user __init__ is not copied in C++, so the constructor
+            # takes the original's argument types, as call sites do (1029-C4)
+            orig = initfunc.inherited_from
+            if orig and orig.mv.module.builtin:
+                orig = None
+            self.func_header(initfunc, declare=True, is_init=True, types_from=orig)
             self.indent()
             self.output("this->__class__ = cl_" + cl.ident + ";")
             self.output(
@@ -2174,9 +2179,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return len([m for m in self.gx.modules.values() if not m.builtin]) == 1
 
     def func_header(
-        self, func: "python.Function", declare: bool, is_init: bool = False
+        self,
+        func: "python.Function",
+        declare: bool,
+        is_init: bool = False,
+        types_from: Optional["python.Function"] = None,
     ) -> None:
-        """Generate the header for a function or method"""
+        """Generate the header for a function or method, with the argument
+        types of 'types_from' if given"""
+        tfunc = types_from or func
         method = isinstance(func.parent, python.Class)
         if method:
             formals = [f for f in func.formals if f != "self"]
@@ -2208,7 +2219,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             header += "void "
 
         ftypes = [
-            typestr.nodetypestr(self.gx, func.vars[f], func, mv=self.mv)
+            typestr.nodetypestr(self.gx, tfunc.vars[f], tfunc, mv=self.mv)
             for f in formals
         ]
 
