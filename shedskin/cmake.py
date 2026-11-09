@@ -1005,7 +1005,9 @@ class CMakeBuilder:
         This needs the real ccache.exe, not a shim (as installed by e.g.
         chocolatey or scoop), as ccache must see itself invoked as cl.exe.
         """
-        ccache_dir = self.build_dir / "ccache"
+        # absolute, as cmake also uses CMAKE_VS_GLOBALS for its compiler
+        # identification projects, which are built in other directories
+        ccache_dir = (self.build_dir / "ccache").resolve()
         ccache_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ccache, ccache_dir / "cl.exe")
         vs_globals = [
