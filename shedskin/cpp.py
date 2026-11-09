@@ -5672,8 +5672,43 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Attribute(
         self, node: ast.Attribute, func: Optional["python.Function"] = None
-    ) -> None:  # XXX merge with visitGetattr
+    ) -> None:
         """Generate a reference to an attribute variable"""
+        cast = self.attr_downcast(node)
+        if cast:
+            self.append("((%s)(" % cast)
+        self.impl_visit_attribute(node, func)
+        if cast:
+            self.append("))")
+
+    def attr_downcast(self, node: ast.Attribute) -> Optional[str]:
+        """Return the cast needed when an instance variable is declared as a
+        class instance, while here it holds a subclass instance: the variable
+        is declared in the topmost class that has it (1030-C2)"""
+        if not isinstance(node.ctx, ast.Load) or node not in self.mergeinh:
+            return None
+        nodeclasses = typestr.types_classes(self.mergeinh[node])
+        if len(nodeclasses) != 1:
+            return None
+        (nodecl,) = nodeclasses
+        if nodecl.mv.module.builtin:
+            return None
+        decl_types = infer.member_types(self.gx, node)
+        if not decl_types:
+            return None
+        if any(not isinstance(t[0], python.Class) for t in decl_types):
+            return None
+        lcp = typestr.lowest_common_parents(typestr.types_classes(decl_types))
+        if len(lcp) != 1 or lcp[0] is nodecl:
+            return None
+        if lcp[0] not in nodecl.ancestors():
+            return None
+        return typestr.typestr(self.gx, self.mergeinh[node], mv=self.mv).strip()
+
+    def impl_visit_attribute(
+        self, node: ast.Attribute, func: Optional["python.Function"] = None
+    ) -> None:  # XXX merge with visitGetattr
+        """Generate a reference to an attribute variable, without casting it"""
         if isinstance(node.ctx, ast.Load):
             cl, module = python.lookup_class_module(
                 node.value, infer.inode(self.gx, node).mv, func, node.attr

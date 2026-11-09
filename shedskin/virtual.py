@@ -149,7 +149,14 @@ def analyze_virtuals(gx: "config.GlobalInfo") -> None:
                 continue  # XXX
 
             # --- determine abstract receiver class
-            classes = typestr.polymorphic_t(gx, gx.merged_inh[objexpr])
+            receiver_types = gx.merged_inh[objexpr]
+            if isinstance(objexpr, ast.Attribute):
+                # the call goes through the C++ member, whose declared type
+                # can be wider than obj.attr here (1029-B1)
+                decl_types = infer.member_types(gx, objexpr)
+                if decl_types:
+                    receiver_types = receiver_types | decl_types
+            classes = typestr.polymorphic_t(gx, receiver_types)
             classes = {cl for cl in classes if isinstance(cl, python.Class)}
             if not classes:
                 continue

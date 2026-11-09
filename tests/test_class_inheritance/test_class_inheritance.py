@@ -411,6 +411,104 @@ def test_class_call():
     assert CallF.f(f) + 'g' == 'fg'
 
 
+class WideN:  # 1029-B1: receiver widened only through the member type
+    def f(self):
+        return 1
+
+
+class WideM(WideN):
+    def f(self):
+        return 2
+
+
+class WideH:
+    def __init__(self, x):
+        self.x = x
+
+    def go(self):
+        return self.x.f()
+
+
+class WideH2(WideH):
+    pass
+
+
+class WideE:
+    pass
+
+
+class WideP(WideE):
+    def g(self):
+        return 'p'
+
+
+class WideQ(WideP):
+    def g(self):
+        return 'q'
+
+
+class WideG:
+    def __init__(self):
+        self.y = WideP()
+
+    def go(self):
+        return self.y.g()
+
+
+class WideG2(WideG):
+    def __init__(self):
+        self.y = WideQ()
+
+
+def test_virtual_member_type():
+    assert WideH(WideM()).go() == 2
+    h2 = WideH2(WideN())
+    assert h2.x.f() == 1
+
+    WideG()
+    assert WideG2().go() == 'q'
+
+
+class PetAnimal:  # 1030-C2: member declared with the base's type
+    def noise(self):
+        return '...'
+
+
+class PetDog(PetAnimal):
+    def __init__(self):
+        self.vol = 11
+
+    def noise(self):
+        return 'woof'
+
+    @property
+    def loud(self):
+        return self.vol * 2
+
+
+class PetOwner:
+    def __init__(self):
+        self.pet = PetAnimal()
+
+
+class PetDogOwner(PetOwner):
+    def __init__(self):
+        self.pet = PetDog()
+
+    def louder(self):
+        self.pet.vol += 1
+        return self.pet.vol
+
+
+def test_downcast_member():
+    o = PetDogOwner()
+    assert o.pet.vol == 11
+    o.pet.vol = 2
+    assert o.louder() == 3
+    assert o.pet.loud == 6
+    assert [w.pet.noise() for w in [PetOwner(), PetDogOwner()]] == ['...', 'woof']
+
+
 def test_all():
     test_inheritance1()
     test_inheritance2()
@@ -423,6 +521,8 @@ def test_all():
     test_virtual_cpp_keyword_formals()
     test_virtual_return_new_container()
     test_downcast_return()
+    test_virtual_member_type()
+    test_downcast_member()
     test_builtin_attribute_not_shadowed()
     test_class_call()
 
