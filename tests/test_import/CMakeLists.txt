@@ -10,6 +10,8 @@ add_shedskin_product(
         bar
         boo/__init__
         boo/quotes
+        cyc_entry
+        cyc_holder
     	pak/__init__
     	pak/hier
     	pak/sub/__init__

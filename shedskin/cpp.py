@@ -321,7 +321,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         lines = []
         # sorted: prop_includes is a set (see include_files)
         modules = sorted(typedefs, key=lambda module: module.include_path())
-        for _module in modules:
+        # the typedefs may also refer back to classes of this module (cyclic
+        # module dependency), which are only declared further down
+        fwd_modules = list(modules)
+        if any(typedefs.values()):
+            fwd_modules.append(self.module)
+        for _module in fwd_modules:
             for name in _module.name_list:
                 lines.append("namespace __%s__ {\n" % name)
             for cl in _module.mv.classes.values():

@@ -19,6 +19,9 @@ import os.path as op # aliased dotted module ('import x.y as z')
 import util_funcs
 from util_funcs import shout
 
+import cyc_entry
+import cyc_holder
+
 from alias_a import Item as AItem, f as fa # same names in both modules
 from alias_b import Item as BItem, f as fb
 
@@ -89,6 +92,12 @@ def test_imported_function_as_value():
     assert apply_spam(util_funcs.spam_name, util_funcs.make_spam()) == 'hello!'
 
 
+def test_cyclic_lambda_typedef():
+    '''lambda typedef from included module refers back to this module'''
+
+    assert cyc_entry.describe(cyc_holder.Holder()) == 1
+
+
 class Item: # also same name as the aliased imports
     def val(self):
         return 'local'
@@ -120,6 +129,7 @@ def test_all():
     test_import_from_nested()
     test_import_submodule_as()
     test_imported_function_as_value()
+    test_cyclic_lambda_typedef()
     test_import_from_as_same_name()
 
 
