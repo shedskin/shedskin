@@ -85,7 +85,7 @@ jobs:
       if: always() && runner.os == 'Windows'
       shell: python
       run: |
-        import glob, os, subprocess
+        import collections, glob, os, subprocess
         d = os.path.join(os.environ["RUNNER_TEMP"], "ccache-debug")
         texts = sorted(glob.glob(os.path.join(d, "**", "builtin.obj.*.ccache-input-text"), recursive=True))
         print(len(texts), "builtin.obj input-text files")
@@ -96,16 +96,23 @@ jobs:
                 return ["(no " + os.path.basename(path) + ")"]
             with open(path, errors="replace") as f:
                 return [l.rstrip()[:400] for l in f if any(w in l for w in words)]
-        for t in texts[:30]:
-            print(os.path.relpath(t, d), lines_of(log_of(t), ["Result:"])[:2])
-        exes = [t for t in texts if "-exe.dir" in t]
-        if len(exes) >= 2:
-            a, b = exes[0], exes[1]
-            for t in (a, b):
+        def kind(t):
+            return "ext" if "-ext.dir" in t else "exe"
+        counts = collections.Counter()
+        for t in texts:
+            results = [l.split("Result: ")[1] for l in lines_of(log_of(t), ["Result: "])]
+            hit = any("hit" in r for r in results)
+            counts[kind(t), "hit" if hit else "miss"] += 1
+        print("builtin.cpp results:", dict(sorted(counts.items())))
+        for k in ("ext", "exe"):
+            pair = [t for t in texts if kind(t) == k][:2]
+            if len(pair) < 2:
+                continue
+            for t in pair:
                 print("=== log of", os.path.relpath(t, d))
-                for l in lines_of(log_of(t), ["Command line", "Working directory", "Hashing", "Executing", "Object file", "Source file", "Result", "Config:", "hash_dir", "base_dir"])[:40]:
+                for l in lines_of(log_of(t), ["Command line", "Working directory", "Hashing", "Object file", "Source file", "Result"])[:30]:
                     print("  ", l)
-            out = subprocess.run(["git", "diff", "--no-index", "--no-color", "-U2", a, b], capture_output=True, text=True, errors="replace").stdout.splitlines()
-            print("=== diff of the input-text files:", len(out), "lines")
-            for l in out[:250]:
+            out = subprocess.run(["git", "diff", "--no-index", "--no-color", "-U2"] + pair, capture_output=True, text=True, errors="replace").stdout.splitlines()
+            print("=== diff of two", k, "input-text files:", len(out), "lines")
+            for l in out[:300]:
                 print(l[:300])
