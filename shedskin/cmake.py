@@ -976,7 +976,10 @@ class CMakeBuilder:
             cache_dir = config.get_user_cache_dir()
             cfg_options.append(f"-DLOCAL_DEPS_DIR={cache_dir}")
 
-        if not self.options.nowarnings:
+        # pass explicitly either way: ENABLE_WARNINGS defaults to ON and is cached
+        if self.options.nowarnings:
+            cfg_options.append("-DENABLE_WARNINGS=OFF")
+        else:
             cfg_options.append("-DENABLE_WARNINGS=ON")
 
         if not cfg_options:

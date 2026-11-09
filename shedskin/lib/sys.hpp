@@ -51,7 +51,7 @@ public:
     str *releaselevel;
 
     __version_info(__ss_int major, __ss_int minor, __ss_int micro, str *releaselevel, __ss_int serial);
-    str *__repr__();
+    str *__repr__() override;
     __SS_STRUCTSEQ_COPY(__version_info)
 };
 
@@ -97,7 +97,7 @@ public:
     __ss_int bits_per_digit, sizeof_digit, default_max_str_digits, str_digits_check_threshold;
 
     __int_info();
-    str *__repr__();
+    str *__repr__() override;
     __SS_STRUCTSEQ_COPY(__int_info)
 };
 
