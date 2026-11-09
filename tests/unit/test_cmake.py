@@ -177,3 +177,70 @@ def test_build_type_defaults_to_release(cmd, monkeypatch):
     demo_path = Path(__file__).parent / "fixtures" / "demo_program1.py"
     Shedskin.commandline([cmd, str(demo_path)])
     assert seen == ["Release"]
+
+
+def _builder(tmp_path, generator=None):
+    """A CMakeBuilder for a project in tmp_path, without a GlobalInfo."""
+    builder = object.__new__(cmake.CMakeBuilder)
+    builder.options = argparse.Namespace(generator=generator)
+    builder.build_dir = tmp_path / "build"
+    return builder
+
+
+@pytest.mark.parametrize(
+    "system, generator, env, expected",
+    [
+        ("Linux", None, None, False),
+        ("Darwin", None, None, False),
+        ("Windows", None, None, True),  # the cmake default on windows
+        ("Windows", "Visual Studio 17 2022", None, True),
+        ("Windows", "Ninja", None, False),
+        ("Windows", None, "Ninja", False),
+        ("Windows", None, "Visual Studio 18 2026", True),
+    ],
+)
+def test_uses_visual_studio_generator(tmp_path, monkeypatch, system, generator, env, expected):
+    """--ccache must know when cmake ignores CMAKE_CXX_COMPILER_LAUNCHER."""
+    monkeypatch.setattr(cmake.platform, "system", lambda: system)
+    if env is None:
+        monkeypatch.delenv("CMAKE_GENERATOR", raising=False)
+    else:
+        monkeypatch.setenv("CMAKE_GENERATOR", env)
+    assert _builder(tmp_path, generator).uses_visual_studio_generator() is expected
+
+
+def test_ccache_vs_globals(tmp_path):
+    """With a visual studio generator, --ccache has msbuild run a copy of
+    ccache.exe named cl.exe, one source file at a time."""
+    ccache = tmp_path / "ccache.exe"
+    ccache.write_bytes(b"not really ccache")
+    builder = _builder(tmp_path)
+    option = builder.ccache_vs_globals(str(ccache))
+    cl = builder.build_dir / "ccache" / "cl.exe"
+    assert cl.read_bytes() == b"not really ccache"
+    assert option.startswith('-DCMAKE_VS_GLOBALS="') and option.endswith('"')
+    vs_globals = option[len('-DCMAKE_VS_GLOBALS="'):-1].split(";")
+    assert vs_globals == [
+        "CLToolExe=cl.exe",
+        f"CLToolPath={cl.parent}",
+        "UseMultiToolTask=true",
+        "TrackFileAccess=false",
+    ]
+    # copying again (an existing build dir) must work too
+    builder.ccache_vs_globals(str(ccache))
+
+
+def test_ccache_vs_globals_absolute_path(tmp_path, monkeypatch):
+    """CLToolPath must be absolute, even for a relative build dir ('-B
+    build'), as cmake also builds its compiler identification projects
+    with CMAKE_VS_GLOBALS, in other directories."""
+    ccache = tmp_path / "ccache.exe"
+    ccache.write_bytes(b"not really ccache")
+    monkeypatch.chdir(tmp_path)
+    builder = _builder(tmp_path)
+    builder.build_dir = Path("build")
+    option = builder.ccache_vs_globals(str(ccache))
+    tool_path = Path(option.split("CLToolPath=")[1].split(";")[0])
+    assert tool_path.is_absolute()
+    assert tool_path == tmp_path / "build" / "ccache"
+    assert (tool_path / "cl.exe").read_bytes() == b"not really ccache"
