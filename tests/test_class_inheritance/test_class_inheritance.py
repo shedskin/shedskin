@@ -509,6 +509,39 @@ def test_downcast_member():
     assert [w.pet.noise() for w in [PetOwner(), PetDogOwner()]] == ['...', 'woof']
 
 
+class InitExpr:  # 1029-C4: inherited __init__ with narrower argument types
+    pass
+
+
+class InitNum(InitExpr):
+    def __init__(self, v):
+        self.v = v
+
+
+class InitAdd(InitExpr):
+    def __init__(self, l, r, op='+'):
+        self.l = l
+        self.r = r
+        self.op = op
+
+
+class InitMul(InitAdd):
+    pass
+
+
+class InitMul2(InitMul):
+    pass
+
+
+def test_inherited_init_types():
+    e = InitAdd(InitMul(InitNum(2), InitNum(3), '*'), InitNum(1))
+    assert e.r.v == 1
+    assert e.op == '+'
+    m = InitMul2(InitNum(4), InitNum(5), op='-')
+    assert m.op == '-'
+    assert m.r.v == 5
+
+
 def test_all():
     test_inheritance1()
     test_inheritance2()
@@ -525,6 +558,7 @@ def test_all():
     test_downcast_member()
     test_builtin_attribute_not_shadowed()
     test_class_call()
+    test_inherited_init_types()
 
 
 if __name__ == '__main__':
