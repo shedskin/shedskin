@@ -181,3 +181,8 @@ add_shedskin_product(
     NAME properties
     MAIN_MODULE properties.py
 )
+add_shedskin_product(
+    BUILD_EXTENSION
+    NAME inherited
+    MAIN_MODULE inherited.py
+)
