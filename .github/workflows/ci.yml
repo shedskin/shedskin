@@ -93,26 +93,32 @@ jobs:
             return t[: -len("input-text")] + "log"
         def lines_of(path, words):
             if not os.path.exists(path):
-                return ["(no " + os.path.basename(path) + ")"]
+                return []
             with open(path, errors="replace") as f:
                 return [l.rstrip()[:400] for l in f if any(w in l for w in words)]
         def kind(t):
             return "ext" if "-ext.dir" in t else "exe"
+        def step(t):
+            return "examples" if "examples" in t else "tests"
+        # compiles that were still running (no log yet) when the job was cancelled
+        done = [t for t in texts if os.path.exists(log_of(t))]
+        print(len(done), "of them finished")
         counts = collections.Counter()
-        for t in texts:
-            results = [l.split("Result: ")[1] for l in lines_of(log_of(t), ["Result: "])]
+        for t in done:
+            results = [l.split("Result: ", 1)[1] for l in lines_of(log_of(t), ["Result: "])]
             hit = any("hit" in r for r in results)
-            counts[kind(t), "hit" if hit else "miss"] += 1
+            counts[step(t), kind(t), "hit" if hit else "miss"] += 1
         print("builtin.cpp results:", dict(sorted(counts.items())))
-        for k in ("ext", "exe"):
-            pair = [t for t in texts if kind(t) == k][:2]
-            if len(pair) < 2:
-                continue
-            for t in pair:
-                print("=== log of", os.path.relpath(t, d))
-                for l in lines_of(log_of(t), ["Command line", "Working directory", "Hashing", "Object file", "Source file", "Result"])[:30]:
-                    print("  ", l)
-            out = subprocess.run(["git", "diff", "--no-index", "--no-color", "-U2"] + pair, capture_output=True, text=True, errors="replace").stdout.splitlines()
-            print("=== diff of two", k, "input-text files:", len(out), "lines")
-            for l in out[:300]:
-                print(l[:300])
+        for s in ("tests", "examples"):
+            for k in ("ext", "exe"):
+                pair = [t for t in done if step(t) == s and kind(t) == k][:2]
+                if len(pair) < 2:
+                    continue
+                for t in pair:
+                    print("=== log of", os.path.relpath(t, d))
+                    for l in lines_of(log_of(t), ["Command line", "Working directory", "Hashing", "Object file", "Source file", "Result"])[:30]:
+                        print("  ", l)
+                out = subprocess.run(["git", "diff", "--no-index", "--no-color", "-U2"] + pair, capture_output=True, text=True, errors="replace").stdout.splitlines()
+                print("=== diff of two", s, k, "input-text files:", len(out), "lines")
+                for l in out[:300]:
+                    print(l[:300])
