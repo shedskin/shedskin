@@ -704,10 +704,14 @@ str *strftime(str *format, struct_time* tuple) {
     do {
         size *= 2;
         buf.resize(size);
+#if defined(__GNUC__) || defined(__clang__) /* (MSVC: C4068) */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
         n = ::strftime(buf.data(), size, format->c_str(), &time_tuple);
+#if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic pop
+#endif
     } while(n == 0 && size < 256 * fmtlen);
     return new str(buf.data(), n);
 }
