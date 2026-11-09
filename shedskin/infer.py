@@ -1915,6 +1915,34 @@ def get_classes(gx: "config.GlobalInfo", var: "python.Variable") -> set["python.
     }
 
 
+def member_types(gx: "config.GlobalInfo", node: ast.Attribute) -> Optional[Types]:
+    """Get the types of the C++ member that 'obj.attr' refers to: an instance
+    variable is declared in the topmost class that has it, so its type can be
+    wider than the types of 'obj.attr' at a given use (1029-B1, 1030-C2)"""
+    if node.value not in gx.merged_inh:
+        return None
+    types: Types = set()
+    found = False
+    for t in gx.merged_inh[node.value]:
+        cl = t[0]
+        if not isinstance(cl, python.Class) or cl.mv.module.builtin:
+            continue
+        for decl_cl in cl.ancestors(True):
+            var = decl_cl.vars.get(node.attr)
+            if (
+                var
+                and not var.invisible
+                and not any(node.attr in a.vars for a in decl_cl.ancestors())
+            ):
+                if var in gx.merged_inh:
+                    types.update(gx.merged_inh[var])
+                    found = True
+                break
+    if not found:
+        return None
+    return types
+
+
 def nested_classes(
     gx: "config.GlobalInfo", var: "python.Variable"
 ) -> set["python.Class"]:
