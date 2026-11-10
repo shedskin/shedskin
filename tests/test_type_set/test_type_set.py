@@ -357,6 +357,12 @@ def test_symmetric_difference():
     assert x.symmetric_difference(x) == set()
     assert sorted(x) == [1, 2, 3, 5]
 
+    # result is a set, whatever the argument
+    y = set()
+    for i in range(3):
+        y = y.symmetric_difference([i, i + 1])
+    assert sorted(y) == [0, 3]
+
     assert sorted({'a', 'c'}.symmetric_difference('abb')) == ['b', 'c']
 
     f = frozenset([1, 2])

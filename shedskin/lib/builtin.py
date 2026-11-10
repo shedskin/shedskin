@@ -971,7 +971,7 @@ class pyset(pyiter):
         return self
     def symmetric_difference(self, b):
         return self
-        return b
+        return set(b)  # any iterable
 
     def __sub__(self, b):
         return self
