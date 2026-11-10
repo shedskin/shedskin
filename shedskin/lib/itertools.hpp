@@ -328,6 +328,10 @@ template<class T> T chainiter<T>::__next__() {
 template<class T, class ... Args> inline chainiter<T> *chain(int iterable_count, pyiter<T> *iterable, Args ... args) {
     chainiter<T> *iter = new chainiter<T>(iterable);
 
+    /* the casts below cannot convert elements, so refuse e.g. chain([1], [0.5]) */
+    static_assert(((!std::is_arithmetic_v<T> || std::is_same_v<T, typename std::remove_pointer_t<Args>::for_in_unit>) && ...),
+        "itertools.chain: mixing iterables of different numeric types (such as int and float) is not supported");
+
     (iter->push_iter(reinterpret_cast<pyiter<T> *>(args)), ...);
 
     return iter;

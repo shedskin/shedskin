@@ -445,6 +445,36 @@ def test_deque_maxlen_on_init():
     assert e.maxlen == 3
 
 
+def test_deque_init_convert():
+    # regression test: an initial iterable with a narrower element type
+    # (ints, for a deque of floats) was silently dropped
+    d = deque([1, 2])
+    d.append(0.5)
+    assert sum(d) == 3.5
+    assert len(d) == 3
+
+    e = deque((1, 2), 5)
+    e.append(0.5)
+    assert sum(e) == 3.5
+    assert e.maxlen == 5
+
+    f = deque(range(3), maxlen=2)
+    f.appendleft(0.5)
+    assert sum(f) == 1.5
+
+    g = deque([1, 2])
+    h = deque(g)
+    h.append(0.5)
+    assert sum(h) == 3.5
+    assert sum(g) == 3
+
+    i = deque([0.5])
+    i.extend([1, 2])
+    i.extendleft(range(2))
+    i += [3]
+    assert sum(i) == 7.5
+
+
 def test_deque_maxlen_none():
     # regression test: an explicit maxlen=None was passed as 0, so the
     # deque silently dropped everything (1023-B5)
@@ -1218,6 +1248,7 @@ def test_all():
     test_deque4()
     test_deque_maxlen()
     test_deque_maxlen_on_init()
+    test_deque_init_convert()
     test_deque_maxlen_none()
     test_deque_extend_self()
     test_deque_maxlen_negative()
