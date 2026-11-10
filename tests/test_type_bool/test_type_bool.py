@@ -110,6 +110,88 @@ def test_attributes():
     assert f.as_integer_ratio() == (0, 1)
 
 
+def test_arithmetic():
+    # a bool acts as an int in arithmetic
+    t, f = True, False
+    i, x = 2, 2.0
+
+    # true division gives a float
+    assert True / 2 == 0.5
+    assert str(t / i) == '0.5'
+    assert str(t / t) == '1.0'
+    assert str(3 / t) == '3.0'
+    assert str(f / i) == '0.0'
+    assert str(t / x) == '0.5'
+    assert str(x / t) == '2.0'
+
+    # floor division and modulo stay int
+    assert str(True // 2) == '0'
+    assert str(t // i) == '0'
+    assert str(t // t) == '1'
+    assert str(7 // t) == '7'
+    assert str(t // x) == '0.0'
+    assert str(x // t) == '2.0'
+    assert str(t % i) == '1'
+    assert str(5 % t) == '0'
+    assert str(t % x) == '1.0'
+    assert divmod(t, i) == (0, 1)
+    assert divmod(5, t) == (5, 0)
+    assert divmod(t, t) == (1, 0)
+    assert str(divmod(t, x)) == '(0.0, 1.0)'
+
+    # power
+    assert str(2 ** True) == '2'
+    assert str(i ** t) == '2'
+    assert str(i ** f) == '1'
+    assert str(True ** 2) == '1'
+    assert str(t ** t) == '1'
+    assert str(f ** f) == '1'
+    assert str(x ** t) == '2.0'
+    assert str(t ** x) == '1.0'
+    assert str(pow(t, i)) == '1'
+    assert str(pow(i, t)) == '2'
+    assert pow(3, t, 5) == 3
+    assert pow(t, 3, 5) == 1
+
+    # other operators
+    assert str(t + t) == '2'
+    assert str(t * 3) == '3'
+    assert str(t - f) == '1'
+    assert str(i - t) == '1'
+    assert str(t + x) == '3.0'
+    assert str(-t) == '-1'
+    assert t << 40 == 1099511627776
+    assert 8 >> t == 4
+    assert str(t & f) == 'False'
+    assert str(t | f) == 'True'
+    assert str(t & 3) == '1'
+
+    # augmented assignment
+    a = 7
+    a //= t
+    assert str(a) == '7'
+    a **= t
+    assert str(a) == '7'
+    b = 7.0
+    b /= t
+    assert str(b) == '7.0'
+
+    # division by False
+    for k in range(4):
+        try:
+            if k == 0:
+                print(t / f)
+            elif k == 1:
+                print(t // f)
+            elif k == 2:
+                print(t % f)
+            else:
+                print(divmod(t, f))
+            assert False
+        except ZeroDivisionError:
+            pass
+
+
 def test_factory():
     assert bool() == False
     assert not bool()
@@ -131,6 +213,7 @@ def test_factory():
 def test_all():
     test_bool()
     test_attributes()
+    test_arithmetic()
     test_factory()
     test_empty()
     test_custom()

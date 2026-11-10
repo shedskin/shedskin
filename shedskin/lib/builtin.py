@@ -74,7 +74,7 @@ class int_:
         return 1
 
     def __pow__(self, b):
-        return b
+        return b.__with_int__()
 
     def __copy__(self):
         return self
@@ -119,7 +119,7 @@ class bool_:
     def __mul__(self, b):
         return b.__with_int__()
     def __truediv__(self, b):
-        return b.__with_int__()
+        return b.__div_int__()
     def __floordiv__(self, b):
         return b.__with_int__()
     def __mod__(self, b):
@@ -150,7 +150,7 @@ class bool_:
         return 1
 
     def __pow__(self, b):
-        return b
+        return b.__with_int__()
 
     def __copy__(self):
         return self
@@ -878,7 +878,7 @@ class dict(pyiter):
 
     def setdefault(self, u, v=None):
         self.__setunit__(u, v)
-        return v
+        return self.value  # existing value, or the default
 
     def has_key(self, u):
         self.__key__(u)
