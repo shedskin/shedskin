@@ -2612,7 +2612,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Name)
-            and node.func.id in ("list", "tuple", "dict", "set")
+            and node.func.id in ("list", "tuple", "dict", "set", "frozenset")
+            # an abstract target (e.g. a list or a set) says nothing about the
+            # type to construct, and needs the cast below
+            and not typestr.typestr(self.gx, argtypes, mv=self.mv).startswith(
+                ("pyiter", "pyseq")
+            )
         ):
             self.visit_Call(node, func, argtypes=argtypes)
         elif ast_utils.is_none(node):
@@ -3062,6 +3067,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(")")
         self.append(")")
 
+    def visit_arith(
+        self, node: ast.AST, func: Optional["python.Function"] = None
+    ) -> None:
+        """Visit an operand of an arithmetic operator: a bool acts as an int
+        here (True / 2 == 0.5). __ss_bool only converts implicitly to a C++
+        'bool', which then selects the wrong overload or built-in operator
+        (e.g. C++ integer division, or __power(__ss_int, __ss_float))"""
+        if self.mergeinh[node] == {(python.def_class(self.gx, "bool_"), 0)}:
+            self.visitm("__ss_int(", node, ")", func)
+        else:
+            self.visit(node, func)
+
     def power(
         self,
         left: ast.AST,
@@ -3082,13 +3099,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     warning=True,
                     mv=self.mv,
                 )
+        self.append("__power(")
+        self.visit_arith(left, func)
+        self.append(", ")
+        self.visit_arith(right, func)
         if mod:
-            self.visitm("__power(", left, ", ", right, ", ", mod, ")", func)
+            self.append(", ")
+            self.visit_arith(mod, func)
         elif default := self.pow_mod_default(left):
             # a ** b or pow(a, b) for a user class with __pow__(self, b, mod=..)
-            self.visitm("__power(", left, ", ", right, ", ", default, ")", func)
-        else:
-            self.visitm("__power(", left, ", ", right, ")", func)
+            self.visitm(", ", default, func)
+        self.append(")")
 
     def pow_mod_default(self, left: ast.AST) -> Union[str, ast.AST, None]:
         """Default modulo of a user class __pow__(self, b, mod=..), to be
@@ -3169,10 +3190,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         inttype = {(python.def_class(self.gx, "int_"), 0)}  # XXX new type?
         floattype = {(python.def_class(self.gx, "float_"), 0)}  # XXX new type?
+        booltype = {(python.def_class(self.gx, "bool_"), 0)}
 
         # --- inline mod/div
         # XXX C++ knows %, /, so we can overload?
-        if floattype.intersection(ltypes) or inttype.intersection(ltypes):
+        if (
+            floattype.intersection(ltypes)
+            or inttype.intersection(ltypes)
+            or ltypes == booltype
+        ):
             if inline in ["%", "/"]:
                 if python.def_class(self.gx, "complex") not in (
                     t[0] for t in rtypes
@@ -3192,18 +3218,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         self.append(")")
                         return
                     self.append({"%": "__mods", "/": "__divs"}[inline] + "(")
-                    self.visit(left, func)
+                    self.visit_arith(left, func)
                     self.append(", ")
-                    self.visit(right, func)
+                    self.visit_arith(right, func)
                     self.append(")")
                     return
 
         # --- inline floordiv
         if (inline and ul and ur) and inline in ["//"]:
             self.append({"//": "__floordiv"}[inline] + "(")
-            self.visit(left, func)
+            self.visit_arith(left, func)
             self.append(",")
-            self.visit(right, func)
+            self.visit_arith(right, func)
             self.append(")")
             return
 
@@ -3230,9 +3256,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             or ast_utils.is_none(right)
         ):  # XXX not middle, cleanup?
             self.append("(")
-            self.visit(left, func)
+            self.visit_arith(left, func)
             self.append(inline)
-            self.visit(right, func)
+            self.visit_arith(right, func)
             self.append(")")
             return
 
@@ -4009,6 +4035,22 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         pow_args.append(pow_kwargs[name])
                 third = pow_args[2] if len(pow_args) == 3 else None
                 self.power(pow_args[0], pow_args[1], third, func)
+                return
+            elif (
+                ident == "divmod"
+                and direct_call.mv.module.ident == "builtin"
+                and len(node.args) == 2
+                and not node.keywords
+                and any(
+                    self.mergeinh[arg] == {(python.def_class(self.gx, "bool_"), 0)}
+                    for arg in node.args
+                )
+            ):
+                self.append("divmod(")
+                self.visit_arith(node.args[0], func)
+                self.append(", ")
+                self.visit_arith(node.args[1], func)
+                self.append(")")
                 return
             elif ident == "hash":
                 self.append("___hash(")

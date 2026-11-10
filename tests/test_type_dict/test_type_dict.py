@@ -29,6 +29,27 @@ def test_setdefault():
     a.setdefault(1,[]).append(1.0)
     assert a == {1: [1.0]}
 
+    # an existing key gives its value, not the default
+    b = {'a': 'p'}
+    assert b.setdefault('a') == 'p'
+    assert b.setdefault('a', 'q') == 'p'
+    assert b.setdefault('b', 'r') == 'r'
+    assert b.setdefault('b') == 'r'
+    assert b.setdefault('c') is None
+    assert sorted(b) == ['a', 'b', 'c']
+    assert b['c'] is None
+
+    c = {1: 2}
+    assert c.setdefault(1, 5) == 2
+    assert c.setdefault(3, 6) == 6
+    assert c.setdefault(3, 7) == 6
+    assert c.setdefault(1, 9) + 1 == 3
+    assert c == {1: 2, 3: 6}
+
+    d = {1: [1.0]}
+    e = d.setdefault(1)
+    assert e == [1.0]
+
 def test_misc():
     a = {}
     a[1.0] = 1

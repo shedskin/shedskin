@@ -131,6 +131,29 @@ def test_frozenset():
     assert list(sorted(a.union(b))) == [1, 2, 3, 4, 5]
     assert list(sorted(a.difference(b))) == [1, 2, 5]
 
+def test_frozenset_empty():
+    # frozenset() takes its element type from what it is merged with
+    a = frozenset()
+    for i in range(3):
+        a = frozenset([i]) | a
+    assert sorted(a) == [0, 1, 2]
+
+    b = frozenset()
+    assert len(b) == 0
+    if len(a) == 3:
+        b = frozenset(['x', 'y'])
+    assert sorted(b) == ['x', 'y']
+
+    c = frozenset()
+    for i in range(3):
+        c = c.union([i])
+    assert sorted(c) == [0, 1, 2]
+
+    d = frozenset()
+    for ch in 'abc':
+        d |= frozenset([ch])
+    assert sorted(d) == ['a', 'b', 'c']
+
 def test_frozenset_hash():
     z, y = [(1, 2), (3,), (4, 5, 6)], [(3,), (4, 5, 6), (1, 2)]
     v, w = frozenset(z), frozenset(y)
@@ -507,6 +530,7 @@ def test_all():
     test_frozen_propagation()
     test_set_cmp()
     test_frozenset()
+    test_frozenset_empty()
     test_frozenset_hash()
     test_frozenset_cmp()
     test_set_proper_subset_superset()
