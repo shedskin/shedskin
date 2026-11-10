@@ -2580,10 +2580,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("}")
 
     def visit_IfExp(
-        self, node: ast.IfExp, func: Optional["python.Function"] = None
+        self,
+        node: ast.IfExp,
+        func: Optional["python.Function"] = None,
+        argtypes: Optional[Types] = None,
     ) -> None:
         """Visit an if expression"""
-        types = self.mergeinh[node]
+        types = argtypes or self.mergeinh[node]
         self.append("((")
         self.bool_test(node.test, func)
         self.append(")?(")
@@ -2599,7 +2602,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         func: Optional["python.Function"],
         check_temp: bool = True,
     ) -> None:
-        """Convert/cast a node to the type it is assigned to"""
+        """Generate a node as the type it is assigned to, passed as, returned
+        as, compared with, and so on ('argtypes')
+
+        this is the one place where it is decided how, following
+        typestr.conversion: a node that creates a new object (a literal, say)
+        is built as that type directly. anything else is cast if that is
+        possible, and gives a warning otherwise"""
         actualtypes = self.mergeinh[node]
         if check_temp and node in self.mv.tempcount:  # XXX
             self.append(self.mv.tempcount[node])
@@ -2609,29 +2618,31 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit_Tuple(node, func, argtypes=argtypes)
         elif isinstance(node, ast.List):
             self.visit_List(node, func, argtypes=argtypes)
+        elif isinstance(node, ast.Set):
+            self.visit_Set(node, func, argtypes=argtypes)
         elif (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Name)
             and node.func.id in ("list", "tuple", "dict", "set")
         ):
             self.visit_Call(node, func, argtypes=argtypes)
+        elif isinstance(node, ast.IfExp):
+            self.visit_IfExp(node, func, argtypes=argtypes)
         elif ast_utils.is_none(node):
             self.visit(node, func)
-        else:  # XXX messy
+        else:
             cast = ""
-            if (
-                actualtypes
-                and argtypes
-                and typestr.typestr(self.gx, actualtypes, mv=self.mv)
-                != typestr.typestr(self.gx, argtypes, mv=self.mv)
-                and typestr.typestr(self.gx, actualtypes, mv=self.mv)
-                not in ("str *", "bytes *")
-            ):  # XXX
-                if typestr.incompatible_assignment_rec(self.gx, actualtypes, argtypes):
-                    error.error(
-                        "incompatible types", self.gx, node, warning=True, mv=self.mv
-                    )
+            conv = typestr.CONV_SAME
+            if actualtypes and argtypes:
+                conv = typestr.conversion(self.gx, actualtypes, argtypes, self.mv)
+            if conv != typestr.CONV_SAME and typestr.typestr(
+                self.gx, actualtypes, mv=self.mv
+            ) not in ("str *", "bytes *"):  # XXX
+                if conv == typestr.CONV_BUILD:
+                    self.conv_warning(node, actualtypes, argtypes, "cannot be used as")
                 else:
+                    if conv == typestr.CONV_NARROW:
+                        self.conv_warning(node, actualtypes, argtypes, "is truncated to")
                     cast = (
                         "("
                         + typestr.typestr(self.gx, argtypes, mv=self.mv).strip()
@@ -2644,6 +2655,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(node, func)
             if cast:
                 self.append("))")
+
+    def conv_warning(
+        self, node: ast.AST, actualtypes: Types, argtypes: Types, how: str
+    ) -> None:
+        """Warn about a value that cannot (safely) be used as another type"""
+        error.error(
+            "incompatible types: '%s' %s '%s'"
+            % (
+                typestr.describe(self.gx, actualtypes, self.mv),
+                how,
+                typestr.describe(self.gx, argtypes, self.mv),
+            ),
+            self.gx,
+            node,
+            warning=True,
+            mv=self.mv,
+        )
 
     def visit_Break(
         self, node: ast.Break, func: Optional["python.Function"] = None
@@ -3049,16 +3077,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Generate a bitwise operation"""
         ltypes = self.mergeinh[node.left]
         ul = typestr.unboxable(self.gx, ltypes)
+        ltarget, rtarget = self.build_targets(node.left, node.right)
         self.append("(")
         self.append("(")
-        self.visit(node.left, func)
+        self.visit_operand(node.left, ltarget, func)
         self.append(")")
         if ul:
             self.append(inline)
         else:
             self.append("->" + msg)
         self.append("(")
-        self.visit(node.right, func)
+        self.visit_operand(node.right, rtarget, func)
         self.append(")")
         self.append(")")
 
@@ -3255,7 +3284,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and len(right.elts) == 1
         ):
             self.append("__add_list_elt(")
-            self.visit(left, func)
+            self.visit_operand(left, self.build_targets(left, right)[0], func)
             self.append(", ")
             self.visit(right.elts[0], func)
             self.append(")")
@@ -3272,18 +3301,59 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             typestr.typestr(self.gx, argtypes, mv=self.mv).strip() != "pyobj *"
         )
 
-        self.append("(")
+        # for other operators, a new container is built as the type of the
+        # other operand, if needed (e.g. {1.0} - {1})
+        ltarget: Optional[Types]
+        rtarget: Optional[Types]
         if convert:
-            self.impl_visit_conv(left, argtypes, func)
+            ltarget = rtarget = argtypes
         else:
-            self.visit(left, func)
+            ltarget, rtarget = self.build_targets(left, right)
+
+        self.append("(")
+        self.visit_operand(left, ltarget, func)
         self.append(")")
         self.append(self.connector(left, func) + middle + "(")
-        if convert:
-            self.impl_visit_conv(right, argtypes, func)
-        else:
-            self.visit(right, func)
+        self.visit_operand(right, rtarget, func)
         self.append(")")
+
+    def build_targets(
+        self, left: ast.AST, right: ast.AST
+    ) -> tuple[Optional[Types], Optional[Types]]:
+        """For the operands of a binary operator, of the same container
+        class: return the types to build an operand as, if it builds a new
+        container with another representation than their common type (e.g.
+        {1.0} | {1}, set() | {1}). other operands are left as they are
+
+        the result of such an operator is inferred to have the type of its
+        left operand, so that is only built as another type if it is empty"""
+        ltypes, rtypes = self.mergeinh[left], self.mergeinh[right]
+        classes = typestr.types_classes(ltypes)
+        if len(classes) != 1 or classes != typestr.types_classes(rtypes):
+            return None, None
+        argtypes = ltypes | rtypes
+        lconv = typestr.conversion(self.gx, ltypes, argtypes, self.mv)
+        rconv = typestr.conversion(self.gx, rtypes, argtypes, self.mv)
+        if lconv == typestr.CONV_SAME:
+            if rconv == typestr.CONV_BUILD and self.builds_new_container(right):
+                return None, argtypes
+        elif (
+            lconv == typestr.CONV_BUILD
+            and rconv == typestr.CONV_SAME
+            and self.builds_new_container(left)
+            and not any(self.subtypes(ltypes, v) for v in classes.pop().tvar_names())
+        ):
+            return argtypes, None
+        return None, None
+
+    def visit_operand(
+        self, node: ast.AST, target: Optional[Types], func: Optional["python.Function"]
+    ) -> None:
+        """Generate an operand, as the given types if any"""
+        if target:
+            self.impl_visit_conv(node, target, func)
+        else:
+            self.visit(node, func)
 
     def do_compare(
         self,
@@ -3299,6 +3369,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         rtypes = self.mergeinh[right]
         argtypes = ltypes | rtypes
         ul, ur = typestr.unboxable(self.gx, ltypes), typestr.unboxable(self.gx, rtypes)
+
+        # 'x in container': look up x as the element type of the container
+        elemtypes = None
+        if middle == "__contains__":
+            elemtypes = self.contains_types(ltypes, rtypes)
 
         # '=='/'!=' on instances of user classes
         if middle in ("__eq__", "__ne__"):
@@ -3399,8 +3474,32 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             assert middle
             self.append(self.connector(left, func) + middle + "(")
-        self.visit2(right, argtypes, middle, func)
+        if elemtypes:
+            self.visit2(right, elemtypes, None, func)
+        else:
+            self.visit2(right, argtypes, middle, func)
         self.append(")" + postfix)
+
+    def contains_types(self, ctypes: Types, etypes: Types) -> Optional[Types]:
+        """For 'x in container': return the element types of the container,
+        if x has to be built as or is truncated to those (C++ converts by
+        itself otherwise)"""
+        classes = typestr.types_classes(ctypes)
+        if not classes or not etypes:
+            return None
+        if any(
+            not cl.mv.module.builtin
+            or cl.ident not in ("list", "tuple", "set", "frozenset", "dict")
+            for cl in classes
+        ):
+            return None
+        unittypes = self.subtypes(ctypes, "unit")
+        if not unittypes:
+            return None
+        conv = typestr.conversion(self.gx, etypes, unittypes, self.mv)
+        if conv in (typestr.CONV_NARROW, typestr.CONV_BUILD):
+            return unittypes
+        return None
 
     def visit2(
         self,
@@ -4494,8 +4593,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         objexpr: Optional[ast.AST],
     ) -> Optional[Types]:
         """Check if a cast to a builtin type is necessary"""
-        # type inference cannot deduce all necessary casts to builtin formals
-        vars = {"u": "unit", "v": "value", "o": None}
+        # type inference cannot deduce all necessary casts to builtin formals:
+        # in the methods of these classes, formals named 'u' and 'v' stand for
+        # an element/key and a value of the container the method is called on
+        vars = {"u": "unit", "v": "value"}
         if (
             target.mv.module.builtin
             and method_call
@@ -4518,7 +4619,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         objexpr: ast.AST,
         msg: str,
         formal_nr: int,
-    ) -> Optional[str]:
+    ) -> Optional[Types]:
         """Check if a cast to a builtin type is necessary"""
         # shortcut for outside of visit_Call XXX merge with visit_Call?
         cls = [t[0] for t in self.mergeinh[objexpr] if isinstance(t[0], python.Class)]
@@ -4532,7 +4633,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         arg, func, formal, target, True, objexpr
                     )
                     if builtin_types:
-                        return typestr.typestr(self.gx, builtin_types, mv=self.mv)
+                        return builtin_types
         return None
 
     def visit_Return(
@@ -4576,8 +4677,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         types it is converted to, rather than casting it"""
         if node in self.mv.tempcount:
             return False
-        if isinstance(node, (ast.List, ast.Tuple, ast.Dict)):
+        if isinstance(node, (ast.List, ast.Tuple, ast.Dict, ast.Set)):
             return True
+        if isinstance(node, ast.IfExp):
+            return self.builds_new_container(
+                node.body
+            ) and self.builds_new_container(node.orelse)
         return (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Name)
@@ -4773,10 +4878,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             lvalue.value,
             self.connector(lvalue.value, func),
             "__setitem__(",
-            subs,
-            ", ",
             func,
         )
+        key_types = self.cast_to_builtin2(subs, func, lvalue.value, "__setitem__", 1)
+        if key_types:
+            self.impl_visit_conv(subs, key_types, func, check_temp=False)
+        else:
+            self.visit(subs, func)
+        self.append(", ")
 
     def struct_unpack_cpp(
         self, node: ast.Assign, func: Optional["python.Function"]
@@ -5063,14 +5172,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif rvalue in self.mv.tempcount:
                 self.append(self.mv.tempcount[rvalue])
             else:
-                cast = self.cast_to_builtin2(
+                builtin_types = self.cast_to_builtin2(
                     rvalue, func, lvalue.value, "__setitem__", 2
                 )
-                if cast:
-                    self.append("((%s)" % cast)
-                self.visit(rvalue, func)
-                if cast:
-                    self.append(")")
+                if builtin_types:
+                    self.impl_visit_conv(rvalue, builtin_types, func)
+                else:
+                    self.visit(rvalue, func)
             self.append(")")
             self.eol()
 

@@ -529,47 +529,105 @@ def typestrnew(
     return namespace + ident + sep[0] + ", ".join(subtypes) + sep[1] + ptr
 
 
-def incompatible_assignment_rec(
-    gx: "config.GlobalInfo", argtypes: Types, formaltypes: Types, depth: int = 0
-) -> bool:
-    """Check if an assignment is incompatible"""
-    if depth == MAX_TYPE_DEPTH:
+# --- conversions
+#
+# a value often has another (inferred) type than the place it ends up in: the
+# variable it is assigned to, the formal it is passed as, the element type of
+# the container it is added to or looked up in, the other operand, and so on.
+# 'conversion' is the single rule for what C++ needs in that case; code
+# generation (CPPGenerator.impl_visit_conv) acts on its outcome:
+
+CONV_SAME = "same"  # same C++ type: nothing to do
+CONV_CAST = "cast"  # same representation, or a widening value conversion: cast
+CONV_NARROW = "narrow"  # a cast compiles, but loses information (float -> int)
+CONV_BUILD = "build"  # different representation: only by building it as such
+
+# unboxed C++ types, in widening order
+SCALARS = ["__ss_bool", "__ss_int", "__ss_float", "complex"]
+
+
+def split_typestr(ts: str) -> tuple[str, list[str]]:
+    """Split a C++ type into its name and template arguments"""
+    ts = ts.strip().rstrip("*").strip()
+    pos = ts.find("<")
+    if pos == -1 or not ts.endswith(">"):
+        return ts, []
+    args, depth, start = [], 0, pos + 1
+    for i in range(pos + 1, len(ts) - 1):
+        if ts[i] == "<":
+            depth += 1
+        elif ts[i] == ">":
+            depth -= 1
+        elif ts[i] == "," and depth == 0:
+            args.append(ts[start:i].strip())
+            start = i + 1
+    args.append(ts[start:-1].strip())
+    return ts[:pos], args
+
+
+def same_representation(ta: str, tf: str) -> bool:
+    """Check if an object of C++ type 'ta' can be used through a pointer of
+    type 'tf': template arguments must be the same, up to the pointers in them
+    (a list<int> is never a list<double>, but a list<B *> works as list<A *>)"""
+    ta, tf = ta.strip(), tf.strip()
+    if ta == tf:
+        return True
+    if ta in SCALARS or tf in SCALARS:
         return False
+    (namea, argsa), (namef, argsf) = split_typestr(ta), split_typestr(tf)
+    if (namea, namef) == ("tuple", "tuple2"):  # tuple<T> is a tuple2<T, T>
+        argsa = argsa * 2
+    elif (namea, namef) == ("tuple2", "tuple"):
+        argsf = argsf * 2
+    elif len(argsa) != len(argsf):  # None, pyobj, a parent class: pointer cast
+        return True
+    return all(same_representation(a, f) for a, f in zip(argsa, argsf))
+
+
+def conversion(
+    gx: "config.GlobalInfo",
+    argtypes: Types,
+    formaltypes: Types,
+    mv: Optional["graph.ModuleVisitor"] = None,
+) -> str:
+    """Determine how a value of 'argtypes' can be used as 'formaltypes' in
+    C++, by comparing the C++ types of both:
+
+    - CONV_SAME: same type.
+    - CONV_CAST: a cast is enough. either a widening value conversion (bool
+      to int to float to complex), or pointers to objects with the same
+      representation: None, (sub)class instances, and containers of those.
+    - CONV_NARROW: a narrowing value conversion (float to int): a cast would
+      compile, but silently loses information.
+    - CONV_BUILD: different representations, such as a list of ints and a
+      list of floats. no cast can fix this (it would reinterpret memory), and
+      converting at run-time would break aliasing. it can only be built as
+      'formaltypes' in the first place, which is possible for literals and
+      the like (see CPPGenerator.impl_visit_conv), and an error otherwise.
+    """
+    ta = typestr(gx, argtypes, mv=mv).strip()
+    tf = typestr(gx, formaltypes, mv=mv).strip()
+    if ta == tf:
+        return CONV_SAME
+    if ta in SCALARS and tf in SCALARS:
+        if SCALARS.index(ta) > SCALARS.index(tf):
+            return CONV_NARROW
+        return CONV_CAST
     argclasses = types_classes(argtypes)
-    formalclasses = types_classes(formaltypes)
-    inttype = (python.def_class(gx, "int_"), 0)
-    booltype = (python.def_class(gx, "bool_"), 0)
-    floattype = (python.def_class(gx, "float_"), 0)
+    if tf in SCALARS:
+        if argclasses == {python.def_class(gx, "none")}:  # XXX None as scalar
+            return CONV_CAST
+        return CONV_BUILD
+    if ta in SCALARS:  # int as pointer
+        return CONV_BUILD
+    if same_representation(ta, tf):
+        return CONV_CAST
+    return CONV_BUILD
 
-    # int -> float
-    if depth > 0 and (argtypes == {inttype} and floattype in formaltypes):
-        return True
 
-    # bool -> int
-    if depth > 0 and (argtypes == {booltype} and inttype in formaltypes):
-        return True
-
-    # void * -> non-pointer
-    if not argclasses and [
-        cl for cl in formalclasses if cl.ident in ["int_", "float_", "bool_", "complex"]
-    ]:
-        return True
-
-    # None -> anything
-    if len(argclasses) == 1 and python.def_class(gx, "none") in argclasses:
-        return False
-
-    # recurse on subvars
-    lcp = lowest_common_parents(polymorphic_cl(gx, formalclasses))
-    if len(lcp) != 1:  # XXX
-        return False
-    tvars = lcp[0].tvar_names()
-    for tvar in tvars:
-        argvartypes = types_var_types(gx, argtypes, tvar)
-        formalvartypes = types_var_types(gx, formaltypes, tvar)
-        if incompatible_assignment_rec(gx, argvartypes, formalvartypes, depth + 1):
-            return True
-    return False
+def describe(gx: "config.GlobalInfo", types: Types, mv: Any = None) -> str:
+    """Describe types for use in a message, e.g. list(int)"""
+    return typestr(gx, types, cplusplus=False, mv=mv)[1:-1] or "None"
 
 
 def upcast_only(

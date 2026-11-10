@@ -870,11 +870,11 @@ class dict(pyiter):
 
     def __setitem__(self, u, v):
         self.__setunit__(u, v)
-    def __getitem__(self, k):
-        self.__key__(k)
+    def __getitem__(self, u):
+        self.__key__(u)
         return self.value
-    def __delitem__(self, k):
-        self.__key__(k)
+    def __delitem__(self, u):
+        self.__key__(u)
 
     def setdefault(self, u, v=None):
         self.__setunit__(u, v)
@@ -897,12 +897,12 @@ class dict(pyiter):
         self.__key__(u)
         return self.value
         return v
-    def pop(self, key, v=None):
-        self.__key__(key)
+    def pop(self, u, v=None):
+        self.__key__(u)
         return self.value
         return v
-    def __pop1(self, key):  # no default: KeyError, never None
-        self.__key__(key)
+    def __pop1(self, u):  # no default: KeyError, never None
+        self.__key__(u)
         return self.value
     def popitem(self):
         return (self.unit, self.value)
@@ -913,8 +913,8 @@ class dict(pyiter):
         item = iter(i).__next__()
         self.__setunit__(item[0], item[1])
 
-    def __delete__(self, k):
-        self.__key__(k)
+    def __delete__(self, u):
+        self.__key__(u)
 
     def keys(self):
         yield self.unit
