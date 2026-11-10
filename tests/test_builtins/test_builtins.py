@@ -650,6 +650,18 @@ def test_range_slicing():
     r = range(-5,-5,-5)
     assert list(r[-5:-4:1]) == []
 
+def test_range_repr():
+    # start is always shown, also when it is 0
+    assert repr(range(8)) == 'range(0, 8)'
+    assert str(range(0, 8, 1)) == 'range(0, 8)'
+    assert repr(range(0)) == 'range(0, 0)'
+    assert repr(range(2, 8)) == 'range(2, 8)'
+    assert repr(range(0, 8, 2)) == 'range(0, 8, 2)'
+    assert repr(range(8)[:3]) == 'range(0, 3)'
+    assert repr(range(8)[::-1]) == 'range(7, -1, -1)'
+    assert repr([range(2)]) == '[range(0, 2)]'
+    assert '%s %r' % (range(1), range(-1)) == 'range(0, 1) range(0, -1)'
+
 def test_range_equality():
     # ranges compare (and hash) by the sequence they produce, not by identity
     assert range(5) == range(5)
@@ -965,6 +977,7 @@ def test_all():
     test_range_beyond_32_bits()
     test_range_near_int_limits()
     test_range_slicing()
+    test_range_repr()
     test_range_equality()
     test_repr()
     test_ascii()

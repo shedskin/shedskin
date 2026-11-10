@@ -448,13 +448,10 @@ __ss_int __xrange::__hash__() {
 }
 
 str *__xrange::__repr__() {
-    if(s==1) {
-        if(a==0)
-            return __mod6(new str("range(%d)"), 1, b);
-        else
-            return __mod6(new str("range(%d, %d)"), 2, a, b);
-    }
-    return __mod6(new str("range(%d, %d, %d)"), 3, a, b, s); /* XXX */
+    /* as in CPython, start is always shown, also when it is 0 */
+    if(s==1)
+        return __mod6(new str("range(%d, %d)"), 2, a, b);
+    return __mod6(new str("range(%d, %d, %d)"), 3, a, b, s);
 }
 
 __xrange *__xrange::__slice__(__ss_int x, __ss_int start, __ss_int stop, __ss_int step) {
