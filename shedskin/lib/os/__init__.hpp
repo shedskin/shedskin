@@ -75,7 +75,7 @@ public:
     stat_result(__ss_int fd);
     void fill_er_up();
     void __set_items();
-    str *__repr__();
+    str *__repr__() override;
     __SS_STRUCTSEQ_COPY(stat_result)
 };
 
@@ -263,7 +263,7 @@ public:
     times_result(tuple<__ss_float> *t);
     times_result(tuple<__ss_int> *t);
 
-    str *__repr__();
+    str *__repr__() override;
     __SS_STRUCTSEQ_COPY(times_result)
 };
 
@@ -286,7 +286,7 @@ public:
     terminal_size(__ss_int columns, __ss_int lines);
     terminal_size(tuple<__ss_int> *t);
 
-    str *__repr__();
+    str *__repr__() override;
     __SS_STRUCTSEQ_COPY(terminal_size)
 };
 
@@ -392,7 +392,7 @@ public:
     statvfs_result(str *path);
     statvfs_result(__ss_int fd);
     void fill_er_up();
-    str *__repr__();
+    str *__repr__() override;
     __SS_STRUCTSEQ_COPY(statvfs_result)
 };
 
@@ -439,7 +439,7 @@ public:
     uname_result(str *sysname, str *nodename, str *release, str *version, str *machine);
     uname_result(tuple<str *> *t);
 
-    str *__repr__();
+    str *__repr__() override;
     __SS_STRUCTSEQ_COPY(uname_result)
 };
 

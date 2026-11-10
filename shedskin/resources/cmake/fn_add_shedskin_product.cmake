@@ -425,12 +425,6 @@ function(add_shedskin_product)
             ${SHEDSKIN_COMPILE_OPTIONS}
             ${SHEDSKIN_OPT_FLAGS}
             $<$<BOOL:${UNIX}>:-ffp-contract=off> # no FMA contraction: match CPython float results
-            $<$<BOOL:${UNIX}>:-Wno-unused-variable>
-            $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
-            $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-            $<$<BOOL:${UNIX}>:-Wno-unused-result>
-            $<$<BOOL:${UNIX}>:-Wno-missing-field-initializers>
-            $<$<BOOL:${UNIX}>:-Wno-cast-function-type> # (PyCFunction) cast in extmods
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wextra>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wpedantic>
@@ -440,6 +434,15 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wwrite-strings>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wredundant-decls>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wmissing-include-dirs>
+            # warning suppressions go after -Wall/-Wextra, as with clang the last flag wins
+            $<$<BOOL:${UNIX}>:-Wno-unused-variable>
+            $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
+            $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
+            $<$<BOOL:${UNIX}>:-Wno-unused-result>
+            $<$<BOOL:${UNIX}>:-Wno-missing-field-initializers>
+            $<$<BOOL:${UNIX}>:-Wno-cast-function-type> # (PyCFunction) cast in extmods
+            # clang's -Wconversion also enables these (gcc's does not, for C++)
+            $<$<AND:$<BOOL:${UNIX}>,$<CXX_COMPILER_ID:Clang,AppleClang>>:-Wno-sign-conversion>
             # windows
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
@@ -595,17 +598,20 @@ function(add_shedskin_product)
             # module still loads correctly
             $<$<BOOL:${UNIX}>:-fvisibility=hidden>
             $<$<BOOL:${UNIX}>:-fvisibility-inlines-hidden>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wextra>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wconversion>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wsign-compare>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-pedantic>
+            # warning suppressions go after -Wall/-Wextra, as with clang the last flag wins
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
             $<$<BOOL:${UNIX}>:-Wno-missing-field-initializers>
             $<$<BOOL:${UNIX}>:-Wno-cast-function-type> # (PyCFunction) cast in extmods
-            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
-            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wextra>
-            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wconversion>
-            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wsign-compare>
-            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-pedantic>
+            # clang's -Wconversion also enables these (gcc's does not, for C++)
+            $<$<AND:$<BOOL:${UNIX}>,$<CXX_COMPILER_ID:Clang,AppleClang>>:-Wno-sign-conversion>
             # windows
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal

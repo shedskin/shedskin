@@ -101,7 +101,7 @@ public:
     str *tm_zone = NULL;
 
     struct_time(tuple2<__ss_int, __ss_int> *_tuple);
-    str *__repr__();
+    str *__repr__() override;
     __SS_STRUCTSEQ_COPY(struct_time)
 };
 

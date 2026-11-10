@@ -130,7 +130,7 @@ inline complex complex::operator*(__ss_float b) { return (*this) * mcomplex(b); 
 
 inline complex complex::operator%(complex b) {
     complex c = (*this) / b;
-    return (*this) - (b * (((__ss_int)c.real)));
+    return (*this) - (b * ((__ss_float)((__ss_int)c.real)));
 }
 inline complex complex::operator%(__ss_float b) { return (*this) % mcomplex(b); }
 
@@ -162,7 +162,7 @@ inline complex& complex::operator=(__ss_float a) {
 
 static inline complex __complexfloordiv(complex a, complex b) {
     complex c = a / b;
-    c.real = ((__ss_int)c.real);
+    c.real = (__ss_float)((__ss_int)c.real);
     c.imag = 0;
     return c;
 }
