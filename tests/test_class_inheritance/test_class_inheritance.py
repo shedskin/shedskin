@@ -542,7 +542,38 @@ def test_inherited_init_types():
     assert m.r.v == 5
 
 
+class LkNode:
+    def __init__(self, n):
+        self.n = n
+
+class LkLeaf(LkNode):
+    pass
+
+class LkInner(LkNode):
+    pass
+
+def test_lookup_base_instance():
+    # 'in' for something typed as the base class, in containers of a subclass
+    leaves = [LkLeaf(1), LkLeaf(2)]
+    tl = (leaves[0], leaves[1])
+    seen = set(leaves)
+    names = {leaves[0]: 'first', leaves[1]: 'second'}
+    nodes = [leaves[1], LkInner(7), leaves[0]]
+    hits = []
+    for x in nodes:
+        hit = x in leaves
+        hits.append(hit)
+        assert (x in tl) == hit
+        assert (x in seen) == hit
+        assert (x in names) == hit
+        assert (x not in leaves) == (not hit)
+        assert (x not in seen) == (not hit)
+        assert leaves.count(x) == int(hit)
+    assert hits == [True, False, True]
+
+
 def test_all():
+    test_lookup_base_instance()
     test_inheritance1()
     test_inheritance2()
     test_inheritance3()
