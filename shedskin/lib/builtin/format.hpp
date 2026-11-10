@@ -165,8 +165,10 @@ template<> inline void __mod_hex(str *result, size_t &pos, char c, __ss_bool arg
 
 /* printf("%.*e") etc. (conv is e, E, f, F, g or G; '#' if alt), with a long
    result on the heap (a stream would put it on the stack) */
+#if defined(__GNUC__) || defined(__clang__) /* (MSVC: C4068) */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
 static inline std::string __fmt_printf(char conv, bool alt, __ss_int precision, __ss_float arg) {
     char fmt[6] = {'%', '%', '.', '*', conv, 0};
     if (alt)
@@ -180,7 +182,9 @@ static inline std::string __fmt_printf(char conv, bool alt, __ss_int precision, 
     snprintf(&s[0], (size_t)n+1, f, (int)precision, arg);
     return s;
 }
+#if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic pop
+#endif
 
 /* the decimal exponent of (non-negative, finite) aarg when rounded to p
    significant digits, i.e. as it would show in scientific notation */
