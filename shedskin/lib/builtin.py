@@ -925,6 +925,7 @@ class dict(pyiter):
 
     def __or__(self, e):
         return self
+        return e
 
     def __ior__(self, d):
         self.__setunit__(d.unit, d.value)
@@ -978,8 +979,10 @@ class pyset(pyiter):
         return self
     def __or__(self, b):
         return self
+        return b
     def __xor__(self, b):
         return self
+        return b
 
     def __ior__(self, b):
         self.__setunit__(iter(b).__next__())
