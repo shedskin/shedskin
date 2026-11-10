@@ -365,6 +365,29 @@ def test_symmetric_difference():
     assert hash(g) == hash(frozenset([1, 3]))
 
 
+def test_binary_accumulate():
+    # the result also takes the element type of the other operand
+    s = set()
+    for i in range(3):
+        s = s | {i}
+    assert sorted(s) == [0, 1, 2]
+
+    t = set()
+    for i in range(3):
+        t = t ^ {i, i + 1}
+    assert sorted(t) == [0, 3]
+
+    u = set()
+    for i in range(3):
+        u = u.union([i])
+    assert sorted(u) == [0, 1, 2]
+
+    w = set()
+    for c in 'abc':
+        w = {c} | w
+    assert sorted(w) == ['a', 'b', 'c']
+
+
 def test_pop_empty():
     s = {1}
     assert s.pop() == 1
@@ -486,6 +509,7 @@ def test_all():
     test_frozenset_augmented_assign()
     test_symmetric_difference()
     test_symmetric_difference_update()
+    test_binary_accumulate()
     test_pop_empty()
     test_set_syntax()
     test_eq()

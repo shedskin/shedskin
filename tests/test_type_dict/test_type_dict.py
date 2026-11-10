@@ -194,6 +194,17 @@ def test_merge():
     g |= [(2, '5'), (3, '6')]
     assert g == result
 
+    # the result also takes the key/value types of the other operand
+    h = {}
+    for i in range(3):
+        h = h | {i: str(i)}
+    assert h == {0: '0', 1: '1', 2: '2'}
+
+    j = {}
+    for i in range(3):
+        j = {str(i): i} | j
+    assert j == {'0': 0, '1': 1, '2': 2}
+
 
 class Bert:
     def __init__(self):
