@@ -554,15 +554,22 @@ public:
         this->__class__ = cl_counter;
     }
 
-    Counter(pyiter<K> *i) { /* count element occurrences */
+    /* the argument is taken as any type (like list and set do), so that
+       its elements are converted when needed, e.g. Counter([1, 2]) for a
+       Counter with float keys */
+    template<class U> Counter(U *i) {
         this->__class__ = cl_counter;
-        K e;
-        typename pyiter<K>::for_in_loop __3;
-        int __2;
-        pyiter<K> *__1;
-        FOR_IN(e, i, 1, 2, 3)
-            this->__addtoitem__(e, 1);
-        END_FOR
+        if constexpr (__ss_is_dict<U>) { /* copy counts */
+            this->gcd = __ss_as_dict<K, V>(i)->gcd;
+        } else { /* count element occurrences */
+            K e;
+            typename U::for_in_loop __3;
+            int __2;
+            U *__1;
+            FOR_IN(e, i, 1, 2, 3)
+                this->__addtoitem__(e, 1);
+            END_FOR
+        }
     }
 
 #ifdef __SS_BIND
@@ -643,8 +650,8 @@ public:
        pattern. The Python-level updateiter()/subtractiter()/__ior__iter()
        stubs exist only so CPA can type-check the non-dict call shape. */
     template <class U> void *update(U *other) {
-        if constexpr (std::is_base_of_v<dict<K, V>, U>) {
-            __update_dict__(other);
+        if constexpr (__ss_is_dict<U>) {
+            __update_dict__(__ss_as_dict<K, V>(other));
         } else {
             K e;
             typename U::for_in_loop __3;
@@ -658,7 +665,7 @@ public:
     }
 
     template <class U> void *subtract(U *other) {
-        if constexpr (std::is_base_of_v<dict<K, V>, U>) {
+        if constexpr (__ss_is_dict<U>) {
             for(auto &kv : other->gcd)
                 this->__addtoitem__(kv.first, -kv.second);
         } else {
@@ -866,8 +873,8 @@ public:
         return this;
     }
     template <class U> Counter<K, V> *__ior__(U *other) {
-        if constexpr (std::is_base_of_v<dict<K, V>, U>)
-            __ior_dict__(other);
+        if constexpr (__ss_is_dict<U>)
+            __ior_dict__(__ss_as_dict<K, V>(other));
         else
             this->gcd = __or__(new Counter<K, V>(other))->gcd;
         return this;
