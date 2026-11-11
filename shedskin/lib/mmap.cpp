@@ -473,6 +473,12 @@ void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 void *mmap::resize(__ss_int new_size)
 {
     __raise_if_closed_or_not_resizeable();
+    /* as CPython: before the file is truncated */
+    if (new_size < 0 or (size_t)new_size > (size_t)PTRDIFF_MAX - (size_t)offset)
+    {
+        throw new ValueError(new str("new size out of range"));
+    }
+    const size_t pos = __tell(); /* (as CPython: kept, even past the new end) */
     /* like CPython: the pages of a shared anonymous mapping cannot be
        grown, so touching the new part would raise SIGBUS */
     if (fd == -1 and (flags & MAP_SHARED) and new_size > (__ss_int)__size())
@@ -512,7 +518,7 @@ void *mmap::resize(__ss_int new_size)
     }
     m_begin = static_cast<iterator>(temp);
     m_end = m_begin + size_t(new_size);
-    m_position = std::min(m_position, m_end);
+    m_position = m_begin + pos;
 #else // !HAVE_MREMAP
     /* No mremap() on this platform (e.g. macOS, FreeBSD). CPython itself does not
        require mremap() to support resize() here either: it falls back to
@@ -542,7 +548,7 @@ void *mmap::resize(__ss_int new_size)
     }
     m_begin = static_cast<iterator>(temp);
     m_end = m_begin + size_t(new_size);
-    m_position = std::min(m_position, m_end);
+    m_position = m_begin + pos;
 #endif // HAVE_MREMAP
     return NULL;
 }
@@ -751,6 +757,12 @@ void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 void *mmap::resize(__ss_int new_size)
 {
     __raise_if_closed_or_not_resizeable();
+    /* as CPython: before the file is truncated */
+    if (new_size < 0 or (size_t)new_size > (size_t)PTRDIFF_MAX - (size_t)offset)
+    {
+        throw new ValueError(new str("new size out of range"));
+    }
+    const size_t pos = __tell(); /* (as CPython: kept, even past the new end) */
     DWORD dwErrCode = 0;
     DWORD off_hi, off_lo;
     LONG newSizeLow, newSizeHigh;
@@ -800,7 +812,7 @@ void *mmap::resize(__ss_int new_size)
         throw new OSError();
     }
     m_end = m_begin + size_t(new_size);
-    m_position = std::min(m_position, m_end);
+    m_position = m_begin + pos;
     return NULL;
 }
 #endif /* WIN32 */
@@ -839,6 +851,10 @@ void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)
 bytes *mmap::read(__ss_int size)
 {
     __raise_if_closed_or_not_readable();
+    if (m_position >= m_end)
+    {
+        return new bytes();
+    }
     const iterator at = m_position;
     /* any negative size reads the rest (like CPython); compare against the
        remaining length to avoid pointer arithmetic outside the mapping. */
@@ -863,7 +879,6 @@ __ss_int mmap::read_byte()
     }
     else
     {
-        m_position = m_end;
         throw new ValueError(const_18);
     }
 }
@@ -871,6 +886,10 @@ __ss_int mmap::read_byte()
 bytes *mmap::readline(__ss_int size, const char eol)
 {
     __raise_if_closed_or_not_readable();
+    if (m_position >= m_end)
+    {
+        return new bytes();
+    }
     const iterator at = m_position;
     m_position = std::find(m_position, m_end, eol);
     if (m_position != m_end) // Line found.
@@ -1309,7 +1328,7 @@ void __init()
 #endif /* WIN32 */
         const_0  = new str("mmap object is not open for reading");
         const_1  = new str("source, destination, or count out of range");
-        const_2  = new str("memory mapped size must be positive");
+        const_2  = new str("memory mapped length must be positive");
         const_3  = new str("memory mapped offset must be positive");
         const_4  = new str("mmap can't specify both access and flags, prot");
         const_5  = new str("mmap invalid access parameter");

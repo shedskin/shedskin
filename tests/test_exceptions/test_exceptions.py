@@ -1032,6 +1032,33 @@ def test_stopiteration_subclass_value():
     assert ok
 
 
+def test_oserror_constructor():
+    e = OSError(1000, 'nope')
+    assert e.errno == 1000
+    assert e.strerror == 'nope'
+    assert str(e) == '[Errno 1000] nope'
+    assert repr(e) == "OSError(1000, 'nope')"
+    e = OSError(1000, 'denied', 'f1')
+    assert e.filename == 'f1'
+    assert str(e) == "[Errno 1000] denied: 'f1'"
+    e = OSError(1, 'x', 'a', None, 'b')
+    assert e.filename2 == 'b'
+    assert str(e) == "[Errno 1] x: 'a' -> 'b'"
+    assert str(OSError(0, 'zero')) == '[Errno 0] zero'
+    assert str(OSError('msg')) == 'msg'
+    caught = ''
+    try:
+        raise FileNotFoundError(2, 'gone', 'fn')
+    except OSError as err:
+        caught = str(err)
+        assert err.filename == 'fn'
+    assert caught == "[Errno 2] gone: 'fn'"
+    p = PermissionError(13, 'denied')
+    assert p.errno == 13
+    c = ConnectionRefusedError(111, 'refused')
+    assert str(c) == '[Errno 111] refused'
+
+
 def test_all():
     test_repr_escapes_argument()
     test_oserror_str_repr_filename()
@@ -1064,6 +1091,7 @@ def test_all():
     test_super_init_no_args()
     test_ioerror_alias()
     test_stopiteration_subclass_value()
+    test_oserror_constructor()
 
 
 if __name__ == '__main__':

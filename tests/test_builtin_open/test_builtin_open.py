@@ -1566,6 +1566,55 @@ def test_unsupported_operation():
     os.remove('unsup.txt')
 
 
+def test_closefd():
+    name = os.path.join(testdata, 'closefd_tmp')
+    with open(name, 'w') as f:
+        f.write('hello\n')
+    fd = os.open(name, os.O_RDONLY)
+    f = open(fd, closefd=False)
+    assert f.read(2) == 'he'
+    f.close()
+    assert f.closed
+    os.lseek(fd, 0, 0)
+    assert os.read(fd, 3) == b'hel'  # the fd is still open
+    g = open(fd, 'rb', closefd=False)
+    os.lseek(fd, 1, 0)
+    assert g.read(2) == b'el'
+    g.close()
+    with open(fd, closefd=False) as h:
+        assert h.fileno() == fd
+    os.fstat(fd)
+    h2 = open(fd, 'rb')  # closefd=True: closes the fd
+    h2.close()
+    closed = False
+    try:
+        os.fstat(fd)
+    except OSError:
+        closed = True
+    assert closed
+    msg = ''
+    try:
+        open(name, closefd=False)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Cannot use closefd=False with file name'
+    msg = ''
+    try:
+        open(name, 'rb', closefd=False)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Cannot use closefd=False with file name'
+    w = os.open(name, os.O_WRONLY | os.O_APPEND)
+    wf = open(w, 'w', closefd=False)
+    wf.write('more')
+    wf.close()  # (flushed)
+    os.write(w, b'!')
+    os.close(w)
+    with open(name) as f2:
+        assert f2.read() == 'hello\nmore!'
+    os.remove(name)
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1620,6 +1669,7 @@ def test_all():
     test_binary_readinto_read1()
     test_open_fd()
     test_line_buffering()
+    test_closefd()
 
 
 if __name__ == '__main__':

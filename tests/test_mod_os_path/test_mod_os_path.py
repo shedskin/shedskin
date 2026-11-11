@@ -689,6 +689,24 @@ def test_os_path_keyword_names():
         assert os.path.realpath(filename="/", strict=False) == "/"
 
 
+def test_os_path_realpath_abs_errors():
+    if os.name == "nt":
+        return  # see test_os_path_realpath_strict
+    assert realpath("//shedskin_x") == "/shedskin_x"
+    assert realpath("//") == "/"
+    assert realpath("///shedskin_x") == "/shedskin_x"
+    # errors name the absolute path, as for CPython
+    cwd = realpath(os.getcwd())
+    name = "shedskin_test_realpath_relative_missing"
+    fname = ""
+    try:
+        realpath(name, strict=True)
+    except FileNotFoundError as e:
+        fname = e.filename
+    assert fname == join(cwd, name)
+    assert realpath(name) == join(cwd, name)
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
@@ -725,6 +743,7 @@ def test_all():
     test_os_path_isdir_kwarg()
     test_os_path_exists_bytes()
     test_os_path_kwarg_names()
+    test_os_path_realpath_abs_errors()
 
 if __name__ == '__main__':
     test_all()

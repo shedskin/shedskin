@@ -553,6 +553,13 @@ str *relpath(str *path, str *start) {
     return joinl(rel_list);
 }
 
+/* unlike abspath/normpath, realpath('//x') is '/x' in CPython */
+static str *__realpath_root(str *path) {
+    if (path->startswith(new str("//")))
+        return path->__slice__(1, 1, 0, 0);
+    return path;
+}
+
 str *realpath(str *filename, __ss_bool strict) {
     /**
     Return the canonical path of the specified filename, eliminating any
@@ -567,6 +574,9 @@ str *realpath(str *filename, __ss_bool strict) {
     path components that don't exist as a direct directory entry.
     */
     __ss_check_nul(filename, "lstat"); /* (as CPython, which lstat()s each component) */
+    /* as CPython: resolve (and report errors) relative to the cwd */
+    if (!isabs(filename))
+        filename = join(2, __os__::getcwd(), filename);
     list<str *> *bits;
     str *component, *newpath, *resolved;
     __ss_int __40, __41, i;
@@ -602,7 +612,7 @@ str *realpath(str *filename, __ss_bool strict) {
 #endif
                     __throw_oserror(component);
                 }
-                return abspath(joinl(((new list<str *>(1, component)))->__add__(bits->__slice__(1, i, 0, 0))));
+                return __realpath_root(abspath(joinl(((new list<str *>(1, component)))->__add__(bits->__slice__(1, i, 0, 0)))));
             }
             else {
                 newpath = joinl(((new list<str *>(1, resolved)))->__add__(bits->__slice__(1, i, 0, 0)));
@@ -611,7 +621,7 @@ str *realpath(str *filename, __ss_bool strict) {
         }
     END_FOR
 
-    return abspath(filename);
+    return __realpath_root(abspath(filename));
 }
 
 str *_resolve_link(str *path) {

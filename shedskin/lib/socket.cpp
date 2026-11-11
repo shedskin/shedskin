@@ -613,6 +613,29 @@ static error *make_error(const char *prefix)
     return make_error(prefix, ERRNO);
 }
 
+/* gaierror(eai code, gai_strerror()), as CPython */
+static gaierror *make_gaierror(int r)
+{
+    str *msg = new str(gai_strerror(r));
+    gaierror *e = new gaierror(__add_strs(4, new str("[Errno "), __str(r), new str("] "), msg));
+    e->__ss_errno = r;
+    e->strerror = msg;
+    return e;
+}
+
+/* a failed gethostbyname(): CPython resolves via getaddrinfo(), so give its error */
+[[noreturn]] static void throw_host_not_found(const char *host)
+{
+    struct addrinfo hints = {}, *res = 0;
+    hints.ai_family = AF_INET;
+    int r = ::getaddrinfo(host, NULL, &hints, &res);
+    if (r == 0) {
+        ::freeaddrinfo(res);
+        r = EAI_NONAME;
+    }
+    throw make_gaierror(r);
+}
+
 static timeout *make_timeout()
 {
     return new timeout(timed_out);
@@ -909,7 +932,7 @@ static unsigned long int string_to_addr(const char *s)
     /* try looking up the address in dns */
     struct hostent *he = ::gethostbyname(s);
     if (!he)
-        throw new gaierror(host_not_found); /* CPython resolves via getaddrinfo() */
+        throw_host_not_found(s);
     return * reinterpret_cast<unsigned long *>( he->h_addr_list[0] );
 }
 
@@ -1306,10 +1329,10 @@ tuple2<bytes *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_i
     if (bufsize < 0)
         throw new ValueError(new str("negative buffersize in recvfrom"));
     std::vector<char> buf((size_t)bufsize);
-    struct sockaddr_in sin;
+    struct sockaddr_in sin = {};
     socklen_t salen = sizeof(sin);
     size_t len = recvfrom(buf.data(), (size_t)bufsize, flags_, reinterpret_cast<sockaddr *>(&sin), &salen);
-    return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), sin_addr_to_tuple(&sin));
+    return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), salen ? sin_addr_to_tuple(&sin) : 0); /* (connected tcp: None, as CPython) */
 }
 
 /* validate a recv_into()/recvfrom_into() buffer, flags and nbytes (0: whole buffer) */
@@ -1343,10 +1366,10 @@ __ss_int socket::recv_into(bytes *buffer, __ss_int nbytes, __ss_int flags)
 tuple2<__ss_int, socket::inet_address> *socket::recvfrom_into(bytes *buffer, __ss_int nbytes, __ss_int flags)
 {
     size_t n = check_into_buffer(buffer, nbytes, flags, "recvfrom_into", "nbytes is greater than the length of the buffer");
-    struct sockaddr_in sin;
+    struct sockaddr_in sin = {};
     socklen_t salen = sizeof(sin);
     size_t len = recvfrom(&buffer->unit[0], n, (int)flags, reinterpret_cast<sockaddr *>(&sin), &salen);
-    return new tuple2<__ss_int, inet_address>(2, (__ss_int)len, sin_addr_to_tuple(&sin));
+    return new tuple2<__ss_int, inet_address>(2, (__ss_int)len, salen ? sin_addr_to_tuple(&sin) : 0); /* (connected tcp: None, as CPython) */
 }
 
 socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int fileno) {
@@ -1729,7 +1752,7 @@ str *gethostbyname(str *hostname)
     check_hostname_nul(hostname, "gethostbyname");
     hostent *he = ::gethostbyname(hostname->c_str());
     if (!he)
-        throw new gaierror(host_not_found); /* CPython resolves via getaddrinfo() */
+        throw_host_not_found(hostname->c_str());
     return in_addr_to_str(reinterpret_cast<const in_addr *>(he->h_addr_list[0]));
 }
 
@@ -1738,7 +1761,7 @@ __host_tuple *gethostbyname_ex(str *hostname)
     check_hostname_nul(hostname, "gethostbyname_ex");
     hostent *he = ::gethostbyname(hostname->c_str());
     if (!he)
-        throw new gaierror(host_not_found); /* CPython resolves via getaddrinfo() */
+        throw_host_not_found(hostname->c_str());
     return hostent_to_tuple(he);
 }
 
@@ -1783,11 +1806,8 @@ tuple2<str *, str *> *getnameinfo(socket::inet_address sockaddr_, __ss_int flags
     tuple_to_sin_addr(&sin, sockaddr_, NULL); /* no port check: CPython gives a gaierror here, via getaddrinfo() */
     char host[NI_MAXHOST], serv[NI_MAXSERV];
     int r = ::getnameinfo(reinterpret_cast<sockaddr *>(&sin), sizeof(sin), host, sizeof(host), serv, sizeof(serv), flags_);
-    if (r != 0) {
-        gaierror *e = new gaierror(new str(gai_strerror(r)));
-        e->__ss_errno = r;
-        throw e;
-    }
+    if (r != 0)
+        throw make_gaierror(r);
     return new tuple2<str *, str *>(2, new str(host), new str(serv));
 }
 
@@ -1859,7 +1879,7 @@ __ss_int if_nametoindex(str *name)
         throw new ValueError(new str("embedded null byte"));
     unsigned int index = ::if_nametoindex(name->c_str());
     if (index == 0)
-        throw new error(new str("no interface with this name"));
+        throw make_error("if_nametoindex");
     return (__ss_int)index;
 }
 
@@ -1869,7 +1889,7 @@ str *if_indextoname(__ss_int index)
         throw new OverflowError(new str("index is out of range"));
     char name[IF_NAMESIZE + 1];
     if (!::if_indextoname((unsigned int)index, name))
-        throw new error(new str("no interface with this index"));
+        throw make_error("if_indextoname");
     return new str(name);
 }
 
@@ -1923,7 +1943,7 @@ str *inet_ntop(__ss_int address_family, bytes *packed_ip)
     else if (address_family == AF_INET6)
         len = sizeof(in6_addr);
     else
-        throw new ValueError(new str("unknown address family"));
+        throw new ValueError(__add_strs(2, new str("unknown address family "), __str(address_family)));
     if (packed_ip->unit.size() != len)
         throw new ValueError(new str("invalid length of packed IP address string"));
     unsigned char packed[sizeof(in6_addr)];

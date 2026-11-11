@@ -74,13 +74,36 @@ struct __ss_file_suppress_iph { __ss_file_suppress_iph() {} };
 /* flush and close even when flushing fails, as CPython; returns the first
    errno (0 on success), leaving it in errno. this is a free function, as on
    macOS errno expands to (*__error()), which file::__error would shadow */
-static int __ss_fclose(FILE *f) {
+static int __ss_fclose(FILE *f, bool closefd=true) {
     __ss_file_suppress_iph guard;
     int err = FFLUSH(f) ? errno : 0;
-    if(fclose(f) and not err)
+    /* closefd=False: there is no portable way to free a FILE * but not its
+       fd, so let fclose() close a copy, and move that back in place */
+    int fd = -1, saved = -1;
+    if(!closefd) {
+        fd = fileno(f);
+        saved = ::dup(fd);
+        if(saved == -1) { /* leave the FILE * open rather than the fd closed */
+            errno = err;
+            return err;
+        }
+    }
+    if(fclose(f) and not err and closefd)
         err = errno;
+    if(saved != -1) {
+        ::dup2(saved, fd);
+        ::close(saved);
+    }
     errno = err;
     return err;
+}
+
+static void __check_closefd(str *flags, __ss_bool closefd) {
+    if(!closefd) { /* (as cpython: after the mode check) */
+        if(flags)
+            __check_open_mode(flags);
+        throw new ValueError(new str("Cannot use closefd=False with file name"));
+    }
 }
 
 /* validate a mode as cpython's io.open does, before anything is opened:
@@ -290,11 +313,13 @@ void file::__close_buffer() {
         buffer->closed = True;
 }
 
-file *open(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file *open(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_bool closefd) {
+    __check_closefd(flags, closefd);
     return new file(name, flags, encoding, errors, newline, buffering);
 }
 
-file *open(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file *open(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_bool closefd) {
+    __check_closefd(flags, closefd);
     return new file(new str(name->unit), flags, encoding, errors, newline, buffering);
 }
 
@@ -323,10 +348,12 @@ FILE *__ss_fdopen(__ss_int fd, str *mode) {
     return fp;
 }
 
-file *open(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file *open(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_bool closefd) {
     if(!flags)
         flags = new str("r");
-    return new file(__ss_fdopen(fd, flags), __str(fd), flags, encoding, errors, newline, buffering);
+    file *f = new file(__ss_fdopen(fd, flags), __str(fd), flags, encoding, errors, newline, buffering);
+    f->__closefd = closefd;
+    return f;
 }
 
 /* decode the bytes collected in __read_cache, with the file's encoding */
@@ -704,7 +731,7 @@ list<str *> *file::readlines(__ss_int size_hint) {
 
 void *file::close() {
     if(f and not closed) {
-        int err = __ss_fclose(f);
+        int err = __ss_fclose(f, __closefd);
         closed = True;
         __close_buffer();
         if(err)
@@ -837,26 +864,30 @@ void __check_binary_args(str *encoding, str *errors, str *newline) {
         throw new ValueError(new str("binary mode doesn't take a newline argument"));
 }
 
-file_binary *open_binary(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file_binary *open_binary(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_bool closefd) {
     __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline);
+    __check_closefd(flags, closefd);
     return new file_binary(name, flags, buffering);
 }
 
-file_binary *open_binary(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file_binary *open_binary(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_bool closefd) {
     __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline);
+    __check_closefd(flags, closefd);
     return new file_binary(new str(name->unit), flags, buffering);
 }
 
-file_binary *open_binary(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file_binary *open_binary(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_bool closefd) {
     if(!flags)
         flags = new str("rb");
     __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline); /* (as cpython: the fd stays open) */
     FILE *fp = __ss_fdopen(fd, flags);
     __set_buffering(fp, buffering, false);
-    return new file_binary(fp, __str(fd), flags);
+    file_binary *f = new file_binary(fp, __str(fd), flags);
+    f->__closefd = closefd;
+    return f;
 }
 
 __ss_int file_binary::write(bytes *s) {
@@ -998,7 +1029,7 @@ void *file_binary::close() {
         return NULL;
     }
     if(f and not closed) {
-        int err = __ss_fclose(f);
+        int err = __ss_fclose(f, __closefd);
         closed = True;
         if(err)
             __throw_oserror();

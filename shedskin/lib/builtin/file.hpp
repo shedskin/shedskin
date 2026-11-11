@@ -23,6 +23,7 @@ public:
 
     FILE *f;
     file_binary *buffer;
+    bool __closefd = true; /* open(fd, closefd=False): close() leaves the fd open */
 
     __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
     __ss_bool line_buffering = False; /* buffering=1 (open, os.fdopen), or a terminal (std streams) */
@@ -98,6 +99,7 @@ public:
     str *mode;
 
     FILE *f;
+    bool __closefd = true; /* open(fd, closefd=False): close() leaves the fd open */
     __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
     __file_options options;
     __GC_VECTOR(char) __read_cache;
@@ -187,14 +189,14 @@ str *__fileio_mode(str *mode);
 void __set_buffering(FILE *f, __ss_int buffering, bool text);
 void __check_binary_args(str *encoding, str *errors, str *newline);
 
-file *open(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
-file *open(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
-file_binary *open_binary(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
-file_binary *open_binary(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0); /* ugly duplication.. use str/byte template? */
+file *open(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
+file *open(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
+file_binary *open_binary(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
+file_binary *open_binary(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True); /* ugly duplication.. use str/byte template? */
 /* open(fd), as os.fdopen(fd) */
 FILE *__ss_fdopen(__ss_int fd, str *mode);
-file *open(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
-file_binary *open_binary(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
+file *open(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
+file_binary *open_binary(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
 
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 

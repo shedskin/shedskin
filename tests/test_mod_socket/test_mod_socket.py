@@ -1230,6 +1230,56 @@ def test_c_int_overflow():
     ]
 
 
+def test_recvfrom_connected_and_lookup_errors():
+    # recvfrom on a connected tcp socket: no address (None)
+    # (explicit timeouts: earlier tests change the default timeout)
+    srv = socket.socket()
+    srv.settimeout(5.0)
+    srv.bind(('127.0.0.1', 0))
+    srv.listen(1)
+    c = socket.create_connection(srv.getsockname(), 5.0)
+    conn, _ = srv.accept()
+    conn.settimeout(5.0)
+    c.sendall(b'abc')
+    d, addr = conn.recvfrom(10)
+    assert d == b'abc'
+    assert addr is None
+    c.sendall(b'xyz')
+    buf = bytearray(5)
+    n, addr2 = conn.recvfrom_into(buf)
+    assert n == 3
+    assert addr2 is None
+    conn.close()
+    c.close()
+    srv.close()
+
+    # lookup errors carry the getaddrinfo() code and message
+    msg = ''
+    code = 0
+    try:
+        socket.gethostbyname('no.such.host.invalid')
+    except socket.gaierror as e:
+        msg = str(e)
+        code = e.errno
+        assert e.strerror is not None
+        assert msg == '[Errno %d] %s' % (e.errno, e.strerror)
+    assert code < 0
+    assert msg.startswith('[Errno -')
+    if sys.platform != 'win32':
+        code = 0
+        try:
+            socket.if_nametoindex('nosuchif0')
+        except OSError as e:
+            code = e.errno
+        assert code > 0
+    msg = ''
+    try:
+        socket.inet_ntop(12345, b'\x00\x00\x00\x00')
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'unknown address family 12345'
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1262,6 +1312,7 @@ def test_all():
     test_none_returns()
     test_unix_path()
     test_error_text()
+    test_recvfrom_connected_and_lookup_errors()
     test_default_timeout() # last, see comment there
 
 

@@ -1081,6 +1081,61 @@ def test_enter_closed():
         assert str(e) == 'mmap closed or invalid'
 
 
+def test_resize_bounds_position():
+    # a negative size is refused before the file is truncated
+    name = 'shedskin_test_mmap_resize.bin'
+    f = open(name, 'wb')
+    f.write(b'x' * (2 * mmap.ALLOCATIONGRANULARITY))
+    f.close()
+    f = open(name, 'r+b')
+    m = mmap.mmap(f.fileno(), 0, offset=mmap.ALLOCATIONGRANULARITY)
+    msg = ''
+    try:
+        m.resize(-1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'new size out of range'
+    assert os.path.getsize(name) == 2 * mmap.ALLOCATIONGRANULARITY
+    m.close()
+    # shrinking keeps the position, even past the new end
+    m = mmap.mmap(f.fileno(), 0)
+    m.seek(5999)
+    m.resize(10)
+    assert m.tell() == 5999
+    assert m.read() == b''
+    assert m.readline() == b''
+    assert m.tell() == 5999
+    msg = ''
+    try:
+        m.read_byte()
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'read byte out of range'
+    msg = ''
+    try:
+        m.write(b'')
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'data out of range'
+    msg = ''
+    try:
+        m.seek(0, 1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'seek out of range'
+    m.seek(2)
+    assert m.read() == b'x' * 8
+    m.close()
+    msg = ''
+    try:
+        mmap.mmap(f.fileno(), -1)
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'memory mapped length must be positive'
+    f.close()
+    os.remove(name)
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1089,6 +1144,7 @@ def test_all():
         test_bytes_from_mmap()
         test_enter_exit_results()
         test_enter_closed()
+        test_resize_bounds_position()
         test_basic()
         test_readonly()
         test_rfind()

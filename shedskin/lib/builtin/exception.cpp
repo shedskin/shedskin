@@ -11,6 +11,15 @@ OSError::OSError(str *msg) : Exception(msg) {
     strerror = 0;
     filename = filename2 = 0;
 }
+/* OSError(errno, strerror[, filename[, winerror[, filename2]]]) */
+OSError::OSError(__ss_int e, str *strerror, str *filename, void *, str *filename2) : Exception(0) {
+    this->__class__ = cl_oserror;
+    __ss_errno = e;
+    this->strerror = strerror;
+    this->filename = filename;
+    this->filename2 = filename2;
+    message = this->__str__();
+}
 void OSError::__init_errno(int e, str *fname, str *fname2) {
     this->filename = fname;
     this->filename2 = fname2;
@@ -19,7 +28,7 @@ void OSError::__init_errno(int e, str *fname, str *fname2) {
     message = this->__str__();
 }
 str *OSError::__str__() {
-    if(!__ss_errno) /* e.g. user-raised OSError('msg') */
+    if(!strerror) /* e.g. user-raised OSError('msg') */
         return BaseException::__str__();
     if(!filename)
         return __add_strs(4, new str("[Errno "), __str(__ss_errno), new str("] "), strerror);
@@ -28,7 +37,7 @@ str *OSError::__str__() {
     return __add_strs(8, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": "), repr(filename), new str(" -> "), repr(filename2));
 }
 str *OSError::__repr__() {
-    if(!__ss_errno)
+    if(!strerror)
         return BaseException::__repr__();
     return __add_strs(5, this->__class__->__name__, new str("("), __str(__ss_errno), new str(", "), repr(strerror), new str(")"));
 }
@@ -37,7 +46,7 @@ str *OSError::__repr__() {
 /* OSError(errno, strerror, filename, winerror, filename2), so CPython sets
    the attributes and str() as for its own OSError (1025-B9) */
 PyObject *OSError::__py_args__() {
-    if(!__ss_errno || !strerror)
+    if(!strerror)
         return 0; /* use message */
     if(!filename)
         return Py_BuildValue("(iN)", (int)__ss_errno, __to_py(strerror));

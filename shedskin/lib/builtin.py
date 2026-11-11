@@ -1194,7 +1194,7 @@ class OverflowError(ArithmeticError): pass
 class ZeroDivisionError(ArithmeticError): pass
 
 class OSError(Exception):
-    def __init__(self, arg=None):
+    def __init__(self, arg=None, strerror=None, filename=None, winerror=None, filename2=None):
         self.args = ('',)
         self.errno = 0
         self.strerror = ''
@@ -1435,10 +1435,10 @@ class file_binary(pyiter):
         return self.unit
 
 __file = file('')
-def open(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None):
+def open(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=True):
     return __file
 
-def open_binary(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None):
+def open_binary(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=True):
     return file_binary('')
 
 def ord(c):
