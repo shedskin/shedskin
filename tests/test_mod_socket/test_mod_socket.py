@@ -1263,15 +1263,20 @@ def test_recvfrom_connected_and_lookup_errors():
         code = e.errno
         assert e.strerror is not None
         assert msg == '[Errno %d] %s' % (e.errno, e.strerror)
-    assert code < 0
-    assert msg.startswith('[Errno -')
+    assert code != 0  # (EAI_* codes: negative on glibc, positive on macos/bsd)
+    assert msg.startswith('[Errno ')
     if sys.platform != 'win32':
+        raised = False
         code = 0
         try:
             socket.if_nametoindex('nosuchif0')
         except OSError as e:
-            code = e.errno
-        assert code > 0
+            raised = True
+            if sys.platform == 'linux':  # (errno is libc-specific)
+                code = e.errno
+        assert raised
+        if sys.platform == 'linux':
+            assert code > 0
     msg = ''
     try:
         socket.inet_ntop(12345, b'\x00\x00\x00\x00')
