@@ -1136,6 +1136,34 @@ def test_resize_bounds_position():
     os.remove(name)
 
 
+def test_move_bounds_mapping_length():
+    # move() checks against the mapping, not the (larger) file
+    name = 'shedskin_test_mmap_move.bin'
+    f = open(name, 'wb')
+    f.write(b'a' * mmap.PAGESIZE + b'b' * mmap.PAGESIZE)
+    f.close()
+    f = open(name, 'r+b')
+    m = mmap.mmap(f.fileno(), mmap.PAGESIZE)
+    assert len(m) == mmap.PAGESIZE
+    assert m.size() == 2 * mmap.PAGESIZE
+    msg = ''
+    try:
+        m.move(0, mmap.PAGESIZE, mmap.PAGESIZE)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'source, destination, or count out of range'
+    msg = ''
+    try:
+        m.move(mmap.PAGESIZE - 10, 0, 100)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'source, destination, or count out of range'
+    m.move(0, 10, 20)
+    m.close()
+    f.close()
+    os.remove(name)
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1173,6 +1201,7 @@ def test_all():
     test_range_messages()
     test_read_negative_size()
     test_read_no_arg()
+    test_move_bounds_mapping_length()
 
 if __name__ == '__main__':
     test_all()

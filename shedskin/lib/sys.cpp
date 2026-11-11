@@ -22,7 +22,9 @@ __version_info *version_info;
 str *__name__, *copyright, *platform, *byteorder;
 __ss_int hexversion, maxsize, maxunicode;
 str *executable;
-file *__ss_stdin, *__ss_stdout, *__ss_stderr;
+file *&__ss_stdin = __shedskin__::__ss_stdin;
+file *&__ss_stdout = __shedskin__::__ss_stdout;
+file *&__ss_stderr = __shedskin__::__ss_stderr;
 file *__stdin__, *__stdout__, *__stderr__;
 
 void __init(int c, char **v) {
@@ -92,9 +94,6 @@ void __init(int c, char **v) {
 
     executable = (c > 0) ? new str(v[0]) : new str("");
 
-    __ss_stdin = __shedskin__::__ss_stdin;
-    __ss_stdout = __shedskin__::__ss_stdout;
-    __ss_stderr = __shedskin__::__ss_stderr;
     __stdin__ = __ss_stdin;
     __stdout__ = __ss_stdout;
     __stderr__ = __ss_stderr;

@@ -833,7 +833,7 @@ void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)
 {
     __raise_if_closed_or_not_writable();
     __raise_if_closed_or_not_readable();
-    __ss_int length = size();
+    __ss_int length = (__ss_int)__size(); /* the mapping, not the file (size()) */
 
     // Taken from Python 2.7
     if (count < 0 or (count + destination) < count or

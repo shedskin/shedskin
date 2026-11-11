@@ -62,8 +62,15 @@ str *__ss_empty_str;
 
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
+static file *__ss_stdout_orig; /* sys.__stdout__ */
+
 bool __ss_stdout_line_buffering() {
     return __ss_stdout && __ss_stdout->line_buffering;
+}
+
+/* print() without file=: sys.stdout if it was assigned, else 0 (C stdout) */
+file *__ss_print_target() {
+    return __ss_stdout != __ss_stdout_orig ? __ss_stdout : 0;
 }
 
 tuple<__ss_int> *__ss_tuple_cache[1600];
@@ -143,6 +150,9 @@ void __init() {
        (EPIPE), instead of silently killing the process (extension modules
        leave this to the interpreter, which does the same) */
     ::signal(SIGPIPE, SIG_IGN);
+#ifdef SIGXFSZ
+    ::signal(SIGXFSZ, SIG_IGN); /* (as CPython: EFBIG instead of being killed) */
+#endif
 #endif
 
     cl_class_ = new class_ ("class");
@@ -214,6 +224,12 @@ void __init() {
 
     __ss_stdin = new file(stdin, new str("<stdin>"), new str("r"));
     __ss_stdout = new file(stdout, new str("<stdout>"), new str("w"));
+    __ss_stdout_orig = __ss_stdout;
+#ifndef WIN32
+    /* as CPython: stderr is line buffered, so a partial line waits for its
+       '\n' (or '\r', see file::write). (windows: _IOLBF is full buffering) */
+    setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
+#endif
     __ss_stderr = new file(stderr, new str("<stderr>"), new str("w"));
     str *utf8 = new str("utf-8"), *se = new str("surrogateescape");
     for (file *fp : {__ss_stdin, __ss_stdout, __ss_stderr}) {

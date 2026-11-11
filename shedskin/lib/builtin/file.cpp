@@ -645,6 +645,8 @@ static void __give_back(FILE *f, __GC_VECTOR(char) &cache, size_t k) {
 str *file::readline(__ss_int n) {
     __check_closed(__SS_CLOSED_MSG);
     __check_mode_readable(mode, "not readable");
+    if(n != 0) /* (as cpython: tell() is 0 after a bom only until a read) */
+        __bom_skipped = false;
     __switch_op(f, options, 'r', __encoding, __errors);
     __read_cache.clear();
     __char_counter cc(__encoding, __errors);
@@ -706,6 +708,8 @@ static void __throw_io_error() {
 str *file::read(__ss_int n) {
     __check_closed(__SS_CLOSED_MSG);
     __check_mode_readable(mode, "not readable");
+    if(n != 0) /* (as cpython: tell() is 0 after a bom only until a read) */
+        __bom_skipped = false;
     __switch_op(f, options, 'r', __encoding, __errors);
     __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
@@ -884,6 +888,7 @@ bool file::__eof() {
 }
 
 __iter<str *> *file::__iter__() {
+    __check_closed(__SS_CLOSED_MSG); /* (as cpython: IOBase.__iter__) */
     return this;
 }
 
@@ -976,11 +981,28 @@ void *file_binary::writelines(pyiter<bytes *> *iter) {
 }
 
 __ss_int file_binary::seek(__ss_int i, __ss_int w) {
-    if(w < 0 || w > 2) /* (as cpython, before the closed check) */
+    /* (as cpython, before the closed check; also SEEK_DATA/SEEK_HOLE where the os has them) */
+    bool whence_ok = w >= 0 && w <= 2;
+#ifdef SEEK_DATA
+    whence_ok = whence_ok || w == SEEK_DATA;
+#endif
+#ifdef SEEK_HOLE
+    whence_ok = whence_ok || w == SEEK_HOLE;
+#endif
+    if(!whence_ok)
         throw new ValueError(__add_strs(3, new str("whence value "), __str(w), new str(" unsupported")));
     __check_closed("seek of closed file");
     __check_seekable(f, "File or stream is not seekable.");
     if(f) {
+        if(w > 2) { /* SEEK_DATA/SEEK_HOLE: stdio does not know them, so ask the fd (an absolute offset) */
+            if(FFLUSH(f))
+                __throw_oserror();
+            off_t pos = ::lseek(fileno(f), (off_t)i, (int)w);
+            if(pos == -1)
+                __throw_oserror();
+            i = (__ss_int)pos;
+            w = SEEK_SET;
+        }
         if(fseek(f, i, (int)w) == -1)
             __throw_oserror();
         return tell(); /* the new absolute position */
@@ -1062,10 +1084,58 @@ __ss_int file_binary::readinto(bytes *b) {
     return (__ss_int)n;
 }
 
+/* bytes already in the stdio buffer (0 if unknown), so read1() need not block */
+static inline size_t __ss_freadahead(FILE *f) {
+#if defined(__GLIBC__)
+    return f->_IO_read_end > f->_IO_read_ptr ? (size_t)(f->_IO_read_end - f->_IO_read_ptr) : 0;
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+    return f->_r > 0 ? (size_t)f->_r : 0;
+#else
+    (void)f;
+    return 0;
+#endif
+}
+
+/* as cpython: at most one read of the os, so a pipe or socket gives what is
+   there (instead of waiting for n bytes or eof) */
 bytes *file_binary::read1(__ss_int n) {
     __check_mode_readable(mode, "read1");
     __check_closed("read of closed file");
-    return read(n);
+    if(n > 0 && __fd_seekable(f)) /* (a regular file: one big read gives all) */
+        return read(n);
+    __switch_op(f, options, 'r');
+    __read_cache.clear();
+    if(n != 0) {
+        const int c = GETC(f); /* (blocks only until something is there) */
+        if(c != EOF) {
+            __read_cache.push_back((char)c);
+            size_t avail = __ss_freadahead(f);
+            if(n > 0)
+                avail = std::min(avail, (size_t)(n - 1));
+            for(size_t i = 0; i < avail; ++i) {
+                const int d = GETC(f);
+                if(d == EOF)
+                    break;
+                __read_cache.push_back((char)d);
+            }
+        }
+        if(__error())
+            __throw_io_error();
+    }
+    bytes *b = new bytes(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
+    b->frozen = 1;
+    return b;
+}
+
+__ss_int file_binary::readinto1(bytes *b) {
+    if(b->frozen)
+        throw new TypeError(new str("readinto() argument must be read-write bytes-like object, not bytes"));
+    __check_mode_readable(mode, "read");
+    __check_closed("readinto of closed file");
+    bytes *data = read1((__ss_int)b->unit.size());
+    size_t n = data->unit.size();
+    b->unit.replace(0, n, data->unit);
+    return (__ss_int)n;
 }
 
 list<bytes *> *file_binary::readlines(__ss_int size_hint) {
@@ -1173,11 +1243,13 @@ bool file_binary::__eof() {
 }
 
 __iter<bytes *> *file_binary::__iter__() {
+    __check_closed(__SS_CLOSED_MSG); /* (as cpython: IOBase.__iter__) */
     return this;
 }
 
 bytes *file_binary::__next__() {
-    __check_closed(__SS_CLOSED_MSG);
+    /* (as cpython: a buffered reader's readline, else IOBase) */
+    __check_closed(__mode_readable(mode) ? "readline of closed file" : __SS_CLOSED_MSG);
     bytes *line = readline(); /* (not the eof flag: data may have been appended) */
     if(!len(line))
         throw new StopIteration();

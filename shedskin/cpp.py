@@ -4499,6 +4499,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         target = funcs[0]  # XXX
 
         swap_env = False
+        env_pos = 1  # after 'file' (spawn*: after 'mode' and 'file')
         for name in (
             "execle",
             "execlpe",
@@ -4507,6 +4508,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ):
             if self.library_func(funcs, "os", None, name):
                 swap_env = True
+                if name.startswith("spawn"):
+                    env_pos = 2
 
         castnull = False  # XXX
         print_call = self.library_func(funcs, "builtin", None, "__print")
@@ -4641,7 +4644,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # os.exec*, os.spawn* (C++ does not yet support non-terminal variadic arguments)
         if swap_env:
-            pairs.insert(1, pairs.pop())
+            pairs.insert(env_pos, pairs.pop())
 
         # 'l.count(2.5)', 'd.get(None)': warn about silently converted values
         if (

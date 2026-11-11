@@ -1756,6 +1756,59 @@ def test_closefd_fd_state_line_buffering_sig():
     os.remove(name)
 
 
+def test_read1_bom_only_next_closed():
+    name = os.path.join(testdata, 'read1_tmp')
+    # utf-8-sig: a file with only a bom is at 3 once read
+    b = open(name, 'wb')
+    b.write(b'\xef\xbb\xbf')
+    b.close()
+    g = open(name, encoding='utf-8-sig')
+    assert g.tell() == 0
+    assert g.read() == ''
+    assert g.tell() == 3
+    g.close()
+    # next() on a closed binary reader
+    rb = open(name, 'rb')
+    rb.close()
+    msg = ''
+    try:
+        next(rb)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'readline of closed file'
+    os.remove(name)
+
+    if sys.platform == 'win32':
+        return
+    # read1()/readinto1() give what a pipe has, without waiting for more
+    r, w = os.pipe()
+    fr = open(r, 'rb')
+    os.write(w, b'hello')
+    assert fr.read1(100) == b'hello'
+    os.write(w, b'abc')
+    ba = bytearray(10)
+    assert fr.readinto1(ba) == 3
+    assert ba[:3] == bytearray(b'abc')
+    os.write(w, b'xyz')
+    assert fr.read1() == b'xyz'
+    os.close(w)
+    assert fr.read1(10) == b''
+    fr.close()
+
+    if sys.platform != 'linux':
+        return
+    # SEEK_DATA/SEEK_HOLE (where the os has them)
+    s = open(name, 'wb')
+    s.write(b'abcdef')
+    s.close()
+    s = open(name, 'rb')
+    assert s.seek(0, os.SEEK_HOLE) == 6
+    assert s.seek(2, os.SEEK_DATA) == 2
+    assert s.read() == b'cdef'
+    s.close()
+    os.remove(name)
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1813,6 +1866,7 @@ def test_all():
     test_closefd()
     test_read_after_eof_and_seekable()
     test_closefd_fd_state_line_buffering_sig()
+    test_read1_bom_only_next_closed()
 
 if __name__ == '__main__':
     test_all()

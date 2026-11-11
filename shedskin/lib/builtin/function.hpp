@@ -1062,6 +1062,7 @@ template<class T> void __print_elem(str *result, T t, size_t &count, str *separa
 }
 
 bool __ss_stdout_line_buffering(); /* (sys.stdout is a terminal, see file.hpp) */
+file *__ss_print_target(); /* (an assigned sys.stdout) */
 
 template<class ... Args> void *print_(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
     str *s = new str();
@@ -1075,6 +1076,8 @@ template<class ... Args> void *print_(int, __ss_bool flush, file *f, str *end, s
     if(!end)
         end = nl;
 
+    if(!f)
+        f = __ss_print_target();
     if(f) {
         f->write(s);
         f->write(end);

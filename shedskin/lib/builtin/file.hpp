@@ -122,7 +122,7 @@ public:
     list<bytes *> *  readlines(__ss_int size_hint=-1);
     virtual bytes *read1(__ss_int n=-1);
     virtual __ss_int readinto(bytes *b);
-    virtual __ss_int readinto1(bytes *b) { return readinto(b); }
+    virtual __ss_int readinto1(bytes *b);
     virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
     virtual __ss_int truncate(); /* (at the current position) */

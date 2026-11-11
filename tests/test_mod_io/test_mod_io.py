@@ -817,6 +817,17 @@ def test_with_closed_message():
     assert msg == 'I/O operation on closed file.'
 
 
+def test_next_closed_message():
+    s = io.StringIO('x\n')
+    s.close()
+    msg = ''
+    try:
+        next(s)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'I/O operation on closed file'
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -858,6 +869,7 @@ def test_all():
     test_closed_message()
     test_truncate_negative()
     test_with_closed_message()
+    test_next_closed_message()
 
 if __name__ == '__main__':
     test_all() 

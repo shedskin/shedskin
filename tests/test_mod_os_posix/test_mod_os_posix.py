@@ -1048,6 +1048,14 @@ def test_wait_exec_utime_edges():
     os.remove(name)
 
 
+def test_spawn_variants():
+    # spawnle/spawnlpe: env after mode and file
+    assert os.spawnle(os.P_WAIT, '/bin/sh', 'sh', '-c', 'exit $X', {'X': '11'}) == 11
+    assert os.spawnlpe(os.P_WAIT, 'sh', 'sh', '-c', 'exit $X', {'X': '12', 'PATH': '/bin:/usr/bin'}) == 12
+    # only P_NOWAIT returns the pid; other modes wait (as CPython)
+    assert os.spawnv(2, '/bin/sh', ['sh', '-c', 'exit 4']) == 4
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1082,6 +1090,7 @@ def test_all():
     test_long_cwd_and_os_names()
     test_exec_spawn_failures()
     test_wait_exec_utime_edges()
+    test_spawn_variants()
 
 if __name__ == '__main__':
     test_all()
