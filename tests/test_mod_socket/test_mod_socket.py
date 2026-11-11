@@ -1241,14 +1241,17 @@ def test_recvfrom_connected_and_lookup_errors():
     conn, _ = srv.accept()
     conn.settimeout(5.0)
     c.sendall(b'abc')
+    # (on windows, CPython gives (0, b'\x00'*14) here, which we can't model)
     d, addr = conn.recvfrom(10)
     assert d == b'abc'
-    assert addr is None
+    if sys.platform != 'win32':
+        assert addr is None
     c.sendall(b'xyz')
     buf = bytearray(5)
     n, addr2 = conn.recvfrom_into(buf)
     assert n == 3
-    assert addr2 is None
+    if sys.platform != 'win32':
+        assert addr2 is None
     conn.close()
     c.close()
     srv.close()

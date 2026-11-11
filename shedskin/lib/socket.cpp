@@ -1332,7 +1332,7 @@ tuple2<bytes *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_i
     struct sockaddr_in sin = {};
     socklen_t salen = sizeof(sin);
     size_t len = recvfrom(buf.data(), (size_t)bufsize, flags_, reinterpret_cast<sockaddr *>(&sin), &salen);
-    return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), salen ? sin_addr_to_tuple(&sin) : 0); /* (connected tcp: None, as CPython) */
+    return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), (salen && sin.sin_family == AF_INET) ? sin_addr_to_tuple(&sin) : 0); /* (connected tcp: None, as CPython; winsock leaves salen as is, so check the family) */
 }
 
 /* validate a recv_into()/recvfrom_into() buffer, flags and nbytes (0: whole buffer) */
@@ -1369,7 +1369,7 @@ tuple2<__ss_int, socket::inet_address> *socket::recvfrom_into(bytes *buffer, __s
     struct sockaddr_in sin = {};
     socklen_t salen = sizeof(sin);
     size_t len = recvfrom(&buffer->unit[0], n, (int)flags, reinterpret_cast<sockaddr *>(&sin), &salen);
-    return new tuple2<__ss_int, inet_address>(2, (__ss_int)len, salen ? sin_addr_to_tuple(&sin) : 0); /* (connected tcp: None, as CPython) */
+    return new tuple2<__ss_int, inet_address>(2, (__ss_int)len, (salen && sin.sin_family == AF_INET) ? sin_addr_to_tuple(&sin) : 0); /* (connected tcp: None, as CPython; winsock leaves salen as is, so check the family) */
 }
 
 socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int fileno) {
