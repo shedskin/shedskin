@@ -3325,6 +3325,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         rtypes = self.mergeinh[right]
         argtypes = ltypes | rtypes
         ul, ur = typestr.unboxable(self.gx, ltypes), typestr.unboxable(self.gx, rtypes)
+        cast = None
+        if middle == "__contains__":
+            cast = self.lookup_other_type(left, right, func)
 
         # '=='/'!=' on instances of user classes
         if middle in ("__eq__", "__ne__"):
@@ -3425,8 +3428,67 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             assert middle
             self.append(self.connector(left, func) + middle + "(")
+        if cast:
+            self.append("((" + cast + ")(")
         self.visit2(right, argtypes, middle, func)
+        if cast:
+            self.append("))")
         self.append(")" + postfix)
+
+    def lookup_other_type(
+        self,
+        container: ast.AST,
+        value: ast.AST,
+        func: Optional["python.Function"],
+    ) -> Optional[str]:
+        """Looking up a value of another type than the element (or key) type of a
+        builtin container ('2.5 in [1, 2]', 'node in leaves'): warn if the value is
+        silently converted, and return a cast for an instance of a base class"""
+        ctypes = self.mergeinh[container]
+        if (
+            not ctypes
+            or self.hetero_tuple(ctypes)
+            or not all(
+                isinstance(t[0], python.Class) and t[0].mv.module.builtin
+                for t in ctypes
+            )
+        ):
+            return None
+        etypes = self.subtypes(ctypes, "unit")
+        ecls = {t[0] for t in etypes if isinstance(t[0], python.Class)}
+        vcls = {t[0] for t in self.mergeinh[value] if isinstance(t[0], python.Class)}
+        if not ecls or len(ecls) != len({t[0] for t in etypes}):
+            return None
+        eidents = {cl.ident for cl in ecls}
+        vidents = {cl.ident for cl in vcls}
+
+        # '2.5 in [1, 2]': the float is converted to an int, so 2 is found
+        if eidents == {"int_"} and "float_" in vidents:
+            error.error(
+                "looking up a float among ints: it is truncated, so 2.5 finds 2",
+                self.gx,
+                value,
+                warning=True,
+                mv=self.mv,
+            )
+        # 'None in [0, 1]': None becomes 0
+        elif eidents <= {"int_", "float_"} and (
+            ast_utils.is_none(value) or vidents == {"none"}
+        ):
+            error.error(
+                "looking up None among numbers: it is treated as 0",
+                self.gx,
+                value,
+                warning=True,
+                mv=self.mv,
+            )
+        # 'node in leaves': the value may be an instance of other subclasses than the
+        # elements, so it has a base class type (list.count and such cast in the same way)
+        elif all(not cl.mv.module.builtin for cl in ecls) and ecls <= vcls:
+            etype = typestr.typestr(self.gx, etypes, mv=self.mv)
+            if etype != typestr.nodetypestr(self.gx, value, func, mv=self.mv):
+                return etype
+        return None
 
     def visit2(
         self,
@@ -4450,6 +4512,24 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # os.exec*, os.spawn* (C++ does not yet support non-terminal variadic arguments)
         if swap_env:
             pairs.insert(1, pairs.pop())
+
+        # 'l.count(2.5)', 'd.get(None)': warn about silently converted values
+        if (
+            method_call
+            and objexpr
+            and node.args
+            and target.mv.module.builtin
+            and isinstance(target.parent, python.Class)
+            and (
+                target.ident
+                in ("__contains__", "count", "index", "remove", "discard", "get", "has_key")
+                or (
+                    target.ident in ("__getitem__", "__delitem__", "pop")
+                    and target.parent.ident in ("dict", "defaultdict", "Counter")
+                )
+            )
+        ):
+            self.lookup_other_type(objexpr, node.args[0], func)
 
         for arg, formal in pairs:
             cast = False
