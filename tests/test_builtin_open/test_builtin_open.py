@@ -1454,6 +1454,36 @@ def test_open_fd():
         assert e3.errno == 9
 
 
+def test_line_buffering():
+    # as CPython: True for text files opened with buffering=1
+    f = open('lbuf.txt', 'w', buffering=1)
+    assert f.line_buffering == True
+    f.close()
+    f = open('lbuf.txt', 'r', buffering=1)
+    assert f.line_buffering == True
+    f.close()
+    f = open('lbuf.txt', 'a+', buffering=1)
+    assert f.line_buffering == True
+    f.close()
+    for buffering in [-1, 4096]:
+        f = open('lbuf.txt', 'w', buffering)
+        assert f.line_buffering == False
+        f.close()
+    f = os.fdopen(os.open('lbuf.txt', os.O_WRONLY), 'w', 1)
+    assert f.line_buffering
+    f.close()
+    f = os.fdopen(os.open('lbuf.txt', os.O_WRONLY), 'w')
+    assert not f.line_buffering
+    f.close()
+    f = open(os.open('lbuf.txt', os.O_WRONLY), 'w', 1)
+    assert f.line_buffering
+    f.close()
+    os.remove('lbuf.txt')
+    # std streams: a terminal (and stderr always), unless python runs unbuffered
+    for g in [sys.stdin, sys.stdout, sys.stderr]:
+        assert g.line_buffering in (True, False)
+
+
 def test_unsupported_operation():
     # as CPython: reading a file not opened for reading (or writing one not
     # opened for writing) raises io.UnsupportedOperation (an OSError) instead
@@ -1567,6 +1597,7 @@ def test_all():
     test_unsupported_operation()
     test_binary_readinto_read1()
     test_open_fd()
+    test_line_buffering()
 
 
 if __name__ == '__main__':

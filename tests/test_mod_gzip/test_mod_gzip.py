@@ -653,6 +653,7 @@ def test_text_mode():
 
     f = gzip.open(io.BytesIO(buf.getvalue()), 'rt')
     assert f.encoding == 'utf-8'
+    assert f.line_buffering == False
     assert f.readable() and not f.writable()
     assert f.read(2) == 'hé'
     assert f.readline(2) == 'll'

@@ -64,6 +64,7 @@ class _GzipTextFile(file):
         self.mode = ''
         self.encoding = ''
         self.errors = ''
+        self.line_buffering = False
 
     def readable(self):
         return True

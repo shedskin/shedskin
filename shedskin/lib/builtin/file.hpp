@@ -25,6 +25,7 @@ public:
     file_binary *buffer;
 
     __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
+    __ss_bool line_buffering = False; /* buffering=1 (open, os.fdopen), or a terminal (std streams) */
     __file_options options;
     __GC_VECTOR(char) __read_cache;
 
