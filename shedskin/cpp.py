@@ -1405,7 +1405,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             for child in children:
                 type_child = self.subtypes(argtypes, "unit")
-                self.impl_visit_conv(child, type_child, func)
+                if ast_utils.is_none(child):
+                    self.visit_none(type_child)  # variadic constructor
+                else:
+                    self.impl_visit_conv(child, type_child, func)
                 if child != children[-1]:
                     self.append(",")
         self.append("))")
@@ -2735,6 +2738,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             msg, short, pre = mapping[type(op)]
             if isinstance(op, (ast.Is, ast.IsNot)):
                 self.visit_is(left, right, op, func)
+            elif isinstance(op, (ast.Eq, ast.NotEq)) and self.none_and_number(
+                left, right
+            ):
+                # a number is never None, but it can be equal to a bare NULL
+                is_op = ast.Is() if isinstance(op, ast.Eq) else ast.IsNot()
+                self.visit_is(left, right, is_op, func)
             elif msg == "__contains__":
                 self.do_compare(right, left, msg, short, func, pre)
             else:
@@ -2744,6 +2753,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             left = right
         if node not in self.bool_wrapper:
             self.append(")")
+
+    def none_and_number(self, left: ast.AST, right: ast.AST) -> bool:
+        """Whether None is compared with something that can only be a number"""
+        numbers = {
+            (python.def_class(self.gx, cl), 0)
+            for cl in ("int_", "float_", "bool_", "complex")
+        }
+        for node, other in ((left, right), (right, left)):
+            if ast_utils.is_none(node) and not ast_utils.is_none(other):
+                types = self.mergeinh[other]
+                return bool(types) and types <= numbers
+        return False
 
     def visit_is(
         self,
@@ -3669,7 +3690,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # to the int __str()/repr() overload (formatting it as "0") instead
             # of the void* one (which correctly returns "None").
             if self.is_none_type(value):
-                self.append("%s(((void *)0))" % convert)
+                self.append("%s(" % convert)
+                self.visit_none()
+                self.append(")")
             else:
                 self.visitm("%s(" % convert, value, ")", func)
             if spec:
@@ -4205,7 +4228,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         # a bare NULL is typed as a plain integer by C++, and
                         # would be printed as "0" (see castnull below)
                         if ast_utils.is_none(arg):
-                            self.append("(void *)NULL")
+                            self.visit_none()
                         else:
                             self.visit(arg, func)
                         if i != len(node.args) - 1:
@@ -4630,15 +4653,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             }:
                 cast = True
                 self.append("(__ss_float(")
-            elif (
+
+            if (
                 castnull
                 and ast_utils.is_none(arg)
                 and not (print_call and formal.name.startswith("__kw_"))
             ):
-                cast = True
-                self.append("((void *)(")
-
-            if arg in target.mv.defaults:
+                self.visit_none()
+            elif builtin_types and ast_utils.is_none(arg):
+                # e.g. l.remove(None): as the element type, or it would be
+                # looked up as a value of another type (and never found)
+                self.visit_none(builtin_types)
+            elif arg in target.mv.defaults:
                 if (
                     isinstance(arg, ast.Name)
                     and arg.id == '__void'
@@ -5868,7 +5894,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # some platforms, which has no __str/repr overload). Give the
             # argument the pointer type those overloads are declared for.
             if self.is_none_type(n):
-                self.append("((void *)0)")
+                self.visit_none()
             else:
                 self.visit(n, func)
         self.append(")")
@@ -5876,6 +5902,21 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def is_none_type(self, node: ast.AST) -> bool:
         """Whether a node's inferred type is exactly None"""
         return self.mergeinh.get(node) == {(python.def_class(self.gx, "none"), 0)}
+
+    def visit_none(self, types: Optional[Types] = None) -> None:
+        """Generate None as a pointer: of the given types, or else a void pointer
+
+        a bare NULL is an integer in C++. as an argument, it can select an
+        overload or template instance for integers (so that None is printed
+        as "0", or looked up as a value of another type than the elements of
+        a container), and it is equal to 0"""
+        ts = "void *"
+        if types:
+            ts = typestr.typestr(self.gx, types, mv=self.mv).strip()
+            if not ts.endswith("*"):  # None among numbers: not representable
+                self.append("NULL")
+                return
+        self.append("((%s)NULL)" % ts)
 
     def attr_var_ref(
         self, node: ast.Attribute, ident: str
