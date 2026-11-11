@@ -1618,7 +1618,7 @@ def test_closefd():
 def test_read_after_eof_and_seekable():
     # data appended after a read hit the end is seen (no sticky eof)
     name = os.path.join(testdata, 'eof_tmp')
-    w = open(name, 'w')
+    w = open(name, 'w', newline='')  # (no '\r\n' on windows, for the binary reads)
     w.write('a\n')
     w.flush()
     r = open(name)

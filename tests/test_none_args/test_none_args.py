@@ -63,6 +63,11 @@ def test_io():
     assert st.getvalue() == 'lin'
     bt = io.BytesIO(b'abcdef')
     assert bt.read(None) == b'abcdef'
+    bt.seek(2)
+    bt.truncate(None)
+    assert bt.getvalue() == b'ab'
+    bt.truncate(0)
+    assert bt.getvalue() == b''
 
 
 def test_random():

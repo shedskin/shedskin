@@ -923,16 +923,17 @@ def test_long_cwd_and_os_names():
     # round-trip (not a lone surrogate)
     name = os.fsdecode(b'shedskin_\xed\xa0\x80')
     assert name == 'shedskin_\udced\udca0\udc80'
-    f = open(name, 'w')
-    f.write('z')
-    f.close()
-    assert name in os.listdir('.')
-    assert name in [e.name for e in os.scandir('.')]
-    assert os.stat(name).st_size == 1
-    os.symlink(name, 'shedskin_link')
-    assert os.readlink('shedskin_link') == name
-    os.remove('shedskin_link')
-    os.remove(name)
+    if sys.platform != 'darwin':  # (macOS: EILSEQ, names must be valid utf-8)
+        f = open(name, 'w')
+        f.write('z')
+        f.close()
+        assert name in os.listdir('.')
+        assert name in [e.name for e in os.scandir('.')]
+        assert os.stat(name).st_size == 1
+        os.symlink(name, 'shedskin_link')
+        assert os.readlink('shedskin_link') == name
+        os.remove('shedskin_link')
+        os.remove(name)
 
     # os.popen text pipes are strict, as open()
     p = os.popen("printf 'a\\377'")
