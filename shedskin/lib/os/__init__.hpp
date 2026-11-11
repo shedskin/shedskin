@@ -304,18 +304,39 @@ template<class T> inline void __utime_check_pair(T *t, const char *msg) {
         __utime_error(msg);
 }
 
-template<class D> void *utime(__ss_bool follow_symlinks, D dir_fd, void *, str *path, void *) {
-    return __utime_now(path, __ss_dirfd(dir_fd), follow_symlinks);
+/* path may also be an fd: then (as cpython) neither dir_fd nor
+   follow_symlinks may be given, and the fd is passed on as dir_fd, with a
+   NULL path (futimens) */
+inline str *__utime_p(str *path, int &, bool &) { return path; }
+inline str *__utime_p(__ss_int fd, int &dir_fd, bool &follow_symlinks) {
+    if(dir_fd != __SS_DIR_FD_CWD)
+        throw new ValueError(new str("utime: can't specify dir_fd without matching path"));
+    if(!follow_symlinks)
+        throw new ValueError(new str("utime: cannot use fd and follow_symlinks together"));
+    dir_fd = __ss_cint(fd);
+    return NULL;
 }
-template<class D, class T> void *utime(__ss_bool follow_symlinks, D dir_fd, void *, str *path, T *times) {
+template<class D, class P> void *utime(__ss_bool follow_symlinks, D dir_fd, void *, P path, void *) {
+    int d = __ss_dirfd(dir_fd);
+    bool f = follow_symlinks;
+    str *p = __utime_p(path, d, f);
+    return __utime_now(p, d, f);
+}
+template<class D, class P, class T> void *utime(__ss_bool follow_symlinks, D dir_fd, void *, P path, T *times) {
     __utime_check_pair(times, "utime: 'times' must be either a tuple of two numbers or None");
-    return __utime_float(path, (__ss_float)times->__getfirst__(), (__ss_float)times->__getsecond__(), __ss_dirfd(dir_fd), follow_symlinks);
+    int d = __ss_dirfd(dir_fd);
+    bool f = follow_symlinks;
+    str *p = __utime_p(path, d, f);
+    return __utime_float(p, (__ss_float)times->__getfirst__(), (__ss_float)times->__getsecond__(), d, f);
 }
-template<class D, class N> void *utime(__ss_bool follow_symlinks, D dir_fd, N *ns, str *path, void *) {
+template<class D, class N, class P> void *utime(__ss_bool follow_symlinks, D dir_fd, N *ns, P path, void *) {
     __utime_check_pair(ns, "utime: 'ns' must be a tuple of two ints");
-    return __utime_ns(path, (__ss_int)ns->__getfirst__(), (__ss_int)ns->__getsecond__(), __ss_dirfd(dir_fd), follow_symlinks);
+    int d = __ss_dirfd(dir_fd);
+    bool f = follow_symlinks;
+    str *p = __utime_p(path, d, f);
+    return __utime_ns(p, (__ss_int)ns->__getfirst__(), (__ss_int)ns->__getsecond__(), d, f);
 }
-template<class D, class N, class T> void *utime(__ss_bool, D, N *, str *, T *) {
+template<class D, class N, class P, class T> void *utime(__ss_bool, D, N *, P, T *) {
     __utime_error("utime: you may specify either 'times' or 'ns' but not both");
 }
 
@@ -361,6 +382,7 @@ public:
 times_result *times();
 
 void *truncate(str *path, __ss_int length);
+inline void *truncate(__ss_int fd, __ss_int length) { return ftruncate(fd, length); } /* (as cpython) */
 void *closerange(__ss_int fd_low, __ss_int fd_high);
 __ss_int waitstatus_to_exitcode(__ss_int status);
 __ss_bool get_inheritable(__ss_int fd);
@@ -501,6 +523,7 @@ public:
 
 statvfs_result *statvfs(str *path);
 statvfs_result *fstatvfs(__ss_int fd);
+inline statvfs_result *statvfs(__ss_int fd) { return fstatvfs(fd); } /* (as cpython) */
 
 __ss_int getuid();
 void *setuid(__ss_int uid);
@@ -578,6 +601,8 @@ __ss_int pathconf(str *path, str *name_);
 __ss_int pathconf(str *path, __ss_int name_);
 __ss_int fpathconf(__ss_int fd, str *name_);
 __ss_int fpathconf(__ss_int fd, __ss_int name_);
+inline __ss_int pathconf(__ss_int fd, str *name) { return fpathconf(fd, name); } /* (as cpython) */
+inline __ss_int pathconf(__ss_int fd, __ss_int name) { return fpathconf(fd, name); }
 str *confstr(str *name_);
 str *confstr(__ss_int name_);
 __ss_int sysconf(str *name_);

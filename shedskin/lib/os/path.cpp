@@ -1627,6 +1627,35 @@ __ss_bool exists(bytes *path) {
     return exists(__os__::fsdecode(path));
 }
 
+/* fds (as cpython, which passes them on to os.stat) */
+
+__ss_int getsize(__ss_int fd) { return __os__::fstat(fd)->st_size; }
+double getmtime(__ss_int fd) { return __os__::fstat(fd)->__ss_st_mtime; }
+double getatime(__ss_int fd) { return __os__::fstat(fd)->__ss_st_atime; }
+double getctime(__ss_int fd) { return __os__::fstat(fd)->__ss_st_ctime; }
+
+static __os__::stat_result *__fstat_or_null(__ss_int fd) {
+    try {
+        return __os__::fstat(fd);
+    } catch (__os__::error *) { /* (as cpython: an fd out of int range still raises) */
+        return NULL;
+    }
+}
+
+__ss_bool exists(__ss_int fd) {
+    return __mbool(__fstat_or_null(fd) != NULL);
+}
+
+__ss_bool isdir(__ss_int fd) {
+    __os__::stat_result *st = __fstat_or_null(fd);
+    return __mbool(st && __stat__::__ss_S_ISDIR(st->st_mode));
+}
+
+__ss_bool isfile(__ss_int fd) {
+    __os__::stat_result *st = __fstat_or_null(fd);
+    return __mbool(st && __stat__::__ss_S_ISREG(st->st_mode));
+}
+
 } // module namespace
 } // module namespace
 

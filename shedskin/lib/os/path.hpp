@@ -47,6 +47,14 @@ __ss_bool exists(bytes *path);
 __ss_bool lexists(str *path);
 __ss_bool isdir(str *s);
 __ss_bool isfile(str *path);
+/* (as cpython, via os.stat: path may be an fd) */
+__ss_int getsize(__ss_int fd);
+double getmtime(__ss_int fd);
+double getatime(__ss_int fd);
+double getctime(__ss_int fd);
+__ss_bool exists(__ss_int fd);
+__ss_bool isdir(__ss_int fd);
+__ss_bool isfile(__ss_int fd);
 __ss_bool isjunction(str *path);
 str *normpath(str *path);
 str *abspath(str *path);

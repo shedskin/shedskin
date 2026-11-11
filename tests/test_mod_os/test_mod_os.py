@@ -1580,6 +1580,48 @@ def test_listdir_scandir_chdir_fd():
     os.rmdir(top)
 
 
+def test_fd_paths():
+    # os.path.exists/isfile/isdir/getsize/get*time, truncate, utime, statvfs
+    # and pathconf also take an fd, as CPython
+    path = 'shedskin_test_fd_paths.txt'
+    with open(path, 'w') as f:
+        f.write('hello')
+    fd = os.open(path, os.O_RDWR)
+    assert os.path.exists(fd) and not os.path.exists(-1) and not os.path.exists(9999)
+    assert os.path.isfile(fd) and not os.path.isfile(9999) and not os.path.isdir(fd)
+    assert os.path.getsize(fd) == 5
+    assert os.path.getmtime(fd) > 0 and os.path.getatime(fd) > 0 and os.path.getctime(fd) > 0
+    try:
+        os.path.getsize(9999)
+        assert False
+    except OSError as e:
+        assert e.errno == 9
+    os.truncate(fd, 2)
+    assert os.path.getsize(path) == 2
+    if os.name != 'nt':  # (no fd for these on windows)
+        d = os.open('.', os.O_RDONLY)
+        assert os.path.isdir(d) and not os.path.isfile(d)
+        os.utime(fd, (1, 2))
+        assert os.stat(path).st_mtime == 2
+        os.utime(fd, ns=(1, 3 * 10**9))
+        assert os.stat(path).st_mtime == 3
+        try:
+            os.utime(fd, follow_symlinks=False)
+            assert False
+        except ValueError as e2:
+            assert str(e2) == 'utime: cannot use fd and follow_symlinks together'
+        try:
+            os.utime(fd, dir_fd=d)
+            assert False
+        except ValueError as e3:
+            assert str(e3) == "utime: can't specify dir_fd without matching path"
+        assert os.statvfs(fd).f_bsize > 0
+        assert os.pathconf(fd, 'PC_NAME_MAX') == os.pathconf(path, 'PC_NAME_MAX')
+        os.close(d)
+    os.close(fd)
+    os.remove(path)
+
+
 def _ls_dir_fd() -> list:
     return sorted(os.listdir('shedskin_test_dir_fd'))
 
@@ -2352,6 +2394,7 @@ def test_all():
     test_dir_fd()
     test_chmod_chown_access_link_at()
     test_listdir_scandir_chdir_fd()
+    test_fd_paths()
     test_stat_follow_symlinks()
     test_stat_fd_dir_fd()
     test_links()

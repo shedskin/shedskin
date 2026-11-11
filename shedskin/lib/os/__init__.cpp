@@ -1540,7 +1540,11 @@ static void __utime_win32(str *path, FILETIME *atime, FILETIME *mtime) {
     CloseHandle(hFile);
 }
 
-/* (as cpython: neither is available on windows) */
+/* (as cpython: neither is available on windows, and no fd for path) */
+[[noreturn]] static void __utime_no_fd() {
+    throw new TypeError(new str("utime: path should be string, bytes, os.PathLike or None, not int"));
+}
+
 static void __utime_check_args(int dir_fd, bool follow_symlinks) {
     if(dir_fd != __SS_DIR_FD_CWD)
         throw new NotImplementedError(new str("utime: dir_fd unavailable on this platform"));
@@ -1549,6 +1553,8 @@ static void __utime_check_args(int dir_fd, bool follow_symlinks) {
 }
 
 void *__utime_now(str *path, int dir_fd, bool follow_symlinks) {
+    if(!path)
+        __utime_no_fd();
     __utime_check_args(dir_fd, follow_symlinks);
     FILETIME now;
     GetSystemTimeAsFileTime(&now);
@@ -1557,6 +1563,8 @@ void *__utime_now(str *path, int dir_fd, bool follow_symlinks) {
 }
 
 static void __utime_set(str *path, long long asec, long ansec, long long msec, long mnsec, int dir_fd, bool follow_symlinks) {
+    if(!path)
+        __utime_no_fd();
     __utime_check_args(dir_fd, follow_symlinks);
     FILETIME atime, mtime;
     time_t_to_FILE_TIME(asec, ansec, &atime);
@@ -1566,6 +1574,11 @@ static void __utime_set(str *path, long long asec, long ansec, long long msec, l
 
 #else
 static void __utime_at(str *path, struct timespec *ts, int dir_fd, bool follow_symlinks) {
+    if(!path) { /* path was an fd (see __utime_p) */
+        if(::futimens(dir_fd, ts) == -1)
+            __throw_oserror();
+        return;
+    }
     if(dir_fd == __SS_DIR_FD_CWD)
         dir_fd = AT_FDCWD;
     if(::utimensat(dir_fd, __ss_cpath(path, "utime"), ts, follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW) == -1)
