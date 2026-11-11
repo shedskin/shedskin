@@ -960,43 +960,21 @@ void *fchmod(__ss_int fd_, __ss_int mode_) {
 }
 
 void *renames(str* old, str* _new) {
-    tuple<str *> *__0, *__1, *__5;
-    str *__2, *head, *tail;
-
-    __0 = __path__::split(_new);
-    head = __0->__getfirst__();
-    tail = __0->__getsecond__();
-
-    if ((!___bool(tail))) {
-        __1 = __path__::split(head);
-        head = __1->__getfirst__();
-        tail = __1->__getsecond__();
-    }
-
-    while(___bool(__AND(head, tail, 2)) && !__path__::exists(head)) {
-        try {
-            makedirs(head);
-        } catch (OSError *) {
-            break;
-        }
-        __5 = __path__::split(head);
-        head = __5->__getfirst__();
-        tail = __5->__getsecond__();
-    }
+    /* as CPython: create the new leaf's parents, then prune the old ones as
+       far as they are empty (errors there are ignored) */
+    tuple<str *> *t = __path__::split(_new);
+    str *head = t->__getfirst__(), *tail = t->__getsecond__();
+    if(___bool(head) && ___bool(tail) && !__path__::exists(head))
+        makedirs(head);
     rename(old, _new);
-
-    __0 = __path__::split(old);
-    head = __0->__getfirst__();
-    tail = __0->__getsecond__();
-
-    if ((!___bool(tail))) {
-        __1 = __path__::split(head);
-        head = __1->__getfirst__();
-        tail = __1->__getsecond__();
-    }
-
-    if(___bool(__AND(head,tail,2))) {
-        removedirs(head);
+    t = __path__::split(old);
+    head = t->__getfirst__();
+    tail = t->__getsecond__();
+    if(___bool(head) && ___bool(tail)) {
+        try {
+            removedirs(head);
+        } catch (OSError *) {
+        }
     }
     return NULL;
 }

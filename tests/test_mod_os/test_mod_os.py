@@ -843,6 +843,25 @@ def test_rename_renames():
     assert os.path.isfile(dst)
     os.remove(dst)
 
+    # ..but leaves (without error) a directory that is not empty
+    top = 'shedskin_test_renames_dir2'
+    os.makedirs(os.path.join(top, 'a', 'b'))
+    for n in ['x', 'y']:
+        with open(os.path.join(top, 'a', 'b', n), 'w') as f:
+            f.write(n)
+    os.renames(os.path.join(top, 'a', 'b', 'x'), os.path.join(top, 'c', 'x'))
+    assert sorted(os.listdir(os.path.join(top, 'a', 'b'))) == ['y']
+    os.renames(os.path.join(top, 'a', 'b', 'y'), os.path.join(top, 'c', 'y'))
+    assert sorted(os.listdir(top)) == ['c']
+    assert sorted(os.listdir(os.path.join(top, 'c'))) == ['x', 'y']
+    # a trailing slash on the old name prunes nothing (as CPython)
+    os.renames(os.path.join(top, 'c') + '/', os.path.join(top, 'd', 'e'))
+    assert sorted(os.listdir(top)) == ['d']
+    os.remove(os.path.join(top, 'd', 'e', 'x'))
+    os.renames(os.path.join(top, 'd', 'e', 'y'), 'shedskin_test_renames_y')
+    assert not os.path.exists(top)
+    os.remove('shedskin_test_renames_y')
+
     try:
         os.rename('shedskin_does_not_exist.txt', dst)
         assert False
