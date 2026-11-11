@@ -1375,6 +1375,14 @@ class file_binary(pyiter):
     def readlines(self, sizehint=-1):
         return [self.unit]
 
+    def read1(self, size=-1):
+        return self.unit
+    # NOTE b must be a bytearray (array.array/memoryview unsupported)
+    def readinto(self, b):
+        return 1
+    def readinto1(self, b):
+        return 1
+
     def write(self, s):
         return 1
     def writelines(self, it):
