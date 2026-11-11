@@ -17,6 +17,21 @@ def test_list_misc():
     assert ah ==  [1, 1.0]
 
 
+def test_list_add_mixed_elt():
+    # list + [element], where the element is wider than the list elements
+    assert [1, 2] + [0.5] == [1.0, 2.0, 0.5]
+    assert [0.5] + [1, 2] == [0.5, 1.0, 2.0]
+    a = [1, 2] + [0.5]
+    assert a == [1.0, 2.0, 0.5]
+    assert sum(a) == 3.5
+    b = [0.5] + [1, 2]
+    assert b == [0.5, 1.0, 2.0]
+    c = [1.5, 2.5]
+    assert c + [3] == [1.5, 2.5, 3.0]
+    d = [1, 2]
+    assert d + [3] == [1, 2, 3]
+
+
 def test_list_clear():
     some_list = [ 1, 2, 3, 4 ]
     some_list.clear()
@@ -907,6 +922,7 @@ def test_all():
     test_list_index_str_identity()
     test_list_length()
     test_list_misc()
+    test_list_add_mixed_elt()
     test_list_nested()
     test_list_slice_assign()
     test_list_extend_iterable()

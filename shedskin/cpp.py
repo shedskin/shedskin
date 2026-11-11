@@ -3284,6 +3284,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and self.one_class(left, ("list",))
             and isinstance(right, ast.List)
             and len(right.elts) == 1
+            # the result has the element type of the left operand, so not for
+            # e.g. [1, 2] + [0.5], which would truncate the float
+            and typestr.typestr(self.gx, ltypes, mv=self.mv)
+            == typestr.typestr(self.gx, ltypes | rtypes, mv=self.mv)
         ):
             self.append("__add_list_elt(")
             self.visit(left, func)
