@@ -864,6 +864,38 @@ class CMakeBuilder:
                         os.remove(cache)
                     return
 
+    def uses_visual_studio_generator(self) -> bool:
+        """Whether cmake builds with a Visual Studio generator (the default
+        on windows), which ignores CMAKE_CXX_COMPILER_LAUNCHER"""
+        if platform.system() != "Windows":
+            return False
+        generator = self.options.generator or os.environ.get("CMAKE_GENERATOR", "")
+        return not generator or generator.startswith("Visual Studio")
+
+    def ccache_vs_globals(self, ccache: str) -> str:
+        """Use ccache with a Visual Studio generator, as described on the
+        ccache wiki: have msbuild run a copy of ccache.exe named cl.exe,
+        which then runs the real cl.exe (found in PATH) itself.
+
+        This needs the real ccache.exe, not a shim (as installed by e.g.
+        chocolatey or scoop), as ccache must see itself invoked as cl.exe.
+        """
+        # absolute, as cmake also uses CMAKE_VS_GLOBALS for its compiler
+        # identification projects, which are built in other directories
+        ccache_dir = (self.build_dir / "ccache").resolve()
+        ccache_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ccache, ccache_dir / "cl.exe")
+        vs_globals = [
+            "CLToolExe=cl.exe",
+            f"CLToolPath={ccache_dir}",
+            # compile files one by one, as ccache can't handle several
+            # source files per cl.exe call
+            "UseMultiToolTask=true",
+            # msbuild file tracking gets in the way of ccache
+            "TrackFileAccess=false",
+        ]
+        return f'-DCMAKE_VS_GLOBALS="{";".join(vs_globals)}"'
+
     def cmake_config(self, options: list[str], generator: Optional[str] = None) -> None:
         """CMake configuration phase"""
         opts = " ".join(options)
@@ -959,11 +991,13 @@ class CMakeBuilder:
             bld_options.append(f"--parallel {self.options.jobs}")
             tst_options.append(f"--parallel {self.options.jobs}")
 
+        ccache = None
         if self.options.ccache:
-            if shutil.which("ccache"):
-                cfg_options.append("-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
-            else:
+            ccache = shutil.which("ccache")
+            if not ccache:
                 self.log.warning("'ccache' not found")
+            elif not self.uses_visual_studio_generator():
+                cfg_options.append("-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
 
         if self.options.spm:
             cfg_options.append("-DENABLE_SPM=ON")
@@ -991,6 +1025,9 @@ class CMakeBuilder:
 
         if not self.build_dir.exists():
             self.mkdir_build()
+
+        if ccache and self.uses_visual_studio_generator():
+            cfg_options.append(self.ccache_vs_globals(ccache))
 
         if self.options.spm:
             spm = ShedskinDependencyManager(self.source_dir)
