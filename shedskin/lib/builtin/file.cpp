@@ -213,6 +213,7 @@ void file::__init_opened(__ss_int buffering) {
         throw new ValueError(new str("can't have unbuffered text I/O"));
     }
     __set_buffering(f, buffering, true);
+    line_buffering = __mbool(buffering == 1);
     if (mode->unit.find('a') != std::string::npos) /* (as cpython, also for an fd: */
         fseek(f, 0, SEEK_END);                      /*  tell() and reads start at the end) */
 

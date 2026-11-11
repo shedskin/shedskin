@@ -215,6 +215,8 @@ void __init() {
     for (file *fp : {__ss_stdin, __ss_stdout, __ss_stderr}) {
         fp->encoding = utf8;
         fp->errors = se;
+        /* as CPython: line buffered for a terminal, and stderr always */
+        fp->line_buffering = (fp == __ss_stderr) ? True : fp->isatty();
     }
 
     cl_baseexception = new class_("BaseException");

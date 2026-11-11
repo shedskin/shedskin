@@ -128,7 +128,7 @@ bytes *BytesIO::getvalue() {
 
 /* StringIO */
 
-StringIO::StringIO(str *initial_value, str *newline) : file(), pos(0), s(new str()), universal(false), any_ending(false), line_buffering(False) {
+StringIO::StringIO(str *initial_value, str *newline) : file(), pos(0), s(new str()), universal(false), any_ending(false) {
     if(!newline) {
         universal = true;
         nl = __GC_STR(1, '\n');

@@ -65,7 +65,6 @@ public:
        '\n' (default), '\r', '\r\n' -> '\n' written as nl, lines end at nl */
     bool universal, any_ending;
     __GC_STR nl;
-    __ss_bool line_buffering; /* always False (only meaningful for TextIOWrapper) */
 
     StringIO(str *initial_value=NULL) : StringIO(initial_value, new str("\n")) {}
     StringIO(str *initial_value, __ss_void_struct) : StringIO(initial_value) {} /* newline not given */
