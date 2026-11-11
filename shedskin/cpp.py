@@ -1928,7 +1928,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             pref, tail = self.forin_preftail(node)
             self.start("FOR_IN{}({},".format(pref, assname))
-            self.visit(node.iter, func)
+            self.impl_visit_to_temp(self.mv.tempcount[node], node.iter, func)
             self.print(self.line + "," + tail + ")")
             if self.only_classes(
                 node.iter,
@@ -2601,6 +2601,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Convert/cast a node to the type it is assigned to"""
         actualtypes = self.mergeinh[node]
+        # the C++ type of a call is the declared return type, which merges
+        # over all calls, and not the type inferred for this call
+        decltypes = self.expr_decl_types(node)
+        if decltypes is not None:
+            actualtypes = decltypes
         if check_temp and node in self.mv.tempcount:  # XXX
             self.append(self.mv.tempcount[node])
         elif isinstance(node, ast.Dict):
@@ -3801,6 +3806,79 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return None
         return typestr.typestr(self.gx, self.mergeinh[node], mv=self.mv).strip()
 
+    def impl_visit_to_temp(
+        self, temp: str, node: ast.AST, func: Optional["python.Function"]
+    ) -> None:
+        """Visit a node that is assigned to a temp. The declared return type
+        of a call may differ from the type of the temp"""
+        if self.expr_decl_types(node) is not None:
+            tempvar = python.lookup_var(temp, func, self.mv)
+            if tempvar and tempvar in self.mergeinh:
+                self.impl_visit_conv(
+                    node, self.mergeinh[tempvar], func, check_temp=False
+                )
+                return
+        self.visit(node, func)
+
+    def expr_decl_types(self, node: ast.AST) -> Optional[Types]:
+        """Return the C++ types of a call to a single user function, or of an
+        item taken from its result, if these follow from its declaration"""
+        if isinstance(node, ast.Call):
+            if self.call_downcast(node):
+                return None
+            return self.call_decl_types(node)
+        if (
+            isinstance(node, ast.Subscript)
+            and not isinstance(node.slice, (ast.Slice, ast.Tuple))
+            and node in self.mergeinh
+            and self.mergeinh[node]
+        ):
+            decltypes = self.expr_decl_types(node.value)
+            if decltypes is None:
+                return None
+            classes = typestr.types_classes(decltypes)
+            if len(classes) != 1:
+                return None
+            ident = next(iter(classes)).ident
+            varname = None
+            if ident in ("list", "tuple"):
+                varname = "unit"
+            elif ident in ("dict", "defaultdict"):
+                varname = "value"
+            elif ident == "tuple2":
+                index = node.slice
+                if not self.hetero_tuple(decltypes):
+                    varname = "first"
+                elif isinstance(index, ast.Constant) and index.value in (0, 1):
+                    varname = ("first", "second")[index.value]
+            return self.subtypes(decltypes, varname) or None
+        return None
+
+    def call_decl_types(self, node: ast.Call) -> Optional[Types]:
+        """Return the types a call to a single user function is declared to
+        return in C++. These merge over all calls, so can differ from the
+        types inferred for this call (e.g. list<int> versus an empty list)"""
+        if node not in self.mergeinh or not self.mergeinh[node]:
+            return None
+        if infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)[4]:
+            return None  # constructor
+        funcs = infer.callfunc_targets(self.gx, node, self.gx.merged_inh)
+        if len(funcs) != 1:
+            return None
+        target = funcs[0]
+        while target.inherited_from:  # copied method: C++ uses original
+            target = target.inherited_from
+        if (
+            target.mv.module.builtin
+            or not target.returnexpr
+            or target.isGenerator
+            or target.retnode is None
+        ):
+            return None
+        if target.ftypes:
+            return target.ftypes[0]
+        return self.mergeinh[target.retnode.thing] or None
+
     def impl_visit_call(
         self,
         node: ast.Call,
@@ -4747,7 +4825,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(rvalue, str):
             self.append(rvalue)
         else:
-            self.visit(rvalue, func)
+            self.impl_visit_to_temp(temp, rvalue, func)
         self.eol()
 
         if ast_utils.has_starred(lvalue):
@@ -5014,13 +5092,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             child
                         ):
                             self.start(self.mv.tempcount[child] + " = ")
-                            self.visit(child, func)
+                            self.impl_visit_to_temp(self.mv.tempcount[child], child, func)
                             self.eol()
             elif not ast_utils.is_constant(node.value) and not ast_utils.is_none(
                 node.value
             ):
                 self.start(self.mv.tempcount[node.value] + " = ")
-                self.visit(node.value, func)
+                self.impl_visit_to_temp(self.mv.tempcount[node.value], node.value, func)
                 self.eol()
 
         # a = (b,c) = .. = expr
@@ -5380,7 +5458,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             qual = node.generators[0]
             if self.genexpr_eager_iter(qual, lcfunc):
                 self.start("    ")
-                self.visitm(self.mv.tempcount[qual], " = ", qual.iter, lcfunc)
+                self.append(self.mv.tempcount[qual] + " = ")
+                self.impl_visit_to_temp(self.mv.tempcount[qual], qual.iter, lcfunc)
                 self.eol()
             self.output("    __last_yield = -1;")
             self.output("}\n")
@@ -5591,7 +5670,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif not isinstance(qual.iter, ast.Name):
                 itervar = self.mv.tempcount[qual]
                 self.start("")
-                self.visitm(itervar, " = ", qual.iter, lcfunc)
+                self.append(itervar + " = ")
+                self.impl_visit_to_temp(itervar, qual.iter, lcfunc)
                 self.eol()
             else:
                 itervar = self.cpp_name(qual.iter.id)
