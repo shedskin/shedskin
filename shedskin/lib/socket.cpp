@@ -828,15 +828,31 @@ static str *__socketio_mode(str *mode) {
 }
 
 file *socket::makefile(str *mode) {
+    return makefile(NULL, NULL, NULL, mode, -1);
+}
+
+file_binary *socket::makefile_binary(str *mode) {
+    return makefile_binary(NULL, NULL, NULL, mode, -1);
+}
+
+/* (as CPython: the text layer gets the encoding, errors and newline, and
+   both get the buffering, but line buffering is never on) */
+file *socket::makefile(str *newline, str *errors, str *encoding, str *mode, __ss_int buffering) {
     if(!mode)
         mode = new str("r");
-    file *f = new file(__makefile(_fd, __makefile_mode(mode)), new str("<socket>"), mode);
+    if(buffering == 0)
+        throw new ValueError(new str("unbuffered streams must be binary"));
+    file *f = new file(__makefile(_fd, __makefile_mode(mode)), new str("<socket>"), mode, encoding, errors, newline, buffering);
+    f->line_buffering = False; /* (as cpython: not passed on to the text layer, whatever buffering) */
     f->buffer->mode = __socketio_mode(mode);
     return f;
 }
 
-file_binary *socket::makefile_binary(str *mode) {
-    file_binary *f = new file_binary(__makefile(_fd, __makefile_mode(mode)), new str("<socket>"));
+file_binary *socket::makefile_binary(str *, str *, str *, str *mode, __ss_int buffering) {
+    /* (as cpython: encoding, errors and newline are ignored in binary mode) */
+    FILE *fp = __makefile(_fd, __makefile_mode(mode));
+    __set_buffering(fp, buffering, false);
+    file_binary *f = new file_binary(fp, new str("<socket>"));
     f->mode = __socketio_mode(mode);
     return f;
 }

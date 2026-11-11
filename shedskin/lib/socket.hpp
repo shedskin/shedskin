@@ -159,6 +159,10 @@ public:
     void *bind(bytes *address);
     file *makefile(str *mode=NULL);
     file_binary *makefile_binary(str *mode=NULL);
+    /* makefile(mode='r', buffering=None, *, encoding=None, errors=None,
+       newline=None): the keyword-only arguments come first, in reverse */
+    file *makefile(str *newline, str *errors, str *encoding, str *mode, __ss_int buffering);
+    file_binary *makefile_binary(str *newline, str *errors, str *encoding, str *mode, __ss_int buffering);
     void *setsockopt(__ss_int level, __ss_int optname, __ss_int value);
     void *connect(inet_address address);
     void *connect(str *address);
