@@ -1929,6 +1929,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.do_fastchoiceiter(node, func, False)
             self.forbody(node, None, assname, func, True, False, False)
         else:
+            self.forin_check(node, func)
             pref, tail = self.forin_preftail(node)
             self.start("FOR_IN{}({},".format(pref, assname))
             self.impl_visit_to_temp(self.mv.tempcount[node], node.iter, func)
@@ -1942,6 +1943,24 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 )
             self.forbody(node, None, assname, func, False, False, False)
         self.print()
+
+    def forin_check(self, node: ast.For, func: Optional["python.Function"]) -> None:
+        """Warn if the elements of a builtin container cannot be used as the
+        loop variable (e.g. lists of ints, for a list of floats)"""
+        if not isinstance(node.target, ast.Name):
+            return
+        var = python.lookup_var(node.target.id, func, self.mv)
+        itertypes = self.mergeinh[node.iter]
+        if (
+            var in self.mergeinh
+            and self.only_classes(
+                node.iter, ("list", "tuple", "set", "frozenset", "dict")
+            )
+            and not self.hetero_tuple(itertypes)
+        ):
+            self.conv_cast(
+                node.iter, self.subtypes(itertypes, "unit"), self.mergeinh[var]
+            )
 
     def do_fastzip2(
         self,
@@ -2630,33 +2649,34 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit_Call(node, func, argtypes=argtypes)
         elif ast_utils.is_none(node):
             self.visit(node, func)
-        else:  # XXX messy
-            cast = ""
-            if (
-                actualtypes
-                and argtypes
-                and typestr.typestr(self.gx, actualtypes, mv=self.mv)
-                != typestr.typestr(self.gx, argtypes, mv=self.mv)
-                and typestr.typestr(self.gx, actualtypes, mv=self.mv)
-                not in ("str *", "bytes *")
-            ):  # XXX
-                if typestr.incompatible_assignment_rec(self.gx, actualtypes, argtypes):
-                    error.error(
-                        "incompatible types", self.gx, node, warning=True, mv=self.mv
-                    )
-                else:
-                    cast = (
-                        "("
-                        + typestr.typestr(self.gx, argtypes, mv=self.mv).strip()
-                        + ")"
-                    )
-                    if cast == "(complex)":
-                        cast = "mcomplex"
-            if cast:
-                self.append("(" + cast + "(")
+        else:
+            cast = None
+            if actualtypes:
+                cast = self.conv_cast(node, actualtypes, argtypes)
+            if cast == "complex":
+                self.append("(mcomplex(")
+            elif cast:
+                self.append("((" + cast + ")(")
             self.visit(node, func)
             if cast:
                 self.append("))")
+
+    def conv_cast(
+        self, node: ast.AST, actualtypes: Types, argtypes: Types
+    ) -> Optional[str]:
+        """Return the C++ type to cast a value of 'actualtypes' to, in order
+        to use it as 'argtypes', if a cast is needed. warn if a cast is not
+        safe (e.g. a list of ints as a list of floats)"""
+        if not argtypes:
+            return None
+        actualstr = typestr.typestr(self.gx, actualtypes, mv=self.mv)
+        argstr = typestr.typestr(self.gx, argtypes, mv=self.mv)
+        if actualstr == argstr or actualstr in ("str *", "bytes *"):  # XXX
+            return None
+        if typestr.incompatible_assignment_rec(self.gx, actualtypes, argtypes):
+            error.error("incompatible types", self.gx, node, warning=True, mv=self.mv)
+            return None
+        return argstr.strip()
 
     def visit_Break(
         self, node: ast.Break, func: Optional["python.Function"] = None

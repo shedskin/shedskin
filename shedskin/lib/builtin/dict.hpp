@@ -161,7 +161,7 @@ template<class K, class V, class U> static inline dict<K, V> *__ss_as_dict(U *ot
     else {
         dict<K, V> *d = new dict<K, V>();
         for (const auto& [key, value] : other->gcd)
-            d->gcd[key] = value;
+            d->gcd[__ss_elem<K>(key)] = __ss_elem<V>(value);
         return d;
     }
 }

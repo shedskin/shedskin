@@ -12,6 +12,23 @@
         else { if (__ ## t1 <= __ ## t2) break; } \
         i=__ ## t1; \
 
+/* convert an element of another container (or iterable) to the element type
+   of a container it is copied to, as in 'floats.extend(ints)'.
+
+   elements of type 'void *' come from a container without an element type:
+   nothing is ever added to it, or only None. they can be used as any pointer
+   type, and do not occur where numbers are expected */
+
+template<class T, class E> inline T __ss_elem(E e) {
+    if constexpr (std::is_same_v<E, void *> && !std::is_same_v<T, void *>) {
+        if constexpr (std::is_pointer_v<T>)
+            return (T)e;
+        else
+            return T();
+    } else
+        return e;
+}
+
 #define FOR_IN(e, iter, temp, i, t) \
     __ ## temp = iter; \
     (void)__ ## i; \

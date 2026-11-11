@@ -207,6 +207,22 @@ def test_lookup_none_scalar():
     assert l.count(None) == 0
 
 
+def test_iter_int_float_var_list():
+    ll = [[1], [2, 3]]
+    l = [1.5]
+    for l in ll:
+        pass
+    assert sum(l) == 5
+
+
+def test_iter_empty_var_typed_number():
+    e = []
+    x = 1
+    for x in e:
+        pass
+    assert x == 1
+
+
 def test_choice_none_scalar():
     c = 3
     i = 0 if c > 2 else None
@@ -255,6 +271,8 @@ test_display_int_float_var_list()
 test_display_empty_var_number()
 test_lookup_float_int()
 test_lookup_none_scalar()
+test_iter_int_float_var_list()
+test_iter_empty_var_typed_number()
 test_choice_none_scalar()
 test_choice_int_float_var_list()
 test_choice_empty_var_number()
@@ -300,12 +318,14 @@ test_choice_empty_var_number()
 #*WARNING* 103.py:201: looking up a float among ints: it is truncated, so 2.5 finds 2
 #*WARNING* 103.py:206: looking up None among numbers: it is treated as 0
 #*WARNING* 103.py:207: looking up None among numbers: it is treated as 0
-#*WARNING* 103.py:212: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:213: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:214: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:215: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:222: incompatible types
-#*WARNING* 103.py:230: incompatible types
+#*WARNING* 103.py:213: incompatible types
+#*WARNING* 103.py:221: incompatible types
+#*WARNING* 103.py:228: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:229: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:230: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:231: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:238: incompatible types
+#*WARNING* 103.py:246: incompatible types
 #*WARNING* 103.py: Variable (Function arg_or_default, 'i') has dynamic (sub)type: {None, int}
 #*WARNING* 103.py: Variable (Function test_assign_none_scalar, 'a') has dynamic (sub)type: {None, int}
 #*WARNING* 103.py: Variable (Function test_assign_none_scalar_list, 'a') has dynamic (sub)type: {None, int}
