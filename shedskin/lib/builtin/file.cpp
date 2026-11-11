@@ -889,6 +889,25 @@ bytes *file_binary::read(__ss_int n) {
     return b;
 }
 
+/* (as BytesIO/GzipFile; b must be a bytearray, as array.array/memoryview
+   are not supported) */
+__ss_int file_binary::readinto(bytes *b) {
+    if(b->frozen)
+        throw new TypeError(new str("readinto() argument must be read-write bytes-like object, not bytes"));
+    __check_mode_readable(mode, "read");
+    __check_closed("readinto of closed file");
+    bytes *data = read((__ss_int)b->unit.size());
+    size_t n = data->unit.size();
+    b->unit.replace(0, n, data->unit);
+    return (__ss_int)n;
+}
+
+bytes *file_binary::read1(__ss_int n) {
+    __check_mode_readable(mode, "read1");
+    __check_closed("read of closed file");
+    return read(n);
+}
+
 list<bytes *> *file_binary::readlines(__ss_int size_hint) {
     __check_closed(__SS_CLOSED_MSG);
     list<bytes *> *lines = new list<bytes *>();

@@ -1,5 +1,6 @@
 import os
 import sys
+import io
 
 
 if os.path.exists("testdata"):
@@ -1356,6 +1357,62 @@ def _binary_op_error(f, op):
     return ''
 
 
+def _fill(f, n: int) -> bytearray:  # (also takes a BytesIO, via file_binary)
+    buf = bytearray(n)
+    k = f.readinto(buf)
+    return buf[:k]
+
+
+def test_binary_readinto_read1():
+    # binary files have readinto/readinto1/read1, as BytesIO and GzipFile
+    with open('rinto.bin', 'wb') as w:
+        w.write(b'abcdefgh')
+        try:
+            w.readinto(bytearray(2))
+            assert False
+        except OSError as e:
+            assert str(e) == 'read'
+        try:
+            w.read1(2)
+            assert False
+        except OSError as e:
+            assert str(e) == 'read1'
+    f = open('rinto.bin', 'rb')
+    b = bytearray(3)
+    assert f.readinto(b) == 3 and b == bytearray(b'abc')
+    assert f.readinto1(b) == 3 and b == bytearray(b'def')
+    assert f.read1(1) == b'g'
+    assert f.read1() == b'h'
+    big = bytearray(5)
+    assert f.readinto(big) == 0 and big == bytearray(5)
+    assert f.readinto(bytearray()) == 0
+    f.seek(6)
+    assert f.readinto(big) == 2 and big == bytearray(b'gh\x00\x00\x00')
+    try:
+        f.readinto(b'xx')
+        assert False
+    except TypeError as e:
+        assert str(e) == 'readinto() argument must be read-write bytes-like object, not bytes'
+    f.close()
+    try:
+        f.readinto(bytearray(2))
+        assert False
+    except ValueError as e:
+        assert str(e) == 'readinto of closed file'
+    try:
+        f.read1(2)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'read of closed file'
+    with open('rinto.bin') as t:
+        bb = bytearray(4)
+        assert t.buffer.readinto(bb) == 4 and bb == bytearray(b'abcd')
+    with open('rinto.bin', 'rb') as g:
+        assert _fill(g, 4) == bytearray(b'abcd')
+    assert _fill(io.BytesIO(b'12345'), 3) == bytearray(b'123')
+    os.remove('rinto.bin')
+
+
 def test_unsupported_operation():
     # as CPython: reading a file not opened for reading (or writing one not
     # opened for writing) raises io.UnsupportedOperation (an OSError) instead
@@ -1467,6 +1524,7 @@ def test_all():
     test_open_read_write_switch()
     test_with_exit_raises()
     test_unsupported_operation()
+    test_binary_readinto_read1()
 
 
 if __name__ == '__main__':
