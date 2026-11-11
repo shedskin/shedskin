@@ -628,6 +628,8 @@ def test_makefile_modes():
 def test_makefile_text_args():
     # makefile takes buffering, and (keyword-only) encoding, errors and
     # newline, as CPython; these used to be dropped
+    if sys.platform == 'win32':  # (a socket handle is not a CRT file descriptor)
+        return
     a, b = socket.socketpair()
     b.sendall('\xe9\r\nx\n'.encode('latin-1'))
     f = a.makefile('r', encoding='latin-1', newline='')
