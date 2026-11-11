@@ -533,6 +533,9 @@ class str_(pyseq):
     def maketrans(x, y=None, z=None):
         return {1: ''}
 
+    def __fspath__(self):  # (for os.fspath; not called in C++)
+        return self
+
     def strip(self, chars=''):
         return ''
     def lstrip(self, chars=''):
@@ -661,6 +664,9 @@ class bytes_(pyseq):
     @classmethod
     def fromhex(cls, s):
         return b''
+
+    def __fspath__(self):  # (for os.fspath; not called in C++)
+        return self
 
     @classmethod
     def maketrans(cls, frm, to):

@@ -45,10 +45,12 @@ bytes *fsencode(bytes *filename);
 str *fsdecode(bytes *filename);
 str *fsdecode(str *filename);
 
-/* os.fspath() is the identity function for the str/bytes paths that
- * shedskin supports (no os.PathLike protocol) */
-template <class T> T *fspath(T *path) {
-    return path;
+/* os.fspath(): the identity for str/bytes, otherwise __fspath__() (DirEntry,
+ * user classes). other functions taking a path do not accept os.PathLike */
+inline str *fspath(str *path) { return path; }
+inline bytes *fspath(bytes *path) { return path; }
+template <class T> auto fspath(T *path) {
+    return path->__fspath__();
 }
 
 void *remove(str *a);
@@ -106,6 +108,7 @@ public:
     __ss_int inode();
     stat_result *stat(__ss_bool follow_symlinks=True);
     str *__repr__();
+    str *__fspath__() { return path; }
 };
 
 /* entries are read eagerly; close() (or leaving a 'with' block) drops them,

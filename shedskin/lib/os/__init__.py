@@ -157,6 +157,8 @@ class DirEntry:
         return stat_result()
     def __repr__(self):
         return ''
+    def __fspath__(self):
+        return self.path
 
 class ScandirIterator:
     def __iter__(self):
@@ -216,7 +218,7 @@ def process_cpu_count():
     return 1
 
 def fspath(path):
-    return path
+    return path.__fspath__()
 
 def remove(path):
     pass
