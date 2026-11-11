@@ -395,6 +395,27 @@ def test_buffer_shares_file():
     os.remove('bftest.txt')
 
 
+def test_stderr_backslashreplace():
+    # as CPython, sys.stderr uses errors='backslashreplace': a surrogate is
+    # written as an escape (and does not raise), unlike sys.stdout
+    assert sys.stderr.errors == 'backslashreplace'
+    assert sys.stdout.errors == 'surrogateescape'
+    sys.stderr.flush()
+    saved = os.dup(2)
+    fd = os.open('stderr_bsr.txt', os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    os.dup2(fd, 2)
+    os.close(fd)
+    n = sys.stderr.write('a\udcffb\ud800\n')
+    print('c\udc80d', file=sys.stderr)
+    sys.stderr.flush()
+    os.dup2(saved, 2)
+    os.close(saved)
+    assert n == 5
+    with open('stderr_bsr.txt', 'rb') as f:
+        assert f.read() == b'a\\udcffb\\ud800\nc\\udc80d\n'
+    os.remove('stderr_bsr.txt')
+
+
 def test_std_buffers():
     # the standard streams (and fdopen/popen files) used to have no .buffer
     assert sys.stdout.buffer.write(b'') == 0
@@ -1590,6 +1611,7 @@ def test_all():
     test_buffer_shares_file()
     if sys.platform != 'win32':
         test_std_buffers()
+        test_stderr_backslashreplace()
     test_open_mode_order()
     test_binary_mode_normalised()
     test_open_read_write_switch()

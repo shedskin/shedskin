@@ -33,6 +33,7 @@ public:
        utf-8 mode is the default); the standard streams use surrogateescape */
     __ss_encoding __encoding = __SS_ENC_UTF8;
     __ss_errors __errors = __SS_ERR_SURROGATEESCAPE;
+    bool __backslashreplace = false; /* sys.stderr (errors='backslashreplace', as CPython): in utf-8, only surrogates need it */
     str *encoding = 0; /* the names as given (None for StringIO, as CPython) */
     str *errors = 0;
     bool __bom_pending = false; /* utf-8-sig: write a bom on the first write */
@@ -85,6 +86,9 @@ public:
     void __init_text(str *encoding, str *errors, str *newline);
     void __init_opened(__ss_int buffering);
 };
+
+/* surrogates as e.g. '\\udcff', as CPython's stderr (errors='backslashreplace') */
+str *__ss_backslashreplace_surrogates(str *s);
 
 /* TODO file<bytes *> template? */
 

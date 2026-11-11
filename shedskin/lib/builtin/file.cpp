@@ -448,12 +448,37 @@ static inline void __check_mode_writable(str *mode, const char *msg) {
         throw new UnsupportedOperation(new str(msg));
 }
 
+str *__ss_backslashreplace_surrogates(str *s) {
+    str *r = new str();
+    char buf[8];
+    for (__ss_char cp : s->unit) {
+        if (cp >= 0xd800 && cp <= 0xdfff) {
+            snprintf(buf, sizeof(buf), "\\u%04x", (unsigned)cp);
+            for (char *p = buf; *p; p++)
+                r->unit += (__ss_char)*p;
+        } else
+            r->unit += cp;
+    }
+    return r;
+}
+
+static bool __has_surrogate(str *s) {
+    for (__ss_char cp : s->unit)
+        if (cp >= 0xd800 && cp <= 0xdfff)
+            return true;
+    return false;
+}
+
 __ss_int file::write(str *s) {
     __ss_int size = -1;
     __check_closed(__SS_CLOSED_MSG);
     __check_mode_writable(mode, "not writable");
     __switch_op(f, options, 'w', __encoding, __errors);
     if(f) {
+        if (__backslashreplace && __has_surrogate(s)) {
+            size = (__ss_int)s->unit.size(); /* (characters written, as CPython: before escaping) */
+            s = __ss_backslashreplace_surrogates(s);
+        }
         __GC_BYTES b;
         if (__bom_pending) {
             __bom_pending = false;

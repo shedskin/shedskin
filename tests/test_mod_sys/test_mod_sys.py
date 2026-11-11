@@ -336,6 +336,7 @@ def test_std_streams_encoding():
     assert sys.stderr.encoding == 'utf-8'
     assert sys.stdin.errors == 'surrogateescape'
     assert sys.stdout.errors == 'surrogateescape'
+    assert sys.stderr.errors == 'backslashreplace'
     assert sys.__stdout__.encoding == 'utf-8'
 
 def test_std_streams_originals():

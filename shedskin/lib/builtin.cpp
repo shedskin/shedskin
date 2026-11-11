@@ -218,6 +218,9 @@ void __init() {
         /* as CPython: line buffered for a terminal, and stderr always */
         fp->line_buffering = (fp == __ss_stderr) ? True : fp->isatty();
     }
+    /* as CPython: stderr escapes what it cannot encode (only surrogates in utf-8) */
+    __ss_stderr->errors = new str("backslashreplace");
+    __ss_stderr->__backslashreplace = true;
 
     cl_baseexception = new class_("BaseException");
     cl_exception = new class_("Exception");
@@ -323,17 +326,7 @@ void __add_missing_newline() {
 /* uncaught exception messages are written as CPython's stderr does it
    (errors='backslashreplace'): any surrogate becomes e.g. '\\ud800' */
 static str *__backslashreplace_surrogates(str *s) {
-    str *r = new str();
-    char buf[8];
-    for (__ss_char cp : s->unit) {
-        if (cp >= 0xd800 && cp <= 0xdfff) {
-            snprintf(buf, sizeof(buf), "\\u%04x", (unsigned)cp);
-            for (char *p = buf; *p; p++)
-                r->unit += (__ss_char)*p;
-        } else
-            r->unit += cp;
-    }
-    return r;
+    return __ss_backslashreplace_surrogates(s);
 }
 
 void terminate_handler() {
