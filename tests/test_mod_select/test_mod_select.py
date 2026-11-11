@@ -164,7 +164,8 @@ def test_select_timeout_range():
         except OverflowError as e:
             msg = str(e)
         assert msg == 'timestamp out of range for C PyTime_t'
-    a, b, c = select.select([r], [], [], 1e9)
+    # (not 1e9: darwin select() gives EINVAL beyond 1e8 seconds, also in CPython)
+    a, b, c = select.select([r], [], [], 1e7)
     assert len(a) == 1
     os.close(r)
     os.close(w)

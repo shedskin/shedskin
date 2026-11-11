@@ -85,6 +85,9 @@ static int __ss_fclose(FILE *f, bool closefd=true) {
     off_t offset = -1;
 #ifndef WIN32
     int fdflags = -1;
+#else
+    DWORD hflags = 0;
+    bool has_hflags = false;
 #endif
     if(!closefd) {
         fd = fileno(f);
@@ -94,6 +97,9 @@ static int __ss_fclose(FILE *f, bool closefd=true) {
         offset = std::max(offset_before, ::lseek(fd, 0, SEEK_CUR)); /* (read ahead, or written) */
 #ifndef WIN32
         fdflags = ::fcntl(fd, F_GETFD);
+#else
+        /* (likewise the msvc crt's _dup2() makes the handle inheritable) */
+        has_hflags = GetHandleInformation((HANDLE)_get_osfhandle(fd), &hflags);
 #endif
         saved = ::dup(fd);
         if(saved == -1) { /* leave the FILE * open rather than the fd closed */
@@ -109,6 +115,9 @@ static int __ss_fclose(FILE *f, bool closefd=true) {
 #ifndef WIN32
         if(fdflags != -1)
             ::fcntl(fd, F_SETFD, fdflags);
+#else
+        if(has_hflags)
+            SetHandleInformation((HANDLE)_get_osfhandle(fd), HANDLE_FLAG_INHERIT, hflags & HANDLE_FLAG_INHERIT);
 #endif
         if(offset != -1)
             ::lseek(fd, offset, SEEK_SET);

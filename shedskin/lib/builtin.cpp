@@ -17,6 +17,10 @@
    so any header they include for the first time (e.g. <sys/stat.h> on
    FreeBSD) would get its declarations placed in the wrong namespace */
 #ifdef WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h> // for Get/SetHandleInformation (file closefd=False)
 #include <io.h> // for _isatty
 #include <malloc.h> // for _aligned_malloc
 #include <sys/types.h>
