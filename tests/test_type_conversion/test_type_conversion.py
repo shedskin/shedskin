@@ -134,19 +134,19 @@
 #    4. arg      0/1/0        9/2/1        -            1/0/0        0/0/1        2/0/0        7/0/1
 #    5. ret      0/1/0        5/0/1        -            1/0/0        0/0/1        2/0/0        8/0/1
 #    6. method   0/1/0        12/2/1       -            1/0/0        0/0/1        2/0/0        5/17/1
-#    7. display  0/1/0        3/1/1        -            1/0/0        0/0/1        2/0/0        4/0/1
+#    7. display  0/1/0        3/1/1        -            2/0/0        0/0/1        2/0/0        4/0/1
 #    8. binop    1/0/0        7/15/0       -            1/0/0        -            2/2/0        11/14/0
-#    9. compare  -            4/5/0        -            1/0/0        0/1/0        1/0/0        6/3/0
-#   10. lookup   1/0/0        2/8/0        0/0/1        2/1/0        0/0/1        2/0/0        4/10/0
+#    9. compare  -            4/5/0        -            1/0/0        1/0/0        1/0/0        6/3/0
+#   10. lookup   1/0/0        2/8/0        0/0/1        5/0/0        0/0/1        2/0/0        4/10/0
 #   11. ctor     -            7/1/0        -            1/0/0        -            1/0/0        2/16/0
 #   12. iter     0/1/0        5/1/0        -            1/0/0        -            3/2/0        7/8/0
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
 #   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        6/19/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        2/8/0        84/44/12     0/0/1        19/2/0       0/1/9        32/4/0       85/92/9
+#   total        2/8/0        84/44/12     0/0/1        23/1/0       1/0/9        32/4/0       85/92/9
 #
-#   all cells: 222 work, 151 TODO, 31 correctly warn or fail
+#   all cells: 227 work, 149 TODO, 31 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -2606,6 +2606,16 @@ def test_display_none():
     assert strs[1][0] is None
 
 
+# none, literal: cast
+def test_display_none_set():
+    s = {'a', None}
+    assert len(s) == 2
+    f = frozenset(['a', None])
+    assert len(f) == 2
+    t = (None, 'a', None)
+    assert t[0] is None and t[1] == 'a'
+
+
 # sub->base, new: cast
 def test_display_sub_new():
     l = [A(), B()]
@@ -3344,14 +3354,18 @@ def test_compare_int_float_scalar():
     assert b == 1 and b == 1.0 and b < 2
 
 
-# none->scalar, literal: warn
-# TODO should give a warning, but today: wrong result, without a warning
-#   at run-time: AssertionError
-#
-# def test_compare_none_scalar():
-#     i = 0
-#     assert i is not None
-#     assert i != None
+# none->scalar, literal: generic
+def test_compare_none_scalar():
+    # a number is never None, also when it is 0
+    i = 0
+    assert i is not None
+    assert i != None
+    assert not i == None
+    assert None != i
+    x = 0.0
+    assert x is not None and x != None and not x == None
+    n = 5
+    assert n != None and not n == None
 
 
 # int->float, literal: build
@@ -3758,13 +3772,10 @@ def test_lookup_none():
 
 
 # none, literal: cast
-# TODO doesn't work today: wrong result, without a warning
-#   at run-time: ValueError: list.remove(x): x not in list
-#
-# def test_lookup_none_remove():
-#     l = ['a', None]
-#     l.remove(None)
-#     assert len(l) == 1
+def test_lookup_none_remove():
+    l = ['a', None]
+    l.remove(None)
+    assert len(l) == 1
 
 
 # none, literal: cast
@@ -3772,6 +3783,28 @@ def test_lookup_none_list():
     ll = [[1], None]
     assert None in ll
     assert ll.index(None) == 1
+
+
+# none, literal: cast
+def test_lookup_none_set():
+    s = {'a', None}
+    assert None in s and len(s) == 2
+    s.discard(None)
+    assert None not in s and len(s) == 1
+    s.add(None)
+    s.remove(None)
+    assert len(s) == 1
+
+
+# none, literal: cast
+def test_lookup_none_sub():
+    kids = [A(), None]
+    assert None in kids
+    kids.remove(None)
+    assert len(kids) == 1 and None not in kids
+    ll = [[1], None, [2]]
+    ll.remove(None)
+    assert len(ll) == 2
 
 
 # sub->base, variable: cast
@@ -5511,6 +5544,7 @@ def test_all():
     test_display_int_float_var_scalar()
     test_display_int_float_nested()
     test_display_none()
+    test_display_none_set()
     test_display_sub_new()
     test_display_sub_var()
     test_display_empty_lit()
@@ -5540,6 +5574,7 @@ def test_all():
     test_binop_empty_accumulate_frozenset()
     test_binop_empty_accumulate_counter()
     test_compare_int_float_scalar()
+    test_compare_none_scalar()
     test_compare_int_float_lit_list()
     test_compare_int_float_lit_dict()
     test_compare_int_float_lit_tuple()
@@ -5555,7 +5590,10 @@ def test_all():
     test_lookup_int_float_scalar()
     test_lookup_int_float_var_scalar()
     test_lookup_none()
+    test_lookup_none_remove()
     test_lookup_none_list()
+    test_lookup_none_set()
+    test_lookup_none_sub()
     test_lookup_sub()
     test_lookup_sub_base_container()
     test_lookup_empty_container_lit()
