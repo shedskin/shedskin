@@ -33,18 +33,32 @@ public:
 
     /* maxlen=None is passed as (void *)NULL and means unbounded; it is
        stored as -1, because the .maxlen attribute is typed int */
-    deque(pyiter<A> *iterable=0, void * =NULL) {
-        __init(iterable);
+    /* the iterable is taken as any type (like list and set do), so that its
+       elements are converted when needed, e.g. deque([1, 2]) for a deque of
+       floats; a 'pyiter<A> *' argument would not match, and such a call
+       would silently end up at the 'void *' overloads below */
+    deque() {
+        __init(-1);
     }
-    deque(pyiter<A> *iterable, __ss_int _maxlen) {
-        __init(iterable, __check_maxlen(_maxlen));
+    template<class U> deque(U *iterable, void * =NULL) {
+        __init(-1);
+        if(iterable)
+            extend(iterable);
+    }
+    template<class U> deque(U *iterable, __ss_int _maxlen) {
+        __init(__check_maxlen(_maxlen));
+        if(iterable)
+            extend(iterable);
     }
     /* a None iterable is passed as (void *)NULL as well */
+    deque(void *) {
+        __init(-1);
+    }
     deque(void *, void *) {
-        __init(0);
+        __init(-1);
     }
     deque(void *, __ss_int _maxlen) {
-        __init(0, __check_maxlen(_maxlen));
+        __init(__check_maxlen(_maxlen));
     }
 
     static __ss_int __check_maxlen(__ss_int _maxlen) {
@@ -53,11 +67,9 @@ public:
         return _maxlen;
     }
 
-    void __init(pyiter<A> *iterable, __ss_int _maxlen=-1) {
+    void __init(__ss_int _maxlen) {
         this->__class__ = cl_deque;
         this->maxlen = _maxlen;
-        if(iterable)
-            extend(iterable);
     }
 
     deque<A> *copy() {

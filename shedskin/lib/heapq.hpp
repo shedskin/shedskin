@@ -328,6 +328,9 @@ inline mergeiter<void *, long int> *merge(__ss_int /* iterable_count */, __ss_in
 }
 template<class T, class Key, class ... Args> mergeiter<T, Key> *merge(__ss_int, Key key, __ss_bool reverse, pyiter<T> *iterable, Args ... args) {
     mergeiter<T, Key> *iter = new mergeiter<T, Key>(iterable, key, reverse.value);
+    /* the casts below cannot convert elements, so refuse e.g. merge([1], [0.5]) */
+    static_assert(((!std::is_arithmetic_v<T> || std::is_same_v<T, typename std::remove_pointer_t<Args>::for_in_unit>) && ...),
+        "heapq.merge: mixing iterables of different numeric types (such as int and float) is not supported");
     (iter->push_iter((pyiter<T> *)args), ...);
     return iter;
 }
