@@ -128,25 +128,25 @@
 # OVERVIEW (number of cells that work / TODO / correctly warn or fail)
 #
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
-#    1. assign   0/2/0        15/4/2       -            3/0/0        0/0/2        8/0/0        11/4/2
+#    1. assign   0/2/0        15/4/2       -            3/0/0        0/0/2        8/0/0        13/2/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
 #    3. setitem  0/1/0        6/2/1        -            1/0/0        0/0/1        2/0/0        4/1/1
 #    4. arg      0/1/0        9/2/1        -            1/0/0        0/0/1        2/0/0        7/0/1
 #    5. ret      0/1/0        5/0/1        -            1/0/0        0/0/1        2/0/0        8/0/1
-#    6. method   0/1/0        12/2/1       -            1/0/0        0/0/1        2/0/0        5/17/1
+#    6. method   0/1/0        12/2/1       -            3/0/0        0/0/1        2/0/0        18/4/1
 #    7. display  0/1/0        3/1/1        -            2/0/0        0/0/1        2/0/0        4/0/1
 #    8. binop    1/0/0        7/15/0       -            1/0/0        -            2/2/0        11/14/0
 #    9. compare  -            4/5/0        -            1/0/0        1/0/0        1/0/0        6/3/0
 #   10. lookup   1/0/0        2/8/0        0/0/1        5/0/0        0/0/1        2/0/0        4/10/0
-#   11. ctor     -            7/1/0        -            1/0/0        -            1/0/0        2/16/0
-#   12. iter     0/1/0        5/1/0        -            1/0/0        -            3/2/0        7/8/0
+#   11. ctor     -            7/1/0        -            1/0/0        -            1/0/0        12/6/0
+#   12. iter     0/1/0        5/0/1        -            1/0/0        -            3/2/0        7/7/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        6/19/0
+#   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        8/17/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        2/8/0        84/44/12     0/0/1        23/1/0       1/0/9        32/4/0       85/92/9
+#   total        2/8/0        84/43/13     0/0/1        25/1/0       1/0/9        32/4/0       112/64/10
 #
-#   all cells: 227 work, 149 TODO, 31 correctly warn or fail
+#   all cells: 256 work, 120 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -699,18 +699,15 @@ def test_assign_empty_new_collections():
 
 
 # empty, new: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_assign_empty_new_from_empty():
-#     a = [1]
-#     a = list([])
-#     a.append(2)
-#     assert sum(a) == 2
-#     s = {1}
-#     s = set([])
-#     s.add(2)
-#     assert sum(s) == 2
+def test_assign_empty_new_from_empty():
+    a = [1]
+    a = list([])
+    a.append(2)
+    assert sum(a) == 2
+    s = {1}
+    s = set([])
+    s.add(2)
+    assert sum(s) == 2
 
 
 # empty, new: build
@@ -805,17 +802,16 @@ def test_assign_empty_var_set_dict():
 #     assert len(g) == 0
 
 
-# empty, variable: warn
-# TODO should give a warning, but today: works
-#
-# def test_assign_empty_var_shared():
-#     # one empty list that meets two different element types
-#     e = []
-#     a = ['x']
-#     a = e
-#     b = [B()]
-#     b = e
-#     assert len(a) == 0 and len(b) == 0
+# empty, variable: cast
+def test_assign_empty_var_shared():
+    # one empty list that meets two different element types. this is safe
+    # as long as nothing is added (which would give a warning)
+    e = []
+    a = ['x']
+    a = e
+    b = [B()]
+    b = e
+    assert len(a) == 0 and len(b) == 0
 
 
 # empty, call: build
@@ -2148,6 +2144,33 @@ def test_method_none():
     assert names[1][0] is None
 
 
+# none, literal: copy
+def test_method_none_iter():
+    # a list of only None has no element type either
+    names = ['a']
+    names.extend([None, None])
+    names += [None]
+    assert len(names) == 4 and names[0] == 'a' and names[1] is None
+    strs = {'a'}
+    strs.update([None])
+    assert len(strs) == 2 and None in strs
+
+
+# none, variable: copy
+def test_method_none_var_iter():
+    nones = [None, None]
+    names = ['a']
+    names.extend(nones)
+    names += nones
+    assert len(names) == 5 and names[4] is None
+    l = list(nones)
+    l.append('b')
+    assert len(l) == 3 and l[0] is None and l[2] == 'b'
+    q = deque(nones)
+    q.append('c')
+    assert len(q) == 3 and q[0] is None and q[2] == 'c'
+
+
 # sub->base, new: cast
 def test_method_sub_new():
     la = [A()]
@@ -2301,88 +2324,66 @@ def test_method_empty_var_elem():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_method_empty_lit_iter():
-#     l = [1]
-#     l.extend([])
-#     assert sum(l) == 1
-#     names = ['a']
-#     names.extend([])
-#     assert len(names) == 1
+def test_method_empty_lit_iter():
+    l = [1]
+    l.extend([])
+    assert sum(l) == 1
+    names = ['a']
+    names.extend([])
+    assert len(names) == 1
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_method_empty_lit_iter_iadd():
-#     l = [1]
-#     l += []
-#     assert sum(l) == 1
-#     names = ['a']
-#     names += []
-#     assert len(names) == 1
+def test_method_empty_lit_iter_iadd():
+    l = [1]
+    l += []
+    assert sum(l) == 1
+    names = ['a']
+    names += []
+    assert len(names) == 1
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no match for 'operator[]' (operand types are '__GC_DICT<__ss_int,
-#     __ss_int>' and
-#
-# def test_method_empty_lit_iter_dict():
-#     d = {1: 2}
-#     d.update({})
-#     assert sum(d.values()) == 2
-#     e = {1: 2}
-#     e |= {}
-#     assert sum(e.values()) == 2
+def test_method_empty_lit_iter_dict():
+    d = {1: 2}
+    d.update({})
+    assert sum(d.values()) == 2
+    e = {1: 2}
+    e |= {}
+    assert sum(e.values()) == 2
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from 'pyseq<void*>::for_in_unit' to '__ss_int'
-#
-# def test_method_empty_lit_iter_deque():
-#     q = deque([1])
-#     q.extend([])
-#     q.extendleft([])
-#     assert sum(q) == 1
+def test_method_empty_lit_iter_deque():
+    q = deque([1])
+    q.extend([])
+    q.extendleft([])
+    assert sum(q) == 1
 
 
 # empty, new: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from 'set<void*>::for_in_unit' to '__ss_int'
-#
-# def test_method_empty_new_iter_set():
-#     s = {1}
-#     s.update(set())
-#     assert sum(s) == 1
-#     strs = {'a'}
-#     strs.update(set())
-#     assert len(strs) == 1
+def test_method_empty_new_iter_set():
+    s = {1}
+    s.update(set())
+    assert sum(s) == 1
+    strs = {'a'}
+    strs.update(set())
+    assert len(strs) == 1
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from 'pyseq<void*>::for_in_unit' to '__ss_int'
-#
-# def test_method_empty_lit_iter_set():
-#     s = {1}
-#     s.update([])
-#     assert sum(s) == 1
+def test_method_empty_lit_iter_set():
+    s = {1}
+    s.update([])
+    assert sum(s) == 1
 
 
 # empty, new: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_method_empty_new_iter_list():
-#     l = [1]
-#     l.extend(())
-#     l.extend(set())
-#     assert sum(l) == 1
+def test_method_empty_new_iter_list():
+    l = [1]
+    l.extend(())
+    l.extend(set())
+    assert sum(l) == 1
 
 
 # empty, new: copy
@@ -2396,25 +2397,19 @@ def test_method_empty_var_elem():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_method_empty_var_iter():
-#     e = []
-#     names = ['a']
-#     names.extend(e)
-#     assert len(names) == 1
+def test_method_empty_var_iter():
+    e = []
+    names = ['a']
+    names.extend(e)
+    assert len(names) == 1
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_method_empty_var_iter_iadd():
-#     e = []
-#     names = ['a']
-#     names += e
-#     assert len(names) == 1
+def test_method_empty_var_iter_iadd():
+    e = []
+    names = ['a']
+    names += e
+    assert len(names) == 1
 
 
 # empty, variable: copy
@@ -2432,25 +2427,19 @@ def test_method_empty_var_elem():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_method_empty_var_iter_number():
-#     e = []
-#     l = [1]
-#     l.extend(e)
-#     assert sum(l) == 1
+def test_method_empty_var_iter_number():
+    e = []
+    l = [1]
+    l.extend(e)
+    assert sum(l) == 1
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_method_empty_var_iter_iadd_number():
-#     e = []
-#     l = [1]
-#     l += e
-#     assert sum(l) == 1
+def test_method_empty_var_iter_iadd_number():
+    e = []
+    l = [1]
+    l += e
+    assert sum(l) == 1
 
 
 # empty, variable: copy
@@ -2468,30 +2457,21 @@ def test_method_empty_var_elem():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no match for 'operator[]' (operand types are '__GC_DICT<str*,
-#     str*>' {aka 'boost::unordered::unordered_flat_map<str*, str*,
-#     ss_hash<str*>, ss_eq<str*>, __ss_era
-#
-# def test_method_empty_var_iter_dict():
-#     e = {}
-#     d = {'a': 'b'}
-#     d.update(e)
-#     d |= e
-#     assert len(d) == 1
+def test_method_empty_var_iter_dict():
+    e = {}
+    d = {'a': 'b'}
+    d.update(e)
+    d |= e
+    assert len(d) == 1
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no match for 'operator[]' (operand types are '__GC_DICT<__ss_int,
-#     __ss_int>' and
-#
-# def test_method_empty_var_iter_dict_number():
-#     e = {}
-#     n = {1: 2}
-#     n.update(e)
-#     n |= e
-#     assert sum(n.values()) == 2
+def test_method_empty_var_iter_dict_number():
+    e = {}
+    n = {1: 2}
+    n.update(e)
+    n |= e
+    assert sum(n.values()) == 2
 
 
 #=========================================================================
@@ -4160,16 +4140,13 @@ def test_ctor_sub():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_ctor_empty_lit():
-#     l = list([])
-#     l.append(1)
-#     assert sum(l) == 1
-#     names = list(())
-#     names.append('a')
-#     assert names[0] == 'a'
+def test_ctor_empty_lit():
+    l = list([])
+    l.append(1)
+    assert sum(l) == 1
+    names = list(())
+    names.append('a')
+    assert names[0] == 'a'
 
 
 # empty, literal: copy
@@ -4185,14 +4162,10 @@ def test_ctor_sub():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no match for 'operator[]' (operand types are '__GC_DICT<__ss_int,
-#     __ss_int>' and
-#
-# def test_ctor_empty_lit_dict():
-#     d = dict({})
-#     d[1] = 2
-#     assert sum(d.values()) == 2
+def test_ctor_empty_lit_dict():
+    d = dict({})
+    d[1] = 2
+    assert sum(d.values()) == 2
 
 
 # empty, literal: copy
@@ -4206,28 +4179,22 @@ def test_ctor_sub():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_ctor_empty_lit_tuple():
-#     t = tuple([])
-#     assert len(t) == 0
-#     u = (1, 2)
-#     u = tuple([])
-#     assert len(u) == 0
+def test_ctor_empty_lit_tuple():
+    t = tuple([])
+    assert len(t) == 0
+    u = (1, 2)
+    u = tuple([])
+    assert len(u) == 0
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from 'pyseq<void*>::for_in_unit' to '__ss_int'
-#
-# def test_ctor_empty_lit_deque():
-#     q = deque([])
-#     q.append(1)
-#     assert sum(q) == 1
-#     q2 = deque([], 3)
-#     q2.append('a')
-#     assert q2[0] == 'a' and q2.maxlen == 3
+def test_ctor_empty_lit_deque():
+    q = deque([])
+    q.append(1)
+    assert sum(q) == 1
+    q2 = deque([], 3)
+    q2.append('a')
+    assert q2[0] == 'a' and q2.maxlen == 3
 
 
 # empty, literal: copy
@@ -4256,14 +4223,11 @@ def test_ctor_sub():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_ctor_empty_var():
-#     e = []
-#     names = list(e)
-#     names.append('a')
-#     assert names[0] == 'a' and len(e) == 0
+def test_ctor_empty_var():
+    e = []
+    names = list(e)
+    names.append('a')
+    assert names[0] == 'a' and len(e) == 0
 
 
 # empty, variable: copy
@@ -4275,14 +4239,11 @@ def test_ctor_empty_var_set():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from 'pyseq<void*>::for_in_unit' to 'str*'
-#
-# def test_ctor_empty_var_deque():
-#     e = []
-#     q = deque(e)
-#     q.append('a')
-#     assert q[0] == 'a'
+def test_ctor_empty_var_deque():
+    e = []
+    q = deque(e)
+    q.append('a')
+    assert q[0] == 'a'
 
 
 # empty, variable: copy
@@ -4298,14 +4259,11 @@ def test_ctor_empty_var_set():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_ctor_empty_var_number():
-#     e = []
-#     l = list(e)
-#     l.append(1)
-#     assert sum(l) == 1 and len(e) == 0
+def test_ctor_empty_var_number():
+    e = []
+    l = list(e)
+    l.append(1)
+    assert sum(l) == 1 and len(e) == 0
 
 
 # empty, variable: copy
@@ -4317,14 +4275,11 @@ def test_ctor_empty_var_set_number():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from 'pyseq<void*>::for_in_unit' to '__ss_int'
-#
-# def test_ctor_empty_var_deque_number():
-#     e = []
-#     q = deque(e)
-#     q.append(1)
-#     assert sum(q) == 1
+def test_ctor_empty_var_deque_number():
+    e = []
+    q = deque(e)
+    q.append(1)
+    assert sum(q) == 1
 
 
 # empty, variable: copy
@@ -4339,28 +4294,19 @@ def test_ctor_empty_var_set_number():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no match for 'operator[]' (operand types are '__GC_DICT<str*,
-#     str*>' {aka 'boost::unordered::unordered_flat_map<str*, str*,
-#     ss_hash<str*>, ss_eq<str*>, __ss_era
-#
-# def test_ctor_empty_var_dict():
-#     ed = {}
-#     d = dict(ed)
-#     d['a'] = 'b'
-#     assert d['a'] == 'b' and len(ed) == 0
+def test_ctor_empty_var_dict():
+    ed = {}
+    d = dict(ed)
+    d['a'] = 'b'
+    assert d['a'] == 'b' and len(ed) == 0
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no match for 'operator[]' (operand types are '__GC_DICT<__ss_int,
-#     __ss_int>' and
-#
-# def test_ctor_empty_var_dict_number():
-#     ed = {}
-#     n = dict(ed)
-#     n[1] = 2
-#     assert n[1] == 2
+def test_ctor_empty_var_dict_number():
+    ed = {}
+    n = dict(ed)
+    n[1] = 2
+    assert n[1] == 2
 
 
 #=========================================================================
@@ -4433,7 +4379,8 @@ def test_iter_int_float_lit_list():
 
 
 # int->float, variable: warn
-# TODO should give a warning, but today: C++ compile error, without a warning
+# -> warning, then C++ compile error (see tests/errs/103.py)
+#   incompatible types
 #   C++: cannot convert 'list<__ss_int>*' to 'list<__ss_float>*' in
 #     assignment
 #
@@ -4664,7 +4611,8 @@ def test_iter_empty_var():
 
 
 # empty, variable: warn
-# TODO should give a warning, but today: C++ compile error, without a warning
+# -> warning, then C++ compile error (see tests/errs/103.py)
+#   incompatible types
 #   C++: invalid conversion from 'void*' to '__ss_int'
 #
 # def test_iter_empty_var_typed_number():
@@ -5190,12 +5138,9 @@ def test_lib_empty_lit_mixed():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_lib_empty_lit_chain():
-#     assert list(itertools.chain(['a'], [])) == ['a']
-#     assert list(itertools.chain([], ['a'])) == ['a']
+def test_lib_empty_lit_chain():
+    assert list(itertools.chain(['a'], [])) == ['a']
+    assert list(itertools.chain([], ['a'])) == ['a']
 
 
 # empty, literal: build
@@ -5289,14 +5234,11 @@ def test_lib_empty_var():
 
 
 # empty, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_lib_empty_var_mixed_chain():
-#     e = []
-#     names = ['a']
-#     assert list(itertools.chain(e, names)) == ['a']
-#     assert list(itertools.chain(names, e)) == ['a']
+def test_lib_empty_var_mixed_chain():
+    e = []
+    names = ['a']
+    assert list(itertools.chain(e, names)) == ['a']
+    assert list(itertools.chain(names, e)) == ['a']
 
 
 # empty, variable: generic
@@ -5459,10 +5401,12 @@ def test_all():
     test_assign_empty_lit_nested()
     test_assign_empty_new()
     test_assign_empty_new_collections()
+    test_assign_empty_new_from_empty()
     test_assign_empty_ifexp()
     test_assign_empty_var_filled()
     test_assign_empty_var()
     test_assign_empty_var_set_dict()
+    test_assign_empty_var_shared()
     test_assign_empty_call()
     test_attr_int_float_lit()
     test_attr_none_lit()
@@ -5533,6 +5477,8 @@ def test_all():
     test_method_int_float_var_iter_dict()
     test_method_int_float_var_iter_deque()
     test_method_none()
+    test_method_none_iter()
+    test_method_none_var_iter()
     test_method_sub_new()
     test_method_sub_var()
     test_method_empty_receiver()
@@ -5540,6 +5486,19 @@ def test_all():
     test_method_empty_lit_elem()
     test_method_empty_new_elem()
     test_method_empty_var_elem()
+    test_method_empty_lit_iter()
+    test_method_empty_lit_iter_iadd()
+    test_method_empty_lit_iter_dict()
+    test_method_empty_lit_iter_deque()
+    test_method_empty_new_iter_set()
+    test_method_empty_lit_iter_set()
+    test_method_empty_new_iter_list()
+    test_method_empty_var_iter()
+    test_method_empty_var_iter_iadd()
+    test_method_empty_var_iter_number()
+    test_method_empty_var_iter_iadd_number()
+    test_method_empty_var_iter_dict()
+    test_method_empty_var_iter_dict_number()
     test_display_int_float_scalar()
     test_display_int_float_var_scalar()
     test_display_int_float_nested()
@@ -5609,8 +5568,18 @@ def test_all():
     test_ctor_int_float_var_collections()
     test_ctor_none()
     test_ctor_sub()
+    test_ctor_empty_lit()
+    test_ctor_empty_lit_dict()
+    test_ctor_empty_lit_tuple()
+    test_ctor_empty_lit_deque()
+    test_ctor_empty_var()
     test_ctor_empty_var_set()
+    test_ctor_empty_var_deque()
+    test_ctor_empty_var_number()
     test_ctor_empty_var_set_number()
+    test_ctor_empty_var_deque_number()
+    test_ctor_empty_var_dict()
+    test_ctor_empty_var_dict_number()
     test_iter_int_float_lit_scalar()
     test_iter_int_float_var_scalar()
     test_iter_int_float_lit_list()
@@ -5648,10 +5617,12 @@ def test_all():
     test_lib_none_filter()
     test_lib_sub()
     test_lib_empty_lit_mixed()
+    test_lib_empty_lit_chain()
     test_lib_empty_lit_chain_only()
     test_lib_empty_lit_product()
     test_lib_empty_lit_heappush()
     test_lib_empty_var()
+    test_lib_empty_var_mixed_chain()
     test_lib_empty_var_mixed_number()
     test_empty_call_contexts()
 

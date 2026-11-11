@@ -231,7 +231,7 @@ public:
         int __2;
         U *__1;
         FOR_IN(e,iter_,1,2,3)
-           append(e);
+           append(__ss_elem<A>(e));
         END_FOR
         return NULL;
     }
@@ -245,7 +245,7 @@ public:
         int __2;
         U *__1;
         FOR_IN(e,iter_,1,2,3)
-           appendleft(e);
+           appendleft(__ss_elem<A>(e));
         END_FOR
         return NULL;
     }
@@ -562,12 +562,12 @@ public:
         if constexpr (__ss_is_dict<U>) { /* copy counts */
             this->gcd = __ss_as_dict<K, V>(i)->gcd;
         } else { /* count element occurrences */
-            K e;
+            typename U::for_in_unit e;
             typename U::for_in_loop __3;
             int __2;
             U *__1;
             FOR_IN(e, i, 1, 2, 3)
-                this->__addtoitem__(e, 1);
+                this->__addtoitem__(__ss_elem<K>(e), 1);
             END_FOR
         }
     }
@@ -653,12 +653,12 @@ public:
         if constexpr (__ss_is_dict<U>) {
             __update_dict__(__ss_as_dict<K, V>(other));
         } else {
-            K e;
+            typename U::for_in_unit e;
             typename U::for_in_loop __3;
             int __2;
             U *__1;
             FOR_IN(e, other, 1, 2, 3)
-                this->__addtoitem__(e, 1);
+                this->__addtoitem__(__ss_elem<K>(e), 1);
             END_FOR
         }
         return NULL;
@@ -667,14 +667,14 @@ public:
     template <class U> void *subtract(U *other) {
         if constexpr (__ss_is_dict<U>) {
             for(auto &kv : other->gcd)
-                this->__addtoitem__(kv.first, -kv.second);
+                this->__addtoitem__(__ss_elem<K>(kv.first), -kv.second);
         } else {
-            K e;
+            typename U::for_in_unit e;
             typename U::for_in_loop __3;
             int __2;
             U *__1;
             FOR_IN(e, other, 1, 2, 3)
-                this->__addtoitem__(e, -1);
+                this->__addtoitem__(__ss_elem<K>(e), -1);
             END_FOR
         }
         return NULL;

@@ -185,7 +185,7 @@ template<class T> template<class U> tuple2<T, T>::tuple2(U *iter) {
     int __2;
     U *__1;
     FOR_IN(e,iter,1,2,3)
-        this->units.push_back(e);
+        this->units.push_back(__ss_elem<T>(e));
     END_FOR
 }
 

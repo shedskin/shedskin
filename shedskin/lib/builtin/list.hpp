@@ -121,7 +121,7 @@ template<class T> template<class U> list<T>::list(U *iter) {
     if constexpr (is_base_of_template<dict>::value<U>) { // include defaultdict..
         this->units.reserve(iter->gcd.size());
         for(auto kv : iter->gcd) {
-            this->units.push_back(kv.first);
+            this->units.push_back(__ss_elem<T>(kv.first));
         }
     } else {
         typename U::for_in_unit e;
@@ -129,7 +129,7 @@ template<class T> template<class U> list<T>::list(U *iter) {
         int __2;
         U *__1;
         FOR_IN(e,iter,1,2,3)
-            this->units.push_back(e);
+            this->units.push_back(__ss_elem<T>(e));
         END_FOR
     }
 }
@@ -282,7 +282,7 @@ template<class T> template<class U> void *list<T>::extend(U *iter) {
     int __2;
     U *__1;
     FOR_IN(e,iter,1,2,3)
-        this->units.push_back(e);
+        this->units.push_back(__ss_elem<T>(e));
     END_FOR
     return NULL;
 }

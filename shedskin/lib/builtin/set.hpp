@@ -366,7 +366,7 @@ template<class T> template<class U> void *set<T>::update(int, U *iter) {
     int __2;
     U *__1;
     FOR_IN(e,iter,1,2,3)
-        add(e);
+        add(__ss_elem<T>(e));
     END_FOR
     return NULL;
 }
@@ -447,10 +447,11 @@ template<class T> template <class U> set<T> *set<T>::symmetric_difference(U *ite
     int __2;
     U *__1;
     FOR_IN(e,iter,1,2,3)
-        if (__contains__(e))
-            c->gcs.erase(e);
+        T x = __ss_elem<T>(e);
+        if (__contains__(x))
+            c->gcs.erase(x);
         else
-            c->gcs.insert(e);
+            c->gcs.insert(x);
     END_FOR
 
     return c;
@@ -464,8 +465,9 @@ template<class T> template <class U> set<T> *set<T>::intersection(int, U *iter) 
     int __2;
     U *__1;
     FOR_IN(e,iter,1,2,3)
-        if (__contains__(e)) {
-            result->add(e);
+        T x = __ss_elem<T>(e);
+        if (__contains__(x)) {
+            result->add(x);
         }
     END_FOR
 
