@@ -1,4 +1,5 @@
 import os
+import select
 import socket
 import sys
 
@@ -624,6 +625,38 @@ def test_makefile_modes():
     b.close()
 
 
+def test_connect_nonblocking():
+    # a non-blocking connect raises (or returns, for connect_ex) 'in
+    # progress' (EINPROGRESS; WSAEWOULDBLOCK on windows), as CPython,
+    # instead of returning as if connected
+    server = socket.create_server(('127.0.0.1', 0))
+    addr = server.getsockname()
+    client = socket.socket()
+    client.setblocking(False)
+    try:
+        client.connect(addr)
+        assert False
+    except OSError as e:
+        assert e.errno != 0
+    select.select([client], [client], [client], 5)
+    assert client.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR) == 0
+    conn, peer = server.accept()
+    client.setblocking(True)
+    client.sendall(b'nb')
+    assert conn.recv(2) == b'nb'
+    conn.close()
+    client.close()
+
+    client = socket.socket()
+    client.settimeout(0.0)
+    assert client.connect_ex(addr) != 0
+    select.select([client], [client], [client], 5)
+    assert client.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR) == 0
+    conn, peer = server.accept()
+    conn.close()
+    client.close()
+    server.close()
+
 def test_connect_ex():
     server = socket.create_server(('127.0.0.1', 0))
     port = server.getsockname()[1]
@@ -1182,6 +1215,7 @@ def test_all():
     test_makefile_binary()
     test_makefile_modes()
     test_connect_ex()
+    test_connect_nonblocking()
     test_create_connection()
     test_fileno_close_dup()
     test_create_server_args()

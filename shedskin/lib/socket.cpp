@@ -1043,7 +1043,10 @@ void *socket::connect(const sockaddr *sa, socklen_t salen)
         /* winsock reports a non-blocking connect in progress as WSAEWOULDBLOCK */
         in_progress = in_progress || (e == WSAEWOULDBLOCK);
 #endif
-	if (!in_progress) {
+	/* in progress is only waited for in timeout mode; a non-blocking
+	 * socket raises it (EINPROGRESS), as CPython, and connect_ex()
+	 * returns it */
+	if (!in_progress || !(_blocking && _timeout > 0)) {
 	    error *err = make_error("connect", e);
 	    if (_blocking && _timeout > 0)
 		set_blocking(_fd); // turn blocking back on
