@@ -1157,39 +1157,14 @@ __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
     return fp;
 }
 
-static FILE *__fdopen(__ss_int fd, str *mode) {
-    __check_open_mode(mode);
-    /* like CPython (io.open), an fd out of C int range is no fd */
-    if(fd < INT_MIN || fd > INT_MAX)
-        throw new TypeError(new str("expected str, bytes or os.PathLike object, not int"));
-    if(fd < 0)
-        throw new ValueError(new str("negative file descriptor"));
-    /* C fdopen() does not know 'x' (and never creates or truncates). like
-       open(), a text file is opened in binary mode: we translate newlines
-       ourselves */
-    str *cmode = __c_open_mode(mode, false);
-    if(cmode->unit.find('b') == std::string::npos)
-        cmode->unit += 'b';
-    FILE* fp = ::fdopen((int)fd, cmode->c_str());
-    if(fp == NULL)
-        __throw_oserror();
-    return fp;
-}
 
+/* (as CPython, where os.fdopen() is io.open()) */
 file* fdopen(__ss_int fd, str* mode, __ss_int buffering, str *encoding, str *errors, str *newline) {
-    if(!mode)
-        mode = new str("r");
-    return new file(__fdopen(fd, mode), new str("<fdopen>"), mode, encoding, errors, newline, buffering);
+    return __shedskin__::open(fd, mode, buffering, encoding, errors, newline);
 }
 
 file_binary* fdopen_binary(__ss_int fd, str* mode, __ss_int buffering, str *encoding, str *errors, str *newline) {
-    if(!mode)
-        mode = new str("rb");
-    __check_open_mode(mode); /* (as cpython: before the other arguments) */
-    __check_binary_args(encoding, errors, newline); /* (as cpython: the fd stays open) */
-    FILE *fp = __fdopen(fd, mode);
-    __set_buffering(fp, buffering, false);
-    return new file_binary(fp, new str("<fdopen>"), mode);
+    return __shedskin__::open_binary(fd, mode, buffering, encoding, errors, newline);
 }
 
 bytes *read(__ss_int fd, __ss_int n) {
