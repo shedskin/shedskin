@@ -475,6 +475,31 @@ def test_deque_init_convert():
     assert sum(i) == 7.5
 
 
+def test_convert_init_update():
+    # regression test: arguments with narrower key/value types (ints, for
+    # floats) did not compile, or were miscounted (Counter.update(dict))
+    c = Counter([1, 2, 2])
+    c[0.5] += 1
+    assert sorted(c.items()) == [(0.5, 1), (1, 1), (2, 2)]
+
+    c2 = Counter({1: 2})
+    c2[0.5] += 1
+    assert sorted(c2.items()) == [(0.5, 1), (1, 2)]
+
+    c3 = Counter([0.5])
+    c3.update([1, 1])
+    c3.update({2: 3})
+    c3.subtract({1: 1})
+    assert sorted(c3.items()) == [(0.5, 1), (1, 1), (2, 3)]
+
+    dd = defaultdict(float, {1: 2})
+    dd[2] += 0.5
+    dd.update({3: 4})
+    dd |= {4: 5}
+    assert sorted(dd.items()) == [(1, 2), (2, 0.5), (3, 4), (4, 5)]
+    assert sum(dd.values()) == 11.5
+
+
 def test_deque_maxlen_none():
     # regression test: an explicit maxlen=None was passed as 0, so the
     # deque silently dropped everything (1023-B5)
@@ -1249,6 +1274,7 @@ def test_all():
     test_deque_maxlen()
     test_deque_maxlen_on_init()
     test_deque_init_convert()
+    test_convert_init_update()
     test_deque_maxlen_none()
     test_deque_extend_self()
     test_deque_maxlen_negative()

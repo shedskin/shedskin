@@ -149,6 +149,23 @@ public:
     template <class U> frozendict<K,V> *__ior__(U *other);
 };
 
+/* whether U is any kind of dict (including defaultdict, Counter..) */
+template<class U> inline constexpr bool __ss_is_dict = is_base_of_template<dict>::value<U>;
+
+/* pass a mapping argument as a dict<K, V>: as-is when it already is one,
+   or else as a copy with converted keys/values, e.g. the {1: 2} in
+   'd = dict({1: 2}); d[2] = 0.5', for a dict of floats */
+template<class K, class V, class U> static inline dict<K, V> *__ss_as_dict(U *other) {
+    if constexpr (std::is_base_of_v<dict<K, V>, U>)
+        return other;
+    else {
+        dict<K, V> *d = new dict<K, V>();
+        for (const auto& [key, value] : other->gcd)
+            d->gcd[key] = value;
+        return d;
+    }
+}
+
 template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> *d, U *iter) {
     __iter<typename U::for_in_unit> *it = ___iter(iter);
     typename U::for_in_unit a, b;
@@ -423,8 +440,8 @@ template<class K, class V> dict<K,V> *dict<K,V>::__ror_dict__(dict<K,V> *) {
 }
 
 template <class K, class V> template<class U> dict<K,V> *dict<K,V>::__ior__(U *other) {
-    if constexpr (std::is_base_of_v<dict<K,V>, U>)
-        __ior_dict__(other);
+    if constexpr (__ss_is_dict<U>)
+        __ior_dict__(__ss_as_dict<K, V>(other));
     else
         update(other);
     return this;
@@ -441,8 +458,8 @@ template <class K, class V> void *dict<K,V>::__ior_dict__(dict<K,V> *other) {
 }
 
 template <class K, class V> template<class U> void *dict<K,V>::update(U *other) {
-    if constexpr (std::is_base_of_v<dict<K,V>, U>) {
-        __update_dict__(other);
+    if constexpr (__ss_is_dict<U>) {
+        __update_dict__(__ss_as_dict<K, V>(other));
     } else {
         typename U::for_in_unit e;
         typename U::for_in_loop __3;

@@ -397,7 +397,27 @@ def test_dict_key_identity():
     assert dd[(255, 0, 0)] == 0.5 and dd[corners[2]] == 0.5
 
 
+def test_dict_convert():
+    # regression test: a mapping argument with narrower key/value types
+    # (ints, for a dict of floats) did not compile
+    d = dict({1: 2})
+    d[2] = 0.5
+    assert sum(d.values()) == 2.5
+
+    e = {1: 0.5}
+    e.update({2: 3})
+    e |= {3: 4}
+    assert sorted(e.items()) == [(1, 0.5), (2, 3), (3, 4)]
+    assert sum(e.values()) == 7.5
+
+    f = dict({1: 2})
+    f[0.5] = 3
+    assert sum(f) == 1.5
+    assert f[1] == 2
+
+
 def test_all():
+    test_dict_convert()
     test_dict_churn()
     test_dict()
     test_dict_get()
