@@ -2630,23 +2630,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             actualtypes = decltypes
         if check_temp and node in self.mv.tempcount:  # XXX
             self.append(self.mv.tempcount[node])
-        elif isinstance(node, ast.Dict):
-            self.visit_Dict(node, func, argtypes=argtypes)
-        elif isinstance(node, ast.Tuple):
-            self.visit_Tuple(node, func, argtypes=argtypes)
-        elif isinstance(node, ast.List):
-            self.visit_List(node, func, argtypes=argtypes)
-        elif (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id in ("list", "tuple", "dict", "set", "frozenset")
-            # an abstract target (e.g. a list or a set) says nothing about the
-            # type to construct, and needs the cast below
-            and not typestr.typestr(self.gx, argtypes, mv=self.mv).startswith(
-                ("pyiter", "pyseq")
-            )
-        ):
-            self.visit_Call(node, func, argtypes=argtypes)
+        elif self.builds_new_container(node, argtypes, check_temp=False):
+            if isinstance(node, ast.Dict):
+                self.visit_Dict(node, func, argtypes=argtypes)
+            elif isinstance(node, ast.Tuple):
+                self.visit_Tuple(node, func, argtypes=argtypes)
+            elif isinstance(node, ast.List):
+                self.visit_List(node, func, argtypes=argtypes)
+            else:
+                assert isinstance(node, ast.Call)
+                self.visit_Call(node, func, argtypes=argtypes)
         elif ast_utils.is_none(node):
             self.visit(node, func)
         else:
@@ -2660,6 +2653,26 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(node, func)
             if cast:
                 self.append("))")
+
+    def builds_new_container(
+        self, node: ast.AST, argtypes: Types, check_temp: bool = True
+    ) -> bool:
+        """Whether impl_visit_conv builds node as a new container of the
+        types it is converted to, rather than casting it"""
+        if check_temp and node in self.mv.tempcount:
+            return False
+        if isinstance(node, (ast.List, ast.Tuple, ast.Dict)):
+            return True
+        return (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id in ("list", "tuple", "dict", "set", "frozenset")
+            # an abstract target (e.g. a list or a set) says nothing about the
+            # type to construct, and needs a cast
+            and not typestr.typestr(self.gx, argtypes, mv=self.mv).startswith(
+                ("pyiter", "pyseq")
+            )
+        )
 
     def conv_cast(
         self, node: ast.AST, actualtypes: Types, argtypes: Types
@@ -4818,25 +4831,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # upcasts class instances (1029-C3, 1030-C3)
         if (
             func.ftypes
-            and self.builds_new_container(node.value)
+            and self.builds_new_container(node.value, func.ftypes[0])
             and typestr.upcast_only(self.gx, self.mergeinh[node.value], func.ftypes[0])
         ):
             rettypes = func.ftypes[0]
         self.impl_visit_conv(node.value, rettypes, func)
         self.eol()
-
-    def builds_new_container(self, node: ast.AST) -> bool:
-        """Check if impl_visit_conv builds node as a new container of the
-        types it is converted to, rather than casting it"""
-        if node in self.mv.tempcount:
-            return False
-        if isinstance(node, (ast.List, ast.Tuple, ast.Dict)):
-            return True
-        return (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id in ("list", "tuple", "dict", "set")
-        )
 
     def impl_visit_return(
         self, value: Optional[str], func: Optional["python.Function"]
