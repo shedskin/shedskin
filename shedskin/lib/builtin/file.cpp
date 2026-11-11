@@ -855,8 +855,22 @@ __ss_int file::truncate(__ss_int size) {
     __check_mode_writable(mode, "truncate");
     flush();
 #ifdef WIN32
-    if(_chsize((int)__ss_fileno(), size) == -1)
+    /* the msvc crt's invalid parameter handler terminates the process
+       (0xc0000409) on a negative size, so fail with EINVAL first. (also
+       _chsize_s, as _chsize takes a long, which is 32 bits on windows) */
+    if(size < 0) {
+        errno = EINVAL;
         __throw_oserror();
+    }
+    errno_t chsize_err;
+    {
+        __ss_file_suppress_iph guard;
+        chsize_err = _chsize_s((int)__ss_fileno(), size);
+    }
+    if(chsize_err) {
+        errno = chsize_err;
+        __throw_oserror();
+    }
 #else
     if(ftruncate((int)__ss_fileno(), size) == -1)
         __throw_oserror();
@@ -1210,8 +1224,22 @@ __ss_int file_binary::truncate(__ss_int size) {
     __check_mode_writable(mode, "truncate");
     flush();
 #ifdef WIN32
-    if(_chsize((int)__ss_fileno(), size) == -1)
+    /* the msvc crt's invalid parameter handler terminates the process
+       (0xc0000409) on a negative size, so fail with EINVAL first. (also
+       _chsize_s, as _chsize takes a long, which is 32 bits on windows) */
+    if(size < 0) {
+        errno = EINVAL;
         __throw_oserror();
+    }
+    errno_t chsize_err;
+    {
+        __ss_file_suppress_iph guard;
+        chsize_err = _chsize_s((int)__ss_fileno(), size);
+    }
+    if(chsize_err) {
+        errno = chsize_err;
+        __throw_oserror();
+    }
 #else
     if(ftruncate((int)__ss_fileno(), size) == -1)
         __throw_oserror();
