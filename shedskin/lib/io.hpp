@@ -83,7 +83,7 @@ public:
     __ss_int truncate(__ss_int size);
     void *close() { closed = True; return NULL; }
     __ss_int write(str *data);
-    StringIO *__enter__() { __check_closed(); return this; }
+    StringIO *__enter__() { __check_closed_iobase(); return this; } /* (IOBase.__enter__, as CPython) */
 
     bool __error() { return false; }
     bool __eof() { return (pos >= len(s)); }

@@ -1711,6 +1711,51 @@ def test_read_after_eof_and_seekable():
     wb.close()
 
 
+def test_closefd_fd_state_line_buffering_sig():
+    name = os.path.join(testdata, 'fdstate_tmp')
+    w = open(name, 'wb')
+    w.write(b'abcdefghij' * 3)
+    w.close()
+    # closefd=False: close() leaves the fd as it was (non-inheritable,
+    # and where reading left it)
+    fd = os.open(name, os.O_RDONLY)
+    inh = os.get_inheritable(fd)
+    f = open(fd, 'rb', closefd=False)
+    assert f.read(2) == b'ab'
+    f.close()
+    assert os.get_inheritable(fd) == inh
+    assert os.lseek(fd, 0, 1) == 30  # (read ahead to the end)
+    os.close(fd)
+
+    # buffering=1: flush after a '\n' or '\r', everything written so far
+    g = open(name, 'w', buffering=1, newline='')  # (no '\r\n' on windows)
+    g.write('a\r')
+    assert os.path.getsize(name) == 2
+    g.write('b\nc')
+    assert os.path.getsize(name) == 5
+    g.write('d')
+    assert os.path.getsize(name) == 5
+    g.close()
+    assert os.path.getsize(name) == 6
+
+    # utf-8-sig: the position after a bom is 0
+    h = open(name, 'w', encoding='utf-8-sig')
+    h.write('qr')
+    h.close()
+    h = open(name, encoding='utf-8-sig')
+    assert h.tell() == 0
+    assert h.read(1) == 'q'
+    assert h.tell() == 4
+    h.seek(0)
+    assert h.tell() == 0
+    h.close()
+    h = open(name, 'r+', encoding='utf-8-sig')
+    assert h.truncate() == 0
+    h.close()
+    assert os.path.getsize(name) == 0
+    os.remove(name)
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1767,6 +1812,7 @@ def test_all():
     test_line_buffering()
     test_closefd()
     test_read_after_eof_and_seekable()
+    test_closefd_fd_state_line_buffering_sig()
 
 if __name__ == '__main__':
     test_all()

@@ -39,6 +39,7 @@ public:
     str *errors = 0;
     bool __bom_pending = false; /* utf-8-sig: write a bom on the first write */
     bool __utf8_sig = false; /* utf-8-sig: (re)check the bom at position 0 */
+    bool __bom_skipped = false; /* utf-8-sig: a bom was skipped, so byte 3 is position 0 */
 
     file(FILE *g=0, str *name=0, str *mode=0);
     file(str *name, str *mode=0, str *encoding=0, str *errors=0, str *newline=0, __ss_int buffering=-1);

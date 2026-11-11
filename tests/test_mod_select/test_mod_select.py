@@ -154,6 +154,22 @@ def test_select_nan():
     os.close(w)
 
 
+def test_select_timeout_range():
+    r, w = os.pipe()
+    os.write(w, b'x')
+    for t in [1e30, -1e30, 1e10, float('inf')]:
+        msg = ''
+        try:
+            select.select([r], [], [], t)
+        except OverflowError as e:
+            msg = str(e)
+        assert msg == 'timestamp out of range for C PyTime_t'
+    a, b, c = select.select([r], [], [], 1e9)
+    assert len(a) == 1
+    os.close(r)
+    os.close(w)
+
+
 def test_all():
     test_select_basic()
     test_select_timeout_no_ready_fds()
@@ -165,6 +181,7 @@ def test_all():
     test_select_sockets()
     test_select_fileno_method()
     test_select_nan()
+    test_select_timeout_range()
 
 if __name__ == '__main__':
     test_all()

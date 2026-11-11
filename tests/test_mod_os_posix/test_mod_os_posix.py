@@ -984,6 +984,70 @@ def test_exec_spawn_failures():
     os.rmdir(d)
 
 
+def test_wait_exec_utime_edges():
+    # WNOHANG with no child ready: status 0
+    pid = os.fork()
+    if pid == 0:
+        r, w = os.pipe()
+        os.read(r, 1)  # (blocks until killed)
+        os._exit(0)
+    assert os.waitpid(pid, os.WNOHANG) == (0, 0)
+    os.kill(pid, 9)
+    os.waitpid(pid, 0)
+
+    # a failed execvp keeps its OSError subclass
+    caught = ''
+    try:
+        os.execvp('shedskin-no-such-prog', ['x'])
+    except FileNotFoundError:
+        caught = 'fnf'
+    assert caught == 'fnf'
+
+    # execve wording, and environment names
+    a = ['x']
+    a.pop()
+    msg = ''
+    try:
+        os.execve('/bin/true', a, {'A': 'b'})
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'execve: argv must not be empty'
+    msg = ''
+    try:
+        os.execve('/bin/true', [''], {'A': 'b'})
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'execve: argv first element cannot be empty'
+    for env in [{'A=B': 'x'}, {'': 'x'}]:
+        msg = ''
+        try:
+            os.execve('/bin/true', ['true'], env)
+        except ValueError as e:
+            msg = str(e)
+        assert msg == 'illegal environment variable name'
+
+    # utime with a float that does not fit
+    name = 'shedskin_test_utime_range'
+    f = open(name, 'w')
+    f.close()
+    for t in [1e30, float('inf'), -9.3e18]:
+        msg = ''
+        try:
+            os.utime(name, (t, 5.0))
+        except OverflowError as e:
+            msg = str(e)
+        assert msg == 'timestamp out of range for platform time_t'
+    msg = ''
+    try:
+        os.utime(name, (float('nan'), 5.0))
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Invalid value NaN (not a number)'
+    os.utime(name, (1.5, 2.25))
+    assert os.stat(name).st_mtime == 2.25
+    os.remove(name)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1017,6 +1081,7 @@ def test_all():
     test_mkfifo_dir_fd()
     test_long_cwd_and_os_names()
     test_exec_spawn_failures()
+    test_wait_exec_utime_edges()
 
 if __name__ == '__main__':
     test_all()

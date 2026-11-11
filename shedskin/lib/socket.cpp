@@ -1169,10 +1169,20 @@ void *socket::setblocking(__ss_int flag)
     return NULL;
 }
 
+/* as CPython (_PyTime_FromSecondsObject): NaN, then int64 nanoseconds */
+static void check_timeout(double val)
+{
+    if (std::isnan(val))
+        throw new ValueError(new str("Invalid value NaN (not a number)"));
+    if (!(val * 1e9 >= -9223372036854775808.0 && val * 1e9 < 9223372036854775808.0))
+        throw new OverflowError(new str("timestamp out of range for C PyTime_t"));
+    if (val < 0)
+        throw new ValueError(new str("Timeout value out of range"));
+}
+
 void *socket::settimeout(double val)
 {
-    if (val < 0)
-	throw new ValueError(new str("Timeout value out of range"));
+    check_timeout(val);
     apply_timeout(val);
     return NULL;
 }
@@ -1692,8 +1702,7 @@ double getdefaulttimeout()
 // FIXME this should allow the argument to be None
 void *setdefaulttimeout(double x)
 {
-    if (x < 0)
-        throw new ValueError(new str("Timeout value out of range"));
+    check_timeout(x);
     __ss_default_timeout = x;
     return NULL;
 }

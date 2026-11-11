@@ -62,6 +62,10 @@ str *__ss_empty_str;
 
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
+bool __ss_stdout_line_buffering() {
+    return __ss_stdout && __ss_stdout->line_buffering;
+}
+
 tuple<__ss_int> *__ss_tuple_cache[1600];
 
 str *byteorder_big, *byteorder_little;

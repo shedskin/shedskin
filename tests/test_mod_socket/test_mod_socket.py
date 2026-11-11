@@ -1294,6 +1294,26 @@ def test_gethostbyname_special():
     assert socket.gethostbyname('127.0.0.1') == '127.0.0.1'
 
 
+def test_settimeout_range():
+    s = socket.socket()
+    for t in [1e30, float('inf')]:
+        msg = ''
+        try:
+            s.settimeout(t)
+        except OverflowError as e:
+            msg = str(e)
+        assert msg == 'timestamp out of range for C PyTime_t'
+    msg = ''
+    try:
+        s.settimeout(float('nan'))
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Invalid value NaN (not a number)'
+    s.settimeout(2.5)
+    assert s.gettimeout() == 2.5
+    s.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1329,6 +1349,7 @@ def test_all():
     test_recvfrom_connected_and_lookup_errors()
     test_default_timeout() # last, see comment there
     test_gethostbyname_special()
+    test_settimeout_range()
 
 if __name__ == '__main__':
     test_all()

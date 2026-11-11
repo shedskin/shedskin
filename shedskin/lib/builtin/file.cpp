@@ -76,12 +76,25 @@ struct __ss_file_suppress_iph { __ss_file_suppress_iph() {} };
    macOS errno expands to (*__error()), which file::__error would shadow */
 static int __ss_fclose(FILE *f, bool closefd=true) {
     __ss_file_suppress_iph guard;
+    /* (fflush() of a reading stream seeks the fd back to the stream position) */
+    off_t offset_before = closefd ? -1 : ::lseek(fileno(f), 0, SEEK_CUR);
     int err = FFLUSH(f) ? errno : 0;
     /* closefd=False: there is no portable way to free a FILE * but not its
        fd, so let fclose() close a copy, and move that back in place */
     int fd = -1, saved = -1;
+    off_t offset = -1;
+#ifndef WIN32
+    int fdflags = -1;
+#endif
     if(!closefd) {
         fd = fileno(f);
+        /* as CPython, the fd stays where reading/writing left it (fclose()
+           would move it back to the stream position), and keeps FD_CLOEXEC
+           (which dup2() clears) */
+        offset = std::max(offset_before, ::lseek(fd, 0, SEEK_CUR)); /* (read ahead, or written) */
+#ifndef WIN32
+        fdflags = ::fcntl(fd, F_GETFD);
+#endif
         saved = ::dup(fd);
         if(saved == -1) { /* leave the FILE * open rather than the fd closed */
             errno = err;
@@ -93,6 +106,12 @@ static int __ss_fclose(FILE *f, bool closefd=true) {
     if(saved != -1) {
         ::dup2(saved, fd);
         ::close(saved);
+#ifndef WIN32
+        if(fdflags != -1)
+            ::fcntl(fd, F_SETFD, fdflags);
+#endif
+        if(offset != -1)
+            ::lseek(fd, offset, SEEK_SET);
     }
     errno = err;
     return err;
@@ -257,14 +276,17 @@ void file::__init_opened(__ss_int buffering) {
    at position 0, a read skips a leading bom, and without one a write adds it */
 void file::__sig_reset() {
     __bom_pending = false;
+    __bom_skipped = false;
     if (ftell(f) != 0)
         return;
     if (mode->unit.find_first_of(__gcs("r+")) != std::string::npos) {
         char head[3];
         bool bom = fread(head, 1, 3, f) == 3 && std::string_view(head, 3) == "\xef\xbb\xbf";
         fseek(f, bom ? 3 : 0, SEEK_SET); /* (also needed before a write) */
-        if (bom)
+        if (bom) {
+            __bom_skipped = true;
             return;
+        }
     }
     __bom_pending = mode->unit.find_first_of(__gcs("wax+")) != std::string::npos;
 }
@@ -538,6 +560,11 @@ __ss_int file::write(str *s) {
             __throw_oserror();
         if (size < 0)
             size = (__ss_int)s->unit.size(); /* characters written, as CPython */
+        /* as CPython: line buffering flushes everything after a '\n' or a
+           '\r' (stdio's _IOLBF keeps what follows the last '\n') */
+        if (line_buffering && s->unit.find_first_of(U"\n\r") != std::string::npos)
+            if (FFLUSH(f))
+                __throw_oserror();
     }
     return size;
 }
@@ -594,6 +621,8 @@ __ss_int file::tell() {
         long status = ftell(f);
         if(status == -1)
             __throw_oserror();
+        if(__bom_skipped && status == 3) /* (as CPython: after the bom is 0) */
+            status = 0;
         return __ss_int(status);
     }
     return -1;
@@ -811,6 +840,8 @@ __ss_int file::truncate() {
     long pos = ftell(f);
     if(pos == -1)
         __throw_oserror();
+    if(__bom_skipped && pos == 3) /* (as tell()) */
+        pos = 0;
     return truncate((__ss_int)pos);
 }
 

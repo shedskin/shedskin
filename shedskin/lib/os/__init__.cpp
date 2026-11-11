@@ -1514,6 +1514,12 @@ void *close(__ss_int fd) {
 /* split float seconds into seconds and nanoseconds like CPython does for
    os.utime() (_PyTime_DoubleToDenominator with ROUND_FLOOR) */
 static void __utime_split(double t, long long &sec, long &nsec) {
+    /* as CPython (and time.cpp): the casts below would be undefined */
+    if (std::isnan(t))
+        throw new ValueError(new str("Invalid value NaN (not a number)"));
+    const double lim = std::ldexp(1.0, (int)(sizeof(time_t) * 8 - 1));
+    if (!(std::floor(t) >= -lim && std::floor(t) < lim))
+        throw new OverflowError(new str("timestamp out of range for platform time_t"));
     double intpart;
     double floatpart = modf(t, &intpart);
     floatpart = floor(floatpart * 1e9);
@@ -1897,7 +1903,7 @@ tuple<__ss_int> *wait() {
 }
 
 tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
-    int status;
+    int status = 0; /* (WNOHANG: unset when no child is ready) */
     pid_t pid_ = __ss_cint_i(pid);
     int options_ = __ss_cint_i(options);
     if((pid = ::waitpid(pid_, &status, options_)) == -1)
@@ -2871,18 +2877,22 @@ char **__exec_envplist(dict<str *, str *> *env) {
     envplist.clear();
     list<tuple<str *> *> *items = new list<tuple<str *> *>(env->items());
     for(__ss_int i=0; i < items->__len__(); i++) {
+        str *key = items->__getitem__(i)->__getfirst__();
+        if (key->unit.empty() || key->unit.find(U'=', 1) != std::string::npos) /* (as CPython: a leading '=' is ok) */
+            throw new ValueError(new str("illegal environment variable name"));
         envplist.push_back(__ss_cpath(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())));
     }
     envplist.push_back(NULL);
     return envplist.data();
 }
 
-/* as CPython */
+/* as CPython: 'execv() arg 2 ..', but 'execve: argv ..' */
 static void __check_exec_args(list<str *> *args, const char *func) {
+    bool ve = std::string(func) == "execve()";
     if (args->units.empty())
-        throw new ValueError(new str((std::string(func) + " arg 2 must not be empty").c_str()));
+        throw new ValueError(new str(ve ? "execve: argv must not be empty" : (std::string(func) + " arg 2 must not be empty").c_str()));
     if (args->units[0]->unit.empty())
-        throw new ValueError(new str((std::string(func) + " arg 2 first element cannot be empty").c_str()));
+        throw new ValueError(new str(ve ? "execve: argv first element cannot be empty" : (std::string(func) + " arg 2 first element cannot be empty").c_str()));
 }
 
 void *execv(str* file, list<str*>* args) {
@@ -2909,7 +2919,10 @@ static void *__execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
     }
     __check_exec_args(args, env ? "execve()" : "execv()");
     list<str *> *PATH = env ? get_exec_path(env) : get_exec_path();
-    OSError *saved = 0, *last = 0;
+    /* (kept as errno + filename: a rethrown OSError * would lose its
+       subclass, e.g. FileNotFoundError, for 'except') */
+    int saved = 0, last = 0;
+    str *saved_name = 0, *last_name = file;
     for(__ss_int i = 0; i < PATH->__len__(); ++i) {
         str* fullname = __path__::join(2, PATH->__getfast__(i), file);
         try {
@@ -2917,17 +2930,16 @@ static void *__execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
                 execve(fullname, args, env);
             execv(fullname, args);
         } catch (OSError *e) {
-            last = e;
-            if(!saved && e->__ss_errno != ENOENT && e->__ss_errno != ENOTDIR)
-                saved = e;
+            last = (int)e->__ss_errno;
+            last_name = e->filename;
+            if(!saved && last != ENOENT && last != ENOTDIR) {
+                saved = last;
+                saved_name = e->filename;
+            }
         }
     }
-    if(saved)
-        throw saved;
-    if(last)
-        throw last;
-    errno = ENOENT;
-    __throw_oserror(file);
+    errno = saved ? saved : last ? last : ENOENT;
+    __throw_oserror(saved ? saved_name : last_name);
 }
 
 void *execvp(str* file, list<str*>* args) {
