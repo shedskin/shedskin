@@ -32,6 +32,7 @@
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #include <sys/statvfs.h>
+#include <dirent.h> /* listdir(fd) */
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__)
 #include <sys/sysmacros.h>
@@ -204,6 +205,40 @@ list<str *> *listdir(void *) {
     return listdir(new str("."));
 }
 
+list<str *> *listdir(__ss_int fd) {
+#ifdef WIN32
+    (void)fd;
+    throw new TypeError(new str("listdir: path should be string, bytes, os.PathLike or None, not int"));
+#else
+    /* as cpython: read a dup of the fd from the start, leaving the fd open */
+    int fd2 = ::dup(__ss_cint(fd));
+    if(fd2 == -1)
+        __throw_oserror();
+    DIR *dir = ::fdopendir(fd2);
+    if(!dir) {
+        int e = errno;
+        ::close(fd2);
+        errno = e;
+        __throw_oserror();
+    }
+    ::rewinddir(dir);
+    list<str *> *r = new list<str *>();
+    errno = 0;
+    while(struct dirent *ent = ::readdir(dir)) {
+        if(strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0)
+            r->append(__fsstr(std::filesystem::path(ent->d_name)));
+    }
+    int e = errno;
+    ::rewinddir(dir); /* (shares the fd's position) */
+    ::closedir(dir);
+    if(e) {
+        errno = e;
+        __throw_oserror();
+    }
+    return r;
+#endif
+}
+
 list<bytes *> *listdir(bytes *path) {
     list<str *> *names = listdir(fsdecode(path));
 
@@ -274,6 +309,17 @@ str *fsdecode(str *filename) {
     return filename;
 }
 
+void *chdir(__ss_int fd) {
+#ifdef WIN32
+    (void)fd;
+    throw new TypeError(new str("chdir: path should be string, bytes or os.PathLike, not int"));
+#else
+    if(::fchdir(__ss_cint(fd)) == -1)
+        __throw_oserror();
+    return NULL;
+#endif
+}
+
 void *chdir(str *dir) {
 #ifdef WIN32
     if(::_wchdir(__to_wide(dir, "chdir").c_str()) == -1)
@@ -316,6 +362,133 @@ void *rename(str *a, str *b) {
     }
     return NULL;
 }
+
+/* dir_fd variants (*at() calls), as CPython; not on windows */
+void __ss_dir_fd_unavailable(const char *func) {
+    throw new NotImplementedError(new str((std::string(func) + ": dir_fd unavailable on this platform").c_str()));
+}
+
+#ifdef WIN32
+void *__rename_at(int, str *, int, str *, bool replace) { __ss_dir_fd_unavailable(replace ? "replace" : "rename"); }
+void *__unlink_at(int, str *, bool, const char *func) { __ss_dir_fd_unavailable(func); }
+void *__mkdir_at(int, str *, __ss_int) { __ss_dir_fd_unavailable("mkdir"); }
+__ss_int __open_at(int, str *, __ss_int, __ss_int) { __ss_dir_fd_unavailable("open"); }
+void *__symlink_at(str *, int, str *) { __ss_dir_fd_unavailable("symlink"); }
+str *__readlink_at(int, str *) { __ss_dir_fd_unavailable("readlink"); }
+#else
+static inline int __at_fd(int dir_fd) { return dir_fd == __SS_DIR_FD_CWD ? AT_FDCWD : dir_fd; }
+
+void *__rename_at(int src_dir_fd, str *a, int dst_dir_fd, str *b, bool replace) {
+    const char *func = replace ? "replace" : "rename";
+    if(::renameat(__at_fd(src_dir_fd), __ss_cpath(a, func, "src"), __at_fd(dst_dir_fd), __ss_cpath(b, func, "dst")) == -1)
+        __throw_oserror(a, b);
+    return NULL;
+}
+
+void *__unlink_at(int dir_fd, str *path, bool dir, const char *func) {
+    if(::unlinkat(__at_fd(dir_fd), __ss_cpath(path, func), dir ? AT_REMOVEDIR : 0) == -1)
+        __throw_oserror(path);
+    return NULL;
+}
+
+void *__mkdir_at(int dir_fd, str *path, __ss_int mode) {
+    if(::mkdirat(__at_fd(dir_fd), __ss_cpath(path, "mkdir"), (mode_t)__ss_cint(mode)) == -1)
+        __throw_oserror(path);
+    return NULL;
+}
+
+__ss_int __open_at(int dir_fd, str *path, __ss_int flags, __ss_int mode) {
+    int fd = ::openat(__at_fd(dir_fd), __ss_cpath(path, "open"), __ss_cint(flags) | O_CLOEXEC, __ss_cint(mode));
+    if(fd == -1)
+        __throw_oserror(path);
+    return fd;
+}
+
+void *__symlink_at(str *src, int dir_fd, str *dst) {
+    if(::symlinkat(__ss_cpath(src, "symlink", "src"), __at_fd(dir_fd), __ss_cpath(dst, "symlink", "dst")) == -1)
+        __throw_oserror(src, dst);
+    return NULL;
+}
+
+str *__readlink_at(int dir_fd, str *path) {
+    size_t size = 256;
+    for(;;) {
+        std::string buffer(size, '\0');
+        ssize_t n = ::readlinkat(__at_fd(dir_fd), __ss_cpath(path, "readlink"), &buffer[0], size);
+        if(n == -1)
+            __throw_oserror(path);
+        if((size_t)n < size) {
+            buffer.resize((size_t)n);
+            return new str(buffer.c_str());
+        }
+        size *= 2;
+    }
+}
+#endif
+
+void __ss_fd_with(const char *func, bool dir_fd) {
+    if(dir_fd)
+        throw new ValueError(new str((std::string(func) + ": can't specify both dir_fd and fd").c_str()));
+    throw new ValueError(new str((std::string(func) + ": cannot use fd and follow_symlinks together").c_str()));
+}
+
+[[noreturn]] static void __ss_arg_unavailable(const char *func, const char *arg) {
+    throw new NotImplementedError(new str((std::string(func) + ": " + arg + " unavailable on this platform").c_str()));
+}
+
+#ifdef WIN32
+void *__chmod_at(int dir_fd, str *, __ss_int, bool) {
+    if(dir_fd != __SS_DIR_FD_CWD)
+        __ss_dir_fd_unavailable("chmod");
+    __ss_arg_unavailable("chmod", "follow_symlinks");
+}
+__ss_bool __access_at(int dir_fd, str *, __ss_int, bool effective_ids, bool) {
+    if(dir_fd != __SS_DIR_FD_CWD)
+        __ss_dir_fd_unavailable("access");
+    __ss_arg_unavailable("access", effective_ids ? "effective_ids" : "follow_symlinks");
+}
+void *__link_at(int src_dir_fd, str *, int dst_dir_fd, str *, bool) {
+    if(src_dir_fd != __SS_DIR_FD_CWD || dst_dir_fd != __SS_DIR_FD_CWD)
+        __ss_dir_fd_unavailable("link");
+    __ss_arg_unavailable("link", "follow_symlinks");
+}
+#else
+void *__chmod_at(int dir_fd, str *path, __ss_int mode, bool follow_symlinks) {
+    if(::fchmodat(__at_fd(dir_fd), __ss_cpath(path, "chmod"), (mode_t)__ss_cint(mode), follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW) == -1) {
+        /* as CPython: the C library may refuse not to follow a symlink (linux) */
+        if(!follow_symlinks && (errno == ENOTSUP || errno == EOPNOTSUPP)) {
+            if(dir_fd == __SS_DIR_FD_CWD)
+                __ss_arg_unavailable("chmod", "follow_symlinks");
+            throw new ValueError(new str("chmod: cannot use dir_fd and follow_symlinks together"));
+        }
+        __throw_oserror(path);
+    }
+    return NULL;
+}
+
+__ss_bool __access_at(int dir_fd, str *path, __ss_int mode, bool effective_ids, bool follow_symlinks) {
+    int flags = (effective_ids ? AT_EACCESS : 0) | (follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW);
+    return __mbool(::faccessat(__at_fd(dir_fd), __ss_cpath(path, "access"), __ss_cint(mode), flags) == 0);
+}
+
+void *__link_at(int src_dir_fd, str *src, int dst_dir_fd, str *dst, bool follow_symlinks) {
+    if(::linkat(__at_fd(src_dir_fd), __ss_cpath(src, "link", "src"), __at_fd(dst_dir_fd), __ss_cpath(dst, "link", "dst"), follow_symlinks ? AT_SYMLINK_FOLLOW : 0) == -1)
+        __throw_oserror(src, dst);
+    return NULL;
+}
+#endif
+
+/* mkfifoat()/mknodat(): not on windows, and only since macOS 13 */
+#if defined(WIN32) || defined(__APPLE__)
+void *__mkfifo_at(int, str *, __ss_int) { __ss_dir_fd_unavailable("mkfifo"); }
+void *__mknod_at(int, str *, __ss_int, __ss_int) { __ss_dir_fd_unavailable("mknod"); }
+#else
+void *__mkfifo_at(int dir_fd, str *path, __ss_int mode) {
+    if(::mkfifoat(__at_fd(dir_fd), __ss_cpath(path, "mkfifo"), (mode_t)__ss_cint(mode)) == -1)
+        __throw_oserror();
+    return NULL;
+}
+#endif
 
 void *replace(str *a, str *b) {
     /* std::rename() already atomically replaces an existing destination
@@ -577,7 +750,7 @@ stat_result::stat_result(__ss_int dir_fd, str *path, bool follow_symlinks) {
     this->__class__ = cl_stat_result;
 #ifdef WIN32
     (void)dir_fd; (void)path; (void)follow_symlinks;
-    throw new NotImplementedError(new str("dir_fd unavailable on this platform"));
+    throw new NotImplementedError(new str("stat: dir_fd unavailable on this platform"));
 #else
     if(::fstatat(__ss_cint(dir_fd), __ss_cpath(path, "stat"), &sbuf, follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW) == -1)
         __throw_oserror(path);
@@ -722,8 +895,37 @@ DirEntry::DirEntry(const std::filesystem::directory_entry &entry) {
         __type = std::filesystem::file_type::unknown;
 }
 
+DirEntry::DirEntry(int dir_fd, str *name, std::filesystem::file_type type, __ss_int ino) {
+    this->__class__ = cl_DirEntry;
+    this->name = this->path = name;
+    __type = type;
+    __dir_fd = dir_fd;
+    __ino = ino;
+}
+
+#ifndef WIN32
+/* scandir(fd): the type of what a symlink points to (unknown if it cannot
+   be stat'ed, as for a dangling link) */
+static std::filesystem::file_type __entry_type_at(int dir_fd, str *name, bool follow_symlinks) {
+    struct stat sb;
+    if(::fstatat(dir_fd, __ss_cpath(name, "scandir"), &sb, follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW) == -1)
+        return std::filesystem::file_type::unknown;
+    if(S_ISDIR(sb.st_mode))
+        return std::filesystem::file_type::directory;
+    if(S_ISREG(sb.st_mode))
+        return std::filesystem::file_type::regular;
+    if(S_ISLNK(sb.st_mode))
+        return std::filesystem::file_type::symlink;
+    return std::filesystem::file_type::unknown;
+}
+#endif
+
 __ss_bool DirEntry::is_dir(__ss_bool follow_symlinks) {
     if(__type == std::filesystem::file_type::symlink) {
+#ifndef WIN32
+        if(__dir_fd != -1)
+            return __mbool(follow_symlinks && __entry_type_at(__dir_fd, name, true) == std::filesystem::file_type::directory);
+#endif
         std::error_code ec;
         return __mbool(follow_symlinks && std::filesystem::is_directory(__fspath(this->path), ec));
     }
@@ -732,6 +934,10 @@ __ss_bool DirEntry::is_dir(__ss_bool follow_symlinks) {
 
 __ss_bool DirEntry::is_file(__ss_bool follow_symlinks) {
     if(__type == std::filesystem::file_type::symlink) {
+#ifndef WIN32
+        if(__dir_fd != -1)
+            return __mbool(follow_symlinks && __entry_type_at(__dir_fd, name, true) == std::filesystem::file_type::regular);
+#endif
         std::error_code ec;
         return __mbool(follow_symlinks && std::filesystem::is_regular_file(__fspath(this->path), ec));
     }
@@ -747,10 +953,14 @@ __ss_bool DirEntry::is_junction() {
 }
 
 __ss_int DirEntry::inode() {
+    if(__dir_fd != -1)
+        return __ino;
     return __os__::lstat(this->path)->st_ino;
 }
 
 stat_result *DirEntry::stat(__ss_bool follow_symlinks) {
+    if(__dir_fd != -1)
+        return new stat_result((__ss_int)__dir_fd, name, follow_symlinks);
     if(follow_symlinks)
         return __os__::stat(this->path);
     return __os__::lstat(this->path);
@@ -804,6 +1014,56 @@ ScandirIterator *scandir(str *path) {
     }
 
     return new ScandirIterator(r);
+}
+
+ScandirIterator *scandir(void *) {
+    return scandir(new str("."));
+}
+
+ScandirIterator *scandir(__ss_int fd) {
+#ifdef WIN32
+    (void)fd;
+    throw new TypeError(new str("scandir: path should be string, bytes, os.PathLike or None, not int"));
+#else
+    /* as cpython: read a dup of the fd from the start; the entries stat()
+       relative to fd, which must stay open */
+    int fd_ = __ss_cint(fd);
+    int fd2 = ::dup(fd_);
+    if(fd2 == -1)
+        __throw_oserror();
+    DIR *dir = ::fdopendir(fd2);
+    if(!dir) {
+        int e = errno;
+        ::close(fd2);
+        errno = e;
+        __throw_oserror();
+    }
+    ::rewinddir(dir);
+    list<DirEntry *> *r = new list<DirEntry *>();
+    errno = 0;
+    while(struct dirent *ent = ::readdir(dir)) {
+        if(strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+            continue;
+        str *name = __fsstr(std::filesystem::path(ent->d_name));
+        std::filesystem::file_type type;
+        switch(ent->d_type) {
+            case DT_DIR: type = std::filesystem::file_type::directory; break;
+            case DT_REG: type = std::filesystem::file_type::regular; break;
+            case DT_LNK: type = std::filesystem::file_type::symlink; break;
+            case DT_UNKNOWN: type = __entry_type_at(fd_, name, false); break;
+            default: type = std::filesystem::file_type::unknown;
+        }
+        r->append(new DirEntry(fd_, name, type, (__ss_int)ent->d_ino));
+    }
+    int e = errno;
+    ::rewinddir(dir);
+    ::closedir(dir);
+    if(e) {
+        errno = e;
+        __throw_oserror();
+    }
+    return new ScandirIterator(r);
+#endif
 }
 
 /* os.walk */
@@ -1280,14 +1540,24 @@ static void __utime_win32(str *path, FILETIME *atime, FILETIME *mtime) {
     CloseHandle(hFile);
 }
 
-void *__utime_now(str *path) {
+/* (as cpython: neither is available on windows) */
+static void __utime_check_args(int dir_fd, bool follow_symlinks) {
+    if(dir_fd != __SS_DIR_FD_CWD)
+        throw new NotImplementedError(new str("utime: dir_fd unavailable on this platform"));
+    if(!follow_symlinks)
+        throw new NotImplementedError(new str("utime: follow_symlinks unavailable on this platform"));
+}
+
+void *__utime_now(str *path, int dir_fd, bool follow_symlinks) {
+    __utime_check_args(dir_fd, follow_symlinks);
     FILETIME now;
     GetSystemTimeAsFileTime(&now);
     __utime_win32(path, &now, &now);
     return NULL;
 }
 
-static void __utime_set(str *path, long long asec, long ansec, long long msec, long mnsec) {
+static void __utime_set(str *path, long long asec, long ansec, long long msec, long mnsec, int dir_fd, bool follow_symlinks) {
+    __utime_check_args(dir_fd, follow_symlinks);
     FILETIME atime, mtime;
     time_t_to_FILE_TIME(asec, ansec, &atime);
     time_t_to_FILE_TIME(msec, mnsec, &mtime);
@@ -1295,29 +1565,34 @@ static void __utime_set(str *path, long long asec, long ansec, long long msec, l
 }
 
 #else
-static void __utime_set(str *path, long long asec, long ansec, long long msec, long mnsec) {
+static void __utime_at(str *path, struct timespec *ts, int dir_fd, bool follow_symlinks) {
+    if(dir_fd == __SS_DIR_FD_CWD)
+        dir_fd = AT_FDCWD;
+    if(::utimensat(dir_fd, __ss_cpath(path, "utime"), ts, follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW) == -1)
+        __throw_oserror(path);
+}
+
+static void __utime_set(str *path, long long asec, long ansec, long long msec, long mnsec, int dir_fd, bool follow_symlinks) {
     struct timespec ts[2];
     ts[0].tv_sec = (time_t)asec;
     ts[0].tv_nsec = ansec;
     ts[1].tv_sec = (time_t)msec;
     ts[1].tv_nsec = mnsec;
-    if(::utimensat(AT_FDCWD, __ss_cpath(path, "utime"), ts, 0) == -1)
-        __throw_oserror(path);
+    __utime_at(path, ts, dir_fd, follow_symlinks);
 }
 
-void *__utime_now(str *path) {
-    if(::utimensat(AT_FDCWD, __ss_cpath(path, "utime"), NULL, 0) == -1)
-        __throw_oserror(path);
+void *__utime_now(str *path, int dir_fd, bool follow_symlinks) {
+    __utime_at(path, NULL, dir_fd, follow_symlinks);
     return NULL;
 }
 #endif
 
-void *__utime_float(str *path, __ss_float atime, __ss_float mtime) {
+void *__utime_float(str *path, __ss_float atime, __ss_float mtime, int dir_fd, bool follow_symlinks) {
     long long asec, msec;
     long ansec, mnsec;
     __utime_split((double)atime, asec, ansec);
     __utime_split((double)mtime, msec, mnsec);
-    __utime_set(path, asec, ansec, msec, mnsec);
+    __utime_set(path, asec, ansec, msec, mnsec, dir_fd, follow_symlinks);
     return NULL;
 }
 
@@ -1333,12 +1608,12 @@ static void __utime_split_ns(__ss_int t, long long &sec, long &nsec) {
     nsec = (long)r;
 }
 
-void *__utime_ns(str *path, __ss_int atime_ns, __ss_int mtime_ns) {
+void *__utime_ns(str *path, __ss_int atime_ns, __ss_int mtime_ns, int dir_fd, bool follow_symlinks) {
     long long asec, msec;
     long ansec, mnsec;
     __utime_split_ns(atime_ns, asec, ansec);
     __utime_split_ns(mtime_ns, msec, mnsec);
-    __utime_set(path, asec, ansec, msec, mnsec);
+    __utime_set(path, asec, ansec, msec, mnsec, dir_fd, follow_symlinks);
     return NULL;
 }
 
@@ -1346,10 +1621,6 @@ void __utime_error(const char *msg) {
     if (strstr(msg, "not both"))
         throw new ValueError(new str(msg));
     throw new TypeError(new str(msg));
-}
-
-void *utime(void *, str *path, void *) {
-    return __utime_now(path);
 }
 
 bytes *urandom(__ss_int n) {
@@ -1636,6 +1907,18 @@ str *getlogin() {
 void *chown(str *path, __ss_int uid, __ss_int gid) {
     if (::chown(__ss_cpath(path, "chown"), __ss_uid(uid), __ss_gid(gid)) == -1)
         __throw_oserror(path);
+    return NULL;
+}
+
+void *__chown_at(int dir_fd, str *path, __ss_int uid, __ss_int gid, bool follow_symlinks) {
+    if (::fchownat(__at_fd(dir_fd), __ss_cpath(path, "chown"), __ss_uid(uid), __ss_gid(gid), follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW) == -1)
+        __throw_oserror(path);
+    return NULL;
+}
+
+void *__fchown(__ss_int fd, __ss_int uid, __ss_int gid) {
+    if (::fchown(__ss_cint(fd), __ss_uid(uid), __ss_gid(gid)) == -1)
+        __throw_oserror();
     return NULL;
 }
 
@@ -2533,6 +2816,14 @@ void *mknod(str *filename, __ss_int mode, __ss_int device) {
         __throw_oserror();
     return NULL;
 }
+
+#ifndef __APPLE__
+void *__mknod_at(int dir_fd, str *path, __ss_int mode, __ss_int device) {
+    if(::mknodat(__at_fd(dir_fd), __ss_cpath(path, "mknod"), (mode_t)__ss_cint(mode), __ss_dev(device)) == -1)
+        __throw_oserror();
+    return NULL;
+}
+#endif
 
 /* the argv/envp arrays live in GC-scanned static vectors, so the strings they
  * point into stay alive until exec replaces the process (or fails) */

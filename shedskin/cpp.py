@@ -4528,9 +4528,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # os.listdir()/listdir(None) must pick the void* (list '.', str
             # names) overload; a bare NULL is ambiguous with the str/bytes ones
             or self.library_func(funcs, "os", None, "listdir")
+            or self.library_func(funcs, "os", None, "scandir")
             # os.stat(path, dir_fd=None) likewise (void* = no dir_fd)
             or self.library_func(funcs, "os", None, "stat")
             or self.library_func(funcs, "os", None, "lstat")
+            or self.library_func(funcs, "os", None, "utime")
+            or any(
+                self.library_func(funcs, "os", None, f)
+                for f in ("rename", "replace", "remove", "unlink", "rmdir", "mkdir",
+                          "open", "symlink", "readlink", "mkfifo", "mknod",
+                          "chmod", "chown", "access", "link")
+            )
             # print(None), but not a None sep/end/file (see below)
             or print_call
         ):

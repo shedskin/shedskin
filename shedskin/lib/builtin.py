@@ -5,6 +5,8 @@ class class_:
         return self.__name__
 
 class int_:
+    def __or_x__(self, x):  # (an fd, e.g. os.listdir(fd) -> str names)
+        return x
     def __real__(self):
         return 1
     real = property(__real__)
