@@ -573,6 +573,19 @@ stat_result::stat_result(str *path, __ss_int t) {
     __set_items();
 }
 
+stat_result::stat_result(__ss_int dir_fd, str *path, bool follow_symlinks) {
+    this->__class__ = cl_stat_result;
+#ifdef WIN32
+    (void)dir_fd; (void)path; (void)follow_symlinks;
+    throw new NotImplementedError(new str("dir_fd unavailable on this platform"));
+#else
+    if(::fstatat(__ss_cint(dir_fd), __ss_cpath(path, "stat"), &sbuf, follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW) == -1)
+        __throw_oserror(path);
+    fill_er_up();
+    __set_items();
+#endif
+}
+
 stat_result::stat_result(__ss_int fd) {
     this->__class__ = cl_stat_result;
 
@@ -641,6 +654,27 @@ stat_result *stat(__ss_bool follow_symlinks, str *path) {
 stat_result *stat(__ss_bool follow_symlinks, bytes *path) {
     return stat(follow_symlinks, fsdecode(path));
 }
+stat_result *stat(__ss_bool follow_symlinks, void *, str *path) {
+    return stat(follow_symlinks, path);
+}
+stat_result *stat(__ss_bool follow_symlinks, void *, bytes *path) {
+    return stat(follow_symlinks, fsdecode(path));
+}
+stat_result *stat(__ss_bool follow_symlinks, __ss_int dir_fd, str *path) {
+    return new stat_result(dir_fd, path, follow_symlinks);
+}
+stat_result *stat(__ss_bool follow_symlinks, __ss_int dir_fd, bytes *path) {
+    return new stat_result(dir_fd, fsdecode(path), follow_symlinks);
+}
+stat_result *stat(__ss_bool follow_symlinks, void *, __ss_int fd) {
+    /* (as cpython: an fd is not followed, so follow_symlinks=False is refused) */
+    if(!follow_symlinks)
+        throw new ValueError(new str("stat: cannot use fd and follow_symlinks together"));
+    return fstat(fd);
+}
+stat_result *stat(__ss_bool, __ss_int, __ss_int) {
+    throw new ValueError(new str("stat: can't specify dir_fd without matching path"));
+}
 stat_result *lstat(str *path) {
 #ifndef WIN32
     return new stat_result(path, 2);
@@ -650,6 +684,18 @@ stat_result *lstat(str *path) {
 }
 stat_result *lstat(bytes *path) {
     return lstat(fsdecode(path));
+}
+stat_result *lstat(void *, str *path) {
+    return lstat(path);
+}
+stat_result *lstat(void *, bytes *path) {
+    return lstat(fsdecode(path));
+}
+stat_result *lstat(__ss_int dir_fd, str *path) {
+    return new stat_result(dir_fd, path, false);
+}
+stat_result *lstat(__ss_int dir_fd, bytes *path) {
+    return new stat_result(dir_fd, fsdecode(path), false);
 }
 stat_result *fstat(__ss_int fd) {
     return new stat_result(fd);

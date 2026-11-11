@@ -75,6 +75,7 @@ public:
 
     stat_result(str *path, __ss_int t);
     stat_result(__ss_int fd);
+    stat_result(__ss_int dir_fd, str *path, bool follow_symlinks); /* os.stat(path, dir_fd=..) */
     void fill_er_up();
     void __set_items();
     str *__repr__() override;
@@ -84,9 +85,22 @@ public:
 stat_result *stat(str *path);
 stat_result *stat(bytes *path);
 stat_result *stat(__ss_bool follow_symlinks, str *path); /* follow_symlinks is keyword-only */
+/* os.stat(path, *, dir_fd=None, follow_symlinks=True): the keyword-only
+   arguments come first (in reverse); a None dir_fd is cast to void * (see
+   cpp.py), and path may also be an fd */
+stat_result *stat(__ss_bool follow_symlinks, void *dir_fd, str *path);
+stat_result *stat(__ss_bool follow_symlinks, void *dir_fd, bytes *path);
+stat_result *stat(__ss_bool follow_symlinks, __ss_int dir_fd, str *path);
+stat_result *stat(__ss_bool follow_symlinks, __ss_int dir_fd, bytes *path);
+stat_result *stat(__ss_bool follow_symlinks, void *dir_fd, __ss_int fd);
+stat_result *stat(__ss_bool follow_symlinks, __ss_int dir_fd, __ss_int fd);
 stat_result *stat(__ss_bool follow_symlinks, bytes *path);
 stat_result *lstat(str *path);
 stat_result *lstat(bytes *path);
+stat_result *lstat(void *dir_fd, str *path); /* lstat(path, *, dir_fd=None) */
+stat_result *lstat(void *dir_fd, bytes *path);
+stat_result *lstat(__ss_int dir_fd, str *path);
+stat_result *lstat(__ss_int dir_fd, bytes *path);
 stat_result *fstat(__ss_int fd);
 
 extern class_ *cl_DirEntry;

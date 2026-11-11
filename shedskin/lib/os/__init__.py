@@ -256,10 +256,10 @@ def system(command):
 def strerror(code):
     return ''
 
-def stat(path, __kw_follow_symlinks=True):
+def stat(path, __kw_dir_fd=None, __kw_follow_symlinks=True):
     return stat_result()
 
-def lstat(path):
+def lstat(path, __kw_dir_fd=None):
     return stat_result()
 
 def fstat(fd):

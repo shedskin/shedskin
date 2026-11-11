@@ -1463,6 +1463,62 @@ def test_stat_follow_symlinks():
     os.remove(path)
 
 
+def test_stat_fd_dir_fd():
+    # os.stat() also takes an fd (as fstat); and both stat and lstat take
+    # dir_fd (keyword-only, as CPython)
+    path = 'shedskin_test_stat_fd.txt'
+    with open(path, 'w') as f:
+        f.write('hello world')
+    fd = os.open(path, os.O_RDONLY)
+    assert os.stat(fd).st_size == 11
+    assert os.stat(fd, dir_fd=None).st_size == 11
+    assert os.stat(fd).st_ino == os.stat(path).st_ino
+    assert os.stat(path, dir_fd=None).st_size == 11
+    assert os.lstat(path, dir_fd=None).st_size == 11
+    try:
+        os.stat(fd, follow_symlinks=False)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'stat: cannot use fd and follow_symlinks together'
+    try:
+        os.stat(fd, dir_fd=fd)
+        assert False
+    except ValueError as e:
+        assert str(e) == "stat: can't specify dir_fd without matching path"
+    os.close(fd)
+    os.remove(path)
+
+    if os.name != 'nt':  # (no dir_fd on windows)
+        top = 'shedskin_test_stat_dir_fd'
+        os.mkdir(top)
+        with open(os.path.join(top, 'x.txt'), 'w') as f:
+            f.write('hello world')
+        os.symlink('x.txt', os.path.join(top, 'lnk'))
+        dfd = os.open(top, os.O_RDONLY)
+        assert os.stat('x.txt', dir_fd=dfd).st_size == 11
+        assert os.stat(b'x.txt', dir_fd=dfd).st_size == 11
+        assert os.stat('lnk', dir_fd=dfd).st_size == 11
+        assert os.stat('lnk', dir_fd=dfd, follow_symlinks=False).st_size == 5
+        assert os.lstat('lnk', dir_fd=dfd).st_size == 5
+        assert os.lstat(b'lnk', dir_fd=dfd).st_size == 5
+        # an absolute path ignores dir_fd
+        assert os.stat(os.path.abspath(os.path.join(top, 'x.txt')), dir_fd=9999).st_size == 11
+        try:
+            os.stat('nope', dir_fd=dfd)
+            assert False
+        except FileNotFoundError as e:
+            assert e.filename == 'nope'
+        try:
+            os.stat('x.txt', dir_fd=9999)
+            assert False
+        except OSError as e2:
+            assert e2.errno == 9
+        os.close(dfd)
+        os.remove(os.path.join(top, 'lnk'))
+        os.remove(os.path.join(top, 'x.txt'))
+        os.rmdir(top)
+
+
 def test_fd_errors_no_filename():
     # errors from calls that take no path carry no filename (like CPython)
     bad = 987
@@ -2040,6 +2096,7 @@ def test_all():
 
     test_utime_extended()
     test_stat_follow_symlinks()
+    test_stat_fd_dir_fd()
     test_links()
     test_two_path_errors()
     test_fd_errors_no_filename()
