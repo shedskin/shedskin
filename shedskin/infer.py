@@ -213,6 +213,14 @@ def analyze(gx: "config.GlobalInfo", module_name: str) -> None:
             nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
 
 
+def self_triggered(gx: "config.GlobalInfo", node: "CNode") -> bool:
+    """A call node that no argument node triggers, so it must trigger itself"""
+    expr = node.thing
+    return (
+        isinstance(expr, ast.Call) and not expr.args
+    ) or expr in gx.lambdawrapper  # XXX
+
+
 def propagate(gx: "config.GlobalInfo") -> None:
     """Propagate constraints through the graph"""
     logger.debug("propagate")
@@ -223,10 +231,7 @@ def propagate(gx: "config.GlobalInfo") -> None:
     for node in gx.types:
         if gx.types[node]:
             add_to_worklist(worklist, node)
-        expr = node.thing
-        if (
-            isinstance(expr, ast.Call) and not expr.args
-        ) or expr in gx.lambdawrapper:  # XXX
+        if self_triggered(gx, node):
             changed.add(node)
 
     for node in changed:
@@ -251,6 +256,11 @@ def propagate(gx: "config.GlobalInfo") -> None:
                 t = (callfunc, a.dcpa, a.cpa)
                 if t in gx.cnode:
                     callnodes.add(gx.cnode[t])
+
+            # a call without arguments in a template created during this
+            # propagation has no argument node to trigger it (see #1769)
+            if self_triggered(gx, a):
+                callnodes.add(a)
 
             for b in a.out.copy():  # XXX can change...?
                 # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
