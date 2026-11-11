@@ -2,6 +2,7 @@ add_shedskin_product(
     SYS_MODULES
         os
         os.path
+        select
         socket
         stat
         sys
