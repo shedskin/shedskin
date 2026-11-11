@@ -186,6 +186,10 @@ file *open(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0
 file *open(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
 file_binary *open_binary(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
 file_binary *open_binary(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0); /* ugly duplication.. use str/byte template? */
+/* open(fd), as os.fdopen(fd) */
+FILE *__ss_fdopen(__ss_int fd, str *mode);
+file *open(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
+file_binary *open_binary(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
 
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 

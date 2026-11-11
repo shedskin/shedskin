@@ -1413,6 +1413,47 @@ def test_binary_readinto_read1():
     os.remove('rinto.bin')
 
 
+def test_open_fd():
+    # open() also takes a file descriptor (as os.fdopen); closing the file
+    # closes it
+    fd = os.open('openfd.txt', os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    f = open(fd, 'w', encoding='utf-8')
+    assert f.fileno() == fd and str(f.name) == str(fd) and f.mode == 'w'
+    assert f.write('fd é\nline2\n') == 11
+    f.close()
+    try:
+        os.close(fd)
+        assert False
+    except OSError as e:
+        assert e.errno == 9
+    fd = os.open('openfd.txt', os.O_RDONLY)
+    with open(fd) as g:
+        assert g.readline() == 'fd é\n'
+        assert g.readlines() == ['line2\n']
+    fb = open(os.open('openfd.txt', os.O_RDONLY), 'rb')
+    assert fb.mode == 'rb'
+    assert fb.read(2) == b'fd'
+    fb.close()
+    os.remove('openfd.txt')
+    r, w = os.pipe()
+    pw = open(w, 'wb')
+    pw.write(b'pipe\n')
+    pw.close()
+    pr = open(r)
+    assert pr.read() == 'pipe\n'
+    pr.close()
+    try:
+        open(-1)
+        assert False
+    except ValueError as e2:
+        assert str(e2) == 'negative file descriptor'
+    try:
+        open(9999, 'rb')
+        assert False
+    except OSError as e3:
+        assert e3.errno == 9
+
+
 def test_unsupported_operation():
     # as CPython: reading a file not opened for reading (or writing one not
     # opened for writing) raises io.UnsupportedOperation (an OSError) instead
@@ -1525,6 +1566,7 @@ def test_all():
     test_with_exit_raises()
     test_unsupported_operation()
     test_binary_readinto_read1()
+    test_open_fd()
 
 
 if __name__ == '__main__':

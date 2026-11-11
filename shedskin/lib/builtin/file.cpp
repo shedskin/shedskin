@@ -297,6 +297,37 @@ file *open(bytes *name, str *flags, __ss_int buffering, str *encoding, str *erro
     return new file(new str(name->unit), flags, encoding, errors, newline, buffering);
 }
 
+/* open(fd) (and os.fdopen). CPython's name is the fd itself (an int) */
+FILE *__ss_fdopen(__ss_int fd, str *mode) {
+    __check_open_mode(mode);
+    /* like CPython (io.open), an fd out of C int range is no fd */
+    if(fd < INT_MIN || fd > INT_MAX)
+        throw new TypeError(new str("expected str, bytes or os.PathLike object, not int"));
+    if(fd < 0)
+        throw new ValueError(new str("negative file descriptor"));
+    /* C fdopen() does not know 'x' (and never creates or truncates). like
+       open(), a text file is opened in binary mode: we translate newlines
+       ourselves */
+    str *cmode = __c_open_mode(mode, false);
+    if(cmode->unit.find('b') == std::string::npos)
+        cmode->unit += 'b';
+    FILE* fp;
+    {
+        /* the msvc crt aborts (0xc0000409) on a bad fd, e.g. open(9999) */
+        __ss_file_suppress_iph guard;
+        fp = ::fdopen((int)fd, cmode->c_str());
+    }
+    if(fp == NULL)
+        __throw_oserror();
+    return fp;
+}
+
+file *open(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+    if(!flags)
+        flags = new str("r");
+    return new file(__ss_fdopen(fd, flags), __str(fd), flags, encoding, errors, newline, buffering);
+}
+
 /* decode the bytes collected in __read_cache, with the file's encoding */
 str *file::__decode_cache() {
     str *s = new str();
@@ -790,6 +821,16 @@ file_binary *open_binary(bytes *name, str *flags, __ss_int buffering, str *encod
     __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline);
     return new file_binary(new str(name->unit), flags, buffering);
+}
+
+file_binary *open_binary(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+    if(!flags)
+        flags = new str("rb");
+    __check_open_mode(flags); /* (as cpython: before the other arguments) */
+    __check_binary_args(encoding, errors, newline); /* (as cpython: the fd stays open) */
+    FILE *fp = __ss_fdopen(fd, flags);
+    __set_buffering(fp, buffering, false);
+    return new file_binary(fp, __str(fd), flags);
 }
 
 __ss_int file_binary::write(bytes *s) {
