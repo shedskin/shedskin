@@ -4722,8 +4722,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         objexpr: ast.AST,
         msg: str,
         formal_nr: int,
-    ) -> Optional[str]:
-        """Check if a cast to a builtin type is necessary"""
+    ) -> Optional[Types]:
+        """Check if a cast to a builtin type is necessary, for an argument of
+        a method that is not called through visit_Call (as cast_to_builtin)"""
         # shortcut for outside of visit_Call XXX merge with visit_Call?
         cls = [t[0] for t in self.mergeinh[objexpr] if isinstance(t[0], python.Class)]
         if cls:
@@ -4736,7 +4737,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         arg, func, formal, target, True, objexpr
                     )
                     if builtin_types:
-                        return typestr.typestr(self.gx, builtin_types, mv=self.mv)
+                        return builtin_types
         return None
 
     def visit_Return(
@@ -5267,14 +5268,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif rvalue in self.mv.tempcount:
                 self.append(self.mv.tempcount[rvalue])
             else:
-                cast = self.cast_to_builtin2(
+                # convert as for a method argument (see visit_Call), so that
+                # a new container is built as the element type, and we warn
+                # about a cast that is not safe
+                builtin_types = self.cast_to_builtin2(
                     rvalue, func, lvalue.value, "__setitem__", 2
                 )
-                if cast:
-                    self.append("((%s)" % cast)
-                self.visit(rvalue, func)
-                if cast:
-                    self.append(")")
+                if builtin_types:
+                    self.impl_visit_conv(rvalue, builtin_types, func)
+                else:
+                    self.visit(rvalue, func)
             self.append(")")
             self.eol()
 

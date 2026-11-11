@@ -130,7 +130,7 @@
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
 #    1. assign   0/2/0        15/4/2       -            3/0/0        0/0/2        8/0/0        11/4/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
-#    3. setitem  0/1/0        5/4/0        -            1/0/0        0/0/1        2/0/0        4/2/0
+#    3. setitem  0/1/0        6/2/1        -            1/0/0        0/0/1        2/0/0        4/1/1
 #    4. arg      0/1/0        9/2/1        -            1/0/0        0/0/1        2/0/0        7/0/1
 #    5. ret      0/1/0        5/0/1        -            1/0/0        0/0/1        2/0/0        8/0/1
 #    6. method   0/1/0        12/2/1       -            1/0/0        0/0/1        2/0/0        5/17/1
@@ -144,9 +144,9 @@
 #   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        6/19/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        2/8/0        83/46/11     0/0/1        19/2/0       0/1/9        32/4/0       85/93/8
+#   total        2/8/0        84/44/12     0/0/1        19/2/0       0/1/9        32/4/0       85/92/9
 #
-#   all cells: 221 work, 154 TODO, 29 correctly warn or fail
+#   all cells: 222 work, 151 TODO, 31 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -1104,18 +1104,16 @@ def test_setitem_int_float_lit_dict_value():
 
 
 # int->float, literal: build
-# TODO doesn't work today: wrong result, without a warning
-#   at run-time: AssertionError
-#
-# def test_setitem_int_float_lit_tuple():
-#     m = [(1.5, 'a')]
-#     m[0] = (2, 'b')
-#     assert m[0][0] + 0.5 == 2.5
+def test_setitem_int_float_lit_tuple():
+    m = [(1.5, 'a')]
+    m[0] = (2, 'b')
+    assert m[0][0] + 0.5 == 2.5
 
 
 # int->float, variable: warn
-# TODO should give a warning, but today: wrong result, without a warning
-#   at run-time: AssertionError
+# -> warning, then C++ compile error (see tests/errs/103.py)
+#   incompatible types
+#   C++: cannot convert 'list<__ss_int>*' to 'list<__ss_float>*'
 #
 # def test_setitem_int_float_var_list():
 #     ints = [3]
@@ -1225,7 +1223,9 @@ def test_setitem_empty_var():
 
 
 # empty, variable: warn
-# TODO should give a warning, but today: works
+# -> warning, then C++ compile error (see tests/errs/103.py)
+#   incompatible types
+#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*'
 #
 # def test_setitem_empty_var_number():
 #     e = []
@@ -5443,6 +5443,7 @@ def test_all():
     test_setitem_int_float_lit_key()
     test_setitem_int_float_lit_list()
     test_setitem_int_float_lit_dict_value()
+    test_setitem_int_float_lit_tuple()
     test_setitem_int_float_lit_slice()
     test_setitem_none_lit()
     test_setitem_sub_new()

@@ -76,6 +76,20 @@ def test_setitem_none_scalar():
     assert l[0] is None and l[1] == 2
 
 
+def test_setitem_int_float_var_list():
+    ints = [3]
+    d = {1: [1.0]}
+    d[2] = ints
+    assert sum(d[2]) == 3
+
+
+def test_setitem_empty_var_number():
+    e = []
+    d = {1: [1]}
+    d[2] = e
+    assert len(d[2]) == 0
+
+
 def arg_or_default(i=None):
     if i is None:
         return -1
@@ -225,6 +239,8 @@ test_assign_empty_call_shared()
 test_attr_int_float_var()
 test_attr_empty_var_number()
 test_setitem_none_scalar()
+test_setitem_int_float_var_list()
+test_setitem_empty_var_number()
 test_arg_none_scalar()
 test_arg_int_float_var_list()
 test_arg_empty_var_number()
@@ -254,40 +270,42 @@ test_choice_empty_var_number()
 #*WARNING* 103.py:74: expression has dynamic (sub)type: {None, int}
 #*WARNING* 103.py:75: expression has dynamic (sub)type: {None, int}
 #*WARNING* 103.py:76: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:79: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:80: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:82: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:85: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:96: incompatible types
-#*WARNING* 103.py:105: incompatible types
-#*WARNING* 103.py:108: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:114: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:115: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:122: incompatible types
-#*WARNING* 103.py:132: incompatible types
-#*WARNING* 103.py:139: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:140: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:141: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:143: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:149: incompatible types
-#*WARNING* 103.py:156: incompatible types
-#*WARNING* 103.py:161: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:162: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:168: incompatible types
-#*WARNING* 103.py:174: incompatible types
-#*WARNING* 103.py:181: looking up a float among ints: it is truncated, so 2.5 finds 2
-#*WARNING* 103.py:182: looking up a float among ints: it is truncated, so 2.5 finds 2
-#*WARNING* 103.py:184: looking up a float among ints: it is truncated, so 2.5 finds 2
-#*WARNING* 103.py:186: looking up a float among ints: it is truncated, so 2.5 finds 2
-#*WARNING* 103.py:187: looking up a float among ints: it is truncated, so 2.5 finds 2
-#*WARNING* 103.py:192: looking up None among numbers: it is treated as 0
-#*WARNING* 103.py:193: looking up None among numbers: it is treated as 0
-#*WARNING* 103.py:198: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:199: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:200: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:201: expression has dynamic (sub)type: {None, int}
-#*WARNING* 103.py:208: incompatible types
-#*WARNING* 103.py:216: incompatible types
+#*WARNING* 103.py:82: incompatible types
+#*WARNING* 103.py:89: incompatible types
+#*WARNING* 103.py:93: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:94: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:96: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:99: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:110: incompatible types
+#*WARNING* 103.py:119: incompatible types
+#*WARNING* 103.py:122: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:128: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:129: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:136: incompatible types
+#*WARNING* 103.py:146: incompatible types
+#*WARNING* 103.py:153: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:154: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:155: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:157: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:163: incompatible types
+#*WARNING* 103.py:170: incompatible types
+#*WARNING* 103.py:175: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:176: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:182: incompatible types
+#*WARNING* 103.py:188: incompatible types
+#*WARNING* 103.py:195: looking up a float among ints: it is truncated, so 2.5 finds 2
+#*WARNING* 103.py:196: looking up a float among ints: it is truncated, so 2.5 finds 2
+#*WARNING* 103.py:198: looking up a float among ints: it is truncated, so 2.5 finds 2
+#*WARNING* 103.py:200: looking up a float among ints: it is truncated, so 2.5 finds 2
+#*WARNING* 103.py:201: looking up a float among ints: it is truncated, so 2.5 finds 2
+#*WARNING* 103.py:206: looking up None among numbers: it is treated as 0
+#*WARNING* 103.py:207: looking up None among numbers: it is treated as 0
+#*WARNING* 103.py:212: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:213: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:214: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:215: expression has dynamic (sub)type: {None, int}
+#*WARNING* 103.py:222: incompatible types
+#*WARNING* 103.py:230: incompatible types
 #*WARNING* 103.py: Variable (Function arg_or_default, 'i') has dynamic (sub)type: {None, int}
 #*WARNING* 103.py: Variable (Function test_assign_none_scalar, 'a') has dynamic (sub)type: {None, int}
 #*WARNING* 103.py: Variable (Function test_assign_none_scalar_list, 'a') has dynamic (sub)type: {None, int}
