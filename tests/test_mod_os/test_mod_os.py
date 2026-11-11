@@ -568,10 +568,30 @@ def test_replace_missing_source():
     os.remove(dst)
 
 
+class FSPathLike:
+    def __init__(self, p: str):
+        self.p = p
+
+    def __fspath__(self) -> str:
+        return self.p + '.txt'
+
+
 def test_fspath():
     assert os.fspath('/tmp/somefile.txt') == '/tmp/somefile.txt'
     # don't hardcode '/' here: os.path.join uses '\\' on Windows
     assert os.path.join(os.fspath('a'), os.fspath('b')) == os.path.join('a', 'b')
+    assert os.fspath(b'a/b') == b'a/b'
+    # DirEntry and classes with __fspath__ give their path
+    top = 'shedskin_test_fspath_dir'
+    os.mkdir(top)
+    open(os.path.join(top, 'f'), 'w').close()
+    entry = list(os.scandir(top))[0]
+    p = os.fspath(entry)
+    assert p == os.path.join(top, 'f') and p.upper() == os.path.join(top, 'f').upper()
+    assert os.path.basename(os.fspath(entry)) == 'f'
+    assert os.fspath(FSPathLike('note')) == 'note.txt'
+    os.remove(p)
+    os.rmdir(top)
 
 
 def test_posix():
