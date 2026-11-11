@@ -801,6 +801,106 @@ def test_uid_gid_overflow():
     os.remove(path)
 
 
+def _mode_at(path: str) -> int:
+    return os.stat(path).st_mode & 0o777
+
+
+def test_chmod_chown_access_link_at():
+    # dir_fd/follow_symlinks (and effective_ids for access), as CPython;
+    # these used to be dropped, so e.g. the target of a symlink changed
+    top = 'shedskin_test_at2'
+    target = os.path.join(top, 'x.txt')
+    os.mkdir(top)
+    with open(target, 'w') as f:
+        f.write('hi')
+    os.symlink('x.txt', os.path.join(top, 'lnk'))
+    os.symlink('nowhere', os.path.join(top, 'dang'))
+    d = os.open(top, os.O_RDONLY)
+    # chmod
+    os.chmod('x.txt', 0o640, dir_fd=d)
+    assert _mode_at(target) == 0o640
+    os.chmod('lnk', 0o604, dir_fd=d)  # (follows)
+    assert _mode_at(target) == 0o604
+    os.chmod(target, 0o600, follow_symlinks=False)  # (a regular file)
+    assert _mode_at(target) == 0o600
+    fd = os.open(target, os.O_RDONLY)
+    os.chmod(fd, 0o644)
+    assert _mode_at(target) == 0o644
+    try:
+        os.chmod('nope', 0o600, dir_fd=d)
+        assert False
+    except FileNotFoundError as e:
+        assert e.filename == 'nope'
+    # chown (-1: unchanged)
+    os.chown('lnk', -1, -1, dir_fd=d, follow_symlinks=False)
+    os.chown(os.path.join(top, 'dang'), -1, -1, follow_symlinks=False)
+    try:
+        os.chown(os.path.join(top, 'dang'), -1, -1)
+        assert False
+    except FileNotFoundError:
+        pass
+    os.chown(fd, -1, -1)
+    try:
+        os.chown(fd, -1, -1, follow_symlinks=False)
+        assert False
+    except ValueError as e2:
+        assert str(e2) == 'chown: cannot use fd and follow_symlinks together'
+    try:
+        os.chown(fd, -1, -1, dir_fd=d)
+        assert False
+    except ValueError as e3:
+        assert str(e3) == "chown: can't specify both dir_fd and fd"
+    os.close(fd)
+    # access
+    assert os.access('dang', os.F_OK, dir_fd=d, follow_symlinks=False)
+    assert not os.access('dang', os.F_OK, dir_fd=d)
+    assert os.access('x.txt', os.R_OK, dir_fd=d, effective_ids=True)
+    assert not os.access('x.txt', os.R_OK, dir_fd=9999)
+    # link: with a dir_fd, follow_symlinks=True follows (linkat)
+    os.link('lnk', 'h1', src_dir_fd=d, dst_dir_fd=d)
+    assert not os.path.islink(os.path.join(top, 'h1'))
+    os.link('lnk', 'h2', src_dir_fd=d, dst_dir_fd=d, follow_symlinks=False)
+    assert os.path.islink(os.path.join(top, 'h2'))
+    os.link('x.txt', os.path.join(top, 'h3'), src_dir_fd=d)
+    assert os.path.exists(os.path.join(top, 'h3'))
+    try:
+        os.link('nope', 'h4', src_dir_fd=d, dst_dir_fd=d)
+        assert False
+    except FileNotFoundError as e4:
+        assert e4.filename == 'nope' and e4.filename2 == 'h4'
+    os.close(d)
+    for name in sorted(os.listdir(top)):
+        os.remove(os.path.join(top, name))
+    os.rmdir(top)
+
+
+def test_fd_statvfs_pathconf():
+    # statvfs and pathconf also take an fd, as CPython
+    path = 'shedskin_test_fd_statvfs.txt'
+    with open(path, 'w') as f:
+        f.write('hello')
+    fd = os.open(path, os.O_RDONLY)
+    assert os.statvfs(fd).f_bsize > 0
+    assert os.pathconf(fd, 'PC_NAME_MAX') == os.pathconf(path, 'PC_NAME_MAX')
+    os.close(fd)
+    os.remove(path)
+
+
+def test_mkfifo_dir_fd():
+    if sys.platform == 'darwin':  # (mkfifoat/mknodat: macOS 13+ only)
+        return
+    top = 'shedskin_test_mkfifo_dir_fd'
+    os.mkdir(top)
+    d = os.open(top, os.O_RDONLY)
+    os.mkfifo('ff', dir_fd=d)
+    assert os.listdir(top) == ['ff']
+    assert stat.S_ISFIFO(os.stat(os.path.join(top, 'ff')).st_mode)
+    os.unlink('ff', dir_fd=d)
+    assert os.listdir(top) == []
+    os.close(d)
+    os.rmdir(top)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -829,6 +929,9 @@ def test_all():
     test_wait_status_macros()
     test_device_numbers()
     test_uid_gid_overflow()
+    test_chmod_chown_access_link_at()
+    test_fd_statvfs_pathconf()
+    test_mkfifo_dir_fd()
 
 
 if __name__ == '__main__':

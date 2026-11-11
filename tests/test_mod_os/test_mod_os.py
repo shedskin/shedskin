@@ -1445,81 +1445,6 @@ def test_utime_dir_fd_follow_symlinks():
     os.rmdir(top)
 
 
-def _mode_at(path: str) -> int:
-    return os.stat(path).st_mode & 0o777
-
-
-def test_chmod_chown_access_link_at():
-    # dir_fd/follow_symlinks (and effective_ids for access), as CPython;
-    # these used to be dropped, so e.g. the target of a symlink changed
-    if os.name == 'nt':  # (not on windows)
-        return
-    top = 'shedskin_test_at2'
-    target = os.path.join(top, 'x.txt')
-    os.mkdir(top)
-    with open(target, 'w') as f:
-        f.write('hi')
-    os.symlink('x.txt', os.path.join(top, 'lnk'))
-    os.symlink('nowhere', os.path.join(top, 'dang'))
-    d = os.open(top, os.O_RDONLY)
-    # chmod
-    os.chmod('x.txt', 0o640, dir_fd=d)
-    assert _mode_at(target) == 0o640
-    os.chmod('lnk', 0o604, dir_fd=d)  # (follows)
-    assert _mode_at(target) == 0o604
-    os.chmod(target, 0o600, follow_symlinks=False)  # (a regular file)
-    assert _mode_at(target) == 0o600
-    fd = os.open(target, os.O_RDONLY)
-    os.chmod(fd, 0o644)
-    assert _mode_at(target) == 0o644
-    try:
-        os.chmod('nope', 0o600, dir_fd=d)
-        assert False
-    except FileNotFoundError as e:
-        assert e.filename == 'nope'
-    # chown (-1: unchanged)
-    os.chown('lnk', -1, -1, dir_fd=d, follow_symlinks=False)
-    os.chown(os.path.join(top, 'dang'), -1, -1, follow_symlinks=False)
-    try:
-        os.chown(os.path.join(top, 'dang'), -1, -1)
-        assert False
-    except FileNotFoundError:
-        pass
-    os.chown(fd, -1, -1)
-    try:
-        os.chown(fd, -1, -1, follow_symlinks=False)
-        assert False
-    except ValueError as e2:
-        assert str(e2) == 'chown: cannot use fd and follow_symlinks together'
-    try:
-        os.chown(fd, -1, -1, dir_fd=d)
-        assert False
-    except ValueError as e3:
-        assert str(e3) == "chown: can't specify both dir_fd and fd"
-    os.close(fd)
-    # access
-    assert os.access('dang', os.F_OK, dir_fd=d, follow_symlinks=False)
-    assert not os.access('dang', os.F_OK, dir_fd=d)
-    assert os.access('x.txt', os.R_OK, dir_fd=d, effective_ids=True)
-    assert not os.access('x.txt', os.R_OK, dir_fd=9999)
-    # link: with a dir_fd, follow_symlinks=True follows (linkat)
-    os.link('lnk', 'h1', src_dir_fd=d, dst_dir_fd=d)
-    assert not os.path.islink(os.path.join(top, 'h1'))
-    os.link('lnk', 'h2', src_dir_fd=d, dst_dir_fd=d, follow_symlinks=False)
-    assert os.path.islink(os.path.join(top, 'h2'))
-    os.link('x.txt', os.path.join(top, 'h3'), src_dir_fd=d)
-    assert os.path.exists(os.path.join(top, 'h3'))
-    try:
-        os.link('nope', 'h4', src_dir_fd=d, dst_dir_fd=d)
-        assert False
-    except FileNotFoundError as e4:
-        assert e4.filename == 'nope' and e4.filename2 == 'h4'
-    os.close(d)
-    for name in sorted(os.listdir(top)):
-        os.remove(os.path.join(top, name))
-    os.rmdir(top)
-
-
 def _scandir_name(e: os.DirEntry) -> str:
     return e.name
 
@@ -1581,8 +1506,8 @@ def test_listdir_scandir_chdir_fd():
 
 
 def test_fd_paths():
-    # os.path.exists/isfile/isdir/getsize/get*time, truncate, utime, statvfs
-    # and pathconf also take an fd, as CPython
+    # os.path.exists/isfile/isdir/getsize/get*time, truncate and utime also
+    # take an fd, as CPython (statvfs/pathconf: see test_mod_os_posix)
     path = 'shedskin_test_fd_paths.txt'
     with open(path, 'w') as f:
         f.write('hello')
@@ -1615,8 +1540,6 @@ def test_fd_paths():
             assert False
         except ValueError as e3:
             assert str(e3) == "utime: can't specify dir_fd without matching path"
-        assert os.statvfs(fd).f_bsize > 0
-        assert os.pathconf(fd, 'PC_NAME_MAX') == os.pathconf(path, 'PC_NAME_MAX')
         os.close(d)
     os.close(fd)
     os.remove(path)
@@ -1661,10 +1584,6 @@ def test_dir_fd():
     os.remove('back.txt', dir_fd=d)
     os.unlink('lnk', dir_fd=d)
     assert _ls_dir_fd() == ['x.txt']
-    if sys.platform != 'darwin':  # (mkfifoat/mknodat: macOS 13+ only)
-        os.mkfifo('ff', dir_fd=d)
-        assert _ls_dir_fd() == ['ff', 'x.txt']
-        os.unlink('ff', dir_fd=d)
     # errors carry the (relative) name
     try:
         os.remove('nope', dir_fd=d)
@@ -1685,7 +1604,7 @@ def test_dir_fd():
     try:
         os.remove('q', dir_fd=d)
         assert False
-    except IsADirectoryError:
+    except (IsADirectoryError, PermissionError):  # (EPERM on macOS)
         pass
     os.rmdir('q', dir_fd=d)
     # dir_fd=None is no dir_fd (and not fd 0)
@@ -2392,7 +2311,6 @@ def test_all():
     test_utime_extended()
     test_utime_dir_fd_follow_symlinks()
     test_dir_fd()
-    test_chmod_chown_access_link_at()
     test_listdir_scandir_chdir_fd()
     test_fd_paths()
     test_stat_follow_symlinks()
