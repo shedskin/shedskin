@@ -412,11 +412,52 @@ public:
     str *__str__();
     str *__repr__();
 
+    /* OSError.__init__(self, arg, strerror, filename, winerror, filename2),
+       for user subclasses: each argument may be (typed as) None */
+    using BaseException::__init__;
+    template<class A, class B=void *, class C=void *, class D=void *, class E=void *>
+    void *__init__(A arg, B strerror_=0, C filename_=0, D winerror_=0, E filename2_=0) {
+        (void)winerror_;
+        if constexpr (std::is_same_v<B, str *> && std::is_integral_v<A>) {
+            if (strerror_) {
+                BaseException::__init__((str *)0);
+                __ss_errno = arg;
+                strerror = strerror_;
+                if constexpr (std::is_same_v<C, str *>)
+                    filename = filename_;
+                if constexpr (std::is_same_v<E, str *>)
+                    filename2 = filename2_;
+                message = __str__();
+                return NULL;
+            }
+        }
+        if constexpr (std::is_same_v<A, str *>)
+            BaseException::__init__(arg);
+        else if constexpr (std::is_integral_v<A>)
+            BaseException::__init__(new str(std::to_string((long long)arg).c_str()));
+        else
+            BaseException::__init__((str *)0);
+        return NULL;
+    }
+
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_OSError; }
     PyObject *__py_args__();
 #endif
 };
+
+#ifdef __SS_BIND
+/* a CPython exception type defined by a module (e.g. io.UnsupportedOperation),
+   as a borrowed reference that is kept: 0 if it cannot be imported */
+inline PyObject *__ss_py_exc_type(const char *module, const char *name) {
+    PyObject *m = PyImport_ImportModule(module);
+    PyObject *t = m ? PyObject_GetAttrString(m, name) : 0;
+    Py_XDECREF(m);
+    if (!t)
+        PyErr_Clear();
+    return t;
+}
+#endif
 
 /* OSError subclasses (PEP 3151); __throw_oserror() picks one based on errno */
 
@@ -571,7 +612,10 @@ public:
     str *__str__() { return BaseException::__str__(); }
     str *__repr__() { return BaseException::__repr__(); }
 #ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_OSError; }
+    PyObject *__to_py__() { /* (so 'except ValueError' catches it in CPython) */
+        static PyObject *t = __ss_py_exc_type("io", "UnsupportedOperation");
+        return t ? t : PyExc_OSError;
+    }
 #endif
 };
 

@@ -91,6 +91,8 @@ template<class A, class B, class C, class D> __select_result<typename A::for_in_
     } else {
         has_timeout = true;
         timeout = (double)timeout_;
+        if(std::isnan(timeout))
+            throw new ValueError(new str("Invalid value NaN (not a number)"));
         if(timeout < 0)
             throw new ValueError(new str("timeout must be non-negative"));
     }

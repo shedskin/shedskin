@@ -1615,6 +1615,102 @@ def test_closefd():
     os.remove(name)
 
 
+def test_read_after_eof_and_seekable():
+    # data appended after a read hit the end is seen (no sticky eof)
+    name = os.path.join(testdata, 'eof_tmp')
+    w = open(name, 'w')
+    w.write('a\n')
+    w.flush()
+    r = open(name)
+    assert r.read() == 'a\n'
+    assert r.read() == ''
+    w.write('b\n')
+    w.flush()
+    assert r.read() == 'b\n'
+    w.write('c\n')
+    w.flush()
+    assert r.readline() == 'c\n'
+    w.write('d\n')
+    w.flush()
+    assert [l for l in r] == ['d\n']
+    rb = open(name, 'rb')
+    assert rb.read() == b'a\nb\nc\nd\n'
+    w.write('e\n')
+    w.flush()
+    assert rb.read() == b'e\n'
+    rb.close()
+    r.close()
+    w.close()
+
+    # truncate(-1) is an error, not truncate()
+    f = open(name, 'r+b')
+    err = 0
+    try:
+        f.truncate(-1)
+    except OSError as e:
+        err = e.errno
+    assert err == 22
+    f.seek(2)
+    assert f.truncate() == 2
+    f.close()
+    assert os.path.getsize(name) == 2
+    g = open(name, 'r+')
+    err = 0
+    try:
+        g.truncate(-1)
+    except OSError as e:
+        err = e.errno
+    assert err == 22
+    g.close()
+    assert os.path.getsize(name) == 2
+
+    # binary seek checks whence first
+    b = open(name, 'rb')
+    msg = ''
+    try:
+        b.seek(0, 5)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'whence value 5 unsupported'
+    b.close()
+
+    # encoding='locale' (utf-8 mode)
+    h = open(name, 'w', encoding='locale')
+    h.write('h\xe9')
+    h.close()
+    hb = open(name, 'rb')
+    assert hb.read() == b'h\xc3\xa9'
+    hb.close()
+    os.remove(name)
+
+    if sys.platform == 'win32':
+        return
+    # seek/tell on a pipe: UnsupportedOperation (text), as CPython
+    rfd, wfd = os.pipe()
+    t = os.fdopen(rfd)
+    msg = ''
+    try:
+        t.tell()
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'underlying stream is not seekable'
+    msg = ''
+    try:
+        t.seek(0)
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'underlying stream is not seekable'
+    t.close()
+    wb = os.fdopen(wfd, 'wb')
+    msg = ''
+    try:
+        wb.seek(0)
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'File or stream is not seekable.'
+    wb.close()
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1670,7 +1766,7 @@ def test_all():
     test_open_fd()
     test_line_buffering()
     test_closefd()
-
+    test_read_after_eof_and_seekable()
 
 if __name__ == '__main__':
     test_all()

@@ -1168,9 +1168,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # an inherited user __init__ is not copied in C++, so the constructor
             # takes the original's argument types, as call sites do (1029-C4)
             orig = initfunc.inherited_from
+            # a library __init__: call sites leave out trailing defaults
+            # (as for the library class itself), e.g. OSError subclasses
+            init_defaults = 0
             if orig and orig.mv.module.builtin:
+                init_defaults = len(orig.defaults)
                 orig = None
-            self.func_header(initfunc, declare=True, is_init=True, types_from=orig)
+            self.func_header(
+                initfunc,
+                declare=True,
+                is_init=True,
+                types_from=orig,
+                init_defaults=init_defaults,
+            )
             self.indent()
             self.output("this->__class__ = cl_" + cl.ident + ";")
             self.output(
@@ -2187,9 +2197,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         declare: bool,
         is_init: bool = False,
         types_from: Optional["python.Function"] = None,
+        init_defaults: int = 0,
     ) -> None:
         """Generate the header for a function or method, with the argument
-        types of 'types_from' if given"""
+        types of 'types_from' if given (and C++ default values for the last
+        'init_defaults' arguments, but never the first)"""
         tfunc = types_from or func
         method = isinstance(func.parent, python.Class)
         if method:
@@ -2262,6 +2274,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if i in casters:
                 formals2[i] = "__" + formals2[i]
         formaldecs = [o + f for (o, f) in zip(ftypes, formals2)]
+        for i in range(max(1, len(formaldecs) - init_defaults), len(formaldecs)):
+            formaldecs[i] += " = {}"
         if (
             declare
             and isinstance(func.parent, python.Class)

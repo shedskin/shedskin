@@ -1363,7 +1363,7 @@ class file(pyiter):
     def seekable(self):
         return False
 
-    def truncate(self, size=-1):
+    def truncate(self, size=None):
         return 1
 
     def __next__(self):
@@ -1428,17 +1428,17 @@ class file_binary(pyiter):
     def seekable(self):
         return False
 
-    def truncate(self, size=-1):
+    def truncate(self, size=None):
         return 1
 
     def __next__(self):
         return self.unit
 
 __file = file('')
-def open(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=True):
+def open(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=1):
     return __file
 
-def open_binary(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=True):
+def open_binary(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=1):
     return file_binary('')
 
 def ord(c):

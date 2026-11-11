@@ -780,6 +780,31 @@ def test_enter_closed():
         assert str(e) == 'I/O operation on closed file.'
 
 
+def test_truncate_negative():
+    s = io.StringIO('hello')
+    s.seek(2)
+    msg = ''
+    try:
+        s.truncate(-1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Negative size value -1'
+    assert s.getvalue() == 'hello'
+    assert s.truncate() == 2
+    assert s.getvalue() == 'he'
+    b = io.BytesIO(b'hello')
+    b.seek(3)
+    msg = ''
+    try:
+        b.truncate(-1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'negative size value -1'
+    assert b.getvalue() == b'hello'
+    assert b.truncate() == 3
+    assert b.getvalue() == b'hel'
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -819,7 +844,7 @@ def test_all():
     test_stringio_line_buffering()
     test_tell_closed()
     test_closed_message()
-
+    test_truncate_negative()
 
 if __name__ == '__main__':
     test_all() 

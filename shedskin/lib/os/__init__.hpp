@@ -276,7 +276,10 @@ public:
 class popen_pipe : public __popen_file {
 public:
     popen_pipe(str *cmd, str *mode=0);
-    popen_pipe(FILE* pipe=0) : __popen_file(pipe) {}
+    popen_pipe(FILE* pipe=0) : __popen_file(pipe) { /* (as cpython: strict, not as the std streams) */
+        __errors = __SS_ERR_STRICT;
+        errors = new str("strict");
+    }
 
     __ss_int close(__ss_int=0); /* (hides __popen_file::close on purpose) */
     popen_pipe *__enter__() { return this; } /* (CPython: no closed check) */

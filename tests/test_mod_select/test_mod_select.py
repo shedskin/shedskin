@@ -142,6 +142,18 @@ def test_select_fileno_method():
     b.close()
 
 
+def test_select_nan():
+    r, w = os.pipe()
+    msg = ''
+    try:
+        select.select([r], [], [], float('nan'))
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Invalid value NaN (not a number)'
+    os.close(r)
+    os.close(w)
+
+
 def test_all():
     test_select_basic()
     test_select_timeout_no_ready_fds()
@@ -152,7 +164,7 @@ def test_all():
     test_select_omitted_timeout_still_works()
     test_select_sockets()
     test_select_fileno_method()
-
+    test_select_nan()
 
 if __name__ == '__main__':
     test_all()

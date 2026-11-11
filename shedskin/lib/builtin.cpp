@@ -348,8 +348,10 @@ void terminate_handler() {
         code = (int)s->code;
         try {
             __add_missing_newline(); /* XXX s->message -> stderr? */
-            if(s->show_message)
+            if(s->show_message) {
+                fflush(stdout); /* as CPython: earlier output first */
                 print_(0, False, __ss_stderr, NULL, NULL, __backslashreplace_surrogates(s->message));
+            }
         } catch (BaseException *) {} /* e.g. stdout is a closed pipe */
 
     } catch (BaseException *e) {

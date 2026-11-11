@@ -1750,10 +1750,10 @@ static __host_tuple *hostent_to_tuple(const hostent *he)
 str *gethostbyname(str *hostname)
 {
     check_hostname_nul(hostname, "gethostbyname");
-    hostent *he = ::gethostbyname(hostname->c_str());
-    if (!he)
-        throw_host_not_found(hostname->c_str());
-    return in_addr_to_str(reinterpret_cast<const in_addr *>(he->h_addr_list[0]));
+    /* as CPython (setipaddr): '' and '<broadcast>' too */
+    in_addr addr;
+    addr.s_addr = (in_addr_t)string_to_addr(hostname->c_str());
+    return in_addr_to_str(&addr);
 }
 
 __host_tuple *gethostbyname_ex(str *hostname)

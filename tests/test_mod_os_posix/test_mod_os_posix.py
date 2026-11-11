@@ -901,6 +901,88 @@ def test_mkfifo_dir_fd():
     os.rmdir(top)
 
 
+def test_long_cwd_and_os_names():
+    # getcwd() of a path longer than 255 bytes (crashed)
+    cwd = os.getcwd()
+    base = 'shedskin_test_long_cwd'
+    os.mkdir(base)
+    os.chdir(base)
+    for i in range(30):
+        os.mkdir('directory_' + str(i))
+        os.chdir('directory_' + str(i))
+    long_cwd = os.getcwd()
+    assert len(long_cwd) > 300
+    assert os.path.basename(long_cwd) == 'directory_29'
+    assert len(os.getcwdb()) == len(os.fsencode(long_cwd))
+    os.chdir(cwd)
+    for i in range(29, -1, -1):
+        os.rmdir('/'.join([base] + ['directory_' + str(j) for j in range(i + 1)]))
+    os.rmdir(base)
+
+    # os-supplied names: an encoded surrogate gives three escapes, which
+    # round-trip (not a lone surrogate)
+    name = os.fsdecode(b'shedskin_\xed\xa0\x80')
+    assert name == 'shedskin_\udced\udca0\udc80'
+    f = open(name, 'w')
+    f.write('z')
+    f.close()
+    assert name in os.listdir('.')
+    assert name in [e.name for e in os.scandir('.')]
+    assert os.stat(name).st_size == 1
+    os.symlink(name, 'shedskin_link')
+    assert os.readlink('shedskin_link') == name
+    os.remove('shedskin_link')
+    os.remove(name)
+
+    # os.popen text pipes are strict, as open()
+    p = os.popen("printf 'a\\377'")
+    err = ''
+    try:
+        p.read()
+    except UnicodeDecodeError as e:
+        err = e.reason
+    p.close()
+    assert err == 'invalid start byte'
+
+
+def test_exec_spawn_failures():
+    # a failed exec in a spawned child: exit code 127, the child stops
+    assert os.spawnv(os.P_WAIT, '/nonexistent/x', ['x']) == 127
+    assert os.spawnvp(os.P_WAIT, 'shedskin_no_such_cmd', ['x']) == 127
+    # argv checks, before anything is executed
+    a = ['x']
+    a.pop()
+    msg = ''
+    try:
+        os.execv('/bin/true', a)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'execv() arg 2 must not be empty'
+    msg = ''
+    try:
+        os.execv('/bin/true', [''])
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'execv() arg 2 first element cannot be empty'
+    msg = ''
+    try:
+        os.spawnv(os.P_WAIT, '/bin/true', a)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'argv first element cannot be empty'
+    # execvp continues past a PATH entry that cannot be executed
+    d = 'shedskin_test_path'
+    os.mkdir(d)
+    f = open(os.path.join(d, 'sh'), 'w')
+    f.write('')
+    f.close()
+    os.chmod(os.path.join(d, 'sh'), 0o644)
+    env = {'PATH': os.path.abspath(d) + ':/bin:/usr/bin'}
+    assert os.spawnvpe(os.P_WAIT, 'sh', ['sh', '-c', 'exit 3'], env) == 3
+    os.remove(os.path.join(d, 'sh'))
+    os.rmdir(d)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -932,7 +1014,8 @@ def test_all():
     test_chmod_chown_access_link_at()
     test_fd_statvfs_pathconf()
     test_mkfifo_dir_fd()
-
+    test_long_cwd_and_os_names()
+    test_exec_spawn_failures()
 
 if __name__ == '__main__':
     test_all()

@@ -89,6 +89,12 @@ public:
     }
     str *__str__() { return BaseException::__str__(); }
     str *__repr__() { return BaseException::__repr__(); }
+#ifdef __SS_BIND
+    PyObject *__to_py__() {
+        static PyObject *t = __ss_py_exc_type("socket", "herror");
+        return t ? t : PyExc_OSError;
+    }
+#endif
 };
 
 extern class_ *cl_gaierror;
@@ -101,6 +107,12 @@ public:
     }
     str *__str__() { return BaseException::__str__(); }
     str *__repr__() { return BaseException::__repr__(); }
+#ifdef __SS_BIND
+    PyObject *__to_py__() {
+        static PyObject *t = __ss_py_exc_type("socket", "gaierror");
+        return t ? t : PyExc_OSError;
+    }
+#endif
 };
 
 extern class_ *cl_timeout;

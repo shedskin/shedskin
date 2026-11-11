@@ -152,12 +152,23 @@ static std::filesystem::path __fspath(str *s, const char *func = 0, const char *
 #endif
 }
 
+/* bytes from the os (posix): utf-8 with surrogateescape, as fsdecode() */
+static inline str *__fsdecode_c(const char *b, size_t n) {
+    str *s = new str();
+    __decode_into(s->unit, b, n, __SS_ENC_UTF8, __SS_ERR_SURROGATEESCAPE, NULL);
+    return s;
+}
+
 static str *__fsstr(const std::filesystem::path &p) {
     const auto &n = p.native();
 #ifdef WIN32
     return new str(__from_utf16<wchar_t>(n.data(), n.size()));
 #else
-    return new str(__from_utf8(n.data(), n.size()));
+    /* as fsdecode(): strict utf-8 + surrogateescape, so an encoded surrogate
+       (ed a0 80) gives three escapes, which round-trip (not a lone surrogate) */
+    str *s = new str();
+    __decode_into(s->unit, n.data(), n.size(), __SS_ENC_UTF8, __SS_ERR_SURROGATEESCAPE, NULL);
+    return s;
 #endif
 }
 
@@ -258,8 +269,11 @@ str *getcwd() {
         __throw_oserror();
     r = __from_wide(d);
 #else
-    char *d=::getcwd(0, 256);
-    r = new str(d);
+    char *d = ::getcwd(0, 0); /* (glibc, bsd, macos: any length; 0 + errno on failure) */
+    if (!d)
+        __throw_oserror();
+    r = new str();
+    __decode_into(r->unit, d, strlen(d), __SS_ENC_UTF8, __SS_ERR_SURROGATEESCAPE, NULL);
 #endif
     free(d);
     return r;
@@ -269,7 +283,7 @@ bytes *getcwdb() {
 #ifdef WIN32
     return new bytes(__to_utf8(getcwd()->unit)); /* as CPython: fs encoding */
 #else
-    char *d=::getcwd(0, 256);
+    char *d = ::getcwd(0, 0); /* (any length: ERANGE past 255 bytes otherwise) */
     if (!d)
         __throw_oserror();
     bytes *r = new bytes(d);
@@ -419,7 +433,7 @@ str *__readlink_at(int dir_fd, str *path) {
             __throw_oserror(path);
         if((size_t)n < size) {
             buffer.resize((size_t)n);
-            return new str(buffer.c_str());
+            return __fsdecode_c(buffer.c_str(), strlen(buffer.c_str()));
         }
         size *= 2;
     }
@@ -1310,6 +1324,8 @@ popen_pipe::popen_pipe(str *cmd, str *flags) {
         __throw_oserror(cmd);
     name = cmd;
     mode = flags;
+    __errors = __SS_ERR_STRICT;
+    errors = new str("strict");
 }
 
 /* as CPython: the exit code shifted left by 8, minus the signal number
@@ -1766,7 +1782,7 @@ str *readlink(str *path) {
         }
         if (nchars < size) {
             buffer.resize(nchars);
-            r = new str(buffer.c_str());
+            r = __fsdecode_c(buffer.c_str(), strlen(buffer.c_str()));
             return r;
         }
         size *= 2;
@@ -2861,55 +2877,71 @@ char **__exec_envplist(dict<str *, str *> *env) {
     return envplist.data();
 }
 
+/* as CPython */
+static void __check_exec_args(list<str *> *args, const char *func) {
+    if (args->units.empty())
+        throw new ValueError(new str((std::string(func) + " arg 2 must not be empty").c_str()));
+    if (args->units[0]->unit.empty())
+        throw new ValueError(new str((std::string(func) + " arg 2 first element cannot be empty").c_str()));
+}
+
 void *execv(str* file, list<str*>* args) {
+    __check_exec_args(args, "execv()");
     ::execv(__ss_cpath(file, "execv"), __exec_argvlist(args));
     __throw_oserror();
 }
 
-void *execvp(str* file, list<str*>* args) {
-    __ss_check_nul(file, "execv"); /* (else no PATH entry exists, giving an OSError) */
-    tuple<str *> *h_t = __path__::split(file);
-
-    if( ___bool(h_t->__getfirst__())) {
-        execv(file,args);
-        __throw_oserror();
-    }
-
-    list<str *> *PATH = get_exec_path();
-
-    for(__ss_int i = 0; i < PATH->__len__(); ++i) {
-        str* dir = PATH->__getfast__(i);
-        str* fullname = __path__::join(2, dir, file);
-        if(__path__::exists(fullname)) {
-            execv(fullname, args);
-        }
-    }
-    __throw_oserror();
-}
-
 void *execve(str* file, list<str*>* args, dict<str *, str *> *env) {
+    __check_exec_args(args, "execve()");
     ::execve(__ss_cpath(file, "execve"), __exec_argvlist(args), __exec_envplist(env));
     __throw_oserror(file);
 }
 
-void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
-    __ss_check_nul(file, "execve");
+/* as CPython's os._execvpe: try each PATH entry, and raise the first error
+   other than ENOENT/ENOTDIR (e.g. EACCES), else the last one */
+static void *__execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
+    __ss_check_nul(file, "execve"); /* (else no PATH entry exists, giving an OSError) */
     tuple<str *> *h_t = __path__::split(file);
-
     if( ___bool(h_t->__getfirst__())) {
-        execve(file, args, env);
-        __throw_oserror();
+        if(env)
+            execve(file, args, env);
+        execv(file, args);
     }
-
-    list<str *> *PATH = get_exec_path(env);
-
+    __check_exec_args(args, env ? "execve()" : "execv()");
+    list<str *> *PATH = env ? get_exec_path(env) : get_exec_path();
+    OSError *saved = 0, *last = 0;
     for(__ss_int i = 0; i < PATH->__len__(); ++i) {
-        str* dir = PATH->__getfast__(i);
-        str* fullname = __path__::join(2, dir, file);
-        if(__path__::exists(fullname))
-            execve(fullname, args, env);
+        str* fullname = __path__::join(2, PATH->__getfast__(i), file);
+        try {
+            if(env)
+                execve(fullname, args, env);
+            execv(fullname, args);
+        } catch (OSError *e) {
+            last = e;
+            if(!saved && e->__ss_errno != ENOENT && e->__ss_errno != ENOTDIR)
+                saved = e;
+        }
     }
-    __throw_oserror();
+    if(saved)
+        throw saved;
+    if(last)
+        throw last;
+    errno = ENOENT;
+    __throw_oserror(file);
+}
+
+void *execvp(str* file, list<str*>* args) {
+    return __execvpe(file, args, 0);
+}
+
+void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
+    return __execvpe(file, args, env);
+}
+
+/* as CPython's os._spawnvef: checked before forking */
+static void __spawn_check_args(list<str *> *args) {
+    if (args->units.empty() || args->units[0]->unit.empty())
+        throw new ValueError(new str("argv first element cannot be empty"));
 }
 
 /* like CPython: P_WAIT gives the exit code, or -signal for a killed child */
@@ -2922,36 +2954,48 @@ static __ss_int __spawn_wait_result(__ss_int pid) {
 }
 
 __ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
+    __spawn_check_args(args);
     __ss_int pid;
-    if(!(pid = fork())) /* XXX no spawn* for C++..? */
-        execv(file, args);
+    if(!(pid = fork())) {
+        try { execv(file, args); } catch (...) {}
+        ::_exit(127);
+    }
     else if (mode == __ss_P_WAIT)
         return __spawn_wait_result(pid);
     return pid;
 }
 
 __ss_int spawnvp(__ss_int mode, str *file, list<str *> *args) {
+    __spawn_check_args(args);
     __ss_int pid;
-    if(!(pid = fork())) /* XXX no spawn* for C++..? */
-        execvp(file, args);
+    if(!(pid = fork())) {
+        try { execvp(file, args); } catch (...) {}
+        ::_exit(127);
+    }
     else if (mode == __ss_P_WAIT)
         return __spawn_wait_result(pid);
     return pid;
 }
 
 __ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
+    __spawn_check_args(args);
     __ss_int pid;
-    if(!(pid = fork())) /* XXX no spawn* for C++..? */
-        execve(file, args, env);
+    if(!(pid = fork())) {
+        try { execve(file, args, env); } catch (...) {}
+        ::_exit(127);
+    }
     else if (mode == __ss_P_WAIT)
         return __spawn_wait_result(pid);
     return pid;
 }
 
 __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
+    __spawn_check_args(args);
     __ss_int pid;
-    if(!(pid = fork())) /* XXX no spawn* for C++..? */
-        execvpe(file, args, env);
+    if(!(pid = fork())) {
+        try { execvpe(file, args, env); } catch (...) {}
+        ::_exit(127);
+    }
     else if (mode == __ss_P_WAIT)
         return __spawn_wait_result(pid);
     return pid;

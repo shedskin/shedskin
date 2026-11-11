@@ -65,8 +65,16 @@ void __init(int c, char **v) {
        program arguments, so orig_argv equals argv here */
     orig_argv = new list<str *>();
     for(int i=0; i<c; i++) {
-        argv->append(new str(v[i]));
-        orig_argv->append(new str(v[i]));
+#ifdef WIN32
+        str *arg = new str(v[i]);
+#else
+        /* as CPython: utf-8 with surrogateescape, so each undecodable byte
+           (also of an encoded surrogate) becomes one escape */
+        str *arg = new str();
+        __decode_into(arg->unit, v[i], strlen(v[i]), __SS_ENC_UTF8, __SS_ERR_SURROGATEESCAPE, NULL);
+#endif
+        argv->append(arg);
+        orig_argv->append(arg);
     }
 
     float_repr_style = new str("short");

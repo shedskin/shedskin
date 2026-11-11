@@ -1059,6 +1059,54 @@ def test_oserror_constructor():
     assert str(c) == '[Errno 111] refused'
 
 
+class MyOSError(OSError):
+    pass
+
+
+class MyOSError2(OSError):
+    pass
+
+
+class MyFileNotFound(FileNotFoundError):
+    pass
+
+
+class MyOSError3(OSError):
+    def __init__(self, msg):
+        OSError.__init__(self, 17, msg, 'fn')
+
+
+def test_oserror_subclasses_user():
+    msg = ''
+    try:
+        raise MyOSError('msg')
+    except MyOSError as e:
+        msg = str(e)
+    assert msg == 'msg'
+    try:
+        raise MyOSError2(1000, 'gone', 'f1')
+    except OSError as e2:
+        msg = str(e2)
+        assert e2.errno == 1000
+        assert e2.filename == 'f1'
+    assert msg == "[Errno 1000] gone: 'f1'"
+    try:
+        raise MyFileNotFound(2, 'nf')
+    except FileNotFoundError as e3:
+        msg = str(e3)
+    assert msg == '[Errno 2] nf'
+    try:
+        raise MyOSError3('exists')
+    except OSError as e4:
+        msg = str(e4)
+        assert e4.errno == 17
+        assert e4.strerror == 'exists'
+    assert msg == "[Errno 17] exists: 'fn'"
+    x = MyOSError2(5, 'io')
+    assert x.errno == 5
+    assert x.strerror == 'io'
+
+
 def test_all():
     test_repr_escapes_argument()
     test_oserror_str_repr_filename()
@@ -1092,7 +1140,7 @@ def test_all():
     test_ioerror_alias()
     test_stopiteration_subclass_value()
     test_oserror_constructor()
-
+    test_oserror_subclasses_user()
 
 if __name__ == '__main__':
     test_all() 

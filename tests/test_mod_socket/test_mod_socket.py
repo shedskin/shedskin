@@ -1285,6 +1285,12 @@ def test_recvfrom_connected_and_lookup_errors():
     assert msg == 'unknown address family 12345'
 
 
+def test_gethostbyname_special():
+    assert socket.gethostbyname('') == '0.0.0.0'
+    assert socket.gethostbyname('<broadcast>') == '255.255.255.255'
+    assert socket.gethostbyname('127.0.0.1') == '127.0.0.1'
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1319,7 +1325,7 @@ def test_all():
     test_error_text()
     test_recvfrom_connected_and_lookup_errors()
     test_default_timeout() # last, see comment there
-
+    test_gethostbyname_special()
 
 if __name__ == '__main__':
     test_all()

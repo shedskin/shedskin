@@ -56,7 +56,8 @@ public:
     virtual list<str *> *  readlines(__ss_int size_hint=-1);
     virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
-    virtual __ss_int truncate(__ss_int size=-1);
+    virtual __ss_int truncate(); /* (at the current position) */
+    virtual __ss_int truncate(__ss_int size);
     virtual __ss_int  write(str *s);
     virtual void * writelines(pyiter<str *> *iter);
     virtual file *__enter__();
@@ -123,7 +124,8 @@ public:
     virtual __ss_int readinto1(bytes *b) { return readinto(b); }
     virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
-    virtual __ss_int truncate(__ss_int size=-1);
+    virtual __ss_int truncate(); /* (at the current position) */
+    virtual __ss_int truncate(__ss_int size);
     virtual __ss_int  write(bytes *b);
     virtual void *writelines(pyiter<bytes *> *iter);
     virtual file_binary *__enter__();
@@ -189,14 +191,14 @@ str *__fileio_mode(str *mode);
 void __set_buffering(FILE *f, __ss_int buffering, bool text);
 void __check_binary_args(str *encoding, str *errors, str *newline);
 
-file *open(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
-file *open(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
-file_binary *open_binary(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
-file_binary *open_binary(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True); /* ugly duplication.. use str/byte template? */
+file *open(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
+file *open(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
+file_binary *open_binary(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
+file_binary *open_binary(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1); /* ugly duplication.. use str/byte template? */
 /* open(fd), as os.fdopen(fd) */
 FILE *__ss_fdopen(__ss_int fd, str *mode);
-file *open(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
-file_binary *open_binary(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_bool closefd = True);
+file *open(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
+file_binary *open_binary(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
 
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
