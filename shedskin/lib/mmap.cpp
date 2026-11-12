@@ -84,6 +84,16 @@ enum
 #else
   __MAP_STACK = -1,
 #endif
+#ifdef MAP_NORESERVE
+  MMAP_PUSH(MAP_NORESERVE),
+#else
+  __MAP_NORESERVE = -1,
+#endif
+#ifdef MAP_32BIT
+  MMAP_PUSH(MAP_32BIT),
+#else
+  __MAP_32BIT = -1,
+#endif
 
   /* madvise() advice; not every option exists on every system (and none of
      them do on WIN32), so missing ones fall back to -1, which madvise()
@@ -226,6 +236,8 @@ enum
 #undef MAP_EXECUTABLE
 #undef MAP_POPULATE
 #undef MAP_STACK
+#undef MAP_NORESERVE
+#undef MAP_32BIT
 
 #undef MADV_NORMAL
 #undef MADV_RANDOM
@@ -282,6 +294,8 @@ const __ss_int
     MAP_EXECUTABLE = __MAP_EXECUTABLE,
     MAP_POPULATE   = __MAP_POPULATE,
     MAP_STACK      = __MAP_STACK,
+    MAP_NORESERVE  = __MAP_NORESERVE,
+    MAP_32BIT      = __MAP_32BIT,
 
     MADV_NORMAL = __MADV_NORMAL,
     MADV_RANDOM = __MADV_RANDOM,
@@ -468,6 +482,8 @@ void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 {
     __raise_if_closed();
     __check_flush_range(offset, size, size_given);
+    if (access == ACCESS_READ or access == ACCESS_COPY) /* (nothing to write back; as CPython) */
+        return NULL;
     if (::msync(m_begin + offset, (size_t)size, MS_SYNC) == -1)
     {
         __throw_oserror();
@@ -752,6 +768,8 @@ void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 {
     __raise_if_closed();
     __check_flush_range(offset, size, size_given);
+    if (access == ACCESS_READ or access == ACCESS_COPY) /* (nothing to write back; as CPython) */
+        return NULL;
     if (!FlushViewOfFile(m_begin + offset, (size_t)size))
     {
         throw new OSError();
@@ -839,12 +857,10 @@ void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)
     __raise_if_closed_or_not_writable(); /* (as CPython: not readable, e.g. PROT_WRITE, is fine) */
     __ss_int length = (__ss_int)__size(); /* the mapping, not the file (size()) */
 
-    // Taken from Python 2.7
-    if (count < 0 or (count + destination) < count or
-            (count + source) < count or source < 0 or
-            source > length or (source + count) > length or
-            destination < 0 or destination > length or
-            (destination + count) > length)
+    /* (without signed overflow, which the compiler may assume away) */
+    if (count < 0 or source < 0 or destination < 0 or
+            source > length or destination > length or
+            count > length - source or count > length - destination)
     {
         throw new ValueError(const_1);
     }
@@ -922,16 +938,19 @@ __ss_int mmap::seek(__ss_int offset, __ss_int whence)
         m_position = m_begin + offset;
         break;
     case 1:  /* SEEK_CUR: relative to current position. */
-        m_position += offset;
-        if (m_position < m_begin or
-                m_position > m_end)
+    {
+        /* (in integers: a huge offset must not overflow the pointer) */
+        __ss_int pos = (__ss_int)(m_position - m_begin);
+        if (offset < -pos or offset > (__ss_int)__size() - pos)
         {
             m_position = restore;
             __seek_failed();
         }
+        m_position = m_begin + pos + offset;
         break;
+    }
     case 2: /* SEEK_END: relative to end */
-        if (offset > 0L or offset < -int(__size()))
+        if (offset > 0L or offset < -(__ss_int)__size())
         {
             __seek_failed();
         }

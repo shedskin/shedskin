@@ -3,6 +3,8 @@
 # model for module socket for shed skin
 # from python 2.5.1 documentation
 
+__void = 0  # 'not given' sentinel
+
 SHUT_RD=0
 SHUT_WR=1
 SHUT_RDWR=2
@@ -247,7 +249,7 @@ class socket(object):
 
     # FIXME CPython default is count=None; a negative value means 'send
     # everything' instead (same convention as timeouts in this module)
-    def sendfile(self, file, offset=0, count=-1):
+    def sendfile(self, file, offset=0, count=__void):  # count not given/None: all
         return 0
 
     def makefile(self, mode=None, buffering=-1, __kw_encoding=None, __kw_errors=None, __kw_newline=None):
@@ -332,7 +334,6 @@ class socket(object):
         return 0
 
 # timeout not given (__void): the default timeout; None: blocking
-__void = 0
 def create_connection(address, timeout=__void, source_address=None, all_errors=False):
     return socket()
 

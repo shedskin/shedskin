@@ -46,6 +46,8 @@ MAP_DENYWRITE, /* ETXTBSY on write access.   */
 MAP_EXECUTABLE,/* Mark it as an executable.  */
 MAP_POPULATE,  /* Populate page tables.      */
 MAP_STACK,     /* Reserve for a process stack.*/
+MAP_NORESERVE, /* Don't reserve swap space.  */
+MAP_32BIT,     /* In the low 2 GiB (x86-64).*/
 
 /* madvise() advice (value is -1 on platforms that lack them). */
 MADV_NORMAL,

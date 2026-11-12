@@ -162,7 +162,9 @@ public:
     __ss_int __ss_fileno();
     __ss_int detach();
     socket *dup();
-    __ss_int sendfile(file_binary *f, __ss_int offset=0, __ss_int count=-1);
+    __ss_int sendfile(file_binary *f, __ss_int offset=0, __ss_void_struct count=__ss_void); /* (count not given/None: all) */
+    __ss_int sendfile(file_binary *f, __ss_int offset, __ss_int count);
+    __ss_int __sendfile(file_binary *f, __ss_int offset, __ss_int count);
     __ss_int getsockopt(__ss_int level, __ss_int optname);
     __ss_int connect_ex(inet_address address);
     __ss_bool get_inheritable();

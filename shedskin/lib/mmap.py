@@ -14,6 +14,8 @@ MAP_DENYWRITE = 2048
 MAP_EXECUTABLE = 4096
 MAP_POPULATE = 32768
 MAP_STACK = 131072
+MAP_NORESERVE = 16384
+MAP_32BIT = 64
 
 # madvise() advice constants. Only MADV_NORMAL/RANDOM/SEQUENTIAL/WILLNEED/
 # DONTNEED are portable; the others are Linux-, BSD- or macOS-only. Unlike

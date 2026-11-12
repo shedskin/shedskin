@@ -992,6 +992,7 @@ file_binary *open_binary(__ss_int fd, str *flags, __ss_int buffering, str *encod
     __set_buffering(fp, buffering, false);
     file_binary *f = new file_binary(fp, __str(fd), flags);
     f->__closefd = closefd;
+    f->__name_is_fd = true;
     return f;
 }
 

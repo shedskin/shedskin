@@ -91,6 +91,20 @@ extern char **environ;
 
 namespace __os__ {
 
+/* CPython's name for the os implementation module (in struct sequence errors) */
+#ifdef WIN32
+#define __SS_POSIX_MOD "nt"
+#else
+#define __SS_POSIX_MOD "posix"
+#endif
+
+/* as CPython's fildes_converter (fsync, fchdir, ..) */
+static int __ss_fildes(__ss_int fd) {
+    if (fd < 0)
+        throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(fd), new str(")")));
+    return __ss_cint(fd);
+}
+
 /* the msvc crt calls its invalid parameter handler (which aborts by default)
    for a bad file descriptor; like cpython, suppress that around calls that
    may legitimately receive one, so they fail with EBADF instead */
@@ -1099,7 +1113,11 @@ static str *__walk_join(str *top, str *name) {
     if(top->unit.empty())
         return name;
     __ss_char last = top->unit.back();
+#ifdef WIN32
     if(last == '/' || last == '\\')
+#else
+    if(last == '/') /* (a backslash is an ordinary character here) */
+#endif
         return new str(top->unit + name->unit);
 #ifdef WIN32
     return new str(top->unit + __gcs("\\") + name->unit);
@@ -1242,7 +1260,8 @@ void *unsetenv(str* var) {
     ss << __ss_cpath(var) << '=';
     _putenv(const_cast<char*>(ss.str().c_str()));
 #else
-    ::unsetenv(__ss_cpath(var));
+    if (::unsetenv(__ss_cpath(var)) == -1) /* e.g. '' or 'a=b': EINVAL, as CPython */
+        __throw_oserror();
 #endif
     return NULL;
 }
@@ -1429,7 +1448,7 @@ __ss_int dup2(__ss_int f1, __ss_int f2, __ss_bool inheritable) {
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
 void *fdatasync(__ss_int f1) {
-    if (::fdatasync(__ss_cint(f1)) == -1)
+    if (::fdatasync(__ss_fildes(f1)) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -1822,7 +1841,7 @@ __ss_int __ss_WTERMSIG(__ss_int status) {
 }
 
 void *fchdir(__ss_int f1) {
-    if (::fchdir(__ss_cint(f1)) == -1)
+    if (::fchdir(__ss_fildes(f1)) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -2054,7 +2073,7 @@ uname_result::uname_result(str *sysname, str *nodename, str *release, str *versi
 uname_result::uname_result(tuple<str *> *t) : tuple2<str *, str *>(t) {
     this->__class__ = cl_uname_result;
     if (len(t) != 5)
-        throw new TypeError(__add_strs(3, new str("os.uname_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
+        throw new TypeError(__add_strs(3, new str(__SS_POSIX_MOD ".uname_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
     sysname = t->__getitem__(0);
     nodename = t->__getitem__(1);
     release = t->__getitem__(2);
@@ -2158,7 +2177,7 @@ __ss_int fpathconf(__ss_int fd, str *name_) {
     return fpathconf(fd, pathconf_names->__getitem__(name_));
 }
 __ss_int fpathconf(__ss_int fd, __ss_int name_) {
-    int fd_ = __ss_cint(fd), name2 = __ss_cint(name_);
+    int fd_ = __ss_fildes(fd), name2 = __ss_cint(name_);
     errno = 0;
     long result = ::fpathconf(fd_, name2);
     if(result == -1 and errno != 0)
@@ -2447,7 +2466,7 @@ __ss_bool access(str *path, __ss_int mode) {
 }
 
 void *fsync(__ss_int fd) {
-    if(::fsync(__ss_cint(fd)) == -1)
+    if(::fsync(__ss_fildes(fd)) == -1)
         __throw_oserror();
     return NULL;
 }
@@ -2505,7 +2524,7 @@ void *fsync(__ss_int fd) {
     int r;
     {
         __suppress_iph guard;
-        r = ::_commit(__ss_cint(fd));
+        r = ::_commit(__ss_fildes(fd));
     }
     if(r == -1)
         __throw_oserror();
@@ -2575,7 +2594,7 @@ times_result::times_result(__ss_float user, __ss_float system, __ss_float childr
 times_result::times_result(tuple<__ss_float> *t) : tuple2<__ss_float, __ss_float>(t) {
     this->__class__ = cl_times_result;
     if (len(t) != 5)
-        throw new TypeError(__add_strs(3, new str("os.times_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
+        throw new TypeError(__add_strs(3, new str(__SS_POSIX_MOD ".times_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
     user = t->__getitem__(0);
     system = t->__getitem__(1);
     children_user = t->__getitem__(2);
@@ -2586,7 +2605,7 @@ times_result::times_result(tuple<__ss_float> *t) : tuple2<__ss_float, __ss_float
 times_result::times_result(tuple<__ss_int> *t) {
     this->__class__ = cl_times_result;
     if (len(t) != 5)
-        throw new TypeError(__add_strs(3, new str("os.times_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
+        throw new TypeError(__add_strs(3, new str(__SS_POSIX_MOD ".times_result() takes a 5-sequence ("), __str(len(t)), new str("-sequence given)")));
     user = (__ss_float)t->__getitem__(0);
     system = (__ss_float)t->__getitem__(1);
     children_user = (__ss_float)t->__getitem__(2);
@@ -3088,9 +3107,7 @@ tuple<__ss_int>* pipe() {
 #endif
 
     if(ret != 0) {
-        str* s = new str("os.pipe failed");
-
-        __throw_oserror(s);
+        __throw_oserror(); /* (no filename, as CPython) */
     }
 
 #ifdef __APPLE__

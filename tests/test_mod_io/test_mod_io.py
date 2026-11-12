@@ -828,6 +828,30 @@ def test_next_closed_message():
     assert msg == 'I/O operation on closed file'
 
 
+def test_huge_sizes():
+    b = io.BytesIO(b'abcdefgh')
+    b.seek(2)
+    assert b.read(9223372036854775807) == b'cdefgh'
+    assert b.tell() == 8
+    b.seek(2)
+    assert b.readline(9223372036854775807) == b'cdefgh'
+    assert b.read() == b''
+    b.seek(2)
+    msg = ''
+    try:
+        b.seek(9223372036854775807, 1)
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'new position too large'
+    s = io.StringIO('abcdefgh')
+    s.seek(3)
+    assert s.read(9223372036854775807) == 'defgh'
+    assert s.tell() == 8
+    s.seek(3)
+    assert s.readline(9223372036854775807) == 'defgh'
+    assert s.read() == ''
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -870,6 +894,7 @@ def test_all():
     test_truncate_negative()
     test_with_closed_message()
     test_next_closed_message()
+    test_huge_sizes()
 
 if __name__ == '__main__':
     test_all() 

@@ -2,6 +2,7 @@ import os
 import os.path
 import glob
 import re
+import sys
 
 testdir = os.curdir
 while not os.path.exists(os.path.join(testdir, "testdata")) and os.path.exists(os.pardir):
@@ -469,6 +470,25 @@ def test_translate():
     assert glob.translate('x|y*z', seps='|\\') == '(?s:x[\\|\\\\]y[^\\|\\\\]*z)\\Z'
 
 
+def test_dir_fd_nul():
+    if sys.platform == 'win32':
+        return
+    os.mkdir('shedskin_test_gnul')
+    open('shedskin_test_gnul/f', 'w').close()
+    fd = os.open('.', os.O_RDONLY)
+    assert glob.glob('shedskin_test_gnul\x00junk', dir_fd=fd) == []
+    assert glob.glob('shedskin_test_gnul/f\x00junk/', dir_fd=fd) == []
+    msg = ''
+    try:
+        glob.glob('shedskin_test_gnul\x00junk/*', dir_fd=fd)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'open: embedded null character in path'
+    os.close(fd)
+    os.remove('shedskin_test_gnul/f')
+    os.rmdir('shedskin_test_gnul')
+
+
 def test_all():
     test_glob()
     test_has_magic()
@@ -480,7 +500,7 @@ def test_all():
     test_translate()
     if os.name == 'posix':  # dir_fd is not supported on windows (as in cpython)
         test_dir_fd()
-
+    test_dir_fd_nul()
 
 if __name__ == "__main__":
     test_all()

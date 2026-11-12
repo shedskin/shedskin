@@ -6,4 +6,5 @@ add_shedskin_product(
         os.path
         re
         stat
+        sys
 )

@@ -1225,6 +1225,51 @@ def test_prot_access_iter_closed():
     os.remove(name)
 
 
+def test_move_seek_flush_limits():
+    m = mmap.mmap(-1, 10)
+    # overflowing counts/offsets are out of range, not undefined behaviour
+    msg = ''
+    try:
+        m.move(0, 5, 2**63 - 1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'source, destination, or count out of range'
+    msg = ''
+    try:
+        m.move(2**63 - 1, 0, 2)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'source, destination, or count out of range'
+    m.seek(3)
+    msg = ''
+    try:
+        m.seek(2**63 - 1, 1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'seek out of range'
+    assert m.tell() == 3
+    assert m.seek(-10, 2) == 0
+    m.close()
+    if mmap.MAP_NORESERVE != -1:
+        m = mmap.mmap(-1, 4096, flags=mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS | mmap.MAP_NORESERVE)
+        m[0] = 1
+        m.close()
+    # flush() of a read-only/copy-on-write mapping has nothing to write back
+    name = 'shedskin_test_mmap_flush.bin'
+    f = open(name, 'wb')
+    f.write(b'0123456789')
+    f.close()
+    f = open(name, 'rb')
+    m = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+    m.flush(5, 5)
+    m.close()
+    m = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
+    m.flush(3, 1)
+    m.close()
+    f.close()
+    os.remove(name)
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1265,6 +1310,7 @@ def test_all():
     test_move_bounds_mapping_length()
     test_write_byte_range_prot_write_messages()
     test_prot_access_iter_closed()
+    test_move_seek_flush_limits()
 
 if __name__ == '__main__':
     test_all()

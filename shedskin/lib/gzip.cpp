@@ -16,6 +16,7 @@
 #include "gzip.hpp"
 
 #include <cstdlib>
+#include <limits>
 #include <ctime>
 #include <typeinfo>
 
@@ -279,7 +280,7 @@ void GzipFile::__init(str *filename, str *mode, __ss_int compresslevel, file_bin
         myfileobj = true;
     }
     if (!filename)
-        filename = fileobj->name ? fileobj->name : new str("");
+        filename = (fileobj->name && !fileobj->__name_is_fd) ? fileobj->name : new str(""); /* (as CPython: an int name counts as '') */
     if (!mode)
         mode = fileobj->mode ? fileobj->mode : new str("rb");
 
@@ -342,6 +343,7 @@ bool GzipFile::__read_input() {
         if (fileobj->closed) /* (f is fclosed) */
             throw new ValueError(new str("read of closed file"));
         inbuf.resize(old + READ_BUFFER_SIZE);
+        clearerr(fileobj->f); /* (EOF is not sticky: data may have been appended) */
         size_t n = fread(&inbuf[old], 1, READ_BUFFER_SIZE, fileobj->f);
         inbuf.resize(old + n);
         if (n == 0 && ferror(fileobj->f))
@@ -392,8 +394,14 @@ void GzipFile::__read_trailer() {
 
 /* decompress some more data into outbuf; false at the end of the last member */
 bool GzipFile::__fill() {
-    if (at_eof)
-        return false;
+    if (at_eof) {
+        /* as CPython: look again, for a member appended since */
+        if (inpos == inbuf.size() && !__read_input())
+            return false;
+        at_eof = false;
+        new_member = true;
+        size = -1;
+    }
     if (outpos == outbuf.size()) {
         outbuf.clear();
         outpos = 0;
@@ -677,8 +685,8 @@ __ss_int GzipFile::seek(__ss_int offset, __ss_int whence) {
         }
         return pos;
     }
-    if (whence == 1)
-        offset = pos + offset;
+    if (whence == 1) /* (saturating: python ints don't overflow) */
+        offset = (offset > std::numeric_limits<__ss_int>::max() - pos) ? std::numeric_limits<__ss_int>::max() : pos + offset;
     else if (whence == 2) {
         while (__fill()) ; /* to learn the size */
         offset = size + offset;
@@ -1031,9 +1039,19 @@ GzipFile *open(file_binary *fileobj, str *mode, __ss_int compresslevel, str *enc
     return new GzipFile(NULL, __binary_mode(mode, encoding, errors, newline), compresslevel, fileobj);
 }
 
+/* as CPython: a bad encoding/errors/newline closes the binary file again */
+static _GzipTextFile *__wrap_text(GzipFile *gz, str *mode, str *encoding, str *errors, str *newline) {
+    try {
+        return new _GzipTextFile(gz, mode, encoding, errors, newline);
+    } catch (BaseException *) {
+        gz->close();
+        throw;
+    }
+}
+
 _GzipTextFile *open_text(str *filename, str *mode, __ss_int compresslevel, str *encoding, str *errors, str *newline) {
     GzipFile *gz = new GzipFile(filename, __text_mode(mode), compresslevel);
-    return new _GzipTextFile(gz, mode, encoding, errors, newline);
+    return __wrap_text(gz, mode, encoding, errors, newline);
 }
 
 _GzipTextFile *open_text(bytes *filename, str *mode, __ss_int compresslevel, str *encoding, str *errors, str *newline) {
@@ -1042,7 +1060,7 @@ _GzipTextFile *open_text(bytes *filename, str *mode, __ss_int compresslevel, str
 
 _GzipTextFile *open_text(file_binary *fileobj, str *mode, __ss_int compresslevel, str *encoding, str *errors, str *newline) {
     GzipFile *gz = new GzipFile(NULL, __text_mode(mode), compresslevel, fileobj);
-    return new _GzipTextFile(gz, mode, encoding, errors, newline);
+    return __wrap_text(gz, mode, encoding, errors, newline);
 }
 
 /* compress, decompress */

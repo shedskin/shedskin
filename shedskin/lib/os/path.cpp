@@ -607,15 +607,27 @@ str *realpath(str *filename, __ss_bool strict) {
                components after it is ENOTDIR (also for ALLOW_MISSING, which
                only ignores missing components) */
             struct ::stat st;
-            if (::lstat(__ss_cpath(component, "lstat"), &st) != 0) {
+            /* as CPython: '.' and '..' are handled lexically (the symlinks
+               before them are resolved already), also in error filenames */
+            str *cpath = component;
+            for (__ss_int j = first - 1; j < i; j++) {
+                str *bit = bits->__getfast__(j);
+                if (__eq(bit, const_1) || __eq(bit, const_3)) { /* "." or ".." */
+                    cpath = normpath(component);
+                    if (component->unit.back() == '/' && cpath->unit.back() != '/')
+                        cpath = new str(cpath->unit + __gcs("/"));
+                    break;
+                }
+            }
+            if (::lstat(__ss_cpath(cpath, "lstat"), &st) != 0) {
                 int err = errno;
                 if (!(err == ENOENT && (allow_missing.value || (all_but_last.value && i >= last)))) {
                     errno = err;
-                    __throw_oserror(component);
+                    __throw_oserror(cpath);
                 }
             } else if (!S_ISDIR(st.st_mode) && !S_ISLNK(st.st_mode) && i < len(bits)) {
                 errno = ENOTDIR;
-                __throw_oserror(component);
+                __throw_oserror(cpath);
             }
         }
         if (islink(component)) {
@@ -649,6 +661,7 @@ str *_resolve_link(str *path) {
     str *dir, *resolved;
 
     paths_seen = (new list<str *>());
+    bool slash = false; /* the (last) target ends in a slash */
 
     while(islink(path)) {
         if (paths_seen->__contains__(path)) {
@@ -656,6 +669,7 @@ str *_resolve_link(str *path) {
         }
         paths_seen->append(path);
         resolved = __os__::readlink(path);
+        slash = resolved->unit.size() && resolved->unit.back() == '/';
         if ((!isabs(resolved))) {
             dir = dirname(path);
             path = normpath(join(2, dir, resolved));
@@ -664,6 +678,11 @@ str *_resolve_link(str *path) {
             path = normpath(resolved);
         }
     }
+    /* as CPython: keep it, so that e.g. a link to 'file/' is ENOTDIR, and
+       for ALL_BUT_LAST, 'missing/' is not the last component (unlike a
+       trailing slash in the argument itself, hence '/.') */
+    if (slash && path->unit.back() != '/')
+        path = new str(path->unit + __gcs("/."));
     return path;
 }
 
