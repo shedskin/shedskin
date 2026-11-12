@@ -728,6 +728,15 @@ def test_os_path_realpath_strict_notdir():
     os.remove(name)
 
 
+def test_os_path_realpath_all_but_last_slash():
+    if os.name == "nt":
+        return  # see test_os_path_realpath_strict
+    cwd = realpath(os.getcwd())
+    name = "shedskin_test_abl_missing"
+    for p in [name, name + "/", name + "//"]:
+        assert realpath(p, strict=os.path.ALL_BUT_LAST) == join(cwd, name), p
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
@@ -766,6 +775,7 @@ def test_all():
     test_os_path_kwarg_names()
     test_os_path_realpath_abs_errors()
     test_os_path_realpath_strict_notdir()
+    test_os_path_realpath_all_but_last_slash()
 
 if __name__ == '__main__':
     test_all()

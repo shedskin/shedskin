@@ -1153,6 +1153,19 @@ def test_getrandom_conf_names():
         assert 'PC_ALLOC_SIZE_MIN' in os.pathconf_names
 
 
+def test_getrandom_flags():
+    assert len(os.urandom(100)) == 100
+    if sys.platform == 'linux':
+        assert len(os.getrandom(16, os.GRND_NONBLOCK)) == 16
+        assert len(os.getrandom(0)) == 0
+        code = 0
+        try:
+            os.getrandom(5, 12345)
+        except OSError as e:
+            code = e.errno
+        assert code == 22
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1191,6 +1204,7 @@ def test_all():
     test_std_streams_nice_tty_fdopen()
     test_direntry_errors_keyboardinterrupt()
     test_getrandom_conf_names()
+    test_getrandom_flags()
 
 if __name__ == '__main__':
     test_all()

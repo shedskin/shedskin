@@ -2434,3 +2434,5 @@ va_arg
 va_copy
 va_end
 va_start
+GRND_NONBLOCK
+GRND_RANDOM

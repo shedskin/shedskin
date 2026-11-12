@@ -595,6 +595,10 @@ str *realpath(str *filename, __ss_bool strict) {
         bits = filename->split(const_4);
         first = 1;
     }
+    /* the last name, ignoring trailing slashes (as CPython, for ALL_BUT_LAST) */
+    __ss_int last = len(bits);
+    while (last > first && len(bits->__getfast__(last - 1)) == 0)
+        last--;
 
     FAST_FOR(i,first,(len(bits)+1),1,40,41)
         component = joinl(bits->__slice__(3, 0, i, 0));
@@ -605,7 +609,7 @@ str *realpath(str *filename, __ss_bool strict) {
             struct ::stat st;
             if (::lstat(__ss_cpath(component, "lstat"), &st) != 0) {
                 int err = errno;
-                if (!(err == ENOENT && (allow_missing.value || (all_but_last.value && i == len(bits))))) {
+                if (!(err == ENOENT && (allow_missing.value || (all_but_last.value && i >= last)))) {
                     errno = err;
                     __throw_oserror(component);
                 }

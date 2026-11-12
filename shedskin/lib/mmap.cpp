@@ -370,9 +370,14 @@ void *mmap::__init__(__ss_int __ss_fileno_, __ss_int length_, __ss_int flags_, _
     {
         throw new ValueError(const_5);
     }
-    if (prot_ == PROT_READ)
+    if (access_ == ACCESS_DEFAULT) /* as CPython: map prot to an access mode */
     {
-        access_ = ACCESS_READ;
+        if ((prot_ & PROT_READ) && (prot_ & PROT_WRITE))
+            ; /* (stays ACCESS_DEFAULT) */
+        else if (prot_ & PROT_WRITE)
+            access_ = ACCESS_WRITE;
+        else /* e.g. PROT_READ|PROT_EXEC: read-only, so no resize() */
+            access_ = ACCESS_READ;
     }
 
     if (__ss_fileno_ == -1)
@@ -1111,7 +1116,7 @@ __ss_bool mmap::__contains__(bytes *string)
 
 __iter<bytes *> *mmap::__iter__()
 {
-    __raise_if_closed();
+    /* (as CPython: the iterator checks, on next()) */
     return new __mmapiter(this);
 }
 

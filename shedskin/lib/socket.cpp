@@ -788,7 +788,7 @@ socket::socket(socket::wrap_fd_tag, socket_type fd, __ss_int family_, __ss_int t
     this->type = type_;
     this->proto = proto_;
     _fd = fd;
-    apply_timeout(__ss_default_timeout);
+    apply_default_timeout(__ss_default_timeout);
 }
 
 str *socket::__repr__() {
@@ -1246,6 +1246,18 @@ void *socket::connect(const sockaddr *sa, socklen_t salen)
  * non-blocking, a positive value is blocking with a timeout, and a negative
  * value (None) is blocking without one. Always sets the fd's blocking flag
  * explicitly, as BSD/macOS accept()ed sockets inherit O_NONBLOCK. */
+/* the default timeout for a new socket object: as CPython, a default of
+   None leaves the fd as it is (fromfd()/socket(fileno=) share its file
+   description with another socket, which may be non-blocking) */
+void socket::apply_default_timeout(double val)
+{
+    if (val < 0) {
+        _blocking = true;
+        _timeout = -1;
+    } else
+        apply_timeout(val);
+}
+
 void socket::apply_timeout(double val)
 {
     if (val == 0) {
@@ -1566,7 +1578,7 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
 #endif
     this->type = type_;
     this->proto = proto_;
-    apply_timeout(timeout);
+    apply_default_timeout(timeout);
 }
 
 socket::~socket()

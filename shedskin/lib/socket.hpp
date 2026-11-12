@@ -151,6 +151,7 @@ public:
     /* internal: put the socket in the mode a timeout value means (0.0
        non-blocking, >0 timeout, <0 none) */
     void apply_timeout(double value);
+    void apply_default_timeout(double value);
     /* internal: adopt an existing fd instead of creating a new socket */
     struct wrap_fd_tag {};
     socket(wrap_fd_tag, socket_type fd, __ss_int family, __ss_int type, __ss_int proto);
@@ -192,6 +193,7 @@ public:
     void *close();
     void *settimeout(double value);
     void *settimeout(void *); /* None: blocking, no timeout */
+    void *settimeout(__ss_int value) { return settimeout((double)value); } /* (0 would also match void *) */
     double gettimeout() { return _timeout; }
     bytes *recv(__ss_int bufsize, __ss_int flags=0);
     tuple2<bytes *, inet_address> *recvfrom(__ss_int bufsize, __ss_int flags=0);
@@ -252,6 +254,7 @@ extern __ss_bool has_ipv6;
 double getdefaulttimeout();
 void *setdefaulttimeout(double x);
 void *setdefaulttimeout(void *); /* None */
+inline void *setdefaulttimeout(__ss_int x) { return setdefaulttimeout((double)x); } /* (0 would also match void *) */
 str *gethostname();
 str *getfqdn(str *name=0);
 
