@@ -61,13 +61,14 @@ static mz_stream *__new_stream() {
     return strm;
 }
 
-static void __check_level(__ss_int compresslevel) {
+static void __check_level(__ss_int compresslevel, const char *msg="Bad compression level") {
     if (compresslevel < -1 || compresslevel > 9) /* (miniz also has a level 10) */
-        throw new ValueError(new str("Bad compression level"));
+        throw new ValueError(new str(msg));
 }
 
 static void __deflate_init(mz_stream *strm, __ss_int compresslevel) {
-    __check_level(compresslevel);
+    /* (as CPython's zlib.compressobj(), used by GzipFile; compress() checks first) */
+    __check_level(compresslevel, "Invalid initialization option");
     if (mz_deflateInit2(strm, (int)compresslevel, MZ_DEFLATED, -MZ_DEFAULT_WINDOW_BITS, 9, MZ_DEFAULT_STRATEGY) != MZ_OK)
         throw new MemoryError();
 }
@@ -633,6 +634,8 @@ void *GzipFile::close() {
     __end();
     fileobj = 0;
     closed = True;
+    if (__textfile)
+        __textfile->closed = True; /* (as CPython: the text wrapper's .closed is its buffer's) */
     if (myfileobj)
         fo->close();
     return NULL;
@@ -722,6 +725,7 @@ __ss_bool GzipFile::isatty() {
 enum { NL_UNIVERSAL, NL_ANY, NL_LF, NL_CR, NL_CRLF };
 
 _GzipTextFile::_GzipTextFile(GzipFile *gz, str *mode, str *encoding, str *errors, str *newline) : file() {
+    gz->__textfile = this;
     __encoding = __lookup_encoding(encoding);
     __errors = __lookup_errors(errors);
     this->encoding = encoding ? encoding : new str("utf-8");

@@ -1314,6 +1314,63 @@ def test_settimeout_range():
     s.close()
 
 
+def test_none_timeouts_trunc_flags():
+    # None: blocking (not a timeout of 0)
+    socket.setdefaulttimeout(None)
+    s = socket.socket()
+    assert s.getblocking()
+    s.settimeout(1.5)
+    s.settimeout(None)
+    assert s.getblocking()
+    srv = socket.socket()
+    srv.bind(('127.0.0.1', 0))
+    srv.listen()  # (default backlog)
+    c = socket.create_connection(srv.getsockname(), None)
+    assert c.getblocking()
+    conn, addr = srv.accept()
+    socket.setdefaulttimeout(2.5)
+    c2 = socket.create_connection(srv.getsockname(), None)
+    assert c2.getblocking()
+    c3 = socket.create_connection(srv.getsockname())
+    assert c3.gettimeout() == 2.5
+    socket.setdefaulttimeout(None)
+    for x in [s, c, c2, c3, conn, srv]:
+        x.close()
+
+    # MSG_TRUNC: the real length of a datagram (and no crash)
+    a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    a.bind(('127.0.0.1', 0))
+    b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    b.sendto(b'A' * 6000, a.getsockname())
+    d = a.recv(1, socket.MSG_TRUNC)
+    assert len(d) == 6000
+    assert d[:1] == b'A'
+    b.sendto(b'B' * 3000, a.getsockname())
+    d2, addr2 = a.recvfrom(1, socket.MSG_TRUNC)
+    assert len(d2) == 3000
+    assert d2[:1] == b'B'
+    b.sendto(b'c', a.getsockname())
+    assert a.recv(10, socket.MSG_DONTWAIT) == b'c'
+    a.close()
+    b.close()
+
+    if sys.platform == 'linux':
+        # SOCK_NONBLOCK/SOCK_CLOEXEC are flags, not part of .type
+        n = socket.socket(socket.AF_INET, socket.SOCK_STREAM | socket.SOCK_NONBLOCK)
+        assert n.type == socket.SOCK_STREAM
+        assert n.gettimeout() == 0.0
+        assert not n.getblocking()
+        n.close()
+        e = socket.socket(socket.AF_INET, socket.SOCK_DGRAM | socket.SOCK_CLOEXEC)
+        assert e.type == socket.SOCK_DGRAM
+        e.close()
+        # a struct value (struct linger {int onoff; int linger;}, little endian)
+        if sys.byteorder == 'little':
+            l = socket.socket()
+            l.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, b'\x01\x00\x00\x00\x05\x00\x00\x00')
+            l.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1350,6 +1407,7 @@ def test_all():
     test_default_timeout() # last, see comment there
     test_gethostbyname_special()
     test_settimeout_range()
+    test_none_timeouts_trunc_flags()
 
 if __name__ == '__main__':
     test_all()

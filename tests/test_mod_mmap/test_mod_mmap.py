@@ -1164,6 +1164,36 @@ def test_move_bounds_mapping_length():
     os.remove(name)
 
 
+def test_write_byte_range_prot_write_messages():
+    m = mmap.mmap(-1, 10)
+    msg = ''
+    try:
+        m.write_byte(256)
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'unsigned byte integer is greater than maximum'
+    msg = ''
+    try:
+        m.write_byte(-1)
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'unsigned byte integer is less than minimum'
+    assert m.tell() == 0
+    m.close()
+    msg = ''
+    try:
+        mmap.mmap(-1, 10, access=7)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'mmap invalid access parameter.'
+    if sys.platform != 'win32':
+        # a write-only mapping can move()
+        pw = mmap.mmap(-1, 10, prot=mmap.PROT_WRITE)
+        pw.write(b'ab')
+        pw.move(0, 1, 1)
+        pw.close()
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1202,6 +1232,7 @@ def test_all():
     test_read_negative_size()
     test_read_no_arg()
     test_move_bounds_mapping_length()
+    test_write_byte_range_prot_write_messages()
 
 if __name__ == '__main__':
     test_all()

@@ -85,8 +85,8 @@ template<class A, class B, class C, class D> __select_result<typename A::for_in_
     bool has_timeout;
     double timeout;
 
-    if constexpr (std::is_same_v<D, __ss_void_struct>) {
-        has_timeout = false;                       // timeout omitted -> block indefinitely
+    if constexpr (std::is_same_v<D, __ss_void_struct> || std::is_pointer_v<D>) {
+        has_timeout = false;                       // timeout omitted or None -> block indefinitely
         timeout = 0.0;
     } else {
         has_timeout = true;

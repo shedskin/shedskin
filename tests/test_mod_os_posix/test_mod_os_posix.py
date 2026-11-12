@@ -1140,6 +1140,19 @@ def test_direntry_errors_keyboardinterrupt():
     assert os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1]) == -2
 
 
+def test_getrandom_conf_names():
+    code = 0
+    try:
+        os.getrandom(-1)
+    except OSError as e:
+        code = e.errno
+    assert code == 22
+    if sys.platform == 'linux':
+        assert os.confstr('CS_GNU_LIBC_VERSION') is not None
+        assert os.pathconf('/', 'PC_SYMLINK_MAX') is not None
+        assert 'PC_ALLOC_SIZE_MIN' in os.pathconf_names
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1177,6 +1190,7 @@ def test_all():
     test_spawn_variants()
     test_std_streams_nice_tty_fdopen()
     test_direntry_errors_keyboardinterrupt()
+    test_getrandom_conf_names()
 
 if __name__ == '__main__':
     test_all()

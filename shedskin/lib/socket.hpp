@@ -176,6 +176,7 @@ public:
     file *makefile(str *newline, str *errors, str *encoding, str *mode, __ss_int buffering);
     file_binary *makefile_binary(str *newline, str *errors, str *encoding, str *mode, __ss_int buffering);
     void *setsockopt(__ss_int level, __ss_int optname, __ss_int value);
+    void *setsockopt(__ss_int level, __ss_int optname, bytes *value); /* (a struct, e.g. SO_LINGER) */
     void *connect(inet_address address);
     void *connect(str *address);
     void *connect(bytes *address);
@@ -190,12 +191,13 @@ public:
     __ss_int sendto(bytes *string, inet_address addr, __ss_int) { return sendto(string, addr); }
     void *close();
     void *settimeout(double value);
+    void *settimeout(void *); /* None: blocking, no timeout */
     double gettimeout() { return _timeout; }
     bytes *recv(__ss_int bufsize, __ss_int flags=0);
     tuple2<bytes *, inet_address> *recvfrom(__ss_int bufsize, __ss_int flags=0);
     __ss_int recv_into(bytes *buffer, __ss_int nbytes=0, __ss_int flags=0);
     tuple2<__ss_int, inet_address> *recvfrom_into(bytes *buffer, __ss_int nbytes=0, __ss_int flags=0);
-    void *listen(__ss_int backlog);
+    void *listen(__ss_int backlog=128);
     inet_address getpeername();
     inet_address getsockname();
 
@@ -206,7 +208,21 @@ public:
 
 extern str * __name__;
 void __init();
-socket *create_connection(socket::inet_address address, double timeout=-1, socket::inet_address source_address=0, __ss_bool all_errors=False);
+socket *__create_connection(socket::inet_address address, double timeout, socket::inet_address source_address, __ss_bool all_errors, bool blocking);
+
+/* timeout: not given (the default timeout), None (blocking) or seconds;
+   source_address: None or an address */
+template<class T=__ss_void_struct, class S=void *> socket *create_connection(socket::inet_address address, T timeout=__ss_void, S source_address=0, __ss_bool all_errors=False) {
+    socket::inet_address src = 0;
+    if constexpr (!std::is_same_v<S, void *>)
+        src = source_address;
+    if constexpr (std::is_same_v<T, __ss_void_struct>)
+        return __create_connection(address, -1.0, src, all_errors, false);
+    else if constexpr (std::is_pointer_v<T>)
+        return __create_connection(address, -1.0, src, all_errors, true);
+    else
+        return __create_connection(address, (double)timeout, src, all_errors, false);
+}
 void *close(__ss_int fd);
 __ss_int dup(__ss_int fd);
 socket *fromfd(__ss_int fd, __ss_int family, __ss_int type, __ss_int proto=0);
@@ -235,6 +251,7 @@ __ss_int __ss_ntohs(__ss_int);
 extern __ss_bool has_ipv6;
 double getdefaulttimeout();
 void *setdefaulttimeout(double x);
+void *setdefaulttimeout(void *); /* None */
 str *gethostname();
 str *getfqdn(str *name=0);
 
@@ -258,6 +275,7 @@ extern __ss_int __ss_IPV6_CHECKSUM, __ss_IPV6_HOPLIMIT, __ss_IPV6_HOPOPTS, __ss_
 extern __ss_int __ss_IPV6_MULTICAST_IF, __ss_IPV6_MULTICAST_LOOP, __ss_IPV6_PKTINFO, __ss_IPV6_RECVRTHDR, __ss_IPV6_RECVTCLASS, __ss_IPV6_RTHDR;
 extern __ss_int __ss_IPV6_TCLASS, __ss_IPV6_UNICAST_HOPS, __ss_IPV6_V6ONLY;
 extern __ss_int __ss_MSG_CTRUNC, __ss_MSG_DONTROUTE, __ss_MSG_OOB, __ss_MSG_PEEK, __ss_MSG_TRUNC, __ss_MSG_WAITALL;
+extern __ss_int __ss_MSG_DONTWAIT, __ss_MSG_NOSIGNAL, __ss_MSG_MORE, __ss_MSG_EOR, __ss_MSG_CONFIRM, __ss_SOCK_NONBLOCK, __ss_SOCK_CLOEXEC, __ss_SO_REUSEPORT, __ss_SO_PRIORITY, __ss_SO_MARK, __ss_SO_PROTOCOL, __ss_SO_DOMAIN, __ss_TCP_KEEPIDLE, __ss_TCP_CORK, __ss_TCP_QUICKACK, __ss_TCP_USER_TIMEOUT, __ss_TCP_DEFER_ACCEPT, __ss_TCP_SYNCNT;
 extern __ss_int __ss_NI_DGRAM, __ss_NI_MAXHOST, __ss_NI_MAXSERV, __ss_NI_NAMEREQD, __ss_NI_NOFQDN, __ss_NI_NUMERICHOST;
 extern __ss_int __ss_NI_NUMERICSERV;
 extern __ss_int __ss_SOCK_RAW, __ss_SOCK_RDM, __ss_SOCK_SEQPACKET;

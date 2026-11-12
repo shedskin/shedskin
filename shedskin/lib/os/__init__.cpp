@@ -1470,6 +1470,8 @@ bytes *read(__ss_int fd, __ss_int n) {
     if(nr < 0)
         __throw_oserror();
     s->unit.resize((size_t)nr);
+    if((size_t)nr * 2 < (size_t)n) /* (don't keep n bytes for a short read, e.g. read(fd, 65536) on a pipe) */
+        s->unit.shrink_to_fit();
     return s;
 }
 
@@ -1721,6 +1723,10 @@ bytes *urandom(__ss_int n) {
  * CPython, must fit a C int) but ignored. */
 bytes *getrandom(__ss_int size, __ss_int flags) {
     __ss_cint(flags);
+    if (size < 0) { /* (as CPython: from the system call, unlike urandom) */
+        errno = EINVAL;
+        __throw_oserror();
+    }
     return urandom(size);
 }
 
@@ -2289,8 +2295,11 @@ struct __wide_vector {
         finish();
     }
     __wide_vector(dict<str *, str *> *env) {
-        for (auto const& [k, v] : env->gcd)
+        for (auto const& [k, v] : env->gcd) {
+            if (k->unit.empty() || k->unit.find(U'=', 1) != std::string::npos) /* (as CPython, and posix below) */
+                throw new ValueError(new str("illegal environment variable name"));
             strings.push_back(__to_wide(__add_strs(3, k, new str("="), v)));
+        }
         finish();
     }
     void finish() {
@@ -2301,11 +2310,13 @@ struct __wide_vector {
     const wchar_t *const *data() { return pointers.data(); }
 };
 
+/* as CPython: 'execv() arg 2 ..', but 'execve: argv ..' (as the posix version below) */
 static void __check_exec_args(list<str *> *args, const char *func) {
+    bool ve = std::string(func) == "execve()";
     if (args->units.empty())
-        throw new ValueError(new str((std::string(func) + " arg 2 must not be empty").c_str()));
+        throw new ValueError(new str(ve ? "execve: argv must not be empty" : (std::string(func) + " arg 2 must not be empty").c_str()));
     if (args->units[0]->unit.empty())
-        throw new ValueError(new str((std::string(func) + " arg 2 first element cannot be empty").c_str()));
+        throw new ValueError(new str(ve ? "execve: argv first element cannot be empty" : (std::string(func) + " arg 2 first element cannot be empty").c_str()));
 }
 
 void *execv(str *file, list<str *> *args) {
@@ -2319,7 +2330,7 @@ void *execv(str *file, list<str *> *args) {
 }
 
 void *execvp(str *file, list<str *> *args) {
-    __check_exec_args(args, "execvp()");
+    __check_exec_args(args, "execv()"); /* (CPython: os.execvp calls os.execv) */
     __wide_vector argv(args);
     {
         __suppress_iph guard;
@@ -2339,7 +2350,7 @@ void *execve(str *file, list<str *> *args, dict<str *, str *> *env) {
 }
 
 void *execvpe(str *file, list<str *> *args, dict<str *, str *> *env) {
-    __check_exec_args(args, "execvpe()");
+    __check_exec_args(args, "execve()"); /* (os.execvpe calls os.execve) */
     __wide_vector argv(args), envp(env);
     {
         __suppress_iph guard;
@@ -3333,6 +3344,24 @@ void __init() {
 #ifdef _PC_NAME_MAX
     pathconf_names->__setitem__(new str("PC_NAME_MAX"), _PC_NAME_MAX);
 #endif
+#ifdef _PC_ALLOC_SIZE_MIN
+    pathconf_names->__setitem__(new str("PC_ALLOC_SIZE_MIN"), _PC_ALLOC_SIZE_MIN);
+#endif
+#ifdef _PC_REC_INCR_XFER_SIZE
+    pathconf_names->__setitem__(new str("PC_REC_INCR_XFER_SIZE"), _PC_REC_INCR_XFER_SIZE);
+#endif
+#ifdef _PC_REC_MAX_XFER_SIZE
+    pathconf_names->__setitem__(new str("PC_REC_MAX_XFER_SIZE"), _PC_REC_MAX_XFER_SIZE);
+#endif
+#ifdef _PC_REC_MIN_XFER_SIZE
+    pathconf_names->__setitem__(new str("PC_REC_MIN_XFER_SIZE"), _PC_REC_MIN_XFER_SIZE);
+#endif
+#ifdef _PC_REC_XFER_ALIGN
+    pathconf_names->__setitem__(new str("PC_REC_XFER_ALIGN"), _PC_REC_XFER_ALIGN);
+#endif
+#ifdef _PC_SYMLINK_MAX
+    pathconf_names->__setitem__(new str("PC_SYMLINK_MAX"), _PC_SYMLINK_MAX);
+#endif
 #ifdef _PC_NO_TRUNC
     pathconf_names->__setitem__(new str("PC_NO_TRUNC"), _PC_NO_TRUNC);
 #endif
@@ -3400,6 +3429,12 @@ void __init() {
 #endif
 #ifdef _CS_PATH
     confstr_names->__setitem__(new str("CS_PATH"), _CS_PATH);
+#endif
+#ifdef _CS_GNU_LIBC_VERSION
+    confstr_names->__setitem__(new str("CS_GNU_LIBC_VERSION"), _CS_GNU_LIBC_VERSION);
+#endif
+#ifdef _CS_GNU_LIBPTHREAD_VERSION
+    confstr_names->__setitem__(new str("CS_GNU_LIBPTHREAD_VERSION"), _CS_GNU_LIBPTHREAD_VERSION);
 #endif
 #ifdef _CS_RELEASE
     confstr_names->__setitem__(new str("CS_RELEASE"), _CS_RELEASE);

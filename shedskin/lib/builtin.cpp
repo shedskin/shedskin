@@ -408,6 +408,9 @@ void terminate_handler() {
             ::kill(::getpid(), SIGINT);
             code = 130;
         }
+#else
+        if (dynamic_cast<KeyboardInterrupt *>(e))
+            code = (int)0xC000013AL; /* STATUS_CONTROL_C_EXIT, as CPython */
 #endif
     }
 

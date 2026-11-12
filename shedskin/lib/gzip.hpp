@@ -35,8 +35,11 @@ public:
 #endif
 };
 
+class _GzipTextFile;
+
 class GzipFile : public file_binary {
 public:
+    file *__textfile = 0; /* the text wrapper (gzip.open(.., 't')): closing us closes it */
     __ss_int mtime; /* of the last member header read (0 before that, None in CPython) */
 
     file_binary *fileobj;
@@ -81,7 +84,7 @@ public:
     void *rewind();
     void *flush();
     void *close();
-    GzipFile *__enter__() { __check_closed(); return this; }
+    GzipFile *__enter__() { __check_closed_iobase(); return this; } /* (IOBase.__enter__) */
     __ss_int truncate();
     __ss_int truncate(__ss_int size);
     __ss_int __ss_fileno();
@@ -164,7 +167,7 @@ public:
 
     /* (hides file::__check_closed: io.TextIOWrapper ends the message with a period) */
     inline void __check_closed() {
-        if(closed)
+        if(closed || gz->closed) /* (also when .buffer was closed) */
             throw new ValueError(new str("I/O operation on closed file."));
     }
     void *writelines(pyiter<str *> *iter) { __check_closed(); return file::writelines(iter); }
