@@ -117,7 +117,11 @@ __ss_int BytesIO::write(bytes *data) {
     if(!size) /* (no padding) */
         return 0;
     if((size_t)pos > s->unit.size())
-        s->unit.resize((size_t)pos, '\0');
+        try {
+            s->unit.resize((size_t)pos, '\0');
+        } catch (std::exception &) { /* bad_alloc, length_error: as CPython */
+            throw new MemoryError();
+        }
     s->unit.insert((size_t)pos, data->unit);
     pos += (__ss_int)size;
     s->unit.erase((size_t)pos, size);
@@ -281,7 +285,11 @@ __ss_int StringIO::write(str *data) {
     if(!size) /* (no padding) */
         return len(data);
     if((size_t)pos > s->unit.size())
-        s->unit.resize((size_t)pos, '\0');
+        try {
+            s->unit.resize((size_t)pos, '\0');
+        } catch (std::exception &) { /* bad_alloc, length_error: as CPython */
+            throw new MemoryError();
+        }
     s->unit.insert((size_t)pos, u);
     pos += (__ss_int)size;
     s->unit.erase((size_t)pos, size);

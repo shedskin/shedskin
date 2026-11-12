@@ -250,8 +250,8 @@ __ss_int open(str *name_, __ss_int flags, __ss_int mode=0777);
 template<class D> __ss_int open(D dir_fd, str *path, __ss_int flags, __ss_int mode) {
     return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? open(path, flags, mode) : __open_at(__ss_dirfd(dir_fd), path, flags, mode);
 }
-file* fdopen(__ss_int fd, str* mode=NULL, __ss_int buffering=-1, str *encoding=NULL, str *errors=NULL, str *newline=NULL);
-file_binary* fdopen_binary(__ss_int fd, str* mode=NULL, __ss_int buffering=-1, str *encoding=NULL, str *errors=NULL, str *newline=NULL);
+file* fdopen(__ss_int fd, str* mode=NULL, __ss_int buffering=-1, str *encoding=NULL, str *errors=NULL, str *newline=NULL, __ss_int closefd=1);
+file_binary* fdopen_binary(__ss_int fd, str* mode=NULL, __ss_int buffering=-1, str *encoding=NULL, str *errors=NULL, str *newline=NULL, __ss_int closefd=1);
 bytes *read(__ss_int fd, __ss_int n);
 __ss_int write(__ss_int fd, bytes *s);
 __ss_int readinto(__ss_int fd, bytes *buffer);

@@ -1435,12 +1435,12 @@ __ss_int open(str *name_, __ss_int flags, __ss_int mode) {
 
 
 /* (as CPython, where os.fdopen() is io.open()) */
-file* fdopen(__ss_int fd, str* mode, __ss_int buffering, str *encoding, str *errors, str *newline) {
-    return __shedskin__::open(fd, mode, buffering, encoding, errors, newline);
+file* fdopen(__ss_int fd, str* mode, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_int closefd) {
+    return __shedskin__::open(fd, mode, buffering, encoding, errors, newline, closefd);
 }
 
-file_binary* fdopen_binary(__ss_int fd, str* mode, __ss_int buffering, str *encoding, str *errors, str *newline) {
-    return __shedskin__::open_binary(fd, mode, buffering, encoding, errors, newline);
+file_binary* fdopen_binary(__ss_int fd, str* mode, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_int closefd) {
+    return __shedskin__::open_binary(fd, mode, buffering, encoding, errors, newline, closefd);
 }
 
 bytes *read(__ss_int fd, __ss_int n) {
@@ -1912,8 +1912,10 @@ tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
 }
 
 __ss_int nice(__ss_int n) {
-    __ss_int m;
-    if((m = ::nice(__ss_cint(n))) == -1)
+    int n_ = __ss_cint(n);
+    errno = 0; /* (as CPython: -1 is also a valid niceness) */
+    __ss_int m = ::nice(n_);
+    if(m == -1 && errno != 0)
         __throw_oserror();
     return m;
 }

@@ -127,6 +127,8 @@ class ExtensionModule:
     def __init__(self, gx: "config.GlobalInfo", gv: "cpp.GenerateVisitor"):
         self.gx = gx
         self.gv = gv
+        # per class, instance attributes that cannot be converted
+        self.unconvertible: dict["python.Class", list[str]] = {}
 
     def write(self, entry: str) -> None:
         """Write an entry to the output file"""
@@ -173,6 +175,8 @@ class ExtensionModule:
                         var.parent.ident,
                         var.name,
                     )
+                    # (so pickle/copy refuse, see do_reduce_setstate)
+                    self.unconvertible.setdefault(var.parent, []).append(var.name)
                 else:
                     logger.warning(
                         "'%s' variable not exported (cannot convert)", var.name
@@ -497,6 +501,27 @@ class ExtensionModule:
         write("    (void)args; (void)kwargs;")
         write("    if (__ss_wrong_thread())")
         write("        return NULL;")
+        # an attribute that cannot be converted would be lost, leaving NULL in
+        # the copy or unpickled object (and crashing on use): refuse instead
+        missing = sorted(
+            {n for c in {cl} | set(cl.ancestors()) for n in self.unconvertible.get(c, [])}
+        )
+        if missing:
+            write(
+                '    PyErr_SetString(PyExc_TypeError, "cannot pickle \'%s\' object (attribute \'%s\' cannot be converted)");'
+                % (cl.ident, missing[0])
+            )
+            write("    return NULL;")
+            write("}\n")
+        else:
+            self.write_reduce_body(cl, vars)
+        self.write_setstate(cl, vars)
+
+    def write_reduce_body(
+        self, cl: "python.Class", vars: list["python.Variable"]
+    ) -> None:
+        """Generate the rest of the __reduce__ method"""
+        write = self.write
         write("    PyObject *t = PyTuple_New(3);")
         write(
             '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));'
@@ -515,6 +540,12 @@ class ExtensionModule:
         write("    PyTuple_SetItem(t, 2, b);")
         write("    return t;")
         write("}\n")
+
+    def write_setstate(
+        self, cl: "python.Class", vars: list["python.Variable"]
+    ) -> None:
+        """Generate the __setstate__ method"""
+        write = self.write
         write(
             "PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs) {"
             % clname(cl)

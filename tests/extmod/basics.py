@@ -1,6 +1,8 @@
 # extension module under test: compile with 'shedskin build -e basics',
 # then run basics_main.py (see README.md)
 
+import io
+
 # globals
 answer = 42
 greeting = 'hello'
@@ -128,8 +130,24 @@ def chorus(animals):  # makes speak() virtual in the C++
     return [a.speak() for a in animals]
 
 
+class Buffer:  # an attribute that cannot be converted (so not picklable)
+    def __init__(self):
+        self.s = io.StringIO()
+        self.n = 0
+
+    def add(self, x):
+        self.s.write(x)
+        self.n += 1
+
+    def get(self):
+        return self.s.getvalue()
+
+
 if __name__ == '__main__':
     # make sure everything is called with the types used from basics_main.py
+    buf = Buffer()
+    buf.add('q')
+    buf.get()
     add(1, 2)
     scale(1.5)
     scale(1.5, 3.0)

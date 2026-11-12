@@ -1056,6 +1056,59 @@ def test_spawn_variants():
     assert os.spawnv(2, '/bin/sh', ['sh', '-c', 'exit 4']) == 4
 
 
+def test_std_streams_nice_tty_fdopen():
+    # closing sys.stdout/stdin/stderr leaves fds 0/1/2 open (in a child)
+    pid = os.fork()
+    if pid == 0:
+        code = 0
+        try:
+            sys.stdout.flush()
+            sys.stdout.close()
+            sys.stderr.close()
+            sys.stdin.close()
+            os.fstat(0)
+            os.fstat(1)
+            os.fstat(2)
+        except OSError:
+            code = 1
+        os._exit(code)
+    assert os.waitpid(pid, 0)[1] == 0
+
+    # nice(): -1 is a valid niceness (root only, in a child)
+    if os.getuid() == 0:
+        pid = os.fork()
+        if pid == 0:
+            code = 0
+            try:
+                if os.nice(-1) != -1:
+                    code = 2
+            except OSError:
+                code = 1
+            os._exit(code)
+        assert os.waitpid(pid, 0)[1] == 0
+
+    # a text file on a terminal is line buffered ('\r' flushes too)
+    m, s = os.openpty()
+    f = os.fdopen(s, 'w')
+    assert f.line_buffering
+    f.write('10%\r')
+    assert os.read(m, 100) == b'10%\r'
+    f.close()
+    os.close(m)
+
+    # os.fdopen(.., closefd=False)
+    name = 'shedskin_test_fdopen_closefd'
+    fd = os.open(name, os.O_RDWR | os.O_CREAT, 0o644)
+    os.write(fd, b'ab')
+    os.lseek(fd, 0, 0)
+    g = os.fdopen(fd, 'rb', closefd=False)
+    assert g.read() == b'ab'
+    g.close()
+    assert os.lseek(fd, 0, os.SEEK_CUR) == 2
+    os.close(fd)
+    os.remove(name)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1091,6 +1144,7 @@ def test_all():
     test_exec_spawn_failures()
     test_wait_exec_utime_edges()
     test_spawn_variants()
+    test_std_streams_nice_tty_fdopen()
 
 if __name__ == '__main__':
     test_all()
