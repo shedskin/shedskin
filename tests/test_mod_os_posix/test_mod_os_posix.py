@@ -1125,7 +1125,7 @@ def test_direntry_errors_keyboardinterrupt():
                 e.is_dir()
             except OSError as err:
                 code = err.errno
-            assert code == 40, e.name
+            assert code in (40, 62), e.name  # ELOOP (linux, macOS/BSD)
     for n in ['loop1', 'loop2', 'dangling']:
         os.remove('shedskin_test_de/' + n)
     os.rmdir('shedskin_test_de')
