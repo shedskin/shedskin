@@ -1337,24 +1337,32 @@ def test_none_timeouts_trunc_flags():
     for x in [s, c, c2, c3, conn, srv]:
         x.close()
 
-    # MSG_TRUNC: the real length of a datagram (and no crash)
-    a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    a.bind(('127.0.0.1', 0))
-    b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    b.sendto(b'A' * 6000, a.getsockname())
-    d = a.recv(1, socket.MSG_TRUNC)
-    assert len(d) == 6000
-    assert d[:1] == b'A'
-    b.sendto(b'B' * 3000, a.getsockname())
-    d2, addr2 = a.recvfrom(1, socket.MSG_TRUNC)
-    assert len(d2) == 3000
-    assert d2[:1] == b'B'
-    b.sendto(b'c', a.getsockname())
-    assert a.recv(10, socket.MSG_DONTWAIT) == b'c'
-    a.close()
-    b.close()
-
     if sys.platform == 'linux':
+        # MSG_TRUNC: the real length of a datagram (and no crash)
+        # (linux only: macos ignores it on input, windows has no MSG_DONTWAIT)
+        a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        a.bind(('127.0.0.1', 0))
+        b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        b.sendto(b'A' * 6000, a.getsockname())
+        d = a.recv(1, socket.MSG_TRUNC)
+        assert len(d) == 6000
+        assert d[:1] == b'A'
+        b.sendto(b'B' * 3000, a.getsockname())
+        d2, addr2 = a.recvfrom(1, socket.MSG_TRUNC)
+        assert len(d2) == 3000
+        assert d2[:1] == b'B'
+        b.sendto(b'c', a.getsockname())
+        assert a.recv(10, socket.MSG_DONTWAIT) == b'c'
+        a.close()
+        b.close()
+
+        # (these are referenced, so linked, on every platform)
+        extra = [socket.MSG_NOSIGNAL, socket.MSG_MORE, socket.MSG_EOR, socket.MSG_CONFIRM,
+                 socket.SO_REUSEPORT, socket.SO_PRIORITY, socket.SO_MARK, socket.SO_PROTOCOL,
+                 socket.SO_DOMAIN, socket.TCP_KEEPIDLE, socket.TCP_CORK, socket.TCP_QUICKACK,
+                 socket.TCP_USER_TIMEOUT, socket.TCP_DEFER_ACCEPT, socket.TCP_SYNCNT]
+        assert all(x > 0 for x in extra)
+
         # SOCK_NONBLOCK/SOCK_CLOEXEC are flags, not part of .type
         n = socket.socket(socket.AF_INET, socket.SOCK_STREAM | socket.SOCK_NONBLOCK)
         assert n.type == socket.SOCK_STREAM

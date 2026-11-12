@@ -438,57 +438,93 @@ __ss_int __ss_MSG_PEEK = MSG_PEEK;
 #endif
 #ifdef MSG_DONTWAIT
 __ss_int __ss_MSG_DONTWAIT = MSG_DONTWAIT;
+#else
+__ss_int __ss_MSG_DONTWAIT = 0; /* (not on this platform) */
 #endif
 #ifdef MSG_NOSIGNAL
 __ss_int __ss_MSG_NOSIGNAL = MSG_NOSIGNAL;
+#else
+__ss_int __ss_MSG_NOSIGNAL = 0; /* (not on this platform) */
 #endif
 #ifdef MSG_MORE
 __ss_int __ss_MSG_MORE = MSG_MORE;
+#else
+__ss_int __ss_MSG_MORE = 0; /* (not on this platform) */
 #endif
 #ifdef MSG_EOR
 __ss_int __ss_MSG_EOR = MSG_EOR;
+#else
+__ss_int __ss_MSG_EOR = 0; /* (not on this platform) */
 #endif
 #ifdef MSG_CONFIRM
 __ss_int __ss_MSG_CONFIRM = MSG_CONFIRM;
+#else
+__ss_int __ss_MSG_CONFIRM = 0; /* (not on this platform) */
 #endif
 #ifdef SOCK_NONBLOCK
 __ss_int __ss_SOCK_NONBLOCK = SOCK_NONBLOCK;
+#else
+__ss_int __ss_SOCK_NONBLOCK = 0; /* (not on this platform) */
 #endif
 #ifdef SOCK_CLOEXEC
 __ss_int __ss_SOCK_CLOEXEC = SOCK_CLOEXEC;
+#else
+__ss_int __ss_SOCK_CLOEXEC = 0; /* (not on this platform) */
 #endif
 #ifdef SO_REUSEPORT
 __ss_int __ss_SO_REUSEPORT = SO_REUSEPORT;
+#else
+__ss_int __ss_SO_REUSEPORT = 0; /* (not on this platform) */
 #endif
 #ifdef SO_PRIORITY
 __ss_int __ss_SO_PRIORITY = SO_PRIORITY;
+#else
+__ss_int __ss_SO_PRIORITY = 0; /* (not on this platform) */
 #endif
 #ifdef SO_MARK
 __ss_int __ss_SO_MARK = SO_MARK;
+#else
+__ss_int __ss_SO_MARK = 0; /* (not on this platform) */
 #endif
 #ifdef SO_PROTOCOL
 __ss_int __ss_SO_PROTOCOL = SO_PROTOCOL;
+#else
+__ss_int __ss_SO_PROTOCOL = 0; /* (not on this platform) */
 #endif
 #ifdef SO_DOMAIN
 __ss_int __ss_SO_DOMAIN = SO_DOMAIN;
+#else
+__ss_int __ss_SO_DOMAIN = 0; /* (not on this platform) */
 #endif
 #ifdef TCP_KEEPIDLE
 __ss_int __ss_TCP_KEEPIDLE = TCP_KEEPIDLE;
+#else
+__ss_int __ss_TCP_KEEPIDLE = 0; /* (not on this platform) */
 #endif
 #ifdef TCP_CORK
 __ss_int __ss_TCP_CORK = TCP_CORK;
+#else
+__ss_int __ss_TCP_CORK = 0; /* (not on this platform) */
 #endif
 #ifdef TCP_QUICKACK
 __ss_int __ss_TCP_QUICKACK = TCP_QUICKACK;
+#else
+__ss_int __ss_TCP_QUICKACK = 0; /* (not on this platform) */
 #endif
 #ifdef TCP_USER_TIMEOUT
 __ss_int __ss_TCP_USER_TIMEOUT = TCP_USER_TIMEOUT;
+#else
+__ss_int __ss_TCP_USER_TIMEOUT = 0; /* (not on this platform) */
 #endif
 #ifdef TCP_DEFER_ACCEPT
 __ss_int __ss_TCP_DEFER_ACCEPT = TCP_DEFER_ACCEPT;
+#else
+__ss_int __ss_TCP_DEFER_ACCEPT = 0; /* (not on this platform) */
 #endif
 #ifdef TCP_SYNCNT
 __ss_int __ss_TCP_SYNCNT = TCP_SYNCNT;
+#else
+__ss_int __ss_TCP_SYNCNT = 0; /* (not on this platform) */
 #endif
 #ifdef MSG_TRUNC
 __ss_int __ss_MSG_TRUNC = MSG_TRUNC;
