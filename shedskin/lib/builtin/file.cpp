@@ -74,7 +74,7 @@ struct __ss_file_suppress_iph { __ss_file_suppress_iph() {} };
 /* flush and close even when flushing fails, as CPython; returns the first
    errno (0 on success), leaving it in errno. this is a free function, as on
    macOS errno expands to (*__error()), which file::__error would shadow */
-static int __ss_fclose(FILE *f, bool closefd=true) {
+static int __ss_fclose(FILE *f, bool closefd=true, bool reading=false) {
     __ss_file_suppress_iph guard;
     /* (fflush() of a reading stream seeks the fd back to the stream position) */
     off_t offset_before = closefd ? -1 : ::lseek(fileno(f), 0, SEEK_CUR);
@@ -94,7 +94,9 @@ static int __ss_fclose(FILE *f, bool closefd=true) {
         /* as CPython, the fd stays where reading/writing left it (fclose()
            would move it back to the stream position), and keeps FD_CLOEXEC
            (which dup2() clears) */
-        offset = std::max(offset_before, ::lseek(fd, 0, SEEK_CUR)); /* (read ahead, or written) */
+        offset = ::lseek(fd, 0, SEEK_CUR); /* (after writing) */
+        if(reading) /* (read ahead: fflush() seeked back) */
+            offset = std::max(offset_before, offset);
 #ifndef WIN32
         fdflags = ::fcntl(fd, F_GETFD);
 #else
@@ -268,7 +270,8 @@ void file::__init_opened(__ss_int buffering) {
         throw new ValueError(new str("can't have unbuffered text I/O"));
     }
     __set_buffering(f, buffering, true);
-    line_buffering = __mbool(buffering == 1);
+    /* as CPython: also when buffering is -1 and the file is a terminal */
+    line_buffering = __mbool(buffering == 1 || (buffering < 0 && f && ::isatty(fileno(f))));
     if (mode->unit.find('a') != std::string::npos) /* (as cpython, also for an fd: */
         fseek(f, 0, SEEK_END);                      /*  tell() and reads start at the end) */
 
@@ -791,7 +794,7 @@ list<str *> *file::readlines(__ss_int size_hint) {
 
 void *file::close() {
     if(f and not closed) {
-        int err = __ss_fclose(f, __closefd);
+        int err = __ss_fclose(f, __closefd, options.last_op == 'r');
         closed = True;
         __close_buffer();
         if(err)
@@ -1153,7 +1156,7 @@ bytes *file_binary::read1(__ss_int n) {
 __ss_int file_binary::readinto1(bytes *b) {
     if(b->frozen)
         throw new TypeError(new str("readinto() argument must be read-write bytes-like object, not bytes"));
-    __check_mode_readable(mode, "read");
+    __check_mode_readable(mode, "read1");
     __check_closed("readinto of closed file");
     bytes *data = read1((__ss_int)b->unit.size());
     size_t n = data->unit.size();
@@ -1184,7 +1187,7 @@ void *file_binary::close() {
         return NULL;
     }
     if(f and not closed) {
-        int err = __ss_fclose(f, __closefd);
+        int err = __ss_fclose(f, __closefd, options.last_op == 'r');
         closed = True;
         if(err)
             __throw_oserror();
@@ -1285,8 +1288,9 @@ __iter<bytes *> *file_binary::__iter__() {
 }
 
 bytes *file_binary::__next__() {
-    /* (as cpython: a buffered reader's readline, else IOBase) */
-    __check_closed(__mode_readable(mode) ? "readline of closed file" : __SS_CLOSED_MSG);
+    /* (as cpython: a writer's read() raises first, even when closed) */
+    __check_mode_readable(mode, "read");
+    __check_closed("readline of closed file");
     bytes *line = readline(); /* (not the eof flag: data may have been appended) */
     if(!len(line))
         throw new StopIteration();

@@ -142,6 +142,11 @@ add_shedskin_product(
     BUILD_EXTENSION
     NAME basics
     MAIN_MODULE basics.py
+    SYS_MODULES
+        io
+        os
+        os.path
+        stat
 )
 add_shedskin_product(
     BUILD_EXTENSION

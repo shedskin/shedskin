@@ -4,6 +4,7 @@
 # '--py' to run the same checks against basics.py under CPython, to verify
 # the checks themselves.
 
+import copy
 import os
 import pickle
 import sys
@@ -139,6 +140,16 @@ def test_inheritance():
     assert basics.Animal.speak(basics.Dog()) == 'generic'
     assert basics.Animal.speak(basics.Puppy()) == 'generic'
     assert basics.Dog.speak(basics.Puppy()) == 'woof'
+
+
+def test_pickle_unconvertible():
+    b = basics.Buffer()
+    b.add('a')
+    if not PURE:
+        # the StringIO attribute would be lost (and the copy crash on use)
+        assert raises(TypeError, copy.copy, b)
+        assert raises(TypeError, pickle.dumps, b)
+    assert b.get() == 'a'
 
 
 def test_pickle():

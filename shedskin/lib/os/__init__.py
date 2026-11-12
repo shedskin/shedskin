@@ -411,10 +411,10 @@ def readinto(fd, buffer):
 def reload_environ():
     pass
 
-def fdopen(fd, mode=None, buffering=-1, encoding=None, errors=None, newline=None):
+def fdopen(fd, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=1):
     return file('/bin/sh')
 
-def fdopen_binary(fd, mode=None, buffering=-1, encoding=None, errors=None, newline=None):  # fdopen(fd, 'rb'), see graph.py
+def fdopen_binary(fd, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=1):  # fdopen(fd, 'rb'), see graph.py
     return file_binary('/bin/sh')
 
 def pipe():

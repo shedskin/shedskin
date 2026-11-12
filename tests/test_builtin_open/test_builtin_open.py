@@ -1809,6 +1809,39 @@ def test_read1_bom_only_next_closed():
     os.remove(name)
 
 
+def test_closefd_read_write_wb_messages():
+    name = os.path.join(testdata, 'closefd_rw_tmp')
+    # closefd=False after read then write: the fd ends after the write
+    fd = os.open(name, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o644)
+    os.write(fd, b'abcdef')
+    g = open(fd, 'r+b', closefd=False)
+    g.seek(0)
+    assert g.read(2) == b'ab'
+    g.write(b'XY')
+    g.close()
+    assert os.lseek(fd, 0, os.SEEK_CUR) == 4
+    os.write(fd, b'!')
+    os.lseek(fd, 0, os.SEEK_SET)
+    assert os.read(fd, 100) == b'abXY!f'
+    os.close(fd)
+    # a write-only binary file: readinto1() and next() (also when closed)
+    w = open(name, 'wb')
+    msg = ''
+    try:
+        w.readinto1(bytearray(1))
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'read1'
+    w.close()
+    msg = ''
+    try:
+        next(w)
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'read'
+    os.remove(name)
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1867,6 +1900,7 @@ def test_all():
     test_read_after_eof_and_seekable()
     test_closefd_fd_state_line_buffering_sig()
     test_read1_bom_only_next_closed()
+    test_closefd_read_write_wb_messages()
 
 if __name__ == '__main__':
     test_all()
