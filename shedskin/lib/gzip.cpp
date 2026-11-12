@@ -698,6 +698,10 @@ __ss_int GzipFile::tell() {
     return pos;
 }
 
+__ss_int GzipFile::truncate() {
+    return truncate(0);
+}
+
 __ss_int GzipFile::truncate(__ss_int) {
     __check_closed();
     throw new __io__::UnsupportedOperation(new str("truncate"));
@@ -949,6 +953,10 @@ __ss_int _GzipTextFile::seek(__ss_int i, __ss_int w) {
 __ss_int _GzipTextFile::tell() {
     __check_closed();
     return gz->tell();
+}
+
+__ss_int _GzipTextFile::truncate() {
+    return truncate(0);
 }
 
 __ss_int _GzipTextFile::truncate(__ss_int) {

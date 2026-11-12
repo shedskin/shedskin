@@ -24,7 +24,8 @@ public:
     list<bytes *> *readlines(__ss_int hint=-1);
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { __check_closed(); return pos; }
-    __ss_int truncate(__ss_int size=-1);
+    __ss_int truncate(__ss_void_struct=__ss_void); /* (at the current position) */
+    __ss_int truncate(__ss_int size);
     void *close() { closed = True; return NULL; }
     __ss_int write(bytes *data);
     BytesIO *__enter__() { __check_closed(); return this; }
@@ -78,10 +79,12 @@ public:
     list<str *> *readlines(__ss_int hint=-1);
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { __check_closed(); return pos; }
-    __ss_int truncate(__ss_int size=-1);
+    __ss_int truncate(__ss_void_struct=__ss_void); /* (at the current position) */
+    __ss_int truncate(__ss_int size);
     void *close() { closed = True; return NULL; }
     __ss_int write(str *data);
-    StringIO *__enter__() { __check_closed(); return this; }
+    StringIO *__enter__() { __check_closed_iobase(); return this; } /* (IOBase.__enter__, as CPython) */
+    str *__next__() { __check_closed(); return file::__next__(); } /* (as CPython's message) */
 
     bool __error() { return false; }
     bool __eof() { return (pos >= len(s)); }

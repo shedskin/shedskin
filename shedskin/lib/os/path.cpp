@@ -553,6 +553,13 @@ str *relpath(str *path, str *start) {
     return joinl(rel_list);
 }
 
+/* unlike abspath/normpath, realpath('//x') is '/x' in CPython */
+static str *__realpath_root(str *path) {
+    if (path->startswith(new str("//")))
+        return path->__slice__(1, 1, 0, 0);
+    return path;
+}
+
 str *realpath(str *filename, __ss_bool strict) {
     /**
     Return the canonical path of the specified filename, eliminating any
@@ -567,6 +574,9 @@ str *realpath(str *filename, __ss_bool strict) {
     path components that don't exist as a direct directory entry.
     */
     __ss_check_nul(filename, "lstat"); /* (as CPython, which lstat()s each component) */
+    /* as CPython: resolve (and report errors) relative to the cwd */
+    if (!isabs(filename))
+        filename = join(2, __os__::getcwd(), filename);
     list<str *> *bits;
     str *component, *newpath, *resolved;
     __ss_int __40, __41, i;
@@ -602,7 +612,7 @@ str *realpath(str *filename, __ss_bool strict) {
 #endif
                     __throw_oserror(component);
                 }
-                return abspath(joinl(((new list<str *>(1, component)))->__add__(bits->__slice__(1, i, 0, 0))));
+                return __realpath_root(abspath(joinl(((new list<str *>(1, component)))->__add__(bits->__slice__(1, i, 0, 0)))));
             }
             else {
                 newpath = joinl(((new list<str *>(1, resolved)))->__add__(bits->__slice__(1, i, 0, 0)));
@@ -611,7 +621,7 @@ str *realpath(str *filename, __ss_bool strict) {
         }
     END_FOR
 
-    return abspath(filename);
+    return __realpath_root(abspath(filename));
 }
 
 str *_resolve_link(str *path) {
@@ -1625,6 +1635,35 @@ str *commonpath(list<str *> *paths) {
 
 __ss_bool exists(bytes *path) {
     return exists(__os__::fsdecode(path));
+}
+
+/* fds (as cpython, which passes them on to os.stat) */
+
+__ss_int getsize(__ss_int fd) { return __os__::fstat(fd)->st_size; }
+double getmtime(__ss_int fd) { return __os__::fstat(fd)->__ss_st_mtime; }
+double getatime(__ss_int fd) { return __os__::fstat(fd)->__ss_st_atime; }
+double getctime(__ss_int fd) { return __os__::fstat(fd)->__ss_st_ctime; }
+
+static __os__::stat_result *__fstat_or_null(__ss_int fd) {
+    try {
+        return __os__::fstat(fd);
+    } catch (__os__::error *) { /* (as cpython: an fd out of int range still raises) */
+        return NULL;
+    }
+}
+
+__ss_bool exists(__ss_int fd) {
+    return __mbool(__fstat_or_null(fd) != NULL);
+}
+
+__ss_bool isdir(__ss_int fd) {
+    __os__::stat_result *st = __fstat_or_null(fd);
+    return __mbool(st && __stat__::__ss_S_ISDIR(st->st_mode));
+}
+
+__ss_bool isfile(__ss_int fd) {
+    __os__::stat_result *st = __fstat_or_null(fd);
+    return __mbool(st && __stat__::__ss_S_ISREG(st->st_mode));
 }
 
 } // module namespace

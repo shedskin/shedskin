@@ -16,11 +16,28 @@ extern dict<str *, str *> *__ss_environ;
 extern dict<str *, __ss_int> *pathconf_names, *confstr_names, *sysconf_names;
 extern str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
-extern __ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_O_RDONLY, __ss_O_WRONLY, __ss_O_RDWR, __ss_O_NDELAY, __ss_O_NONBLOCK, __ss_O_APPEND, __ss_O_DSYNC, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_NOCTTY, __ss_O_CREAT, __ss_O_EXCL, __ss_O_TRUNC, __ss_O_BINARY, __ss_O_TEXT, __ss_O_LARGEFILE, __ss_O_SHLOCK, __ss_O_EXLOCK, __ss_O_NOINHERIT, __ss__O_SHORT_LIVED, __ss_O_TEMPORARY, __ss_O_RANDOM, __ss_O_SEQUENTIAL, __ss_O_ASYNC, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_NOFOLLOW, __ss_O_NOATIME, __ss_EX_OK, __ss_EX_USAGE, __ss_EX_DATAERR, __ss_EX_NOINPUT, __ss_EX_NOUSER, __ss_EX_NOHOST, __ss_EX_UNAVAILABLE, __ss_EX_SOFTWARE, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_CANTCREAT, __ss_EX_IOERR, __ss_EX_TEMPFAIL, __ss_EX_PROTOCOL, __ss_EX_NOPERM, __ss_EX_CONFIG, __ss_EX_NOTFOUND, __ss_P_WAIT, __ss_P_NOWAIT, __ss_P_OVERLAY, __ss_P_NOWAITO, __ss_P_DETACH, __ss_SEEK_SET, __ss_SEEK_CUR, __ss_SEEK_END;
+extern __ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_O_RDONLY, __ss_O_WRONLY, __ss_O_RDWR, __ss_O_NDELAY, __ss_O_NONBLOCK, __ss_O_APPEND, __ss_O_DSYNC, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_NOCTTY, __ss_O_CREAT, __ss_O_EXCL, __ss_O_TRUNC, __ss_O_BINARY, __ss_O_TEXT, __ss_O_LARGEFILE, __ss_O_SHLOCK, __ss_O_EXLOCK, __ss_O_NOINHERIT, __ss__O_SHORT_LIVED, __ss_O_TEMPORARY, __ss_O_RANDOM, __ss_O_SEQUENTIAL, __ss_O_ASYNC, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_NOFOLLOW, __ss_O_NOATIME, __ss_EX_OK, __ss_EX_USAGE, __ss_EX_DATAERR, __ss_EX_NOINPUT, __ss_EX_NOUSER, __ss_EX_NOHOST, __ss_EX_UNAVAILABLE, __ss_EX_SOFTWARE, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_CANTCREAT, __ss_EX_IOERR, __ss_EX_TEMPFAIL, __ss_EX_PROTOCOL, __ss_EX_NOPERM, __ss_EX_CONFIG, __ss_EX_NOTFOUND, __ss_P_WAIT, __ss_P_NOWAIT, __ss_P_OVERLAY, __ss_P_NOWAITO, __ss_P_DETACH, __ss_SEEK_SET, __ss_SEEK_CUR, __ss_SEEK_END, __ss_SEEK_DATA, __ss_SEEK_HOLE;
 
 typedef OSError error;
 
 class stat_result;
+
+/* dir_fd (and src_dir_fd/dst_dir_fd) arguments: a None is cast to void *
+   (see cpp.py), so it cannot pass as fd 0; __SS_DIR_FD_CWD stands for no
+   dir_fd (AT_FDCWD). keyword-only arguments come first, in reverse */
+#define __SS_DIR_FD_CWD (-100)
+inline int __ss_dirfd(void *) { return __SS_DIR_FD_CWD; }
+inline int __ss_dirfd(__ss_int dir_fd) { return __ss_cint(dir_fd); }
+[[noreturn]] void __ss_dir_fd_unavailable(const char *func); /* (windows) */
+
+void *__rename_at(int src_dir_fd, str *a, int dst_dir_fd, str *b, bool replace);
+void *__unlink_at(int dir_fd, str *path, bool dir, const char *func);
+void *__mkdir_at(int dir_fd, str *path, __ss_int mode);
+__ss_int __open_at(int dir_fd, str *path, __ss_int flags, __ss_int mode);
+void *__symlink_at(str *src, int dir_fd, str *dst);
+str *__readlink_at(int dir_fd, str *path);
+void *__mkfifo_at(int dir_fd, str *path, __ss_int mode);
+void *__mknod_at(int dir_fd, str *path, __ss_int mode, __ss_int device);
 
 /* bytes paths: like CPython, these give bytes where a str path gives str.
    the bytes overloads go through fsdecode()/fsencode(), which round-trip
@@ -28,13 +45,25 @@ class stat_result;
 list<str *> *listdir(str *path);
 list<bytes *> *listdir(bytes *path);
 list<str *> *listdir(void *path=0); /* listdir(None), see cpp.py */
+list<str *> *listdir(__ss_int fd); /* (as cpython: not on windows) */
 str *getcwd();
 bytes *getcwdb();
 void *chdir(str *dir);
+void *chdir(__ss_int fd); /* (fchdir; as cpython: not on windows) */
 str *getenv(str *name_, str *default_=0);
 list<str *> *get_exec_path(dict<str *, str *> *env=0);
 void *rename(str *a, str *b);
 void *replace(str *a, str *b);
+template<class D1, class D2> void *rename(D2 dst_dir_fd, D1 src_dir_fd, str *a, str *b) {
+    if(__ss_dirfd(src_dir_fd) == __SS_DIR_FD_CWD && __ss_dirfd(dst_dir_fd) == __SS_DIR_FD_CWD)
+        return rename(a, b);
+    return __rename_at(__ss_dirfd(src_dir_fd), a, __ss_dirfd(dst_dir_fd), b, false);
+}
+template<class D1, class D2> void *replace(D2 dst_dir_fd, D1 src_dir_fd, str *a, str *b) {
+    if(__ss_dirfd(src_dir_fd) == __SS_DIR_FD_CWD && __ss_dirfd(dst_dir_fd) == __SS_DIR_FD_CWD)
+        return replace(a, b);
+    return __rename_at(__ss_dirfd(src_dir_fd), a, __ss_dirfd(dst_dir_fd), b, true);
+}
 __ss_int cpu_count();
 __ss_int process_cpu_count();
 
@@ -55,12 +84,24 @@ template <class T> auto fspath(T *path) {
 
 void *remove(str *a);
 void *rmdir(str *a);
+template<class D> void *remove(D dir_fd, str *path) {
+    return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? remove(path) : __unlink_at(__ss_dirfd(dir_fd), path, false, "remove");
+}
+template<class D> void *rmdir(D dir_fd, str *path) {
+    return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? rmdir(path) : __unlink_at(__ss_dirfd(dir_fd), path, true, "rmdir");
+}
 void *removedirs(str *name_);
 void *mkdir(str *path, __ss_int mode=0777);
+template<class D> void *mkdir(D dir_fd, str *path, __ss_int mode) {
+    return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? mkdir(path, mode) : __mkdir_at(__ss_dirfd(dir_fd), path, mode);
+}
 void *makedirs(str *name_, __ss_int mode=0777, __ss_bool exist_ok=False, __ss_int parent_mode=-1);
 void *abort();
 __ss_int system(str *c);
 void *unlink(str *path);
+template<class D> void *unlink(D dir_fd, str *path) {
+    return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? unlink(path) : __unlink_at(__ss_dirfd(dir_fd), path, false, "unlink");
+}
 
 /* the struct sequences below (stat_result, terminal_size..) are tuples, with
    the items also as attributes: items are set once, as they are immutable */
@@ -111,9 +152,12 @@ public:
        std::filesystem::directory_entry itself: its path lives in malloc'd
        memory, which leaks as the GC never runs destructors */
     std::filesystem::file_type __type; /* not exposed to Python side */
+    int __dir_fd = -1; /* scandir(fd): name is relative to this (as cpython, path is just name) */
+    __ss_int __ino = 0; /* (scandir(fd): d_ino) */
 
     DirEntry() : __type(std::filesystem::file_type::unknown) { __class__ = cl_DirEntry; }
     DirEntry(const std::filesystem::directory_entry &entry);
+    DirEntry(int dir_fd, str *name, std::filesystem::file_type type, __ss_int ino);
 
     __ss_bool is_dir(__ss_bool follow_symlinks=True);
     __ss_bool is_file(__ss_bool follow_symlinks=True);
@@ -145,6 +189,8 @@ public:
 };
 
 ScandirIterator *scandir(str *path=0);
+ScandirIterator *scandir(void *); /* scandir(None), see cpp.py */
+ScandirIterator *scandir(__ss_int fd); /* (as cpython: not on windows) */
 
 typedef tuple3<str *, list<str *> *, list<str *> *> __walk_tuple;
 
@@ -184,12 +230,26 @@ void *putenv(str* varname, str* value);
 __ss_int umask(__ss_int newmask);
 void *chmod(str* path, __ss_int val);
 void *fchmod(__ss_int fd, __ss_int mode);
+/* chmod(path, mode, *, dir_fd=None, follow_symlinks=True); path may be an fd */
+void *__chmod_at(int dir_fd, str *path, __ss_int mode, bool follow_symlinks);
+[[noreturn]] void __ss_fd_with(const char *func, bool dir_fd); /* fd and dir_fd/follow_symlinks */
+template<class D> void *chmod(__ss_bool follow_symlinks, D dir_fd, str *path, __ss_int mode) {
+    if(__ss_dirfd(dir_fd) == __SS_DIR_FD_CWD && follow_symlinks)
+        return chmod(path, mode);
+    return __chmod_at(__ss_dirfd(dir_fd), path, mode, follow_symlinks);
+}
+template<class D> void *chmod(__ss_bool, D, __ss_int fd, __ss_int mode) { /* (as cpython: dir_fd and follow_symlinks are ignored) */
+    return fchmod(fd, mode);
+}
 void *renames(str* old, str* _new);
 tuple2<__ss_int,__ss_int>* pipe();
 __ss_int dup(__ss_int f1);
 __ss_int dup2(__ss_int f1, __ss_int f2, __ss_bool inheritable=True);
 void *close(__ss_int fd);
 __ss_int open(str *name_, __ss_int flags, __ss_int mode=0777);
+template<class D> __ss_int open(D dir_fd, str *path, __ss_int flags, __ss_int mode) {
+    return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? open(path, flags, mode) : __open_at(__ss_dirfd(dir_fd), path, flags, mode);
+}
 file* fdopen(__ss_int fd, str* mode=NULL, __ss_int buffering=-1, str *encoding=NULL, str *errors=NULL, str *newline=NULL);
 file_binary* fdopen_binary(__ss_int fd, str* mode=NULL, __ss_int buffering=-1, str *encoding=NULL, str *errors=NULL, str *newline=NULL);
 bytes *read(__ss_int fd, __ss_int n);
@@ -216,7 +276,10 @@ public:
 class popen_pipe : public __popen_file {
 public:
     popen_pipe(str *cmd, str *mode=0);
-    popen_pipe(FILE* pipe=0) : __popen_file(pipe) {}
+    popen_pipe(FILE* pipe=0) : __popen_file(pipe) { /* (as cpython: strict, not as the std streams) */
+        __errors = __SS_ERR_STRICT;
+        errors = new str("strict");
+    }
 
     __ss_int close(__ss_int=0); /* (hides __popen_file::close on purpose) */
     popen_pipe *__enter__() { return this; } /* (CPython: no closed check) */
@@ -231,10 +294,12 @@ popen_pipe* popen(str* cmd, str* mode, __ss_int bufsize);
 
 void _exit(__ss_int code);
 
-/* os.utime(path, times=None, *, ns=None): the keyword-only ns comes first */
-void *__utime_now(str *path);
-void *__utime_float(str *path, __ss_float atime, __ss_float mtime);
-void *__utime_ns(str *path, __ss_int atime_ns, __ss_int mtime_ns);
+/* os.utime(path, times=None, *, ns=None, dir_fd=None, follow_symlinks=True):
+   the keyword-only arguments come first (in reverse); a None is cast to
+   void * (see cpp.py), so a None dir_fd cannot pass as fd 0 */
+void *__utime_now(str *path, int dir_fd, bool follow_symlinks);
+void *__utime_float(str *path, __ss_float atime, __ss_float mtime, int dir_fd, bool follow_symlinks);
+void *__utime_ns(str *path, __ss_int atime_ns, __ss_int mtime_ns, int dir_fd, bool follow_symlinks);
 [[noreturn]] void __utime_error(const char *msg);
 
 template<class T> inline void __utime_check_pair(T *t, const char *msg) {
@@ -242,16 +307,39 @@ template<class T> inline void __utime_check_pair(T *t, const char *msg) {
         __utime_error(msg);
 }
 
-void *utime(void *ns, str *path, void *times);
-template<class T> void *utime(void *, str *path, T *times) {
+/* path may also be an fd: then (as cpython) neither dir_fd nor
+   follow_symlinks may be given, and the fd is passed on as dir_fd, with a
+   NULL path (futimens) */
+inline str *__utime_p(str *path, int &, bool &) { return path; }
+inline str *__utime_p(__ss_int fd, int &dir_fd, bool &follow_symlinks) {
+    if(dir_fd != __SS_DIR_FD_CWD)
+        throw new ValueError(new str("utime: can't specify dir_fd without matching path"));
+    if(!follow_symlinks)
+        throw new ValueError(new str("utime: cannot use fd and follow_symlinks together"));
+    dir_fd = __ss_cint(fd);
+    return NULL;
+}
+template<class D, class P> void *utime(__ss_bool follow_symlinks, D dir_fd, void *, P path, void *) {
+    int d = __ss_dirfd(dir_fd);
+    bool f = follow_symlinks;
+    str *p = __utime_p(path, d, f);
+    return __utime_now(p, d, f);
+}
+template<class D, class P, class T> void *utime(__ss_bool follow_symlinks, D dir_fd, void *, P path, T *times) {
     __utime_check_pair(times, "utime: 'times' must be either a tuple of two numbers or None");
-    return __utime_float(path, (__ss_float)times->__getfirst__(), (__ss_float)times->__getsecond__());
+    int d = __ss_dirfd(dir_fd);
+    bool f = follow_symlinks;
+    str *p = __utime_p(path, d, f);
+    return __utime_float(p, (__ss_float)times->__getfirst__(), (__ss_float)times->__getsecond__(), d, f);
 }
-template<class N> void *utime(N *ns, str *path, void *) {
+template<class D, class N, class P> void *utime(__ss_bool follow_symlinks, D dir_fd, N *ns, P path, void *) {
     __utime_check_pair(ns, "utime: 'ns' must be a tuple of two ints");
-    return __utime_ns(path, (__ss_int)ns->__getfirst__(), (__ss_int)ns->__getsecond__());
+    int d = __ss_dirfd(dir_fd);
+    bool f = follow_symlinks;
+    str *p = __utime_p(path, d, f);
+    return __utime_ns(p, (__ss_int)ns->__getfirst__(), (__ss_int)ns->__getsecond__(), d, f);
 }
-template<class N, class T> void *utime(N *, str *, T *) {
+template<class D, class N, class P, class T> void *utime(__ss_bool, D, N *, P, T *) {
     __utime_error("utime: you may specify either 'times' or 'ns' but not both");
 }
 
@@ -265,11 +353,21 @@ __ss_int lseek(__ss_int fd, __ss_int pos, __ss_int how);
 
 /* available on both posix and windows (windows versions in __init__.cpp) */
 void *symlink(str *src, str *dst, __ss_bool target_is_directory=False);
+template<class D> void *symlink(D dir_fd, str *src, str *dst, __ss_bool target_is_directory) {
+    return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? symlink(src, dst, target_is_directory) : __symlink_at(src, __ss_dirfd(dir_fd), dst);
+}
 __ss_int getpid();
 __ss_int getppid();
 void *ftruncate(__ss_int fd, __ss_int n);
 void *fsync(__ss_int fd);
 __ss_bool access(str *path, __ss_int mode);
+/* access(path, mode, *, dir_fd=None, effective_ids=False, follow_symlinks=True) */
+__ss_bool __access_at(int dir_fd, str *path, __ss_int mode, bool effective_ids, bool follow_symlinks);
+template<class D> __ss_bool access(__ss_bool follow_symlinks, __ss_bool effective_ids, D dir_fd, str *path, __ss_int mode) {
+    if(__ss_dirfd(dir_fd) == __SS_DIR_FD_CWD && !effective_ids && follow_symlinks)
+        return access(path, mode);
+    return __access_at(__ss_dirfd(dir_fd), path, mode, effective_ids, follow_symlinks);
+}
 
 extern class_ *cl_times_result;
 class times_result : public tuple2<__ss_float, __ss_float> {
@@ -287,6 +385,7 @@ public:
 times_result *times();
 
 void *truncate(str *path, __ss_int length);
+inline void *truncate(__ss_int fd, __ss_int length) { return ftruncate(fd, length); } /* (as cpython) */
 void *closerange(__ss_int fd_low, __ss_int fd_high);
 __ss_int waitstatus_to_exitcode(__ss_int status);
 __ss_bool get_inheritable(__ss_int fd);
@@ -313,7 +412,19 @@ terminal_size *get_terminal_size(__ss_int fd=1);
 void *kill(__ss_int pid, __ss_int sig);
 tuple2<__ss_int, __ss_int> *waitpid(__ss_int pid, __ss_int options);
 void *link(str *src, str *dst);
+/* link(src, dst, *, src_dir_fd=None, dst_dir_fd=None, follow_symlinks=True):
+   as CPython, plain link() (which does not follow a symlink on linux)
+   unless a dir_fd is given or follow_symlinks is False */
+void *__link_at(int src_dir_fd, str *src, int dst_dir_fd, str *dst, bool follow_symlinks);
+template<class D1, class D2> void *link(__ss_bool follow_symlinks, D2 dst_dir_fd, D1 src_dir_fd, str *src, str *dst) {
+    if(__ss_dirfd(src_dir_fd) == __SS_DIR_FD_CWD && __ss_dirfd(dst_dir_fd) == __SS_DIR_FD_CWD && follow_symlinks)
+        return link(src, dst);
+    return __link_at(__ss_dirfd(src_dir_fd), src, __ss_dirfd(dst_dir_fd), dst, follow_symlinks);
+}
 str *readlink(str *path);
+template<class D> str *readlink(D dir_fd, str *path) {
+    return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? readlink(path) : __readlink_at(__ss_dirfd(dir_fd), path);
+}
 str *getlogin();
 
 void *execv(str *file, list<str*> *args);
@@ -415,6 +526,7 @@ public:
 
 statvfs_result *statvfs(str *path);
 statvfs_result *fstatvfs(__ss_int fd);
+inline statvfs_result *statvfs(__ss_int fd) { return fstatvfs(fd); } /* (as cpython) */
 
 __ss_int getuid();
 void *setuid(__ss_int uid);
@@ -443,6 +555,21 @@ void *setgroups(pyseq<__ss_int> *groups);
 void *fchdir(__ss_int f1);
 void *fdatasync(__ss_int f1);
 void *chown(str *path, __ss_int uid, __ss_int gid);
+/* chown(path, uid, gid, *, dir_fd=None, follow_symlinks=True); path may be an fd */
+void *__chown_at(int dir_fd, str *path, __ss_int uid, __ss_int gid, bool follow_symlinks);
+void *__fchown(__ss_int fd, __ss_int uid, __ss_int gid);
+template<class D> void *chown(__ss_bool follow_symlinks, D dir_fd, str *path, __ss_int uid, __ss_int gid) {
+    if(__ss_dirfd(dir_fd) == __SS_DIR_FD_CWD && follow_symlinks)
+        return chown(path, uid, gid);
+    return __chown_at(__ss_dirfd(dir_fd), path, uid, gid, follow_symlinks);
+}
+template<class D> void *chown(__ss_bool follow_symlinks, D dir_fd, __ss_int fd, __ss_int uid, __ss_int gid) {
+    if(__ss_dirfd(dir_fd) != __SS_DIR_FD_CWD)
+        __ss_fd_with("chown", true);
+    if(!follow_symlinks)
+        __ss_fd_with("chown", false);
+    return __fchown(fd, uid, gid);
+}
 void *chroot(str *path);
 
 str *ctermid();
@@ -477,6 +604,8 @@ __ss_int pathconf(str *path, str *name_);
 __ss_int pathconf(str *path, __ss_int name_);
 __ss_int fpathconf(__ss_int fd, str *name_);
 __ss_int fpathconf(__ss_int fd, __ss_int name_);
+inline __ss_int pathconf(__ss_int fd, str *name) { return fpathconf(fd, name); } /* (as cpython) */
+inline __ss_int pathconf(__ss_int fd, __ss_int name) { return fpathconf(fd, name); }
 str *confstr(str *name_);
 str *confstr(__ss_int name_);
 __ss_int sysconf(str *name_);
@@ -485,6 +614,9 @@ __ss_int sysconf(__ss_int name_);
 
 tuple2<__ss_float, __ss_float> *getloadavg();
 void *mkfifo(str *path, __ss_int mode=438);
+template<class D> void *mkfifo(D dir_fd, str *path, __ss_int mode) {
+    return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? mkfifo(path, mode) : __mkfifo_at(__ss_dirfd(dir_fd), path, mode);
+}
 
 
 
@@ -493,6 +625,9 @@ __ss_int __ss_major(__ss_int dev);
 __ss_int __ss_minor(__ss_int dev);
 
 void *mknod(str *filename, __ss_int mode=0600, __ss_int device=0);
+template<class D> void *mknod(D dir_fd, str *path, __ss_int mode, __ss_int device) {
+    return __ss_dirfd(dir_fd) == __SS_DIR_FD_CWD ? mknod(path, mode, device) : __mknod_at(__ss_dirfd(dir_fd), path, mode, device);
+}
 
 #endif
 

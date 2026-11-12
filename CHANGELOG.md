@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Much faster CI runs (Johan Kristensen, Shakeeb Alireza)
 
+- Much improved mixed-type conversion
+
 ## [0.9.14]
 
 - Full type inference rewrite. This solves 'max-iterations' for amaze, life, test_prog_nqueens, fixes a private 3000-line program (from uncertain 400 sec runs to

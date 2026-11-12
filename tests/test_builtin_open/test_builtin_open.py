@@ -395,6 +395,27 @@ def test_buffer_shares_file():
     os.remove('bftest.txt')
 
 
+def test_stderr_backslashreplace():
+    # as CPython, sys.stderr uses errors='backslashreplace': a surrogate is
+    # written as an escape (and does not raise), unlike sys.stdout
+    assert sys.stderr.errors == 'backslashreplace'
+    assert sys.stdout.errors == 'surrogateescape'
+    sys.stderr.flush()
+    saved = os.dup(2)
+    fd = os.open('stderr_bsr.txt', os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    os.dup2(fd, 2)
+    os.close(fd)
+    n = sys.stderr.write('a\udcffb\ud800\n')
+    print('c\udc80d', file=sys.stderr)
+    sys.stderr.flush()
+    os.dup2(saved, 2)
+    os.close(saved)
+    assert n == 5
+    with open('stderr_bsr.txt', 'rb') as f:
+        assert f.read() == b'a\\udcffb\\ud800\nc\\udc80d\n'
+    os.remove('stderr_bsr.txt')
+
+
 def test_std_buffers():
     # the standard streams (and fdopen/popen files) used to have no .buffer
     assert sys.stdout.buffer.write(b'') == 0
@@ -1545,6 +1566,249 @@ def test_unsupported_operation():
     os.remove('unsup.txt')
 
 
+def test_closefd():
+    name = os.path.join(testdata, 'closefd_tmp')
+    with open(name, 'w') as f:
+        f.write('hello\n')
+    fd = os.open(name, os.O_RDONLY)
+    f = open(fd, closefd=False)
+    assert f.read(2) == 'he'
+    f.close()
+    assert f.closed
+    os.lseek(fd, 0, 0)
+    assert os.read(fd, 3) == b'hel'  # the fd is still open
+    g = open(fd, 'rb', closefd=False)
+    os.lseek(fd, 1, 0)
+    assert g.read(2) == b'el'
+    g.close()
+    with open(fd, closefd=False) as h:
+        assert h.fileno() == fd
+    os.fstat(fd)
+    h2 = open(fd, 'rb')  # closefd=True: closes the fd
+    h2.close()
+    closed = False
+    try:
+        os.fstat(fd)
+    except OSError:
+        closed = True
+    assert closed
+    msg = ''
+    try:
+        open(name, closefd=False)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Cannot use closefd=False with file name'
+    msg = ''
+    try:
+        open(name, 'rb', closefd=False)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Cannot use closefd=False with file name'
+    w = os.open(name, os.O_WRONLY | os.O_APPEND)
+    wf = open(w, 'w', closefd=False)
+    wf.write('more')
+    wf.close()  # (flushed)
+    os.write(w, b'!')
+    os.close(w)
+    with open(name) as f2:
+        assert f2.read() == 'hello\nmore!'
+    os.remove(name)
+
+
+def test_read_after_eof_and_seekable():
+    # data appended after a read hit the end is seen (no sticky eof)
+    name = os.path.join(testdata, 'eof_tmp')
+    w = open(name, 'w', newline='')  # (no '\r\n' on windows, for the binary reads)
+    w.write('a\n')
+    w.flush()
+    r = open(name)
+    assert r.read() == 'a\n'
+    assert r.read() == ''
+    w.write('b\n')
+    w.flush()
+    assert r.read() == 'b\n'
+    w.write('c\n')
+    w.flush()
+    assert r.readline() == 'c\n'
+    w.write('d\n')
+    w.flush()
+    assert [l for l in r] == ['d\n']
+    rb = open(name, 'rb')
+    assert rb.read() == b'a\nb\nc\nd\n'
+    w.write('e\n')
+    w.flush()
+    assert rb.read() == b'e\n'
+    rb.close()
+    r.close()
+    w.close()
+
+    # truncate(-1) is an error, not truncate()
+    f = open(name, 'r+b')
+    err = 0
+    try:
+        f.truncate(-1)
+    except OSError as e:
+        err = e.errno
+    assert err == 22
+    f.seek(2)
+    assert f.truncate() == 2
+    f.close()
+    assert os.path.getsize(name) == 2
+    g = open(name, 'r+')
+    err = 0
+    try:
+        g.truncate(-1)
+    except OSError as e:
+        err = e.errno
+    assert err == 22
+    g.close()
+    assert os.path.getsize(name) == 2
+
+    # binary seek checks whence first
+    b = open(name, 'rb')
+    msg = ''
+    try:
+        b.seek(0, 5)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'whence value 5 unsupported'
+    b.close()
+
+    # encoding='locale' (utf-8 mode)
+    h = open(name, 'w', encoding='locale')
+    h.write('h\xe9')
+    h.close()
+    hb = open(name, 'rb')
+    assert hb.read() == b'h\xc3\xa9'
+    hb.close()
+    os.remove(name)
+
+    if sys.platform == 'win32':
+        return
+    # seek/tell on a pipe: UnsupportedOperation (text), as CPython
+    rfd, wfd = os.pipe()
+    t = os.fdopen(rfd)
+    msg = ''
+    try:
+        t.tell()
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'underlying stream is not seekable'
+    msg = ''
+    try:
+        t.seek(0)
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'underlying stream is not seekable'
+    t.close()
+    wb = os.fdopen(wfd, 'wb')
+    msg = ''
+    try:
+        wb.seek(0)
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'File or stream is not seekable.'
+    wb.close()
+
+
+def test_closefd_fd_state_line_buffering_sig():
+    name = os.path.join(testdata, 'fdstate_tmp')
+    w = open(name, 'wb')
+    w.write(b'abcdefghij' * 3)
+    w.close()
+    # closefd=False: close() leaves the fd as it was (non-inheritable,
+    # and where reading left it)
+    fd = os.open(name, os.O_RDONLY)
+    inh = os.get_inheritable(fd)
+    f = open(fd, 'rb', closefd=False)
+    assert f.read(2) == b'ab'
+    f.close()
+    assert os.get_inheritable(fd) == inh
+    assert os.lseek(fd, 0, 1) == 30  # (read ahead to the end)
+    os.close(fd)
+
+    # buffering=1: flush after a '\n' or '\r', everything written so far
+    g = open(name, 'w', buffering=1, newline='')  # (no '\r\n' on windows)
+    g.write('a\r')
+    assert os.path.getsize(name) == 2
+    g.write('b\nc')
+    assert os.path.getsize(name) == 5
+    g.write('d')
+    assert os.path.getsize(name) == 5
+    g.close()
+    assert os.path.getsize(name) == 6
+
+    # utf-8-sig: the position after a bom is 0
+    h = open(name, 'w', encoding='utf-8-sig')
+    h.write('qr')
+    h.close()
+    h = open(name, encoding='utf-8-sig')
+    assert h.tell() == 0
+    assert h.read(1) == 'q'
+    assert h.tell() == 4
+    h.seek(0)
+    assert h.tell() == 0
+    h.close()
+    h = open(name, 'r+', encoding='utf-8-sig')
+    assert h.truncate() == 0
+    h.close()
+    assert os.path.getsize(name) == 0
+    os.remove(name)
+
+
+def test_read1_bom_only_next_closed():
+    name = os.path.join(testdata, 'read1_tmp')
+    # utf-8-sig: a file with only a bom is at 3 once read
+    b = open(name, 'wb')
+    b.write(b'\xef\xbb\xbf')
+    b.close()
+    g = open(name, encoding='utf-8-sig')
+    assert g.tell() == 0
+    assert g.read() == ''
+    assert g.tell() == 3
+    g.close()
+    # next() on a closed binary reader
+    rb = open(name, 'rb')
+    rb.close()
+    msg = ''
+    try:
+        next(rb)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'readline of closed file'
+    os.remove(name)
+
+    if sys.platform == 'win32':
+        return
+    # read1()/readinto1() give what a pipe has, without waiting for more
+    r, w = os.pipe()
+    fr = open(r, 'rb')
+    os.write(w, b'hello')
+    assert fr.read1(100) == b'hello'
+    os.write(w, b'abc')
+    ba = bytearray(10)
+    assert fr.readinto1(ba) == 3
+    assert ba[:3] == bytearray(b'abc')
+    os.write(w, b'xyz')
+    assert fr.read1() == b'xyz'
+    os.close(w)
+    assert fr.read1(10) == b''
+    fr.close()
+
+    if sys.platform != 'linux':
+        return
+    # SEEK_DATA/SEEK_HOLE (where the os has them)
+    s = open(name, 'wb')
+    s.write(b'abcdef')
+    s.close()
+    s = open(name, 'rb')
+    assert s.seek(0, os.SEEK_HOLE) == 6
+    assert s.seek(2, os.SEEK_DATA) == 2
+    assert s.read() == b'cdef'
+    s.close()
+    os.remove(name)
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1590,6 +1854,7 @@ def test_all():
     test_buffer_shares_file()
     if sys.platform != 'win32':
         test_std_buffers()
+        test_stderr_backslashreplace()
     test_open_mode_order()
     test_binary_mode_normalised()
     test_open_read_write_switch()
@@ -1598,7 +1863,10 @@ def test_all():
     test_binary_readinto_read1()
     test_open_fd()
     test_line_buffering()
-
+    test_closefd()
+    test_read_after_eof_and_seekable()
+    test_closefd_fd_state_line_buffering_sig()
+    test_read1_bom_only_next_closed()
 
 if __name__ == '__main__':
     test_all()

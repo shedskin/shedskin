@@ -336,6 +336,7 @@ def test_std_streams_encoding():
     assert sys.stderr.encoding == 'utf-8'
     assert sys.stdin.errors == 'surrogateescape'
     assert sys.stdout.errors == 'surrogateescape'
+    assert sys.stderr.errors == 'backslashreplace'
     assert sys.__stdout__.encoding == 'utf-8'
 
 def test_std_streams_originals():
@@ -414,6 +415,29 @@ def test_getsizeof():
     assert sys.getsizeof(1, -1) == sys.getsizeof(1)
     assert sys.getsizeof(small, -1) == sys.getsizeof(small)
 
+def test_reassigned_std_streams():
+    # print() and input() follow an assigned sys.stdout/sys.stdin
+    name = 'shedskin_test_reassigned.txt'
+    out = open(name, 'w')
+    sys.stdout = out
+    print('to file')
+    print('a', 'b', sep='-', end='!\n')
+    sys.stdout = sys.__stdout__
+    out.close()
+    f = open(name)
+    assert f.read() == 'to file\na-b!\n'
+    f.close()
+    g = open(name, 'w')
+    g.write('line one\nline two\n')
+    g.close()
+    sys.stdin = open(name)
+    assert input() == 'line one'
+    assert input() == 'line two'
+    sys.stdin.close()
+    sys.stdin = sys.__stdin__
+    os.remove(name)
+
+
 def test_all():
     test_sys()
     test_version_consistency()
@@ -444,6 +468,7 @@ def test_all():
     test_hash_info()
     test_getsizeof()
     test_input_eof() # last: replaces stdin
+    test_reassigned_std_streams()
 
 if __name__ == '__main__':
     test_all()

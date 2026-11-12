@@ -59,6 +59,8 @@ P_WAIT = 0
 R_OK = 0
 SEEK_CUR = 0
 SEEK_END = 0
+SEEK_DATA = 0
+SEEK_HOLE = 0
 SEEK_SET = 0
 TMP_MAX = 0
 WCONTINUED = 0
@@ -205,10 +207,10 @@ def getlogin():
 def chdir(path):
     pass
 
-def rename(src, dst):
+def rename(src, dst, __kw_src_dir_fd=None, __kw_dst_dir_fd=None):
     pass
 
-def replace(src, dst):
+def replace(src, dst, __kw_src_dir_fd=None, __kw_dst_dir_fd=None):
     pass
 
 def cpu_count():
@@ -220,16 +222,16 @@ def process_cpu_count():
 def fspath(path):
     return path.__fspath__()
 
-def remove(path):
+def remove(path, __kw_dir_fd=None):
     pass
 
-def rmdir(path):
+def rmdir(path, __kw_dir_fd=None):
     pass
 
 def removedirs(name):
     pass
 
-def mkdir(path, mode=0o0777):
+def mkdir(path, mode=0o0777, __kw_dir_fd=None):
     pass
 
 def makedirs(name, mode=0o0777, exist_ok=False, parent_mode=-1):
@@ -247,7 +249,7 @@ def openpty():
 def abort():
     pass
 
-def chown(path, uid, gid):
+def chown(path, uid, gid, __kw_dir_fd=None, __kw_follow_symlinks=True):
     pass
 
 def system(command):
@@ -265,7 +267,7 @@ def lstat(path, __kw_dir_fd=None):
 def fstat(fd):
     return stat_result()
 
-def readlink(path):
+def readlink(path, __kw_dir_fd=None):
     return ''
 
 def getuid():
@@ -340,7 +342,7 @@ def putenv(name, value):
 def umask(mask):
     return 0
 
-def chmod(path, mode):
+def chmod(path, mode, __kw_dir_fd=None, __kw_follow_symlinks=True):
     pass
 
 def fchmod(fd, mode):
@@ -394,7 +396,7 @@ def spawnve(mode, file, args, env):
 def spawnvpe(mode, file, args, env):
     return 1
 
-def open(path, flags, mode=0o777):
+def open(path, flags, mode=0o777, __kw_dir_fd=None):
     return 1
 
 def read(fd, length):
@@ -463,10 +465,10 @@ def uname():
 def lchown(path, uid, gid):
     pass
 
-def link(src, dst):
+def link(src, dst, __kw_src_dir_fd=None, __kw_dst_dir_fd=None, __kw_follow_symlinks=True):
     pass
 
-def symlink(src, dst, target_is_directory=False):
+def symlink(src, dst, target_is_directory=False, __kw_dir_fd=None):
     pass
 
 def nice(increment):
@@ -541,10 +543,10 @@ def get_terminal_size(fd=1):
 def getloadavg():
     return (1.0,)
 
-def mkfifo(path, mode=438):
+def mkfifo(path, mode=438, __kw_dir_fd=None):
     pass
 
-def unlink(path):
+def unlink(path, __kw_dir_fd=None):
     pass
 
 def lseek(fd, position, whence):
@@ -559,10 +561,10 @@ def urandom(size):
 def getrandom(size, flags=0):
     return b''
 
-def utime(path, times=None, __kw_ns=None):
+def utime(path, times=None, __kw_ns=None, __kw_dir_fd=None, __kw_follow_symlinks=True):
     pass
 
-def access(path, mode):
+def access(path, mode, __kw_dir_fd=None, __kw_effective_ids=False, __kw_follow_symlinks=True):
     return True
 
 class times_result(tuple):
@@ -592,7 +594,7 @@ def major(device):
 def minor(device):
     return 1
 
-def mknod(path, mode=0o600, device=0):
+def mknod(path, mode=0o600, device=0, __kw_dir_fd=None):
     pass
 
 def WCOREDUMP(status):

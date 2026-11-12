@@ -1168,9 +1168,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # an inherited user __init__ is not copied in C++, so the constructor
             # takes the original's argument types, as call sites do (1029-C4)
             orig = initfunc.inherited_from
+            # a library __init__: call sites leave out trailing defaults
+            # (as for the library class itself), e.g. OSError subclasses
+            init_defaults = 0
             if orig and orig.mv.module.builtin:
+                init_defaults = len(orig.defaults)
                 orig = None
-            self.func_header(initfunc, declare=True, is_init=True, types_from=orig)
+            self.func_header(
+                initfunc,
+                declare=True,
+                is_init=True,
+                types_from=orig,
+                init_defaults=init_defaults,
+            )
             self.indent()
             self.output("this->__class__ = cl_" + cl.ident + ";")
             self.output(
@@ -2206,9 +2216,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         declare: bool,
         is_init: bool = False,
         types_from: Optional["python.Function"] = None,
+        init_defaults: int = 0,
     ) -> None:
         """Generate the header for a function or method, with the argument
-        types of 'types_from' if given"""
+        types of 'types_from' if given (and C++ default values for the last
+        'init_defaults' arguments, but never the first)"""
         tfunc = types_from or func
         method = isinstance(func.parent, python.Class)
         if method:
@@ -2281,6 +2293,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if i in casters:
                 formals2[i] = "__" + formals2[i]
         formaldecs = [o + f for (o, f) in zip(ftypes, formals2)]
+        for i in range(max(1, len(formaldecs) - init_defaults), len(formaldecs)):
+            formaldecs[i] += " = {}"
         if (
             declare
             and isinstance(func.parent, python.Class)
@@ -4518,6 +4532,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         target = funcs[0]  # XXX
 
         swap_env = False
+        env_pos = 1  # after 'file' (spawn*: after 'mode' and 'file')
         for name in (
             "execle",
             "execlpe",
@@ -4526,6 +4541,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ):
             if self.library_func(funcs, "os", None, name):
                 swap_env = True
+                if name.startswith("spawn"):
+                    env_pos = 2
 
         castnull = False  # XXX
         print_call = self.library_func(funcs, "builtin", None, "__print")
@@ -4561,9 +4578,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # os.listdir()/listdir(None) must pick the void* (list '.', str
             # names) overload; a bare NULL is ambiguous with the str/bytes ones
             or self.library_func(funcs, "os", None, "listdir")
+            or self.library_func(funcs, "os", None, "scandir")
             # os.stat(path, dir_fd=None) likewise (void* = no dir_fd)
             or self.library_func(funcs, "os", None, "stat")
             or self.library_func(funcs, "os", None, "lstat")
+            or self.library_func(funcs, "os", None, "utime")
+            or any(
+                self.library_func(funcs, "os", None, f)
+                for f in ("rename", "replace", "remove", "unlink", "rmdir", "mkdir",
+                          "open", "symlink", "readlink", "mkfifo", "mknod",
+                          "chmod", "chown", "access", "link")
+            )
             # print(None), but not a None sep/end/file (see below)
             or print_call
         ):
@@ -4652,7 +4677,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # os.exec*, os.spawn* (C++ does not yet support non-terminal variadic arguments)
         if swap_env:
-            pairs.insert(1, pairs.pop())
+            pairs.insert(env_pos, pairs.pop())
 
         # 'l.count(2.5)', 'd.get(None)': warn about silently converted values
         if (

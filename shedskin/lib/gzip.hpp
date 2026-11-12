@@ -28,7 +28,10 @@ public:
     str *__str__() { return BaseException::__str__(); }
     str *__repr__() { return BaseException::__repr__(); }
 #ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_OSError; }
+    PyObject *__to_py__() {
+        static PyObject *t = __ss_py_exc_type("gzip", "BadGzipFile");
+        return t ? t : PyExc_OSError;
+    }
 #endif
 };
 
@@ -79,7 +82,8 @@ public:
     void *flush();
     void *close();
     GzipFile *__enter__() { __check_closed(); return this; }
-    __ss_int truncate(__ss_int size=-1);
+    __ss_int truncate();
+    __ss_int truncate(__ss_int size);
     __ss_int __ss_fileno();
     __ss_bool isatty();
 
@@ -146,7 +150,8 @@ public:
     __ss_int write(str *s);
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell();
-    __ss_int truncate(__ss_int size=-1);
+    __ss_int truncate();
+    __ss_int truncate(__ss_int size);
     void *flush();
     void *close();
     _GzipTextFile *__enter__() { __check_closed(); return this; }

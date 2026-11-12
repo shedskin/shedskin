@@ -407,9 +407,38 @@ public:
     str *strerror;
 
     OSError(str *msg=0);
+    OSError(__ss_int e, str *strerror, str *filename=0, void *winerror=0, str *filename2=0);
     void __init_errno(int e, str *fname, str *fname2=0);
     str *__str__();
     str *__repr__();
+
+    /* OSError.__init__(self, arg, strerror, filename, winerror, filename2),
+       for user subclasses: each argument may be (typed as) None */
+    using BaseException::__init__;
+    template<class A, class B=void *, class C=void *, class D=void *, class E=void *>
+    void *__init__(A arg, B strerror_=0, C filename_=0, D winerror_=0, E filename2_=0) {
+        (void)winerror_;
+        if constexpr (std::is_same_v<B, str *> && std::is_integral_v<A>) {
+            if (strerror_) {
+                BaseException::__init__((str *)0);
+                __ss_errno = arg;
+                strerror = strerror_;
+                if constexpr (std::is_same_v<C, str *>)
+                    filename = filename_;
+                if constexpr (std::is_same_v<E, str *>)
+                    filename2 = filename2_;
+                message = __str__();
+                return NULL;
+            }
+        }
+        if constexpr (std::is_same_v<A, str *>)
+            BaseException::__init__(arg);
+        else if constexpr (std::is_integral_v<A>)
+            BaseException::__init__(new str(std::to_string((long long)arg).c_str()));
+        else
+            BaseException::__init__((str *)0);
+        return NULL;
+    }
 
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_OSError; }
@@ -417,11 +446,25 @@ public:
 #endif
 };
 
+#ifdef __SS_BIND
+/* a CPython exception type defined by a module (e.g. io.UnsupportedOperation),
+   as a borrowed reference that is kept: 0 if it cannot be imported */
+inline PyObject *__ss_py_exc_type(const char *module, const char *name) {
+    PyObject *m = PyImport_ImportModule(module);
+    PyObject *t = m ? PyObject_GetAttrString(m, name) : 0;
+    Py_XDECREF(m);
+    if (!t)
+        PyErr_Clear();
+    return t;
+}
+#endif
+
 /* OSError subclasses (PEP 3151); __throw_oserror() picks one based on errno */
 
 class BlockingIOError : public OSError {
 public:
     BlockingIOError(str *msg=0) : OSError(msg) { this->__class__ = cl_blockingioerror; }
+    BlockingIOError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_blockingioerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_BlockingIOError; }
 #endif
@@ -430,6 +473,7 @@ public:
 class ChildProcessError : public OSError {
 public:
     ChildProcessError(str *msg=0) : OSError(msg) { this->__class__ = cl_childprocesserror; }
+    ChildProcessError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_childprocesserror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ChildProcessError; }
 #endif
@@ -438,6 +482,7 @@ public:
 class ConnectionError : public OSError {
 public:
     ConnectionError(str *msg=0) : OSError(msg) { this->__class__ = cl_connectionerror; }
+    ConnectionError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_connectionerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ConnectionError; }
 #endif
@@ -446,6 +491,7 @@ public:
 class BrokenPipeError : public ConnectionError {
 public:
     BrokenPipeError(str *msg=0) : ConnectionError(msg) { this->__class__ = cl_brokenpipeerror; }
+    BrokenPipeError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : ConnectionError(e, s, f, w, f2) { this->__class__ = cl_brokenpipeerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_BrokenPipeError; }
 #endif
@@ -454,6 +500,7 @@ public:
 class ConnectionAbortedError : public ConnectionError {
 public:
     ConnectionAbortedError(str *msg=0) : ConnectionError(msg) { this->__class__ = cl_connectionabortederror; }
+    ConnectionAbortedError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : ConnectionError(e, s, f, w, f2) { this->__class__ = cl_connectionabortederror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ConnectionAbortedError; }
 #endif
@@ -462,6 +509,7 @@ public:
 class ConnectionRefusedError : public ConnectionError {
 public:
     ConnectionRefusedError(str *msg=0) : ConnectionError(msg) { this->__class__ = cl_connectionrefusederror; }
+    ConnectionRefusedError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : ConnectionError(e, s, f, w, f2) { this->__class__ = cl_connectionrefusederror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ConnectionRefusedError; }
 #endif
@@ -470,6 +518,7 @@ public:
 class ConnectionResetError : public ConnectionError {
 public:
     ConnectionResetError(str *msg=0) : ConnectionError(msg) { this->__class__ = cl_connectionreseterror; }
+    ConnectionResetError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : ConnectionError(e, s, f, w, f2) { this->__class__ = cl_connectionreseterror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ConnectionResetError; }
 #endif
@@ -478,6 +527,7 @@ public:
 class FileExistsError : public OSError {
 public:
     FileExistsError(str *msg=0) : OSError(msg) { this->__class__ = cl_fileexistserror; }
+    FileExistsError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_fileexistserror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_FileExistsError; }
 #endif
@@ -486,6 +536,7 @@ public:
 class FileNotFoundError : public OSError {
 public:
     FileNotFoundError(str *msg=0) : OSError(msg) { this->__class__ = cl_filenotfounderror; }
+    FileNotFoundError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_filenotfounderror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_FileNotFoundError; }
 #endif
@@ -494,6 +545,7 @@ public:
 class InterruptedError : public OSError {
 public:
     InterruptedError(str *msg=0) : OSError(msg) { this->__class__ = cl_interruptederror; }
+    InterruptedError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_interruptederror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_InterruptedError; }
 #endif
@@ -502,6 +554,7 @@ public:
 class IsADirectoryError : public OSError {
 public:
     IsADirectoryError(str *msg=0) : OSError(msg) { this->__class__ = cl_isadirectoryerror; }
+    IsADirectoryError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_isadirectoryerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_IsADirectoryError; }
 #endif
@@ -510,6 +563,7 @@ public:
 class NotADirectoryError : public OSError {
 public:
     NotADirectoryError(str *msg=0) : OSError(msg) { this->__class__ = cl_notadirectoryerror; }
+    NotADirectoryError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_notadirectoryerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NotADirectoryError; }
 #endif
@@ -518,6 +572,7 @@ public:
 class PermissionError : public OSError {
 public:
     PermissionError(str *msg=0) : OSError(msg) { this->__class__ = cl_permissionerror; }
+    PermissionError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_permissionerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_PermissionError; }
 #endif
@@ -526,6 +581,7 @@ public:
 class ProcessLookupError : public OSError {
 public:
     ProcessLookupError(str *msg=0) : OSError(msg) { this->__class__ = cl_processlookuperror; }
+    ProcessLookupError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_processlookuperror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ProcessLookupError; }
 #endif
@@ -534,6 +590,7 @@ public:
 class TimeoutError : public OSError {
 public:
     TimeoutError(str *msg=0) : OSError(msg) { this->__class__ = cl_timeouterror; }
+    TimeoutError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_timeouterror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_TimeoutError; }
 #endif
@@ -555,7 +612,10 @@ public:
     str *__str__() { return BaseException::__str__(); }
     str *__repr__() { return BaseException::__repr__(); }
 #ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_OSError; }
+    PyObject *__to_py__() { /* (so 'except ValueError' catches it in CPython) */
+        static PyObject *t = __ss_py_exc_type("io", "UnsupportedOperation");
+        return t ? t : PyExc_OSError;
+    }
 #endif
 };
 

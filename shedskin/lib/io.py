@@ -47,7 +47,7 @@ class BytesIO(file_binary):
     def detach(self):
         pass
 
-    def truncate(self, size=-1):
+    def truncate(self, size=__void):
         return 1
 
 
@@ -74,5 +74,5 @@ class StringIO(file):
     def detach(self):
         pass
 
-    def truncate(self, size=-1):
+    def truncate(self, size=__void):
         return 1

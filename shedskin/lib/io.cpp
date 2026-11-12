@@ -95,11 +95,14 @@ __ss_int BytesIO::seek(__ss_int i, __ss_int w) {
     return pos;
 }
 
+__ss_int BytesIO::truncate(__ss_void_struct) {
+    __check_closed();
+    return truncate(pos);
+}
+
 __ss_int BytesIO::truncate(__ss_int size) {
     __check_closed();
-    if(size == -1)
-        size = pos;
-    else if(size < 0)
+    if(size < 0)
         throw new ValueError(__add(new str("negative size value "), __str(size)));
     if((size_t)size < s->unit.size()) /* never grows the buffer */
         s->unit.resize((size_t)size);
@@ -255,12 +258,15 @@ __ss_int StringIO::seek(__ss_int i, __ss_int w) {
     return pos;
 }
 
+__ss_int StringIO::truncate(__ss_void_struct) {
+    __check_closed();
+    return truncate(pos);
+}
+
 __ss_int StringIO::truncate(__ss_int size) {
     __check_closed();
-    if(size == -1)
-        size = pos;
-    else if(size < 0)
-        throw new ValueError(__add(new str("negative pos value "), __str(size)));
+    if(size < 0)
+        throw new ValueError(__add(new str("Negative size value "), __str(size)));
     if((size_t)size < s->unit.size()) /* never grows the buffer */
         s->unit.resize((size_t)size);
     return size;

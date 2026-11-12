@@ -17,6 +17,10 @@
    so any header they include for the first time (e.g. <sys/stat.h> on
    FreeBSD) would get its declarations placed in the wrong namespace */
 #ifdef WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h> // for Get/SetHandleInformation (file closefd=False)
 #include <io.h> // for _isatty
 #include <malloc.h> // for _aligned_malloc
 #include <sys/types.h>
@@ -61,6 +65,17 @@ char __str_cache[4000];
 str *__ss_empty_str;
 
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
+
+static file *__ss_stdout_orig; /* sys.__stdout__ */
+
+bool __ss_stdout_line_buffering() {
+    return __ss_stdout && __ss_stdout->line_buffering;
+}
+
+/* print() without file=: sys.stdout if it was assigned, else 0 (C stdout) */
+file *__ss_print_target() {
+    return __ss_stdout != __ss_stdout_orig ? __ss_stdout : 0;
+}
 
 tuple<__ss_int> *__ss_tuple_cache[1600];
 
@@ -139,6 +154,9 @@ void __init() {
        (EPIPE), instead of silently killing the process (extension modules
        leave this to the interpreter, which does the same) */
     ::signal(SIGPIPE, SIG_IGN);
+#ifdef SIGXFSZ
+    ::signal(SIGXFSZ, SIG_IGN); /* (as CPython: EFBIG instead of being killed) */
+#endif
 #endif
 
     cl_class_ = new class_ ("class");
@@ -210,6 +228,12 @@ void __init() {
 
     __ss_stdin = new file(stdin, new str("<stdin>"), new str("r"));
     __ss_stdout = new file(stdout, new str("<stdout>"), new str("w"));
+    __ss_stdout_orig = __ss_stdout;
+#ifndef WIN32
+    /* as CPython: stderr is line buffered, so a partial line waits for its
+       '\n' (or '\r', see file::write). (windows: _IOLBF is full buffering) */
+    setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
+#endif
     __ss_stderr = new file(stderr, new str("<stderr>"), new str("w"));
     str *utf8 = new str("utf-8"), *se = new str("surrogateescape");
     for (file *fp : {__ss_stdin, __ss_stdout, __ss_stderr}) {
@@ -218,6 +242,9 @@ void __init() {
         /* as CPython: line buffered for a terminal, and stderr always */
         fp->line_buffering = (fp == __ss_stderr) ? True : fp->isatty();
     }
+    /* as CPython: stderr escapes what it cannot encode (only surrogates in utf-8) */
+    __ss_stderr->errors = new str("backslashreplace");
+    __ss_stderr->__backslashreplace = true;
 
     cl_baseexception = new class_("BaseException");
     cl_exception = new class_("Exception");
@@ -323,17 +350,7 @@ void __add_missing_newline() {
 /* uncaught exception messages are written as CPython's stderr does it
    (errors='backslashreplace'): any surrogate becomes e.g. '\\ud800' */
 static str *__backslashreplace_surrogates(str *s) {
-    str *r = new str();
-    char buf[8];
-    for (__ss_char cp : s->unit) {
-        if (cp >= 0xd800 && cp <= 0xdfff) {
-            snprintf(buf, sizeof(buf), "\\u%04x", (unsigned)cp);
-            for (char *p = buf; *p; p++)
-                r->unit += (__ss_char)*p;
-        } else
-            r->unit += cp;
-    }
-    return r;
+    return __ss_backslashreplace_surrogates(s);
 }
 
 void terminate_handler() {
@@ -355,8 +372,10 @@ void terminate_handler() {
         code = (int)s->code;
         try {
             __add_missing_newline(); /* XXX s->message -> stderr? */
-            if(s->show_message)
+            if(s->show_message) {
+                fflush(stdout); /* as CPython: earlier output first */
                 print_(0, False, __ss_stderr, NULL, NULL, __backslashreplace_surrogates(s->message));
+            }
         } catch (BaseException *) {} /* e.g. stdout is a closed pipe */
 
     } catch (BaseException *e) {

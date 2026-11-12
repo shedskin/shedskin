@@ -625,6 +625,41 @@ def test_makefile_modes():
     b.close()
 
 
+def test_makefile_text_args():
+    # makefile takes buffering, and (keyword-only) encoding, errors and
+    # newline, as CPython; these used to be dropped
+    if sys.platform == 'win32':  # (a socket handle is not a CRT file descriptor)
+        return
+    a, b = socket.socketpair()
+    b.sendall('\xe9\r\nx\n'.encode('latin-1'))
+    f = a.makefile('r', encoding='latin-1', newline='')
+    assert f.readline() == '\xe9\r\n'
+    assert f.readline() == 'x\n'
+    assert f.encoding == 'latin-1' and f.errors == 'strict'
+    b.sendall(b'\xffz\n')
+    g = a.makefile('r', errors='replace')
+    assert g.readline() == '\ufffdz\n'
+    w = b.makefile('w', 1, encoding='latin-1')
+    assert not w.line_buffering  # (as cpython, whatever buffering)
+    w.write('\xfc\n')
+    w.flush()
+    assert a.recv(10) == b'\xfc\n'
+    rb = a.makefile('rb', 0, encoding='utf-8')  # (ignored in binary mode)
+    b.sendall(b'xyz')
+    assert rb.read(3) == b'xyz'
+    try:
+        a.makefile('r', 0)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'unbuffered streams must be binary'
+    f.close()
+    g.close()
+    w.close()
+    rb.close()
+    a.close()
+    b.close()
+
+
 def test_connect_nonblocking():
     # a non-blocking connect raises (or returns, for connect_ex) 'in
     # progress' (EINPROGRESS; WSAEWOULDBLOCK on windows), as CPython,
@@ -1195,6 +1230,90 @@ def test_c_int_overflow():
     ]
 
 
+def test_recvfrom_connected_and_lookup_errors():
+    # recvfrom on a connected tcp socket: no address (None)
+    # (explicit timeouts: earlier tests change the default timeout)
+    srv = socket.socket()
+    srv.settimeout(5.0)
+    srv.bind(('127.0.0.1', 0))
+    srv.listen(1)
+    c = socket.create_connection(srv.getsockname(), 5.0)
+    conn, _ = srv.accept()
+    conn.settimeout(5.0)
+    c.sendall(b'abc')
+    # (on windows, CPython gives (0, b'\x00'*14) here, which we can't model)
+    d, addr = conn.recvfrom(10)
+    assert d == b'abc'
+    if sys.platform != 'win32':
+        assert addr is None
+    c.sendall(b'xyz')
+    buf = bytearray(5)
+    n, addr2 = conn.recvfrom_into(buf)
+    assert n == 3
+    if sys.platform != 'win32':
+        assert addr2 is None
+    conn.close()
+    c.close()
+    srv.close()
+
+    # lookup errors carry the getaddrinfo() code and message
+    msg = ''
+    code = 0
+    try:
+        socket.gethostbyname('no.such.host.invalid')
+    except socket.gaierror as e:
+        msg = str(e)
+        code = e.errno
+        assert e.strerror is not None
+        assert msg == '[Errno %d] %s' % (e.errno, e.strerror)
+    assert code != 0  # (EAI_* codes: negative on glibc, positive on macos/bsd)
+    assert msg.startswith('[Errno ')
+    if sys.platform != 'win32':
+        raised = False
+        code = 0
+        try:
+            socket.if_nametoindex('nosuchif0')
+        except OSError as e:
+            raised = True
+            if sys.platform == 'linux':  # (errno is libc-specific)
+                code = e.errno
+        assert raised
+        if sys.platform == 'linux':
+            assert code > 0
+    msg = ''
+    try:
+        socket.inet_ntop(12345, b'\x00\x00\x00\x00')
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'unknown address family 12345'
+
+
+def test_gethostbyname_special():
+    assert socket.gethostbyname('') == '0.0.0.0'
+    assert socket.gethostbyname('<broadcast>') == '255.255.255.255'
+    assert socket.gethostbyname('127.0.0.1') == '127.0.0.1'
+
+
+def test_settimeout_range():
+    s = socket.socket()
+    for t in [1e30, float('inf')]:
+        msg = ''
+        try:
+            s.settimeout(t)
+        except OverflowError as e:
+            msg = str(e)
+        assert msg == 'timestamp out of range for C PyTime_t'
+    msg = ''
+    try:
+        s.settimeout(float('nan'))
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Invalid value NaN (not a number)'
+    s.settimeout(2.5)
+    assert s.gettimeout() == 2.5
+    s.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1216,6 +1335,7 @@ def test_all():
     test_makefile_modes()
     test_connect_ex()
     test_connect_nonblocking()
+    test_makefile_text_args()
     test_create_connection()
     test_fileno_close_dup()
     test_create_server_args()
@@ -1226,8 +1346,10 @@ def test_all():
     test_none_returns()
     test_unix_path()
     test_error_text()
+    test_recvfrom_connected_and_lookup_errors()
     test_default_timeout() # last, see comment there
-
+    test_gethostbyname_special()
+    test_settimeout_range()
 
 if __name__ == '__main__':
     test_all()

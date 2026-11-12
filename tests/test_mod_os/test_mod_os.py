@@ -2,6 +2,7 @@
 
 import os
 import stat
+import sys
 from os import fdopen as os_fdopen
 
 def test_getcwd():
@@ -1401,6 +1402,219 @@ def test_walk_onerror():
 
 
 
+def test_utime_dir_fd_follow_symlinks():
+    # utime takes dir_fd and follow_symlinks (keyword-only, as CPython);
+    # these used to be dropped, so the wrong file was changed
+    if os.name == 'nt':  # (neither is available on windows)
+        return
+    top = 'shedskin_test_utime_at'
+    os.mkdir(top)
+    target = os.path.join(top, 'x.txt')
+    link = os.path.join(top, 'lnk')
+    with open(target, 'w') as f:
+        f.write('hello world')
+    os.symlink('x.txt', link)
+    dfd = os.open(top, os.O_RDONLY)
+    os.utime('x.txt', (300, 400), dir_fd=dfd)
+    assert os.stat(target).st_mtime == 400
+    os.utime('x.txt', ns=(5 * 10**9, 6 * 10**9 + 7), dir_fd=dfd)
+    assert os.stat(target).st_mtime_ns == 6 * 10**9 + 7
+    # follow_symlinks=False: the link changes, not its target
+    os.utime(link, (1, 2), follow_symlinks=False)
+    assert os.lstat(link).st_mtime == 2
+    assert os.stat(target).st_mtime_ns == 6 * 10**9 + 7
+    os.utime('lnk', ns=(3, 4 * 10**9), dir_fd=dfd, follow_symlinks=False)
+    assert os.lstat(link).st_mtime == 4
+    os.utime(link, (7, 8))
+    assert os.stat(target).st_mtime == 8 and os.lstat(link).st_mtime == 4
+    os.utime(target, None, dir_fd=None, follow_symlinks=True)
+    assert os.stat(target).st_mtime > 8
+    try:
+        os.utime('nope', (1, 2), dir_fd=dfd)
+        assert False
+    except FileNotFoundError as e:
+        assert e.filename == 'nope'
+    try:
+        os.utime('x.txt', dir_fd=9999)
+        assert False
+    except OSError as e2:
+        assert e2.errno == 9
+    os.close(dfd)
+    os.remove(link)
+    os.remove(target)
+    os.rmdir(top)
+
+
+def _scandir_name(e: os.DirEntry) -> str:
+    return e.name
+
+
+def test_listdir_scandir_chdir_fd():
+    # listdir/scandir/chdir also take a directory fd, as CPython
+    if os.name == 'nt':  # (not on windows)
+        return
+    top = 'shedskin_test_fd_dir'
+    os.mkdir(top)
+    os.mkdir(os.path.join(top, 'dd'))
+    with open(os.path.join(top, 'x.txt'), 'w') as f:
+        f.write('hello world')
+    os.symlink('x.txt', os.path.join(top, 'lnk'))
+    os.symlink('nowhere', os.path.join(top, 'dang'))
+    d = os.open(top, os.O_RDONLY)
+    assert sorted(os.listdir(d)) == ['dang', 'dd', 'lnk', 'x.txt']
+    assert sorted(os.listdir(d)) == ['dang', 'dd', 'lnk', 'x.txt']  # (again)
+    # scandir(fd): path is the name, and the entries stat relative to fd
+    ents = sorted(os.scandir(d), key=_scandir_name)
+    assert [e.path for e in ents] == ['dang', 'dd', 'lnk', 'x.txt']
+    dang, dd, lnk, x = ents
+    assert dd.is_dir() and not dd.is_symlink()
+    assert lnk.is_symlink() and lnk.is_file() and not lnk.is_file(follow_symlinks=False)
+    assert lnk.stat().st_size == 11 and x.stat().st_size == 11
+    assert lnk.stat(follow_symlinks=False).st_size == 5
+    assert x.inode() == os.stat(os.path.join(top, 'x.txt')).st_ino
+    assert dang.is_symlink() and not dang.is_file() and not dang.is_dir()
+    try:
+        dang.stat()
+        assert False
+    except FileNotFoundError:
+        pass
+    assert os.fspath(x) == 'x.txt'
+    xf = os.open(os.path.join(top, 'x.txt'), os.O_RDONLY)
+    try:
+        os.listdir(xf)
+        assert False
+    except NotADirectoryError:
+        pass
+    try:
+        os.scandir(xf)
+        assert False
+    except NotADirectoryError:
+        pass
+    os.close(xf)
+    # scandir()/scandir(None) are still the cwd (not fd 0)
+    assert len(list(os.scandir())) == len(os.listdir('.'))
+    assert len(list(os.scandir(None))) == len(os.listdir('.'))
+    cwd = os.getcwd()
+    os.chdir(d)
+    assert os.path.basename(os.getcwd()) == top
+    os.chdir(cwd)
+    os.close(d)
+    for name in ['dang', 'lnk', 'x.txt']:
+        os.remove(os.path.join(top, name))
+    os.rmdir(os.path.join(top, 'dd'))
+    os.rmdir(top)
+
+
+def test_fd_paths():
+    # os.path.exists/isfile/isdir/getsize/get*time, truncate and utime also
+    # take an fd, as CPython (statvfs/pathconf: see test_mod_os_posix)
+    path = 'shedskin_test_fd_paths.txt'
+    with open(path, 'w') as f:
+        f.write('hello')
+    fd = os.open(path, os.O_RDWR)
+    assert os.path.exists(fd) and not os.path.exists(-1) and not os.path.exists(9999)
+    assert os.path.isfile(fd) and not os.path.isfile(9999) and not os.path.isdir(fd)
+    assert os.path.getsize(fd) == 5
+    assert os.path.getmtime(fd) > 0 and os.path.getatime(fd) > 0 and os.path.getctime(fd) > 0
+    try:
+        os.path.getsize(9999)
+        assert False
+    except OSError as e:
+        assert e.errno == 9
+    os.truncate(fd, 2)
+    assert os.path.getsize(path) == 2
+    if os.name != 'nt':  # (no fd for these on windows)
+        d = os.open('.', os.O_RDONLY)
+        assert os.path.isdir(d) and not os.path.isfile(d)
+        os.utime(fd, (1, 2))
+        assert os.stat(path).st_mtime == 2
+        os.utime(fd, ns=(1, 3 * 10**9))
+        assert os.stat(path).st_mtime == 3
+        try:
+            os.utime(fd, follow_symlinks=False)
+            assert False
+        except ValueError as e2:
+            assert str(e2) == 'utime: cannot use fd and follow_symlinks together'
+        try:
+            os.utime(fd, dir_fd=d)
+            assert False
+        except ValueError as e3:
+            assert str(e3) == "utime: can't specify dir_fd without matching path"
+        os.close(d)
+    os.close(fd)
+    os.remove(path)
+
+
+def _ls_dir_fd() -> list:
+    return sorted(os.listdir('shedskin_test_dir_fd'))
+
+def test_dir_fd():
+    # dir_fd (src_dir_fd/dst_dir_fd for rename/replace), as CPython; these
+    # used to be dropped, so the functions acted relative to the cwd
+    if os.name == 'nt':  # (no dir_fd on windows)
+        return
+    top = 'shedskin_test_dir_fd'
+    os.mkdir(top)
+    with open(os.path.join(top, 'x.txt'), 'w') as f:
+        f.write('hello world')
+    d = os.open(top, os.O_RDONLY)
+    os.mkdir('nd', dir_fd=d)
+    os.mkdir('nd2', 0o700, dir_fd=d)
+    assert _ls_dir_fd() == ['nd', 'nd2', 'x.txt']
+    assert os.stat(os.path.join(top, 'nd2')).st_mode & 0o777 == 0o700
+    os.rmdir('nd', dir_fd=d)
+    os.rmdir('nd2', dir_fd=d)
+    assert _ls_dir_fd() == ['x.txt']
+    fd = os.open('n.txt', os.O_WRONLY | os.O_CREAT, 0o644, dir_fd=d)
+    os.write(fd, b'new')
+    os.close(fd)
+    fd = os.open('x.txt', os.O_RDONLY, dir_fd=d)
+    assert os.read(fd, 5) == b'hello'
+    os.close(fd)
+    os.symlink('x.txt', 'lnk', dir_fd=d)
+    assert os.readlink(os.path.join(top, 'lnk')) == 'x.txt'
+    assert os.readlink('lnk', dir_fd=d) == 'x.txt'
+    os.rename('n.txt', 'm.txt', src_dir_fd=d, dst_dir_fd=d)
+    assert _ls_dir_fd() == ['lnk', 'm.txt', 'x.txt']
+    os.replace('m.txt', 'r.txt', src_dir_fd=d, dst_dir_fd=d)
+    assert _ls_dir_fd() == ['lnk', 'r.txt', 'x.txt']
+    os.rename('r.txt', 'shedskin_test_dir_fd_out.txt', src_dir_fd=d)  # (dst: cwd)
+    assert _ls_dir_fd() == ['lnk', 'x.txt']
+    os.rename('shedskin_test_dir_fd_out.txt', 'back.txt', dst_dir_fd=d)
+    os.remove('back.txt', dir_fd=d)
+    os.unlink('lnk', dir_fd=d)
+    assert _ls_dir_fd() == ['x.txt']
+    # errors carry the (relative) name
+    try:
+        os.remove('nope', dir_fd=d)
+        assert False
+    except FileNotFoundError as e:
+        assert e.filename == 'nope'
+    try:
+        os.rename('nope', 'z', src_dir_fd=d, dst_dir_fd=d)
+        assert False
+    except FileNotFoundError as e2:
+        assert e2.filename == 'nope' and e2.filename2 == 'z'
+    try:
+        os.mkdir('q', dir_fd=9999)
+        assert False
+    except OSError as e3:
+        assert e3.errno == 9
+    os.mkdir(os.path.join(top, 'q'))
+    try:
+        os.remove('q', dir_fd=d)
+        assert False
+    except (IsADirectoryError, PermissionError):  # (EPERM on macOS)
+        pass
+    os.rmdir('q', dir_fd=d)
+    # dir_fd=None is no dir_fd (and not fd 0)
+    os.mkdir(os.path.join(top, 'nn'), dir_fd=None)
+    os.rmdir(os.path.join(top, 'nn'), dir_fd=None)
+    os.close(d)
+    os.remove(os.path.join(top, 'x.txt'))
+    os.rmdir(top)
+
+
 def test_utime_extended():
     path = 'shedskin_test_utime2.txt'
     with open(path, 'w') as f:
@@ -2095,6 +2309,10 @@ def test_all():
     test_struct_sequences()
 
     test_utime_extended()
+    test_utime_dir_fd_follow_symlinks()
+    test_dir_fd()
+    test_listdir_scandir_chdir_fd()
+    test_fd_paths()
     test_stat_follow_symlinks()
     test_stat_fd_dir_fd()
     test_links()

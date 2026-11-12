@@ -952,6 +952,13 @@ NONE_IS_VALUE = {
     ("builtin", None, "str"),  # str(None) is 'None', not ''
 }
 
+# library methods with a __void default where None does mean 'omitted'
+# (truncate(None) truncates at the current position, like truncate())
+NONE_IS_VOID = {
+    ("io", "StringIO", "truncate"),
+    ("io", "BytesIO", "truncate"),
+}
+
 
 def strip_none_args(
     func: "python.Function",
@@ -973,7 +980,8 @@ def strip_none_args(
             return False
         default = func.defaults[i - default_start]
         # __void defaults: C++ distinguishes omission from None
-        return not (isinstance(default, ast.Name) and default.id == "__void")
+        return not (isinstance(default, ast.Name) and default.id == "__void") or (
+            func.mv.module.ident, cl, func.ident) in NONE_IS_VOID
 
     for kw in list(kwdict):
         if not ast_utils.is_none(kwdict[kw]):

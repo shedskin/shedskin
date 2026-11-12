@@ -74,13 +74,64 @@ struct __ss_file_suppress_iph { __ss_file_suppress_iph() {} };
 /* flush and close even when flushing fails, as CPython; returns the first
    errno (0 on success), leaving it in errno. this is a free function, as on
    macOS errno expands to (*__error()), which file::__error would shadow */
-static int __ss_fclose(FILE *f) {
+static int __ss_fclose(FILE *f, bool closefd=true) {
     __ss_file_suppress_iph guard;
+    /* (fflush() of a reading stream seeks the fd back to the stream position) */
+    off_t offset_before = closefd ? -1 : ::lseek(fileno(f), 0, SEEK_CUR);
     int err = FFLUSH(f) ? errno : 0;
-    if(fclose(f) and not err)
+    /* closefd=False: there is no portable way to free a FILE * but not its
+       fd, so let fclose() close a copy, and move that back in place */
+    int fd = -1, saved = -1;
+    off_t offset = -1;
+#ifndef WIN32
+    int fdflags = -1;
+#else
+    DWORD hflags = 0;
+    bool has_hflags = false;
+#endif
+    if(!closefd) {
+        fd = fileno(f);
+        /* as CPython, the fd stays where reading/writing left it (fclose()
+           would move it back to the stream position), and keeps FD_CLOEXEC
+           (which dup2() clears) */
+        offset = std::max(offset_before, ::lseek(fd, 0, SEEK_CUR)); /* (read ahead, or written) */
+#ifndef WIN32
+        fdflags = ::fcntl(fd, F_GETFD);
+#else
+        /* (likewise the msvc crt's _dup2() makes the handle inheritable) */
+        has_hflags = GetHandleInformation((HANDLE)_get_osfhandle(fd), &hflags);
+#endif
+        saved = ::dup(fd);
+        if(saved == -1) { /* leave the FILE * open rather than the fd closed */
+            errno = err;
+            return err;
+        }
+    }
+    if(fclose(f) and not err and closefd)
         err = errno;
+    if(saved != -1) {
+        ::dup2(saved, fd);
+        ::close(saved);
+#ifndef WIN32
+        if(fdflags != -1)
+            ::fcntl(fd, F_SETFD, fdflags);
+#else
+        if(has_hflags)
+            SetHandleInformation((HANDLE)_get_osfhandle(fd), HANDLE_FLAG_INHERIT, hflags & HANDLE_FLAG_INHERIT);
+#endif
+        if(offset != -1)
+            ::lseek(fd, offset, SEEK_SET);
+    }
     errno = err;
     return err;
+}
+
+static void __check_closefd(str *flags, __ss_int closefd) {
+    if(!closefd) { /* (as cpython: after the mode check) */
+        if(flags)
+            __check_open_mode(flags);
+        throw new ValueError(new str("Cannot use closefd=False with file name"));
+    }
 }
 
 /* validate a mode as cpython's io.open does, before anything is opened:
@@ -181,6 +232,10 @@ void __set_buffering(FILE *f, __ss_int buffering, bool text) {
 /* encoding, errors and newline, as for open() and os.fdopen() */
 void file::__init_text(str *encoding, str *errors, str *newline) {
     options.universal_mode = true;
+    /* 'locale' is no codec, but asks for the locale encoding: as in utf-8
+       mode (shedskin's model, and CPython 3.15's default), utf-8 */
+    if (encoding && encoding->unit == U"locale")
+        encoding = new str("UTF-8");
     __encoding = __lookup_encoding(encoding);
     __errors = __lookup_errors(errors);
     this->encoding = encoding ? encoding : new str("utf-8");
@@ -230,14 +285,17 @@ void file::__init_opened(__ss_int buffering) {
    at position 0, a read skips a leading bom, and without one a write adds it */
 void file::__sig_reset() {
     __bom_pending = false;
+    __bom_skipped = false;
     if (ftell(f) != 0)
         return;
     if (mode->unit.find_first_of(__gcs("r+")) != std::string::npos) {
         char head[3];
         bool bom = fread(head, 1, 3, f) == 3 && std::string_view(head, 3) == "\xef\xbb\xbf";
         fseek(f, bom ? 3 : 0, SEEK_SET); /* (also needed before a write) */
-        if (bom)
+        if (bom) {
+            __bom_skipped = true;
             return;
+        }
     }
     __bom_pending = mode->unit.find_first_of(__gcs("wax+")) != std::string::npos;
 }
@@ -290,11 +348,13 @@ void file::__close_buffer() {
         buffer->closed = True;
 }
 
-file *open(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file *open(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_int closefd) {
+    __check_closefd(flags, closefd);
     return new file(name, flags, encoding, errors, newline, buffering);
 }
 
-file *open(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file *open(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_int closefd) {
+    __check_closefd(flags, closefd);
     return new file(new str(name->unit), flags, encoding, errors, newline, buffering);
 }
 
@@ -323,10 +383,12 @@ FILE *__ss_fdopen(__ss_int fd, str *mode) {
     return fp;
 }
 
-file *open(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file *open(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_int closefd) {
     if(!flags)
         flags = new str("r");
-    return new file(__ss_fdopen(fd, flags), __str(fd), flags, encoding, errors, newline, buffering);
+    file *f = new file(__ss_fdopen(fd, flags), __str(fd), flags, encoding, errors, newline, buffering);
+    f->__closefd = closefd;
+    return f;
 }
 
 /* decode the bytes collected in __read_cache, with the file's encoding */
@@ -420,6 +482,10 @@ static inline void __switch_op(FILE *f, __file_options &options, char op,
         }
         options.last_op = op;
     }
+    /* as cpython, a read after hitting the end sees data appended since
+       (the stdio eof flag is sticky, e.g. for glibc 2.28+) */
+    if(op == 'r' && f)
+        clearerr(f);
 }
 
 /* readable(), writable() and seekable(), as cpython: from the mode (also
@@ -448,12 +514,37 @@ static inline void __check_mode_writable(str *mode, const char *msg) {
         throw new UnsupportedOperation(new str(msg));
 }
 
+str *__ss_backslashreplace_surrogates(str *s) {
+    str *r = new str();
+    char buf[8];
+    for (__ss_char cp : s->unit) {
+        if (cp >= 0xd800 && cp <= 0xdfff) {
+            snprintf(buf, sizeof(buf), "\\u%04x", (unsigned)cp);
+            for (char *p = buf; *p; p++)
+                r->unit += (__ss_char)*p;
+        } else
+            r->unit += cp;
+    }
+    return r;
+}
+
+static bool __has_surrogate(str *s) {
+    for (__ss_char cp : s->unit)
+        if (cp >= 0xd800 && cp <= 0xdfff)
+            return true;
+    return false;
+}
+
 __ss_int file::write(str *s) {
     __ss_int size = -1;
     __check_closed(__SS_CLOSED_MSG);
     __check_mode_writable(mode, "not writable");
     __switch_op(f, options, 'w', __encoding, __errors);
     if(f) {
+        if (__backslashreplace && __has_surrogate(s)) {
+            size = (__ss_int)s->unit.size(); /* (characters written, as CPython: before escaping) */
+            s = __ss_backslashreplace_surrogates(s);
+        }
         __GC_BYTES b;
         if (__bom_pending) {
             __bom_pending = false;
@@ -478,6 +569,11 @@ __ss_int file::write(str *s) {
             __throw_oserror();
         if (size < 0)
             size = (__ss_int)s->unit.size(); /* characters written, as CPython */
+        /* as CPython: line buffering flushes everything after a '\n' or a
+           '\r' (stdio's _IOLBF keeps what follows the last '\n') */
+        if (line_buffering && s->unit.find_first_of(U"\n\r") != std::string::npos)
+            if (FFLUSH(f))
+                __throw_oserror();
     }
     return size;
 }
@@ -494,8 +590,17 @@ void *file::writelines(pyiter<str *> *iter) {
     return NULL;
 }
 
+static inline __ss_bool __fd_seekable(FILE *f);
+
+/* as cpython: a pipe, socket or terminal is checked up front */
+static inline void __check_seekable(FILE *f, const char *msg) {
+    if(f && !__fd_seekable(f))
+        throw new UnsupportedOperation(new str(msg));
+}
+
 __ss_int file::seek(__ss_int i, __ss_int w) {
     __check_closed(__SS_CLOSED_MSG);
+    __check_seekable(f, "underlying stream is not seekable");
     /* text files only allow seeking to a tell() position or to the end, as
        in cpython */
     if(w == 1 && i != 0)
@@ -519,11 +624,14 @@ __ss_int file::seek(__ss_int i, __ss_int w) {
 
 __ss_int file::tell() {
     __check_closed(__SS_CLOSED_MSG);
+    __check_seekable(f, "underlying stream is not seekable");
     if(f) {
         __settle_cr(f, options, __encoding, __errors);
         long status = ftell(f);
         if(status == -1)
             __throw_oserror();
+        if(__bom_skipped && status == 3) /* (as CPython: after the bom is 0) */
+            status = 0;
         return __ss_int(status);
     }
     return -1;
@@ -546,6 +654,8 @@ static void __give_back(FILE *f, __GC_VECTOR(char) &cache, size_t k) {
 str *file::readline(__ss_int n) {
     __check_closed(__SS_CLOSED_MSG);
     __check_mode_readable(mode, "not readable");
+    if(n != 0) /* (as cpython: tell() is 0 after a bom only until a read) */
+        __bom_skipped = false;
     __switch_op(f, options, 'r', __encoding, __errors);
     __read_cache.clear();
     __char_counter cc(__encoding, __errors);
@@ -607,6 +717,8 @@ static void __throw_io_error() {
 str *file::read(__ss_int n) {
     __check_closed(__SS_CLOSED_MSG);
     __check_mode_readable(mode, "not readable");
+    if(n != 0) /* (as cpython: tell() is 0 after a bom only until a read) */
+        __bom_skipped = false;
     __switch_op(f, options, 'r', __encoding, __errors);
     __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
@@ -665,7 +777,7 @@ list<str *> *file::readlines(__ss_int size_hint) {
     __check_closed(__SS_CLOSED_MSG);
     list<str *> *lines = new list<str *>();
     __ss_int total = 0;
-    while(not __eof()) {
+    while(true) {
         str *line = readline();
         if(line->unit.empty())
             break;
@@ -679,7 +791,7 @@ list<str *> *file::readlines(__ss_int size_hint) {
 
 void *file::close() {
     if(f and not closed) {
-        int err = __ss_fclose(f);
+        int err = __ss_fclose(f, __closefd);
         closed = True;
         __close_buffer();
         if(err)
@@ -732,15 +844,42 @@ __ss_bool file::readable() { if (!__mode_readable(mode)) return False; __check_c
 __ss_bool file::writable() { if (!__mode_writable(mode)) return False; __check_closed(__SS_CLOSED_MSG_IOBASE); return True; }
 __ss_bool file::seekable() { __check_closed(__SS_CLOSED_MSG_IOBASE); return __fd_seekable(f); }
 
+__ss_int file::truncate() {
+    __check_closed(__SS_CLOSED_MSG);
+    __check_mode_writable(mode, "truncate");
+    flush();
+    /* (as cpython: the raw position, so a pipe gives ESPIPE) */
+    __settle_cr(f, options, __encoding, __errors);
+    long pos = ftell(f);
+    if(pos == -1)
+        __throw_oserror();
+    if(__bom_skipped && pos == 3) /* (as tell()) */
+        pos = 0;
+    return truncate((__ss_int)pos);
+}
+
+/* (a negative size is EINVAL, as cpython) */
 __ss_int file::truncate(__ss_int size) {
     __check_closed(__SS_CLOSED_MSG);
     __check_mode_writable(mode, "truncate");
     flush();
-    if(size == -1)
-        size = tell();
 #ifdef WIN32
-    if(_chsize((int)__ss_fileno(), size) == -1)
+    /* the msvc crt's invalid parameter handler terminates the process
+       (0xc0000409) on a negative size, so fail with EINVAL first. (also
+       _chsize_s, as _chsize takes a long, which is 32 bits on windows) */
+    if(size < 0) {
+        errno = EINVAL;
         __throw_oserror();
+    }
+    errno_t chsize_err;
+    {
+        __ss_file_suppress_iph guard;
+        chsize_err = _chsize_s((int)__ss_fileno(), size);
+    }
+    if(chsize_err) {
+        errno = chsize_err;
+        __throw_oserror();
+    }
 #else
     if(ftruncate((int)__ss_fileno(), size) == -1)
         __throw_oserror();
@@ -772,14 +911,14 @@ bool file::__eof() {
 }
 
 __iter<str *> *file::__iter__() {
+    __check_closed(__SS_CLOSED_MSG); /* (as cpython: IOBase.__iter__) */
     return this;
 }
 
 str *file::__next__() {
-    if(__eof())
-        throw new StopIteration();
-    str *line = readline();
-    if(__eof() and !len(line))
+    __check_closed(__SS_CLOSED_MSG);
+    str *line = readline(); /* (not the eof flag: data may have been appended) */
+    if(!len(line))
         throw new StopIteration();
     return line;
 }
@@ -812,26 +951,30 @@ void __check_binary_args(str *encoding, str *errors, str *newline) {
         throw new ValueError(new str("binary mode doesn't take a newline argument"));
 }
 
-file_binary *open_binary(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file_binary *open_binary(str *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_int closefd) {
     __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline);
+    __check_closefd(flags, closefd);
     return new file_binary(name, flags, buffering);
 }
 
-file_binary *open_binary(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file_binary *open_binary(bytes *name, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_int closefd) {
     __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline);
+    __check_closefd(flags, closefd);
     return new file_binary(new str(name->unit), flags, buffering);
 }
 
-file_binary *open_binary(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline) {
+file_binary *open_binary(__ss_int fd, str *flags, __ss_int buffering, str *encoding, str *errors, str *newline, __ss_int closefd) {
     if(!flags)
         flags = new str("rb");
     __check_open_mode(flags); /* (as cpython: before the other arguments) */
     __check_binary_args(encoding, errors, newline); /* (as cpython: the fd stays open) */
     FILE *fp = __ss_fdopen(fd, flags);
     __set_buffering(fp, buffering, false);
-    return new file_binary(fp, __str(fd), flags);
+    file_binary *f = new file_binary(fp, __str(fd), flags);
+    f->__closefd = closefd;
+    return f;
 }
 
 __ss_int file_binary::write(bytes *s) {
@@ -861,8 +1004,28 @@ void *file_binary::writelines(pyiter<bytes *> *iter) {
 }
 
 __ss_int file_binary::seek(__ss_int i, __ss_int w) {
+    /* (as cpython, before the closed check; also SEEK_DATA/SEEK_HOLE where the os has them) */
+    bool whence_ok = w >= 0 && w <= 2;
+#ifdef SEEK_DATA
+    whence_ok = whence_ok || w == SEEK_DATA;
+#endif
+#ifdef SEEK_HOLE
+    whence_ok = whence_ok || w == SEEK_HOLE;
+#endif
+    if(!whence_ok)
+        throw new ValueError(__add_strs(3, new str("whence value "), __str(w), new str(" unsupported")));
     __check_closed("seek of closed file");
+    __check_seekable(f, "File or stream is not seekable.");
     if(f) {
+        if(w > 2) { /* SEEK_DATA/SEEK_HOLE: stdio does not know them, so ask the fd (an absolute offset) */
+            if(FFLUSH(f))
+                __throw_oserror();
+            off_t pos = ::lseek(fileno(f), (off_t)i, (int)w);
+            if(pos == -1)
+                __throw_oserror();
+            i = (__ss_int)pos;
+            w = SEEK_SET;
+        }
         if(fseek(f, i, (int)w) == -1)
             __throw_oserror();
         return tell(); /* the new absolute position */
@@ -944,17 +1107,65 @@ __ss_int file_binary::readinto(bytes *b) {
     return (__ss_int)n;
 }
 
+/* bytes already in the stdio buffer (0 if unknown), so read1() need not block */
+static inline size_t __ss_freadahead(FILE *f) {
+#if defined(__GLIBC__)
+    return f->_IO_read_end > f->_IO_read_ptr ? (size_t)(f->_IO_read_end - f->_IO_read_ptr) : 0;
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+    return f->_r > 0 ? (size_t)f->_r : 0;
+#else
+    (void)f;
+    return 0;
+#endif
+}
+
+/* as cpython: at most one read of the os, so a pipe or socket gives what is
+   there (instead of waiting for n bytes or eof) */
 bytes *file_binary::read1(__ss_int n) {
     __check_mode_readable(mode, "read1");
     __check_closed("read of closed file");
-    return read(n);
+    if(n > 0 && __fd_seekable(f)) /* (a regular file: one big read gives all) */
+        return read(n);
+    __switch_op(f, options, 'r');
+    __read_cache.clear();
+    if(n != 0) {
+        const int c = GETC(f); /* (blocks only until something is there) */
+        if(c != EOF) {
+            __read_cache.push_back((char)c);
+            size_t avail = __ss_freadahead(f);
+            if(n > 0)
+                avail = std::min(avail, (size_t)(n - 1));
+            for(size_t i = 0; i < avail; ++i) {
+                const int d = GETC(f);
+                if(d == EOF)
+                    break;
+                __read_cache.push_back((char)d);
+            }
+        }
+        if(__error())
+            __throw_io_error();
+    }
+    bytes *b = new bytes(__read_cache.empty() ? "" : &__read_cache[0], __read_cache.size());
+    b->frozen = 1;
+    return b;
+}
+
+__ss_int file_binary::readinto1(bytes *b) {
+    if(b->frozen)
+        throw new TypeError(new str("readinto() argument must be read-write bytes-like object, not bytes"));
+    __check_mode_readable(mode, "read");
+    __check_closed("readinto of closed file");
+    bytes *data = read1((__ss_int)b->unit.size());
+    size_t n = data->unit.size();
+    b->unit.replace(0, n, data->unit);
+    return (__ss_int)n;
 }
 
 list<bytes *> *file_binary::readlines(__ss_int size_hint) {
     __check_closed(__SS_CLOSED_MSG);
     list<bytes *> *lines = new list<bytes *>();
     __ss_int total = 0;
-    while(not __eof()) {
+    while(true) {
         bytes *line = readline();
         if(line->unit.empty())
             break;
@@ -973,7 +1184,7 @@ void *file_binary::close() {
         return NULL;
     }
     if(f and not closed) {
-        int err = __ss_fclose(f);
+        int err = __ss_fclose(f, __closefd);
         closed = True;
         if(err)
             __throw_oserror();
@@ -1009,15 +1220,35 @@ __ss_bool file_binary::readable() { if (!__mode_readable(mode)) return False; __
 __ss_bool file_binary::writable() { if (!__mode_writable(mode)) return False; __check_closed(__SS_CLOSED_MSG_IOBASE); return True; }
 __ss_bool file_binary::seekable() { __check_closed(__SS_CLOSED_MSG_IOBASE); return __fd_seekable(f); }
 
+__ss_int file_binary::truncate() {
+    __check_closed("truncate of closed file");
+    __check_mode_writable(mode, "truncate");
+    flush();
+    return truncate(tell());
+}
+
+/* (a negative size is EINVAL, as cpython) */
 __ss_int file_binary::truncate(__ss_int size) {
     __check_closed("truncate of closed file");
     __check_mode_writable(mode, "truncate");
     flush();
-    if(size == -1)
-        size = tell();
 #ifdef WIN32
-    if(_chsize((int)__ss_fileno(), size) == -1)
+    /* the msvc crt's invalid parameter handler terminates the process
+       (0xc0000409) on a negative size, so fail with EINVAL first. (also
+       _chsize_s, as _chsize takes a long, which is 32 bits on windows) */
+    if(size < 0) {
+        errno = EINVAL;
         __throw_oserror();
+    }
+    errno_t chsize_err;
+    {
+        __ss_file_suppress_iph guard;
+        chsize_err = _chsize_s((int)__ss_fileno(), size);
+    }
+    if(chsize_err) {
+        errno = chsize_err;
+        __throw_oserror();
+    }
 #else
     if(ftruncate((int)__ss_fileno(), size) == -1)
         __throw_oserror();
@@ -1049,14 +1280,15 @@ bool file_binary::__eof() {
 }
 
 __iter<bytes *> *file_binary::__iter__() {
+    __check_closed(__SS_CLOSED_MSG); /* (as cpython: IOBase.__iter__) */
     return this;
 }
 
 bytes *file_binary::__next__() {
-    if(__eof())
-        throw new StopIteration();
-    bytes *line = readline();
-    if(__eof() and !len(line))
+    /* (as cpython: a buffered reader's readline, else IOBase) */
+    __check_closed(__mode_readable(mode) ? "readline of closed file" : __SS_CLOSED_MSG);
+    bytes *line = readline(); /* (not the eof flag: data may have been appended) */
+    if(!len(line))
         throw new StopIteration();
     return line;
 }

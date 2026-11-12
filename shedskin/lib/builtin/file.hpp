@@ -23,6 +23,7 @@ public:
 
     FILE *f;
     file_binary *buffer;
+    bool __closefd = true; /* open(fd, closefd=False): close() leaves the fd open */
 
     __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
     __ss_bool line_buffering = False; /* buffering=1 (open, os.fdopen), or a terminal (std streams) */
@@ -33,10 +34,12 @@ public:
        utf-8 mode is the default); the standard streams use surrogateescape */
     __ss_encoding __encoding = __SS_ENC_UTF8;
     __ss_errors __errors = __SS_ERR_SURROGATEESCAPE;
+    bool __backslashreplace = false; /* sys.stderr (errors='backslashreplace', as CPython): in utf-8, only surrogates need it */
     str *encoding = 0; /* the names as given (None for StringIO, as CPython) */
     str *errors = 0;
     bool __bom_pending = false; /* utf-8-sig: write a bom on the first write */
     bool __utf8_sig = false; /* utf-8-sig: (re)check the bom at position 0 */
+    bool __bom_skipped = false; /* utf-8-sig: a bom was skipped, so byte 3 is position 0 */
 
     file(FILE *g=0, str *name=0, str *mode=0);
     file(str *name, str *mode=0, str *encoding=0, str *errors=0, str *newline=0, __ss_int buffering=-1);
@@ -54,7 +57,8 @@ public:
     virtual list<str *> *  readlines(__ss_int size_hint=-1);
     virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
-    virtual __ss_int truncate(__ss_int size=-1);
+    virtual __ss_int truncate(); /* (at the current position) */
+    virtual __ss_int truncate(__ss_int size);
     virtual __ss_int  write(str *s);
     virtual void * writelines(pyiter<str *> *iter);
     virtual file *__enter__();
@@ -86,6 +90,9 @@ public:
     void __init_opened(__ss_int buffering);
 };
 
+/* surrogates as e.g. '\\udcff', as CPython's stderr (errors='backslashreplace') */
+str *__ss_backslashreplace_surrogates(str *s);
+
 /* TODO file<bytes *> template? */
 
 class file_binary : public __iter<bytes *> {
@@ -94,6 +101,7 @@ public:
     str *mode;
 
     FILE *f;
+    bool __closefd = true; /* open(fd, closefd=False): close() leaves the fd open */
     __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
     __file_options options;
     __GC_VECTOR(char) __read_cache;
@@ -114,10 +122,11 @@ public:
     list<bytes *> *  readlines(__ss_int size_hint=-1);
     virtual bytes *read1(__ss_int n=-1);
     virtual __ss_int readinto(bytes *b);
-    virtual __ss_int readinto1(bytes *b) { return readinto(b); }
+    virtual __ss_int readinto1(bytes *b);
     virtual __ss_int seek(__ss_int i, __ss_int w=0);
     virtual __ss_int tell();
-    virtual __ss_int truncate(__ss_int size=-1);
+    virtual __ss_int truncate(); /* (at the current position) */
+    virtual __ss_int truncate(__ss_int size);
     virtual __ss_int  write(bytes *b);
     virtual void *writelines(pyiter<bytes *> *iter);
     virtual file_binary *__enter__();
@@ -183,14 +192,14 @@ str *__fileio_mode(str *mode);
 void __set_buffering(FILE *f, __ss_int buffering, bool text);
 void __check_binary_args(str *encoding, str *errors, str *newline);
 
-file *open(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
-file *open(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
-file_binary *open_binary(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
-file_binary *open_binary(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0); /* ugly duplication.. use str/byte template? */
+file *open(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
+file *open(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
+file_binary *open_binary(str *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
+file_binary *open_binary(bytes *name, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1); /* ugly duplication.. use str/byte template? */
 /* open(fd), as os.fdopen(fd) */
 FILE *__ss_fdopen(__ss_int fd, str *mode);
-file *open(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
-file_binary *open_binary(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0);
+file *open(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
+file_binary *open_binary(__ss_int fd, str *flags = 0, __ss_int buffering = -1, str *encoding = 0, str *errors = 0, str *newline = 0, __ss_int closefd = 1);
 
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 

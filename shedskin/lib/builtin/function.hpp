@@ -1061,6 +1061,9 @@ template<class T> void __print_elem(str *result, T t, size_t &count, str *separa
         result->unit += separator->unit;
 }
 
+bool __ss_stdout_line_buffering(); /* (sys.stdout is a terminal, see file.hpp) */
+file *__ss_print_target(); /* (an assigned sys.stdout) */
+
 template<class ... Args> void *print_(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
     str *s = new str();
     size_t count = sizeof...(args);
@@ -1073,6 +1076,8 @@ template<class ... Args> void *print_(int, __ss_bool flush, file *f, str *end, s
     if(!end)
         end = nl;
 
+    if(!f)
+        f = __ss_print_target();
     if(f) {
         f->write(s);
         f->write(end);
@@ -1088,6 +1093,9 @@ template<class ... Args> void *print_(int, __ss_bool flush, file *f, str *end, s
         b = __to_utf8_se(end);
         if(fwrite(b.data(), 1, b.size(), stdout) != b.size())
             __throw_oserror();
+        /* as CPython: line buffering flushes after a '\n' or a '\r' */
+        if(!flush && __ss_stdout_line_buffering())
+            flush = __mbool(s->unit.find_first_of(U"\n\r") != std::string::npos || end->unit.find_first_of(U"\n\r") != std::string::npos);
         if(flush and fflush(stdout) != 0)
             __throw_oserror();
     }

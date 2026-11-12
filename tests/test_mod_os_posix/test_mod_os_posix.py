@@ -801,6 +801,261 @@ def test_uid_gid_overflow():
     os.remove(path)
 
 
+def _mode_at(path: str) -> int:
+    return os.stat(path).st_mode & 0o777
+
+
+def test_chmod_chown_access_link_at():
+    # dir_fd/follow_symlinks (and effective_ids for access), as CPython;
+    # these used to be dropped, so e.g. the target of a symlink changed
+    top = 'shedskin_test_at2'
+    target = os.path.join(top, 'x.txt')
+    os.mkdir(top)
+    with open(target, 'w') as f:
+        f.write('hi')
+    os.symlink('x.txt', os.path.join(top, 'lnk'))
+    os.symlink('nowhere', os.path.join(top, 'dang'))
+    d = os.open(top, os.O_RDONLY)
+    # chmod
+    os.chmod('x.txt', 0o640, dir_fd=d)
+    assert _mode_at(target) == 0o640
+    os.chmod('lnk', 0o604, dir_fd=d)  # (follows)
+    assert _mode_at(target) == 0o604
+    os.chmod(target, 0o600, follow_symlinks=False)  # (a regular file)
+    assert _mode_at(target) == 0o600
+    fd = os.open(target, os.O_RDONLY)
+    os.chmod(fd, 0o644)
+    assert _mode_at(target) == 0o644
+    try:
+        os.chmod('nope', 0o600, dir_fd=d)
+        assert False
+    except FileNotFoundError as e:
+        assert e.filename == 'nope'
+    # chown (-1: unchanged)
+    os.chown('lnk', -1, -1, dir_fd=d, follow_symlinks=False)
+    os.chown(os.path.join(top, 'dang'), -1, -1, follow_symlinks=False)
+    try:
+        os.chown(os.path.join(top, 'dang'), -1, -1)
+        assert False
+    except FileNotFoundError:
+        pass
+    os.chown(fd, -1, -1)
+    try:
+        os.chown(fd, -1, -1, follow_symlinks=False)
+        assert False
+    except ValueError as e2:
+        assert str(e2) == 'chown: cannot use fd and follow_symlinks together'
+    try:
+        os.chown(fd, -1, -1, dir_fd=d)
+        assert False
+    except ValueError as e3:
+        assert str(e3) == "chown: can't specify both dir_fd and fd"
+    os.close(fd)
+    # access
+    assert os.access('dang', os.F_OK, dir_fd=d, follow_symlinks=False)
+    assert not os.access('dang', os.F_OK, dir_fd=d)
+    assert os.access('x.txt', os.R_OK, dir_fd=d, effective_ids=True)
+    assert not os.access('x.txt', os.R_OK, dir_fd=9999)
+    # link: with a dir_fd, follow_symlinks=True follows (linkat)
+    os.link('lnk', 'h1', src_dir_fd=d, dst_dir_fd=d)
+    assert not os.path.islink(os.path.join(top, 'h1'))
+    os.link('lnk', 'h2', src_dir_fd=d, dst_dir_fd=d, follow_symlinks=False)
+    assert os.path.islink(os.path.join(top, 'h2'))
+    os.link('x.txt', os.path.join(top, 'h3'), src_dir_fd=d)
+    assert os.path.exists(os.path.join(top, 'h3'))
+    try:
+        os.link('nope', 'h4', src_dir_fd=d, dst_dir_fd=d)
+        assert False
+    except FileNotFoundError as e4:
+        assert e4.filename == 'nope' and e4.filename2 == 'h4'
+    os.close(d)
+    for name in sorted(os.listdir(top)):
+        os.remove(os.path.join(top, name))
+    os.rmdir(top)
+
+
+def test_fd_statvfs_pathconf():
+    # statvfs and pathconf also take an fd, as CPython
+    path = 'shedskin_test_fd_statvfs.txt'
+    with open(path, 'w') as f:
+        f.write('hello')
+    fd = os.open(path, os.O_RDONLY)
+    assert os.statvfs(fd).f_bsize > 0
+    assert os.pathconf(fd, 'PC_NAME_MAX') == os.pathconf(path, 'PC_NAME_MAX')
+    os.close(fd)
+    os.remove(path)
+
+
+def test_mkfifo_dir_fd():
+    if sys.platform == 'darwin':  # (mkfifoat/mknodat: macOS 13+ only)
+        return
+    top = 'shedskin_test_mkfifo_dir_fd'
+    os.mkdir(top)
+    d = os.open(top, os.O_RDONLY)
+    os.mkfifo('ff', dir_fd=d)
+    assert os.listdir(top) == ['ff']
+    assert stat.S_ISFIFO(os.stat(os.path.join(top, 'ff')).st_mode)
+    os.unlink('ff', dir_fd=d)
+    assert os.listdir(top) == []
+    os.close(d)
+    os.rmdir(top)
+
+
+def test_long_cwd_and_os_names():
+    # getcwd() of a path longer than 255 bytes (crashed)
+    cwd = os.getcwd()
+    base = 'shedskin_test_long_cwd'
+    os.mkdir(base)
+    os.chdir(base)
+    for i in range(30):
+        os.mkdir('directory_' + str(i))
+        os.chdir('directory_' + str(i))
+    long_cwd = os.getcwd()
+    assert len(long_cwd) > 300
+    assert os.path.basename(long_cwd) == 'directory_29'
+    assert len(os.getcwdb()) == len(os.fsencode(long_cwd))
+    os.chdir(cwd)
+    for i in range(29, -1, -1):
+        os.rmdir('/'.join([base] + ['directory_' + str(j) for j in range(i + 1)]))
+    os.rmdir(base)
+
+    # os-supplied names: an encoded surrogate gives three escapes, which
+    # round-trip (not a lone surrogate)
+    name = os.fsdecode(b'shedskin_\xed\xa0\x80')
+    assert name == 'shedskin_\udced\udca0\udc80'
+    if sys.platform != 'darwin':  # (macOS: EILSEQ, names must be valid utf-8)
+        f = open(name, 'w')
+        f.write('z')
+        f.close()
+        assert name in os.listdir('.')
+        assert name in [e.name for e in os.scandir('.')]
+        assert os.stat(name).st_size == 1
+        os.symlink(name, 'shedskin_link')
+        assert os.readlink('shedskin_link') == name
+        os.remove('shedskin_link')
+        os.remove(name)
+
+    # os.popen text pipes are strict, as open()
+    p = os.popen("printf 'a\\377'")
+    err = ''
+    try:
+        p.read()
+    except UnicodeDecodeError as e:
+        err = e.reason
+    p.close()
+    assert err == 'invalid start byte'
+
+
+def test_exec_spawn_failures():
+    # a failed exec in a spawned child: exit code 127, the child stops
+    assert os.spawnv(os.P_WAIT, '/nonexistent/x', ['x']) == 127
+    assert os.spawnvp(os.P_WAIT, 'shedskin_no_such_cmd', ['x']) == 127
+    # argv checks, before anything is executed
+    a = ['x']
+    a.pop()
+    msg = ''
+    try:
+        os.execv('/bin/true', a)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'execv() arg 2 must not be empty'
+    msg = ''
+    try:
+        os.execv('/bin/true', [''])
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'execv() arg 2 first element cannot be empty'
+    msg = ''
+    try:
+        os.spawnv(os.P_WAIT, '/bin/true', a)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'argv first element cannot be empty'
+    # execvp continues past a PATH entry that cannot be executed
+    d = 'shedskin_test_path'
+    os.mkdir(d)
+    f = open(os.path.join(d, 'sh'), 'w')
+    f.write('')
+    f.close()
+    os.chmod(os.path.join(d, 'sh'), 0o644)
+    env = {'PATH': os.path.abspath(d) + ':/bin:/usr/bin'}
+    assert os.spawnvpe(os.P_WAIT, 'sh', ['sh', '-c', 'exit 3'], env) == 3
+    os.remove(os.path.join(d, 'sh'))
+    os.rmdir(d)
+
+
+def test_wait_exec_utime_edges():
+    # WNOHANG with no child ready: status 0
+    pid = os.fork()
+    if pid == 0:
+        r, w = os.pipe()
+        os.read(r, 1)  # (blocks until killed)
+        os._exit(0)
+    assert os.waitpid(pid, os.WNOHANG) == (0, 0)
+    os.kill(pid, 9)
+    os.waitpid(pid, 0)
+
+    # a failed execvp keeps its OSError subclass
+    caught = ''
+    try:
+        os.execvp('shedskin-no-such-prog', ['x'])
+    except FileNotFoundError:
+        caught = 'fnf'
+    assert caught == 'fnf'
+
+    # execve wording, and environment names
+    a = ['x']
+    a.pop()
+    msg = ''
+    try:
+        os.execve('/bin/true', a, {'A': 'b'})
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'execve: argv must not be empty'
+    msg = ''
+    try:
+        os.execve('/bin/true', [''], {'A': 'b'})
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'execve: argv first element cannot be empty'
+    for env in [{'A=B': 'x'}, {'': 'x'}]:
+        msg = ''
+        try:
+            os.execve('/bin/true', ['true'], env)
+        except ValueError as e:
+            msg = str(e)
+        assert msg == 'illegal environment variable name'
+
+    # utime with a float that does not fit
+    name = 'shedskin_test_utime_range'
+    f = open(name, 'w')
+    f.close()
+    for t in [1e30, float('inf'), -9.3e18]:
+        msg = ''
+        try:
+            os.utime(name, (t, 5.0))
+        except OverflowError as e:
+            msg = str(e)
+        assert msg == 'timestamp out of range for platform time_t'
+    msg = ''
+    try:
+        os.utime(name, (float('nan'), 5.0))
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Invalid value NaN (not a number)'
+    os.utime(name, (1.5, 2.25))
+    assert os.stat(name).st_mtime == 2.25
+    os.remove(name)
+
+
+def test_spawn_variants():
+    # spawnle/spawnlpe: env after mode and file
+    assert os.spawnle(os.P_WAIT, '/bin/sh', 'sh', '-c', 'exit $X', {'X': '11'}) == 11
+    assert os.spawnlpe(os.P_WAIT, 'sh', 'sh', '-c', 'exit $X', {'X': '12', 'PATH': '/bin:/usr/bin'}) == 12
+    # only P_NOWAIT returns the pid; other modes wait (as CPython)
+    assert os.spawnv(2, '/bin/sh', ['sh', '-c', 'exit 4']) == 4
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -829,7 +1084,13 @@ def test_all():
     test_wait_status_macros()
     test_device_numbers()
     test_uid_gid_overflow()
-
+    test_chmod_chown_access_link_at()
+    test_fd_statvfs_pathconf()
+    test_mkfifo_dir_fd()
+    test_long_cwd_and_os_names()
+    test_exec_spawn_failures()
+    test_wait_exec_utime_edges()
+    test_spawn_variants()
 
 if __name__ == '__main__':
     test_all()

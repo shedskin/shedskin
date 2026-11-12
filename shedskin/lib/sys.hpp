@@ -15,7 +15,9 @@ extern str *version;
 extern str *__name__, *copyright, *platform, *byteorder;
 extern __ss_int hexversion, maxsize, maxunicode;
 extern str *executable;
-extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
+/* the builtin std streams themselves (references), so that assigning e.g.
+   sys.stdout also redirects print() and input(), as in CPython */
+extern file *&__ss_stdin, *&__ss_stdout, *&__ss_stderr;
 extern file *__stdin__, *__stdout__, *__stderr__;
 
 void __ss_exit();

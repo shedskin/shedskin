@@ -5,6 +5,8 @@ class class_:
         return self.__name__
 
 class int_:
+    def __or_x__(self, x):  # (an fd, e.g. os.listdir(fd) -> str names)
+        return x
     def __real__(self):
         return 1
     real = property(__real__)
@@ -1192,7 +1194,7 @@ class OverflowError(ArithmeticError): pass
 class ZeroDivisionError(ArithmeticError): pass
 
 class OSError(Exception):
-    def __init__(self, arg=None):
+    def __init__(self, arg=None, strerror=None, filename=None, winerror=None, filename2=None):
         self.args = ('',)
         self.errno = 0
         self.strerror = ''
@@ -1361,7 +1363,7 @@ class file(pyiter):
     def seekable(self):
         return False
 
-    def truncate(self, size=-1):
+    def truncate(self, size=None):
         return 1
 
     def __next__(self):
@@ -1426,17 +1428,17 @@ class file_binary(pyiter):
     def seekable(self):
         return False
 
-    def truncate(self, size=-1):
+    def truncate(self, size=None):
         return 1
 
     def __next__(self):
         return self.unit
 
 __file = file('')
-def open(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None):
+def open(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=1):
     return __file
 
-def open_binary(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None):
+def open_binary(file, mode=None, buffering=-1, encoding=None, errors=None, newline=None, closefd=1):
     return file_binary('')
 
 def ord(c):

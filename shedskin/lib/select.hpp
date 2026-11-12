@@ -91,6 +91,11 @@ template<class A, class B, class C, class D> __select_result<typename A::for_in_
     } else {
         has_timeout = true;
         timeout = (double)timeout_;
+        if(std::isnan(timeout))
+            throw new ValueError(new str("Invalid value NaN (not a number)"));
+        /* as CPython: int64 nanoseconds (the casts below would be undefined) */
+        if(!(timeout * 1e9 >= -9223372036854775808.0 && timeout * 1e9 < 9223372036854775808.0))
+            throw new OverflowError(new str("timestamp out of range for C PyTime_t"));
         if(timeout < 0)
             throw new ValueError(new str("timeout must be non-negative"));
     }

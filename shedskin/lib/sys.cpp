@@ -22,7 +22,9 @@ __version_info *version_info;
 str *__name__, *copyright, *platform, *byteorder;
 __ss_int hexversion, maxsize, maxunicode;
 str *executable;
-file *__ss_stdin, *__ss_stdout, *__ss_stderr;
+file *&__ss_stdin = __shedskin__::__ss_stdin;
+file *&__ss_stdout = __shedskin__::__ss_stdout;
+file *&__ss_stderr = __shedskin__::__ss_stderr;
 file *__stdin__, *__stdout__, *__stderr__;
 
 void __init(int c, char **v) {
@@ -65,8 +67,16 @@ void __init(int c, char **v) {
        program arguments, so orig_argv equals argv here */
     orig_argv = new list<str *>();
     for(int i=0; i<c; i++) {
-        argv->append(new str(v[i]));
-        orig_argv->append(new str(v[i]));
+#ifdef WIN32
+        str *arg = new str(v[i]);
+#else
+        /* as CPython: utf-8 with surrogateescape, so each undecodable byte
+           (also of an encoded surrogate) becomes one escape */
+        str *arg = new str();
+        __decode_into(arg->unit, v[i], strlen(v[i]), __SS_ENC_UTF8, __SS_ERR_SURROGATEESCAPE, NULL);
+#endif
+        argv->append(arg);
+        orig_argv->append(arg);
     }
 
     float_repr_style = new str("short");
@@ -84,9 +94,6 @@ void __init(int c, char **v) {
 
     executable = (c > 0) ? new str(v[0]) : new str("");
 
-    __ss_stdin = __shedskin__::__ss_stdin;
-    __ss_stdout = __shedskin__::__ss_stdout;
-    __ss_stderr = __shedskin__::__ss_stderr;
     __stdin__ = __ss_stdin;
     __stdout__ = __ss_stdout;
     __stderr__ = __ss_stderr;
