@@ -1224,6 +1224,16 @@ def test_putenv_empty_name():
     assert msg == 'illegal environment variable name'
 
 
+def test_pathconf_negative_fd():
+    # (unlike fpathconf(), no ValueError: EBADF, as CPython)
+    code = 0
+    try:
+        os.pathconf(-1, 'PC_NAME_MAX')
+    except OSError as e:
+        code = e.errno
+    assert code == 9
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1265,6 +1275,7 @@ def test_all():
     test_getrandom_flags()
     test_negative_fd_unsetenv_pipe_walk()
     test_putenv_empty_name()
+    test_pathconf_negative_fd()
 
 if __name__ == '__main__':
     test_all()

@@ -77,6 +77,10 @@ public:
         __class__ = cl_error;
         __init_plain_oserror(this, msg);
     }
+    /* error(errno, strerror[, filename..]), as OSError */
+    error(__ss_int e, str *strerror_, str *filename_=0, void *winerror_=0, str *filename2_=0) : OSError(e, strerror_, filename_, winerror_, filename2_) {
+        __class__ = cl_error;
+    }
 };
 
 extern class_ *cl_herror;
@@ -87,8 +91,12 @@ public:
         __class__ = cl_herror;
         __init_plain_oserror(this, msg);
     }
-    str *__str__() { return BaseException::__str__(); }
-    str *__repr__() { return BaseException::__repr__(); }
+    /* herror(errno, strerror[, filename..]), as OSError */
+    herror(__ss_int e, str *strerror_, str *filename_=0, void *winerror_=0, str *filename2_=0) : OSError(e, strerror_, filename_, winerror_, filename2_) {
+        __class__ = cl_herror;
+    }
+    str *__str__() { return OSError::__str__(); } /* ('[Errno N] ..' when given an errno) */
+    str *__repr__() { return OSError::__repr__(); }
 #ifdef __SS_BIND
     PyObject *__to_py__() {
         static PyObject *t = __ss_py_exc_type("socket", "herror");
@@ -105,8 +113,12 @@ public:
         __class__ = cl_gaierror;
         __init_plain_oserror(this, msg);
     }
-    str *__str__() { return BaseException::__str__(); }
-    str *__repr__() { return BaseException::__repr__(); }
+    /* gaierror(errno, strerror[, filename..]), as OSError */
+    gaierror(__ss_int e, str *strerror_, str *filename_=0, void *winerror_=0, str *filename2_=0) : OSError(e, strerror_, filename_, winerror_, filename2_) {
+        __class__ = cl_gaierror;
+    }
+    str *__str__() { return OSError::__str__(); } /* ('[Errno N] ..' when given an errno) */
+    str *__repr__() { return OSError::__repr__(); }
 #ifdef __SS_BIND
     PyObject *__to_py__() {
         static PyObject *t = __ss_py_exc_type("socket", "gaierror");
@@ -123,8 +135,8 @@ public:
         __class__ = cl_timeout;
         __init_plain_oserror(this, msg);
     }
-    str *__str__() { return BaseException::__str__(); }
-    str *__repr__() { return BaseException::__repr__(); }
+    str *__str__() { return OSError::__str__(); } /* ('[Errno N] ..' when given an errno) */
+    str *__repr__() { return OSError::__repr__(); }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_TimeoutError; } /* socket.timeout is TimeoutError */
 #endif

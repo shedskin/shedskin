@@ -863,6 +863,8 @@ __ss_int socket::sendfile(file_binary *f, __ss_int offset, __ss_void_struct) {
 }
 
 __ss_int socket::sendfile(file_binary *f, __ss_int offset, __ss_int count) {
+    if (!(type & SOCK_STREAM)) /* (as CPython: the socket type is checked first) */
+        throw new ValueError(new str("only SOCK_STREAM type sockets are supported"));
     if (count <= 0)
         throw new ValueError(__add_strs(3, new str("count must be a positive integer (got "), __str(count), new str(")")));
     return __sendfile(f, offset, count);
@@ -1862,23 +1864,23 @@ tuple2<socket *, socket *> *socketpair(__ss_int family, __ss_int type, __ss_int 
 }
 
 /* the argument checks (and messages) of CPython's htons/htonl and friends */
+/* as CPython 3.15 (uint16_t/uint32_t converters) */
 static uint16_t check_uint16(__ss_int x, const char *name)
 {
-    if ((long long)x < INT_MIN || (long long)x > INT_MAX)
-        throw new OverflowError(new str("Python int too large to convert to C int"));
+    (void)name;
     if (x < 0)
-        throw new OverflowError(new str((std::string(name) + ": can't convert negative Python int to C 16-bit unsigned integer").c_str()));
+        throw new ValueError(new str("Cannot convert negative int"));
     if (x > 0xffff)
-        throw new OverflowError(new str((std::string(name) + ": Python int too large to convert to C 16-bit unsigned integer").c_str()));
+        throw new OverflowError(new str("Python int too large for C uint16_t"));
     return (uint16_t)x;
 }
 
 static uint32_t check_uint32(__ss_int x)
 {
     if (x < 0)
-        throw new OverflowError(new str("can't convert negative value to unsigned int"));
+        throw new ValueError(new str("Cannot convert negative int"));
     if ((long long)x > 0xffffffffLL)
-        throw new OverflowError(new str("int larger than 32 bits"));
+        throw new OverflowError(new str("Python int too large for C uint32_t"));
     return (uint32_t)x;
 }
 
@@ -2029,6 +2031,7 @@ tuple2<str *, str *> *getnameinfo(socket::inet_address sockaddr_, __ss_int flags
     check_nul(sockaddr_->first); /* (a ValueError here, unlike for bind/connect) */
     /* as CPython: getaddrinfo(AI_NUMERICHOST), so only a numeric address
        (no host name, '' or '<broadcast>'); a bad port is a gaierror too */
+    __ss_cint_i(sockaddr_->second); /* (the port is a C int, as CPython) */
     struct addrinfo hints = {}, *res = 0;
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;

@@ -1164,7 +1164,7 @@ def test_binary_mode_normalised():
     assert closed_mode(open('bmode.bin', 'rb')) == 'rb'
     assert closed_mode(open('bmode.bin', 'b+r')) == 'rb+'
     assert closed_mode(open('bmode.bin', 'rb+')) == 'rb+'
-    assert closed_mode(open('bmode.bin', 'w+b')) == 'rb+'
+    assert closed_mode(open('bmode.bin', 'w+b')) == 'wb+'  # (3.15; 'rb+' before)
     assert closed_mode(open('bmode.bin', 'ba')) == 'ab'
     assert closed_mode(open('bmode.bin', 'a+b')) == 'ab+'
     os.remove('bmode.bin')
@@ -1183,13 +1183,13 @@ def test_binary_mode_normalised():
         assert f.buffer.mode == 'rb'
     with open('bmode.bin', 'w+') as f:
         assert f.mode == 'w+'
-        assert f.buffer.mode == 'rb+'
+        assert f.buffer.mode == 'wb+'
     with open('bmode.bin', 'a') as f:
         assert f.buffer.mode == 'ab'
 
     fd = os.open('bmode.bin', os.O_RDWR)
     with os.fdopen(fd, 'w+b') as g:
-        assert g.mode == 'rb+'
+        assert g.mode == 'wb+'
     fd = os.open('bmode.bin', os.O_RDONLY)
     with os.fdopen(fd, 'br') as g:
         assert g.mode == 'rb'

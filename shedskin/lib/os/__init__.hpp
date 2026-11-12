@@ -604,8 +604,9 @@ __ss_int pathconf(str *path, str *name_);
 __ss_int pathconf(str *path, __ss_int name_);
 __ss_int fpathconf(__ss_int fd, str *name_);
 __ss_int fpathconf(__ss_int fd, __ss_int name_);
-inline __ss_int pathconf(__ss_int fd, str *name) { return fpathconf(fd, name); } /* (as cpython) */
-inline __ss_int pathconf(__ss_int fd, __ss_int name) { return fpathconf(fd, name); }
+/* (as cpython; but a negative fd is EBADF here, not fpathconf()'s ValueError) */
+__ss_int pathconf(__ss_int fd, str *name);
+__ss_int pathconf(__ss_int fd, __ss_int name);
 str *confstr(str *name_);
 str *confstr(__ss_int name_);
 __ss_int sysconf(str *name_);

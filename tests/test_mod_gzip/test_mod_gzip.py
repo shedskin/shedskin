@@ -106,7 +106,7 @@ def test_header_fields():
     payload = gzip.compress(b'some data', mtime=0)[10:]
     flags = gzip.FEXTRA | gzip.FNAME | gzip.FCOMMENT | gzip.FHCRC
     header = b'\x1f\x8b\x08' + bytes([flags]) + b'\x07\x00\x00\x00\x00\xff'
-    header += b'\x03\x00abc' + b'name.txt\x00' + b'a comment\x00' + b'\x12\x34'
+    header += b'\x03\x00abc' + b'name.txt\x00' + b'a comment\x00' + b'\x10\x82'  # (the header crc: checked since 3.15)
     data = header + payload
     assert gzip.decompress(data) == b'some data'
     g = gzip.GzipFile(fileobj=io.BytesIO(data))
@@ -1037,6 +1037,29 @@ def test_readinto_msgs_text_seek_wrong_direction():
     os.remove(name)
 
 
+def test_header_crc_wplus_mode():
+    # FHCRC: the header crc is checked (CPython 3.15)
+    good = gzip.compress(b'hello', mtime=0)
+    bad = good[:3] + b'\x02' + good[4:10] + b'\x00\x00' + good[10:]
+    msg = ''
+    try:
+        gzip.decompress(bad)
+    except gzip.BadGzipFile as e:
+        msg = str(e)
+    assert msg == 'Corrupted gzip header. Checksums do not match: c990 != 0000'
+    right = good[:3] + b'\x02' + good[4:10] + b'\x90\xc9' + good[10:]
+    assert gzip.decompress(right) == b'hello'
+    # 'w+b' is 'wb+' (3.15), so a GzipFile on it writes
+    name = 'shedskin_test_gzip_wplus.gz'
+    f = open(name, 'w+b')
+    assert f.mode == 'wb+'
+    g = gzip.GzipFile(fileobj=f)
+    assert g.mode != gzip.READ
+    g.close()
+    f.close()
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -1070,6 +1093,7 @@ def test_all():
     test_fd_name_appended_members_seek()
     test_compress_defaults_seek_end()
     test_readinto_msgs_text_seek_wrong_direction()
+    test_header_crc_wplus_mode()
 
 if __name__ == '__main__':
     test_all()

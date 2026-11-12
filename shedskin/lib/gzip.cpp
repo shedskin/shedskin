@@ -174,21 +174,38 @@ template<class R> static bool __read_gzip_header(R &next, __ss_int &mtime) {
         throw new BadGzipFile(new str("Unknown compression method"));
     int flag = (unsigned char)header[1];
     mtime = (__ss_int)__get32(header + 2);
+    /* FHCRC: as CPython 3.15, check the crc32 (low 16 bits) of the header */
+    std::string h;
+    if (flag & 2) {
+        h.push_back((char)c1);
+        h.push_back((char)c2);
+        h.append(header, 8);
+    }
+    auto nx = [&]() { int c = next(); if (c != -1 && (flag & 2)) h.push_back((char)c); return c; };
     if (flag & 4) { /* FEXTRA */
-        int lo = next(), hi = next();
+        int lo = nx(), hi = nx();
         if (lo == -1 || hi == -1)
             throw __eof_error();
         for (int i = 0; i < (lo | (hi << 8)); i++)
-            if (next() == -1)
+            if (nx() == -1)
                 throw __eof_error();
     }
     if (flag & 8) /* FNAME */
-        for (int c = next(); c != -1 && c != 0; c = next()) ;
+        for (int c = nx(); c != -1 && c != 0; c = nx()) ;
     if (flag & 16) /* FCOMMENT */
-        for (int c = next(); c != -1 && c != 0; c = next()) ;
-    if (flag & 2) /* FHCRC */
-        if (next() == -1 || next() == -1)
+        for (int c = nx(); c != -1 && c != 0; c = nx()) ;
+    if (flag & 2) { /* FHCRC */
+        int lo = next(), hi = next();
+        if (lo == -1 || hi == -1)
             throw __eof_error();
+        unsigned int crc = __crc32(0, h.data(), h.size()) & 0xffff;
+        unsigned int stored = (unsigned int)(lo | (hi << 8));
+        if (crc != stored) {
+            char buf[64];
+            snprintf(buf, sizeof(buf), "Corrupted gzip header. Checksums do not match: %04x != %04x", crc, stored);
+            throw new BadGzipFile(new str(buf));
+        }
+    }
     return true;
 }
 

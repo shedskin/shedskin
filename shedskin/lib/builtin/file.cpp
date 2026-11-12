@@ -202,7 +202,7 @@ str *__c_open_mode(str *mode, bool excl) {
 
 /* the .mode of a binary file, as cpython's FileIO.mode: one of 'rb', 'wb',
    'ab' or 'xb', plus '+' when it is also writable/readable (so 'br' becomes
-   'rb', and 'w+b' becomes 'rb+'). a text file keeps the mode as given */
+   'rb', and 'w+b' becomes 'wb+', as 3.15). a text file keeps the mode as given */
 str *__fileio_mode(str *mode) {
     const auto &u = mode->unit;
     bool plus = u.find('+') != std::string::npos;
@@ -210,9 +210,9 @@ str *__fileio_mode(str *mode) {
         return new str(plus ? "xb+" : "xb");
     if (u.find('a') != std::string::npos)
         return new str(plus ? "ab+" : "ab");
-    if (plus)
-        return new str("rb+");
-    return new str(u.find('r') != std::string::npos ? "rb" : "wb");
+    if (u.find('r') != std::string::npos)
+        return new str(plus ? "rb+" : "rb");
+    return new str(plus ? "wb+" : "wb");
 }
 
 static FILE *__ss_fopen(str *file_name, str *flags) {
