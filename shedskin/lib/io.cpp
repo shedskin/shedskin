@@ -7,6 +7,7 @@
 #include "io.hpp"
 
 #include <algorithm>
+#include <limits>
 
 namespace __io__ {
 
@@ -27,8 +28,10 @@ bytes *BytesIO::read(__ss_int n) {
         result = s->__slice__(1, pos, 0, 0);
         pos = size;
     } else {
+        if(n > size - pos) /* (pos + n must not overflow, e.g. read(sys.maxsize)) */
+            n = size - pos;
         result = s->__slice__(3, pos, pos + n, 0);
-        pos = std::min(pos + n, size);
+        pos += n;
     }
     return result;
 }
@@ -83,10 +86,14 @@ __ss_int BytesIO::seek(__ss_int i, __ss_int w) {
         pos = i;
     }
     else if(w==1) {
+        if(i > std::numeric_limits<__ss_int>::max() - pos)
+            throw new OverflowError(new str("new position too large"));
         pos += i;
         if(pos < 0) pos = 0;
     }
     else if(w==2) {
+        if(i > std::numeric_limits<__ss_int>::max() - len(s))
+            throw new OverflowError(new str("new position too large"));
         pos = len(s)+i;
         if(pos < 0) pos = 0;
     }
@@ -210,8 +217,10 @@ str *StringIO::read(__ss_int n) {
         result = s->__slice__(1, pos, 0, 0);
         pos = size;
     } else {
+        if(n > size - pos) /* (pos + n must not overflow, e.g. read(sys.maxsize)) */
+            n = size - pos;
         result = s->__slice__(3, pos, pos + n, 0);
-        pos = std::min(pos + n, size);
+        pos += n;
     }
     return result;
 }

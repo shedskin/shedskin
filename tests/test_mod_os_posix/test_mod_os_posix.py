@@ -1166,6 +1166,48 @@ def test_getrandom_flags():
         assert code == 22
 
 
+def test_negative_fd_unsetenv_pipe_walk():
+    msg = ''
+    try:
+        os.fsync(-1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'file descriptor cannot be a negative integer (-1)'
+    msg = ''
+    try:
+        os.fchdir(-1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'file descriptor cannot be a negative integer (-1)'
+    msg = ''
+    try:
+        os.fpathconf(-1, 'PC_NAME_MAX')
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'file descriptor cannot be a negative integer (-1)'
+    msg = ''
+    try:
+        os.times_result((1.0, 2.0))
+    except TypeError as e:
+        msg = str(e)
+    assert msg == 'posix.times_result() takes a 5-sequence (2-sequence given)'
+    # invalid names
+    code = 0
+    try:
+        os.unsetenv('a=b')
+    except OSError as e:
+        code = e.errno
+    assert code == 22
+    # walk: a backslash is not a separator here
+    os.makedirs('shedskin_test_walk\\/sub')
+    roots = []
+    for root, dirs, files in os.walk('shedskin_test_walk\\'):
+        roots.append(root)
+    assert roots == ['shedskin_test_walk\\', 'shedskin_test_walk\\/sub']
+    os.rmdir('shedskin_test_walk\\/sub')
+    os.rmdir('shedskin_test_walk\\')
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1205,6 +1247,7 @@ def test_all():
     test_direntry_errors_keyboardinterrupt()
     test_getrandom_conf_names()
     test_getrandom_flags()
+    test_negative_fd_unsetenv_pipe_walk()
 
 if __name__ == '__main__':
     test_all()

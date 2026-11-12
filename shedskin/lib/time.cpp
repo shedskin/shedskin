@@ -1366,28 +1366,38 @@ void __init() {
     cl_clock_info = new class_("SimpleNamespace");
     const_0 = new str("time.struct_time() takes a 9-sequence");
     const_1 = new str("time.struct_time(tm_year=%d, tm_mon=%d, tm_mday=%d, tm_hour=%d, tm_min=%d, tm_sec=%d, tm_wday=%d, tm_yday=%d, tm_isdst=%d)");
-    struct_time* gmt = gmtime();
-    struct_time* localt = localtime();
-    __ss_int gmt_hour = gmt->tm_hour;
-    __ss_int localt_hour = localt->tm_hour;
-    if (gmt->tm_mday > localt->tm_mday) {
-        localt_hour -= 24;
-    } else if (gmt->tm_mday < localt->tm_mday) {
-        localt_hour += 24;
-    }
-    timezone = (gmt_hour - localt_hour) * 3600;
 #ifdef WIN32
+    /* as CPython: the CRT globals */
+    _tzset();
+    long tz = 0;
+    _get_timezone(&tz);
+    timezone = (__ss_int)tz;
     tzname = new tuple2<str *, str *>(2, new str(_tzname[0]), new str(_tzname[1]));
     daylight = _daylight;
+    altzone = timezone - 3600;
 #else
+    /* as CPython (glibc, and where tm_gmtoff exists): the utc offsets of
+       january and july of this year, which also handles half-hour zones,
+       DST in effect at startup and the southern hemisphere */
+    tzset();
+    const time_t YEAR = (365 * 24 + 6) * 3600;
+    time_t t = (::time(NULL) / YEAR) * YEAR;
+    struct tm tm_;
+    ::localtime_r(&t, &tm_);
+    __ss_int janzone = -(__ss_int)tm_.tm_gmtoff;
+    t += YEAR / 2;
+    ::localtime_r(&t, &tm_);
+    __ss_int julyzone = -(__ss_int)tm_.tm_gmtoff;
+    if (janzone < julyzone) { /* DST is reversed in the southern hemisphere */
+        timezone = julyzone;
+        altzone = janzone;
+    } else {
+        timezone = janzone;
+        altzone = julyzone;
+    }
+    daylight = janzone != julyzone;
     tzname = new tuple2<str *, str *>(2, new str(::tzname[0]), new str(::tzname[1]));
-    daylight = ::daylight;
 #endif
-    /* Not all platforms expose a standard "altzone" global (the DST
-       counterpart of timezone). When no DST rule applies, altzone simply
-       coincides with timezone; otherwise mirror CPython's own fallback
-       of guessing it's one hour ahead of the standard offset. */
-    altzone = daylight ? (timezone - 3600) : timezone;
 }
 
 

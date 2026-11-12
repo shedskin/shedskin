@@ -18,6 +18,7 @@
 
 #include "socket.hpp"
 #include <climits>
+#include <cctype>
 #include <fcntl.h>
 #include <cerrno>
 #include <cstddef>
@@ -762,6 +763,25 @@ static bool get_fd_inheritable(socket_type fd)
 #endif
 }
 
+/* as CPython: a wrapped fd must be a socket (getsockname() failing with
+ * EBADF or ENOTSOCK); also gives the family when it isn't given */
+static int check_socket_fd(socket_type fd, __ss_int family)
+{
+#ifndef WIN32
+    sockaddr_storage ss;
+    socklen_t len = sizeof(ss);
+    memset(&ss, 0, sizeof(ss));
+    if (::getsockname(fd, reinterpret_cast<sockaddr *>(&ss), &len) == SOCKET_ERROR) {
+        if (errno == EBADF || errno == ENOTSOCK)
+            return errno;
+    } else if (family < 0)
+        return -(int)ss.ss_family;
+#else
+    (void)fd; (void)family;
+#endif
+    return 0;
+}
+
 static socket_type dup_socket_fd(socket_type fd)
 {
 #ifdef WIN32
@@ -822,7 +842,22 @@ socket *socket::dup() {
     return sock;
 }
 
+__ss_int socket::sendfile(file_binary *f, __ss_int offset, __ss_void_struct) {
+    return __sendfile(f, offset, -1);
+}
+
 __ss_int socket::sendfile(file_binary *f, __ss_int offset, __ss_int count) {
+    if (count <= 0)
+        throw new ValueError(__add_strs(3, new str("count must be a positive integer (got "), __str(count), new str(")")));
+    return __sendfile(f, offset, count);
+}
+
+__ss_int socket::__sendfile(file_binary *f, __ss_int offset, __ss_int count) {
+    /* (the checks of CPython's _check_sendfile_params and _sendfile_use_send) */
+    if (!(type & SOCK_STREAM))
+        throw new ValueError(new str("only SOCK_STREAM type sockets are supported"));
+    if (_timeout == 0)
+        throw new ValueError(new str("non-blocking sockets are not supported"));
     /* portable fallback implementation (chunked read/send loop), like
      * CPython uses on platforms without os.sendfile() */
     if (offset)
@@ -1016,8 +1051,14 @@ static unsigned long int string_to_addr(const char *s)
         return addr;
 #else
     struct in_addr addr;
-    if (::inet_aton(s, &addr))
+    if (::inet_aton(s, &addr)) {
+        /* glibc inet_aton() stops at whitespace and ignores what follows,
+         * where CPython's getaddrinfo() rejects '127.0.0.1 junk' */
+        for (const char *p = s; *p; p++)
+            if (isspace((unsigned char)*p))
+                throw_host_not_found(s);
         return addr.s_addr; // ip address
+    }
 #endif
     /* try looking up the address in dns */
     struct hostent *he = ::gethostbyname(s);
@@ -1054,6 +1095,8 @@ void *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
     /* pass a plain int, as CPython does: __ss_int is 64-bit by default, and
      * some option handlers (winsock TCP_*, big-endian kernels) do not accept
      * or misread a wider buffer */
+    if (value < INT_MIN || value > INT_MAX) /* (CPython then tries a buffer) */
+        throw new TypeError(new str("a bytes-like object is required, not 'int'"));
     int v = (int)value;
     if (::setsockopt(_fd, level_, optname_, SOCKOPT_CAST &v, sizeof(v)) == SOCKET_ERROR)
         throw make_error("setsockopt");
@@ -1260,14 +1303,15 @@ void socket::apply_default_timeout(double val)
 
 void socket::apply_timeout(double val)
 {
+    /* (as CPython: the new timeout holds even if the fcntl() then fails) */
     if (val == 0) {
-        set_nonblocking(_fd);
         _blocking = false;
         _timeout = 0;
+        set_nonblocking(_fd);
     } else {
-        set_blocking(_fd);
         _blocking = true;
         _timeout = val < 0 ? -1 : val;
+        set_blocking(_fd);
     }
 }
 
@@ -1311,7 +1355,8 @@ void *socket::shutdown(__ss_int how)
 
 void socket::write_wait()
 {
-    if (_blocking && _timeout > 0) {
+    /* (closed: no FD_SET(-1); the call itself fails with EBADF, as CPython) */
+    if (_blocking && _timeout > 0 && _fd != SS_INVALID_SOCKET) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
@@ -1395,7 +1440,7 @@ void *socket::close()
 
 void socket::read_wait()
 {
-    if (_blocking && _timeout > 0) {
+    if (_blocking && _timeout > 0 && _fd != SS_INVALID_SOCKET) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
@@ -1529,14 +1574,15 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
                 proto_ = info.iProtocol;
         }
 #else
-        if (family_ < 0) {
-            sockaddr_storage ss;
-            socklen_t len = sizeof(ss);
-            memset(&ss, 0, sizeof(ss));
-            if (::getsockname(_fd, reinterpret_cast<sockaddr *>(&ss), &len) == SOCKET_ERROR)
-                throw make_error("socket");
-            family_ = ss.ss_family;
+        int r = check_socket_fd(_fd, family_);
+        if (r > 0) {
+            _fd = SS_INVALID_SOCKET; /* (not ours to close) */
+            throw make_error("socket", r);
         }
+        if (r < 0)
+            family_ = -r;
+        else if (family_ < 0)
+            throw make_error("socket");
         if (type_ < 0) {
             int v = 0;
             socklen_t len = sizeof(v);
@@ -1596,7 +1642,7 @@ void *socket::listen(__ss_int backlog)
 
 socket* socket::accept(sockaddr *sa, socklen_t *salen)
 {
-    if (_blocking && _timeout > 0) {
+    if (_blocking && _timeout > 0 && _fd != SS_INVALID_SOCKET) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
@@ -1679,9 +1725,10 @@ socket::inet_address socket::getsockname()
 
 str *gethostname()
 {
-    char name[HOST_NAME_MAX];
+    char name[HOST_NAME_MAX + 1]; /* (+ the NUL) */
     if (::gethostname(name, sizeof(name)) == -1)
         throw make_error("gethostname");
+    name[HOST_NAME_MAX] = '\0';
     return new str(name);
 }
 
@@ -1690,6 +1737,7 @@ socket *__create_connection(socket::inet_address address, double timeout, socket
     /* only one address is ever tried here, so all_errors makes no difference */
     (void)all_errors;
     socket *s = new socket(__ss_AF_INET, __ss_SOCK_STREAM, 0);
+    try { /* (on failure, close the socket and re-raise, as CPython) */
     if (blocking)
         s->settimeout((void *)0);
     else if (timeout >= 0)
@@ -1702,6 +1750,10 @@ socket *__create_connection(socket::inet_address address, double timeout, socket
     if (nul != std::string::npos)
         address = new tuple2<str *, __ss_int>(2, new str(address->first->unit.substr(0, nul)), address->second);
     s->connect(address);
+    } catch (BaseException *) {
+        s->close();
+        throw;
+    }
     return s;
 }
 
@@ -1710,6 +1762,9 @@ socket *fromfd(__ss_int fd, __ss_int family, __ss_int type, __ss_int proto)
     __ss_cint(family); /* (before the dup) */
     __ss_cint(type);
     __ss_cint(proto);
+    int r = check_socket_fd((socket_type)fd, 0);
+    if (r > 0)
+        throw make_error("socket", r);
     return new socket(socket::wrap_fd_tag(), dup_socket_fd((socket_type)fd), family, type, proto);
 }
 
@@ -1718,7 +1773,12 @@ socket *create_server(socket::inet_address address, __ss_int family, __ss_int ba
     if (dualstack_ipv6)
         throw new ValueError(new str("dualstack_ipv6 not supported"));
     __ss_cint_i(backlog); /* (before binding) */
+#ifndef SO_REUSEPORT
+    if (reuse_port) /* (before creating the socket, as CPython) */
+        throw new ValueError(new str("SO_REUSEPORT not supported on this platform"));
+#endif
     socket *s = new socket(family, __ss_SOCK_STREAM, 0);
+    try { /* (on failure, close the socket and re-raise, as CPython) */
 #ifdef WIN32
     /* SO_REUSEADDR has different (unsafe) semantics on Windows; do what
      * CPython does and set SO_EXCLUSIVEADDRUSE instead. */
@@ -1726,15 +1786,16 @@ socket *create_server(socket::inet_address address, __ss_int family, __ss_int ba
 #else
     s->setsockopt(SOL_SOCKET, SO_REUSEADDR, 1);
 #endif
-    if (reuse_port) {
 #ifdef SO_REUSEPORT
+    if (reuse_port)
         s->setsockopt(SOL_SOCKET, SO_REUSEPORT, 1);
-#else
-        throw new ValueError(new str("SO_REUSEPORT not supported on this platform"));
 #endif
-    }
     s->bind(address);
     s->listen(backlog >= 0 ? backlog : __ss_SOMAXCONN);
+    } catch (BaseException *) {
+        s->close();
+        throw;
+    }
     return s;
 }
 

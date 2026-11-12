@@ -421,6 +421,8 @@ __ss_bool _lexists(str *pathname, __ss_int dir_fd) {
     return False;
 #else
     struct stat st;
+    if (__ss_has_nul(pathname)) /* (as CPython: lstat's ValueError counts as False) */
+        return False;
     return __mbool(::fstatat((int)dir_fd, pathname->c_str(), &st, AT_SYMLINK_NOFOLLOW) == 0);
 #endif
 }
@@ -434,7 +436,7 @@ __ss_bool _isdir(str *pathname, __ss_int dir_fd) {
     return False;
 #else
     struct stat st;
-    if (::fstatat((int)dir_fd, pathname->c_str(), &st, 0) != 0)
+    if (__ss_has_nul(pathname) || ::fstatat((int)dir_fd, pathname->c_str(), &st, 0) != 0)
         return False;
     return __mbool(S_ISDIR(st.st_mode));
 #endif
@@ -448,6 +450,8 @@ static list<str *> *_listdir_at(str *dirname, __ss_int dir_fd, __ss_bool dironly
     list<str *> *names = new list<str *>();
     int fd;
 
+    if (__ss_has_nul(dirname)) /* (as CPython's os.open: not an OSError, so it propagates) */
+        throw new ValueError(new str("open: embedded null character in path"));
     if (___bool(dirname))
         fd = ::openat((int)dir_fd, dirname->c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     else

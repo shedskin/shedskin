@@ -102,6 +102,7 @@ public:
 
     FILE *f;
     bool __closefd = true; /* open(fd, closefd=False): close() leaves the fd open */
+    bool __name_is_fd = false; /* open(fd): CPython's .name is then the int fd (e.g. not a gzip FNAME) */
     __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
     __file_options options;
     __GC_VECTOR(char) __read_cache;

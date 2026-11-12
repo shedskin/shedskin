@@ -926,6 +926,44 @@ def test_text_buffer_fileobj_types():
     os.remove(name)
 
 
+def test_fd_name_appended_members_seek():
+    # a file opened by fd has no name to write into the header
+    name = 'shedskin_test_gzip_fd.gz'
+    # (on windows, an os.open() fd is in text mode, which translates '\n'
+    # to '\r\n' below us, in cpython too: so use O_BINARY)
+    BIN = os.O_BINARY if os.name == 'nt' else 0
+    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | BIN)
+    f = open(fd, 'wb')
+    g = gzip.GzipFile(fileobj=f, mode='wb', mtime=0)
+    assert g.name == ''
+    g.write(b'one\n')
+    g.close()
+    f.close()
+    f = open(name, 'rb')
+    assert f.read(4) == b'\x1f\x8b\x08\x00'  # (no FNAME flag)
+    f.close()
+    # members appended after reaching the end are still seen
+    r = gzip.open(name, 'rb')
+    assert r.read() == b'one\n'
+    a = gzip.open(name, 'ab')
+    a.write(b'two\n')
+    a.close()
+    assert r.read() == b'two\n'
+    assert r.tell() == 8
+    # a huge relative seek just ends up at the end
+    r.seek(0)
+    assert r.seek(9223372036854775806, 1) == 8
+    r.close()
+    # a bad text encoding leaves no open file behind
+    failed = False
+    try:
+        gzip.open(name, 'rt', encoding='bogus')
+    except LookupError:
+        failed = True
+    assert failed
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -956,6 +994,7 @@ def test_all():
     test_text_crlf_ignore()
     test_text_buffer_closed_messages()
     test_text_buffer_fileobj_types()
+    test_fd_name_appended_members_seek()
 
 if __name__ == '__main__':
     test_all()

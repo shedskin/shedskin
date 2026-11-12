@@ -1408,6 +1408,110 @@ def test_int_timeouts_fromfd_blocking():
     srv.close()
 
 
+def test_closed_timeout_sendfile_checks():
+    # a closed socket with a timeout: EBADF, not an abort in select()
+    s = socket.socket()
+    s.settimeout(1.5)
+    s.close()
+    failed = False
+    try:
+        s.recv(10)
+    except OSError:
+        failed = True
+    assert failed
+    failed = False
+    try:
+        s.send(b'x')
+    except OSError:
+        failed = True
+    assert failed
+    # a failed setblocking() still sets the timeout
+    try:
+        s.setblocking(False)
+    except OSError:
+        pass
+    assert s.gettimeout() == 0.0
+    # setsockopt() int values must fit a C int
+    s = socket.socket()
+    msg = ''
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 2**32 + 1)
+    except TypeError as e:
+        msg = str(e)
+    assert msg == "a bytes-like object is required, not 'int'"
+    s.close()
+    # sendfile() argument checks
+    name = 'shedskin_test_sendfile.bin'
+    f = open(name, 'wb')
+    f.write(b'abcdef')
+    f.close()
+    f = open(name, 'rb')
+    u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    msg = ''
+    try:
+        u.sendfile(f)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'only SOCK_STREAM type sockets are supported'
+    u.close()
+    srv = socket.socket()
+    srv.bind(('127.0.0.1', 0))
+    srv.listen()
+    a = socket.create_connection(srv.getsockname(), 5.0)
+    b, addr = srv.accept()
+    msg = ''
+    try:
+        a.sendfile(f, 0, 0)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'count must be a positive integer (got 0)'
+    assert a.sendfile(f, 0, None) == 6
+    assert a.sendfile(f, 1, 2) == 2
+    a.setblocking(False)
+    msg = ''
+    try:
+        a.sendfile(f)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'non-blocking sockets are not supported'
+    data = b''
+    while len(data) < 8:
+        data += b.recv(100)
+    assert data == b'abcdefbc'
+    f.close()
+    os.remove(name)
+    a.close()
+    b.close()
+    srv.close()
+    if sys.platform == 'win32':
+        return
+    # fromfd()/socket(fileno=) want a socket
+    r, w = os.pipe()
+    code = 0
+    try:
+        socket.fromfd(r, socket.AF_INET, socket.SOCK_STREAM)
+    except OSError as e:
+        code = e.errno
+    assert code == 88 or code == 38  # ENOTSOCK (linux, macos/bsd)
+    code = 0
+    try:
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0, w)
+    except OSError as e:
+        code = e.errno
+    assert code == 88 or code == 38
+    os.close(r)
+    os.close(w)
+    # no trailing junk after an ip address
+    s = socket.socket()
+    failed = False
+    try:
+        s.bind(('127.0.0.1 junk', 0))
+    except OSError:
+        failed = True
+    assert failed
+    s.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1446,6 +1550,7 @@ def test_all():
     test_settimeout_range()
     test_none_timeouts_trunc_flags()
     test_int_timeouts_fromfd_blocking()
+    test_closed_timeout_sendfile_checks()
 
 if __name__ == '__main__':
     test_all()

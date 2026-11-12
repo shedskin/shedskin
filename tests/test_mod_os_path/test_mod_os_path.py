@@ -737,6 +737,53 @@ def test_os_path_realpath_all_but_last_slash():
         assert realpath(p, strict=os.path.ALL_BUT_LAST) == join(cwd, name), p
 
 
+def test_os_path_realpath_link_slash_dots():
+    if sys.platform == 'win32':
+        return
+    d = 'shedskin_test_rp9'
+    os.mkdir(d)
+    os.chdir(d)
+    cwd = os.getcwd()
+    open('f', 'w').close()
+    os.symlink('f/', 'lfs')
+    os.symlink('nonexist/', 'l')
+    # a trailing slash in a link target counts (unlike one in the argument)
+    code = 0
+    try:
+        os.path.realpath('lfs', strict=True)
+    except OSError as e:
+        code = e.errno
+    assert code == 20  # ENOTDIR
+    assert os.path.realpath('lfs') == os.path.join(cwd, 'f')
+    fname = ''
+    try:
+        os.path.realpath('l', strict=os.path.ALL_BUT_LAST)
+    except FileNotFoundError as e:
+        fname = e.filename
+    assert fname == os.path.join(cwd, 'nonexist')
+    assert os.path.realpath('nonexist/', strict=os.path.ALL_BUT_LAST) == os.path.join(cwd, 'nonexist')
+    # error filenames without '.' and '..'
+    fname = ''
+    try:
+        os.path.realpath('./x', strict=True)
+    except FileNotFoundError as e:
+        fname = e.filename
+    assert fname == os.path.join(cwd, 'x')
+    os.mkdir('d')
+    fname = ''
+    try:
+        os.path.realpath('d/../x', strict=True)
+    except FileNotFoundError as e:
+        fname = e.filename
+    assert fname == os.path.join(cwd, 'x')
+    os.rmdir('d')
+    os.remove('l')
+    os.remove('lfs')
+    os.remove('f')
+    os.chdir('..')
+    os.rmdir(d)
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
@@ -776,6 +823,7 @@ def test_all():
     test_os_path_realpath_abs_errors()
     test_os_path_realpath_strict_notdir()
     test_os_path_realpath_all_but_last_slash()
+    test_os_path_realpath_link_slash_dots()
 
 if __name__ == '__main__':
     test_all()
