@@ -1530,7 +1530,11 @@ def test_getnameinfo_numeric_if_indextoname_range():
     # as CPython: only a numeric address (getaddrinfo(AI_NUMERICHOST))
     flags = socket.NI_NUMERICHOST | socket.NI_NUMERICSERV
     assert socket.getnameinfo(('127.0.0.1', 80), flags) == ('127.0.0.1', '80')
-    for host in ['localhost', '', '<broadcast>']:
+    hosts = ['localhost', '<broadcast>']
+    if sys.platform.startswith('linux'):
+        # (macOS getaddrinfo() treats '' as NULL, giving the loopback address)
+        hosts.append('')
+    for host in hosts:
         failed = False
         try:
             socket.getnameinfo((host, 80), flags)
