@@ -918,7 +918,8 @@ def test_text_buffer_fileobj_types():
     t.close()
     assert b.closed
     g = gzip.open(name, 'rb')
-    assert g.read() == b'text\nbytes\n'
+    # (newline=None: the text layer writes '\n' as os.linesep, the buffer not)
+    assert g.read() == b'text' + os.linesep.encode() + b'bytes\n'
     fo = g.fileobj
     assert fo.name == name
     g.close()
