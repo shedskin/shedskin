@@ -300,8 +300,7 @@ def test_find_args():
     for start in range(-10, 11):
         assert m.find(b'a', start) == data.find(b'a', start)
         assert m.rfind(b'a', start) == data.rfind(b'a', start)
-        if start <= 8:
-            assert m.find(b'', start) == data.find(b'', start)
+        assert m.find(b'', start) == data.find(b'', start)
         for end in range(-10, 11):
             assert m.find(b'a', start, end) == data.find(b'a', start, end)
             assert m.rfind(b'a', start, end) == data.rfind(b'a', start, end)
@@ -310,7 +309,7 @@ def test_find_args():
     assert m.find(b'a', -1) == -1
     assert m.rfind(b'a', -1) == -1
     assert m.find(b'a', 0, 0) == -1
-    assert m.find(b'', 9) == 8  # unlike bytes, start is clamped to the size
+    assert m.find(b'', 9) == -1  # as bytes (CPython 3.15)
     assert m.find(b'', 3, 2) == -1
     # start defaults to the current position
     m.seek(2)
@@ -1270,6 +1269,22 @@ def test_move_seek_flush_limits():
     os.remove(name)
 
 
+def test_find_past_end():
+    # as bytes.find() (CPython 3.15): a start past the end finds nothing
+    m = mmap.mmap(-1, 5)
+    m.write(b'abcde')
+    assert m.find(b'', 100) == -1
+    assert m.rfind(b'', 100) == -1
+    assert m.find(b'', 6) == -1
+    assert m.find(b'', 5) == 5
+    assert m.rfind(b'', 6, 10) == -1
+    assert m.find(b'', 3, 2) == -1
+    assert m.rfind(b'', -1) == 5
+    assert m.find(b'cd', -3) == 2
+    assert m.rfind(b'abcdef') == -1
+    m.close()
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1311,6 +1326,7 @@ def test_all():
     test_write_byte_range_prot_write_messages()
     test_prot_access_iter_closed()
     test_move_seek_flush_limits()
+    test_find_past_end()
 
 if __name__ == '__main__':
     test_all()

@@ -388,12 +388,15 @@ str *getenv(str *name_, str *default_) {
 
 void *rename(str *a, str *b) {
 #ifdef WIN32
-    if(::_wrename(__to_wide(a, "rename", "src").c_str(), __to_wide(b, "rename", "dst").c_str()) == -1) {
+    /* as CPython: MoveFileExW() without flags, so an existing destination is
+       FileExistsError (_wrename() gives EACCES), and no copy across volumes */
+    if(!::MoveFileExW(__to_wide(a, "rename", "src").c_str(), __to_wide(b, "rename", "dst").c_str(), 0))
+        __throw_winerror(GetLastError(), a, b);
 #else
     if(std::rename(__ss_cpath(a, "rename", "src"), __ss_cpath(b, "rename", "dst")) == -1) {
-#endif
         __throw_oserror(a, b);
     }
+#endif
     return NULL;
 }
 
@@ -525,6 +528,13 @@ void *__mkfifo_at(int dir_fd, str *path, __ss_int mode) {
 #endif
 
 void *replace(str *a, str *b) {
+#ifdef WIN32
+    /* as CPython: MoveFileExW(MOVEFILE_REPLACE_EXISTING), with the win32
+       error mapped to errno (std::filesystem's error_code is a win32 code) */
+    if(!::MoveFileExW(__to_wide(a, "replace", "src").c_str(), __to_wide(b, "replace", "dst").c_str(), MOVEFILE_REPLACE_EXISTING))
+        __throw_winerror(GetLastError(), a, b);
+    return NULL;
+#else
     /* std::rename() already atomically replaces an existing destination
      * on POSIX, but on Windows it fails with EEXIST in that case instead.
      * std::filesystem::rename() is specified to have POSIX-like overwrite
@@ -540,6 +550,7 @@ void *replace(str *a, str *b) {
         __throw_oserror(a, b);
     }
     return NULL;
+#endif
 }
 
 __ss_int cpu_count() {

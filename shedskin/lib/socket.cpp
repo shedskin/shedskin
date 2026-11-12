@@ -2027,10 +2027,20 @@ tuple2<str *, str *> *getnameinfo(socket::inet_address sockaddr_, __ss_int flags
 {
     int flags_ = __ss_cint_i(flags);
     check_nul(sockaddr_->first); /* (a ValueError here, unlike for bind/connect) */
+    /* as CPython: getaddrinfo(AI_NUMERICHOST), so only a numeric address
+       (no host name, '' or '<broadcast>'); a bad port is a gaierror too */
+    struct addrinfo hints = {}, *res = 0;
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_NUMERICHOST;
+    int r = ::getaddrinfo(sockaddr_->first->c_str(), __str(sockaddr_->second)->c_str(), &hints, &res);
+    if (r != 0)
+        throw make_gaierror(r);
     sockaddr_in sin;
-    tuple_to_sin_addr(&sin, sockaddr_, NULL); /* no port check: CPython gives a gaierror here, via getaddrinfo() */
+    memcpy(&sin, res->ai_addr, sizeof(sin));
+    ::freeaddrinfo(res);
     char host[NI_MAXHOST], serv[NI_MAXSERV];
-    int r = ::getnameinfo(reinterpret_cast<sockaddr *>(&sin), sizeof(sin), host, sizeof(host), serv, sizeof(serv), flags_);
+    r = ::getnameinfo(reinterpret_cast<sockaddr *>(&sin), sizeof(sin), host, sizeof(host), serv, sizeof(serv), flags_);
     if (r != 0)
         throw make_gaierror(r);
     return new tuple2<str *, str *>(2, new str(host), new str(serv));
@@ -2110,8 +2120,11 @@ __ss_int if_nametoindex(str *name)
 
 str *if_indextoname(__ss_int index)
 {
-    if (index < 0 || index > (__ss_int)UINT_MAX)
-        throw new OverflowError(new str("index is out of range"));
+    /* (as CPython 3.15's unsigned int conversion) */
+    if (index < 0)
+        throw new ValueError(new str("Cannot convert negative int"));
+    if (index > (__ss_int)UINT_MAX)
+        throw new OverflowError(new str("Python int too large for C unsigned int"));
     char name[IF_NAMESIZE + 1];
     if (!::if_indextoname((unsigned int)index, name))
         throw make_error("if_indextoname");

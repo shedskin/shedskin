@@ -348,6 +348,8 @@ bool GzipFile::__read_input() {
     if (direct) {
         if (fileobj->closed) /* (f is fclosed) */
             throw new ValueError(new str("read of closed file"));
+        if (!fileobj->readable()) /* (as fileobj.read(): not EBADF) */
+            throw new __io__::UnsupportedOperation(new str("read"));
         inbuf.resize(old + READ_BUFFER_SIZE);
         clearerr(fileobj->f); /* (EOF is not sticky: data may have been appended) */
         size_t n = fread(&inbuf[old], 1, READ_BUFFER_SIZE, fileobj->f);
@@ -513,6 +515,7 @@ __ss_int GzipFile::readinto(bytes *b) {
     /* b must be a bytearray (array.array/memoryview are not supported) */
     if (b->frozen)
         throw new TypeError(new str("readinto() argument must be read-write bytes-like object, not bytes"));
+    __check_can_read("readinto");
     bytes *data = read((__ss_int)b->unit.size());
     size_t n = data->unit.size();
     b->unit.replace(0, n, data->unit);
@@ -598,6 +601,8 @@ void GzipFile::__flush_raw() {
     if (direct) {
         if (fileobj->closed) /* (f is fclosed) */
             throw new ValueError(new str("write to closed file"));
+        if (!fileobj->writable()) /* (as fileobj.write(): not EBADF) */
+            throw new __io__::UnsupportedOperation(new str("write"));
         if (fwrite(outbuf.data(), 1, outbuf.size(), fileobj->f) != outbuf.size())
             __throw_oserror();
     } else
@@ -965,7 +970,7 @@ __ss_int _GzipTextFile::seek(__ss_int i, __ss_int w) {
     __ss_int pos = gz->seek(i, w);
     if (__utf8_sig && !gz->writing && pos == 0)
         bom_check = true; /* (as cpython, which resets the decoder) */
-    return pos;
+    return w == 0 ? i : pos; /* (as TextIOWrapper: the cookie itself) */
 }
 
 __ss_int _GzipTextFile::tell() {
