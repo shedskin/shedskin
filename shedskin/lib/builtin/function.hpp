@@ -1062,6 +1062,7 @@ template<class T> void __print_elem(str *result, T t, size_t &count, str *separa
 }
 
 bool __ss_stdout_line_buffering(); /* (sys.stdout is a terminal, see file.hpp) */
+bool __ss_stdout_closed(); /* (sys.stdout.close() was called) */
 file *__ss_print_target(); /* (an assigned sys.stdout) */
 
 template<class ... Args> void *print_(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
@@ -1085,6 +1086,9 @@ template<class ... Args> void *print_(int, __ss_bool flush, file *f, str *end, s
             f->flush();
     }
     else {
+        /* (sys.stdout.close() fclose()s stdout: as CPython, a ValueError) */
+        if(__ss_stdout_closed())
+            throw new ValueError(new str("I/O operation on closed file."));
         /* utf-8 at the boundary. a failed write raises (e.g. BrokenPipeError
            when piped into 'head'), instead of silently carrying on */
         __GC_BYTES b = __to_utf8_se(s);

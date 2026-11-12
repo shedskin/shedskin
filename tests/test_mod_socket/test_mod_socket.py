@@ -127,46 +127,47 @@ def test_byteorder():
     assert socket.ntohs(socket.htons(0xffff)) == 0xffff
     assert socket.ntohl(socket.htonl(0xffffffff)) == 0xffffffff
 
-    # out-of-range values raise rather than being truncated
+    # out-of-range values raise rather than being truncated (as 3.15:
+    # ValueError for negative values)
     errors = []
     for v in [-1, 0x10000, 1 << 31, -(1 << 31) - 1]:
         try:
             socket.htons(v)
             errors.append('none')
-        except OverflowError as e:
+        except (OverflowError, ValueError) as e:
             errors.append(str(e))
         try:
             socket.ntohs(v)
             errors.append('none')
-        except OverflowError as e:
+        except (OverflowError, ValueError) as e:
             errors.append(str(e))
     assert errors == [
-        "htons: can't convert negative Python int to C 16-bit unsigned integer",
-        "ntohs: can't convert negative Python int to C 16-bit unsigned integer",
-        'htons: Python int too large to convert to C 16-bit unsigned integer',
-        'ntohs: Python int too large to convert to C 16-bit unsigned integer',
-        'Python int too large to convert to C int',
-        'Python int too large to convert to C int',
-        'Python int too large to convert to C int',
-        'Python int too large to convert to C int',
+        'Cannot convert negative int',
+        'Cannot convert negative int',
+        'Python int too large for C uint16_t',
+        'Python int too large for C uint16_t',
+        'Python int too large for C uint16_t',
+        'Python int too large for C uint16_t',
+        'Cannot convert negative int',
+        'Cannot convert negative int',
     ]
     errors = []
     for v in [-1, 1 << 32]:
         try:
             socket.htonl(v)
             errors.append('none')
-        except OverflowError as e:
+        except (OverflowError, ValueError) as e:
             errors.append(str(e))
         try:
             socket.ntohl(v)
             errors.append('none')
-        except OverflowError as e:
+        except (OverflowError, ValueError) as e:
             errors.append(str(e))
     assert errors == [
-        "can't convert negative value to unsigned int",
-        "can't convert negative value to unsigned int",
-        'int larger than 32 bits',
-        'int larger than 32 bits',
+        'Cannot convert negative int',
+        'Cannot convert negative int',
+        'Python int too large for C uint32_t',
+        'Python int too large for C uint32_t',
     ]
 
 
@@ -1555,6 +1556,53 @@ def test_getnameinfo_numeric_if_indextoname_range():
     assert msg == 'Python int too large for C unsigned int'
 
 
+def test_sendfile_order_port_range_select_fd_herror_ctor():
+    # the socket type is checked before the count
+    name = 'shedskin_test_r12.bin'
+    f = open(name, 'wb')
+    f.write(b'x')
+    f.close()
+    f = open(name, 'rb')
+    u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    msg = ''
+    try:
+        u.sendfile(f, 0, 0)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'only SOCK_STREAM type sockets are supported'
+    u.close()
+    f.close()
+    os.remove(name)
+    # getnameinfo(): the port is a C int
+    msg = ''
+    try:
+        socket.getnameinfo(('127.0.0.1', 2**32 + 80), socket.NI_NUMERICHOST | socket.NI_NUMERICSERV)
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'signed integer is greater than maximum'
+    # select(): an fd is a C int first
+    msg = ''
+    try:
+        select.select([2**40], [], [], 0)
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'Python int too large to convert to C int'
+    # herror/gaierror(errno, strerror)
+    code = 0
+    text = ''
+    try:
+        raise socket.herror(1, 'host not found')
+    except socket.herror as e:
+        code = e.errno
+        text = str(e)
+    assert code == 1
+    assert text == '[Errno 1] host not found'
+    e2 = socket.gaierror(-2, 'nn')
+    assert e2.strerror == 'nn'
+    assert repr(e2) == "gaierror(-2, 'nn')"
+    assert str(socket.herror('plain')) == 'plain'
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1596,6 +1644,7 @@ def test_all():
     test_closed_timeout_sendfile_checks()
     test_herror()
     test_getnameinfo_numeric_if_indextoname_range()
+    test_sendfile_order_port_range_select_fd_herror_ctor()
 
 if __name__ == '__main__':
     test_all()

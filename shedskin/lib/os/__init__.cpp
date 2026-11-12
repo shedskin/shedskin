@@ -121,17 +121,28 @@ struct __suppress_iph { __suppress_iph() {} }; /* (avoid unused-variable warning
 
 #ifdef WIN32
 /* map a win32 error code (GetLastError()) to errno, so __throw_oserror()
-   picks the same OSError subclass as cpython does for the common cases */
+   picks the same OSError subclass as cpython does for the common cases (as
+   cpython's winerror_to_errno(), PC/errmap.h) */
 [[noreturn]] static void __throw_winerror(DWORD err, str *fname=0, str *fname2=0) {
     switch(err) {
         case ERROR_FILE_NOT_FOUND:
         case ERROR_PATH_NOT_FOUND:
-        case ERROR_INVALID_NAME:
-        case ERROR_BAD_NETPATH: errno = ENOENT; break;
+        case ERROR_INVALID_DRIVE:
+        case ERROR_BAD_NETPATH:
+        case ERROR_BAD_NET_NAME:
+        case ERROR_BAD_PATHNAME:
+        case ERROR_FILENAME_EXCED_RANGE: errno = ENOENT; break;
         case ERROR_ACCESS_DENIED:
+        case ERROR_CURRENT_DIRECTORY:
+        case ERROR_WRITE_PROTECT:
         case ERROR_SHARING_VIOLATION:
         case ERROR_LOCK_VIOLATION: errno = EACCES; break;
-        case ERROR_PRIVILEGE_NOT_HELD: errno = EPERM; break;
+        case ERROR_TOO_MANY_OPEN_FILES: errno = EMFILE; break;
+        case ERROR_INVALID_HANDLE: errno = EBADF; break;
+        case ERROR_DISK_FULL: errno = ENOSPC; break;
+        case ERROR_BROKEN_PIPE:
+        case ERROR_NO_DATA: errno = EPIPE; break;
+        /* (ERROR_INVALID_NAME, ERROR_PRIVILEGE_NOT_HELD: EINVAL, as cpython) */
         case ERROR_ALREADY_EXISTS:
         case ERROR_FILE_EXISTS: errno = EEXIST; break;
         case ERROR_NOT_SAME_DEVICE: errno = EXDEV; break;
@@ -2195,8 +2206,20 @@ __ss_int fpathconf(__ss_int fd, str *name_) {
         throw new ValueError(new str("unrecognized configuration name"));
     return fpathconf(fd, pathconf_names->__getitem__(name_));
 }
+static __ss_int __fpathconf(int fd_, __ss_int name_);
 __ss_int fpathconf(__ss_int fd, __ss_int name_) {
-    int fd_ = __ss_fildes(fd), name2 = __ss_cint(name_);
+    return __fpathconf(__ss_fildes(fd), name_);
+}
+__ss_int pathconf(__ss_int fd, str *name_) {
+    if(!pathconf_names->__contains__(name_))
+        throw new ValueError(new str("unrecognized configuration name"));
+    return pathconf(fd, pathconf_names->__getitem__(name_));
+}
+__ss_int pathconf(__ss_int fd, __ss_int name_) {
+    return __fpathconf(__ss_cint(fd), name_);
+}
+static __ss_int __fpathconf(int fd_, __ss_int name_) {
+    int name2 = __ss_cint(name_);
     errno = 0;
     long result = ::fpathconf(fd_, name2);
     if(result == -1 and errno != 0)

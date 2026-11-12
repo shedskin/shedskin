@@ -541,7 +541,14 @@ void *sleep(__ss_float s) {
 #else
 void *sleep(__ss_float s) {
     __ss_check_sleep(s);
-    Sleep(s*1000); // TODO ms resolution..
+    /* (Sleep() takes a DWORD of milliseconds, and INFINITE is 0xffffffff:
+       sleep longer ones in pieces) */
+    double ms = s * 1000;
+    while (ms > 0xfffffffe) {
+        Sleep(0xfffffffe);
+        ms -= 0xfffffffe;
+    }
+    Sleep((DWORD)ms); // TODO ms resolution..
     return NULL;
     }
 #endif

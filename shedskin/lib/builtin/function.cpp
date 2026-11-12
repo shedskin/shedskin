@@ -7,6 +7,10 @@ str *input(str *msg) {
         __ss_stdout->write(msg);
         __ss_stdout->options.lastchar = msg->unit[msg->unit.size()-1];
     }
+    /* as CPython: flush stdout (and stderr) before reading, so the prompt
+       shows when stdout is a pipe; errors are ignored */
+    try { __ss_stdout->flush(); } catch (BaseException *) {}
+    try { __ss_stderr->flush(); } catch (BaseException *) {}
     str *s = __ss_stdin->readline();
     if(!s->unit.size()) /* EOF only if nothing was read: a last line without newline is returned */
         throw new EOFError(new str("EOF when reading a line"));

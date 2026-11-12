@@ -37,6 +37,7 @@ template<class A> void __select_add(A *fds, fd_set *set, int *maxFD) {
     typename A::for_in_unit e;
     FOR_IN(e,fds,0,1,2)
         __ss_int FD = __select_fd(e);
+        __ss_cint(FD); /* (as CPython: a C int first, OverflowError) */
         if(FD < 0)
             throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(FD), new str(")")));
 #ifdef WIN32

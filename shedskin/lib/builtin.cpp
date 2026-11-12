@@ -68,6 +68,10 @@ file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 static file *__ss_stdout_orig; /* sys.__stdout__ */
 
+bool __ss_stdout_closed() {
+    return __ss_stdout && __ss_stdout->closed;
+}
+
 bool __ss_stdout_line_buffering() {
     return __ss_stdout && __ss_stdout->line_buffering;
 }
