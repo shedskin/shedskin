@@ -1109,6 +1109,37 @@ def test_std_streams_nice_tty_fdopen():
     os.remove(name)
 
 
+def test_direntry_errors_keyboardinterrupt():
+    # DirEntry.is_dir()/is_file() only treat a missing target as False
+    os.mkdir('shedskin_test_de')
+    os.symlink('loop2', 'shedskin_test_de/loop1')
+    os.symlink('loop1', 'shedskin_test_de/loop2')
+    os.symlink('nowhere', 'shedskin_test_de/dangling')
+    for e in os.scandir('shedskin_test_de'):
+        if e.name == 'dangling':
+            assert not e.is_dir()
+            assert not e.is_file()
+        else:
+            code = 0
+            try:
+                e.is_dir()
+            except OSError as err:
+                code = err.errno
+            assert code == 40, e.name
+    for n in ['loop1', 'loop2', 'dangling']:
+        os.remove('shedskin_test_de/' + n)
+    os.rmdir('shedskin_test_de')
+
+    # an uncaught KeyboardInterrupt ends the process by SIGINT
+    pid = os.fork()
+    if pid == 0:
+        r = os.open('/dev/null', os.O_WRONLY)
+        os.dup2(r, 1)  # (the message)
+        os.dup2(r, 2)
+        raise KeyboardInterrupt
+    assert os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1]) == -2
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1145,6 +1176,7 @@ def test_all():
     test_wait_exec_utime_edges()
     test_spawn_variants()
     test_std_streams_nice_tty_fdopen()
+    test_direntry_errors_keyboardinterrupt()
 
 if __name__ == '__main__':
     test_all()

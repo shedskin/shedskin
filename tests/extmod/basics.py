@@ -130,6 +130,18 @@ def chorus(animals):  # makes speak() virtual in the C++
     return [a.speak() for a in animals]
 
 
+def fail_empty(n):  # no arguments: args == ()
+    raise KeyError()
+
+
+def fail_noted(n):
+    try:
+        raise ValueError('v')
+    except ValueError as e:
+        e.add_note('note one')
+        raise e
+
+
 class Buffer:  # an attribute that cannot be converted (so not picklable)
     def __init__(self):
         self.s = io.StringIO()
@@ -145,6 +157,14 @@ class Buffer:  # an attribute that cannot be converted (so not picklable)
 
 if __name__ == '__main__':
     # make sure everything is called with the types used from basics_main.py
+    try:
+        fail_empty(1)
+    except KeyError:
+        pass
+    try:
+        fail_noted(1)
+    except ValueError:
+        pass
     buf = Buffer()
     buf.add('q')
     buf.get()
