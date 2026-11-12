@@ -707,6 +707,27 @@ def test_os_path_realpath_abs_errors():
     assert realpath(name) == join(cwd, name)
 
 
+def test_os_path_realpath_strict_notdir():
+    if os.name == "nt":
+        return  # see test_os_path_realpath_strict
+    name = "shedskin_test_realpath_notdir"
+    f = open(name, "w")
+    f.close()
+    full = join(realpath(os.getcwd()), name)
+    for p in [name + "/y", name + "/..", name + "/"]:
+        for strict in [True, os.path.ALLOW_MISSING]:
+            code = 0
+            fname = ""
+            try:
+                realpath(p, strict=strict)
+            except OSError as e:
+                code = e.errno
+                fname = e.filename
+            assert code == 20, p
+            assert fname == full, p
+    os.remove(name)
+
+
 def test_all():
     test_os_path_join()
     test_os_path()
@@ -744,6 +765,7 @@ def test_all():
     test_os_path_exists_bytes()
     test_os_path_kwarg_names()
     test_os_path_realpath_abs_errors()
+    test_os_path_realpath_strict_notdir()
 
 if __name__ == '__main__':
     test_all()

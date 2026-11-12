@@ -919,11 +919,18 @@ DirEntry::DirEntry(int dir_fd, str *name, std::filesystem::file_type type, __ss_
 
 #ifndef WIN32
 /* scandir(fd): the type of what a symlink points to (unknown if it cannot
-   be stat'ed, as for a dangling link) */
-static std::filesystem::file_type __entry_type_at(int dir_fd, str *name, bool follow_symlinks) {
+   be stat'ed, as for a dangling link). with 'raise', only a missing target
+   is unknown, as CPython's DirEntry.is_dir()/is_file() catch only
+   FileNotFoundError (e.g. a symlink loop raises) */
+static std::filesystem::file_type __entry_type_at(int dir_fd, str *name, bool follow_symlinks, bool raise=false, str *path=0) {
     struct stat sb;
-    if(::fstatat(dir_fd, __ss_cpath(name, "scandir"), &sb, follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW) == -1)
+    int r = dir_fd == -1 ? ::stat(__ss_cpath(path, "stat"), &sb)
+                         : ::fstatat(dir_fd, __ss_cpath(name, "scandir"), &sb, follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW);
+    if(r == -1) {
+        if(raise && errno != ENOENT)
+            __throw_oserror(dir_fd == -1 ? path : name);
         return std::filesystem::file_type::unknown;
+    }
     if(S_ISDIR(sb.st_mode))
         return std::filesystem::file_type::directory;
     if(S_ISREG(sb.st_mode))
@@ -937,11 +944,11 @@ static std::filesystem::file_type __entry_type_at(int dir_fd, str *name, bool fo
 __ss_bool DirEntry::is_dir(__ss_bool follow_symlinks) {
     if(__type == std::filesystem::file_type::symlink) {
 #ifndef WIN32
-        if(__dir_fd != -1)
-            return __mbool(follow_symlinks && __entry_type_at(__dir_fd, name, true) == std::filesystem::file_type::directory);
-#endif
+        return __mbool(follow_symlinks && __entry_type_at(__dir_fd, name, true, true, this->path) == std::filesystem::file_type::directory);
+#else
         std::error_code ec;
         return __mbool(follow_symlinks && std::filesystem::is_directory(__fspath(this->path), ec));
+#endif
     }
     return __mbool(__type == std::filesystem::file_type::directory);
 }
@@ -949,11 +956,11 @@ __ss_bool DirEntry::is_dir(__ss_bool follow_symlinks) {
 __ss_bool DirEntry::is_file(__ss_bool follow_symlinks) {
     if(__type == std::filesystem::file_type::symlink) {
 #ifndef WIN32
-        if(__dir_fd != -1)
-            return __mbool(follow_symlinks && __entry_type_at(__dir_fd, name, true) == std::filesystem::file_type::regular);
-#endif
+        return __mbool(follow_symlinks && __entry_type_at(__dir_fd, name, true, true, this->path) == std::filesystem::file_type::regular);
+#else
         std::error_code ec;
         return __mbool(follow_symlinks && std::filesystem::is_regular_file(__fspath(this->path), ec));
+#endif
     }
     return __mbool(__type == std::filesystem::file_type::regular);
 }

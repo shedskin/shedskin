@@ -399,6 +399,16 @@ void terminate_handler() {
                 for(__ss_int i=0; i<len(e->__notes__); i++)
                     print_(0, False, NULL, NULL, NULL, __backslashreplace_surrogates(e->__notes__->__getfast__(i)));
         } catch (BaseException *) {} /* e.g. stdout is a closed pipe */
+#ifndef WIN32
+        /* as CPython: an uncaught KeyboardInterrupt ends the process by
+           SIGINT (so the shell sees 130, and a parent WIFSIGNALED) */
+        if (dynamic_cast<KeyboardInterrupt *>(e)) {
+            fflush(NULL);
+            ::signal(SIGINT, SIG_DFL);
+            ::kill(::getpid(), SIGINT);
+            code = 130;
+        }
+#endif
     }
 
     std::exit(code);

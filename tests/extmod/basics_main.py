@@ -142,6 +142,17 @@ def test_inheritance():
     assert basics.Dog.speak(basics.Puppy()) == 'woof'
 
 
+def test_exception_args_notes():
+    try:
+        basics.fail_empty(1)
+    except KeyError as e:
+        assert e.args == (), e.args
+    try:
+        basics.fail_noted(1)
+    except ValueError as e2:
+        assert e2.__notes__ == ['note one'], getattr(e2, '__notes__', None)
+
+
 def test_pickle_unconvertible():
     b = basics.Buffer()
     b.add('a')

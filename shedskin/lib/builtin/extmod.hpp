@@ -48,8 +48,13 @@ template<class T> PyObject *__to_py(T t) {
 inline void __ss_raise_py(BaseException *e) {
     PyObject *type = e->__to_py__();
     PyObject *args = e->__py_args__();
+    if(!args && !e->message) {
+        args = PyTuple_New(0); /* as CPython: KeyError() has args () */
+        if(!args)
+            return;
+    }
     if(!args) {
-        PyObject *msg = e->message ? e->message->__to_py__() : PyUnicode_FromStringAndSize("", 0);
+        PyObject *msg = e->message->__to_py__();
         if(!msg)
             return;
         args = PyTuple_Pack(1, msg); /* does not steal msg */
@@ -62,6 +67,16 @@ inline void __ss_raise_py(BaseException *e) {
     Py_DECREF(args);
     if(!value)
         return;
+    /* notes from add_note() */
+    if(e->__notes__) {
+        PyObject *notes = e->__notes__->__to_py__();
+        if(!notes || PyObject_SetAttrString(value, "__notes__", notes) < 0) {
+            Py_XDECREF(notes);
+            Py_DECREF(value);
+            return;
+        }
+        Py_DECREF(notes);
+    }
     if(e->__py_setattrs__(value) == 0)
         PyErr_SetObject(type, value);
     Py_DECREF(value);

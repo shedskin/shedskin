@@ -5,6 +5,7 @@
 #ifndef WIN32
 #include <pwd.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #else
 #ifdef _MSC_VER
 #ifndef NOMINMAX
@@ -597,9 +598,19 @@ str *realpath(str *filename, __ss_bool strict) {
 
     FAST_FOR(i,first,(len(bits)+1),1,40,41)
         component = joinl(bits->__slice__(3, 0, i, 0));
-        if (strict.value && (!allow_missing.value) && len(component) && (!lexists(component).value)) {
-            if (!(all_but_last.value && (i == len(bits)))) {
-                errno = ENOENT;
+        if (strict.value && len(component)) {
+            /* as CPython: lstat each component, so e.g. a file with more
+               components after it is ENOTDIR (also for ALLOW_MISSING, which
+               only ignores missing components) */
+            struct ::stat st;
+            if (::lstat(__ss_cpath(component, "lstat"), &st) != 0) {
+                int err = errno;
+                if (!(err == ENOENT && (allow_missing.value || (all_but_last.value && i == len(bits))))) {
+                    errno = err;
+                    __throw_oserror(component);
+                }
+            } else if (!S_ISDIR(st.st_mode) && !S_ISLNK(st.st_mode) && i < len(bits)) {
+                errno = ENOTDIR;
                 __throw_oserror(component);
             }
         }
