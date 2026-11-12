@@ -4595,6 +4595,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             or self.library_func(funcs, "socket", None, "setdefaulttimeout")
             or self.library_func(funcs, "socket", None, "create_connection")
             or self.library_func(funcs, "select", None, "select")
+            # mtime=None (the current time) must not be a bare NULL (0)
+            or self.library_func(funcs, "gzip", None, "compress")
             # print(None), but not a None sep/end/file (see below)
             or print_call
         ):

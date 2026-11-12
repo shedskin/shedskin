@@ -1512,6 +1512,20 @@ def test_closed_timeout_sendfile_checks():
     s.close()
 
 
+def test_herror():
+    if sys.platform == 'win32':
+        return
+    # as CPython: setipaddr() first, then a failing gethostbyname(): herror
+    kind = ''
+    try:
+        socket.gethostbyname_ex('<broadcast>')
+    except socket.herror:
+        kind = 'herror'
+    except socket.gaierror:
+        kind = 'gaierror'
+    assert kind == 'herror'
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1551,6 +1565,7 @@ def test_all():
     test_none_timeouts_trunc_flags()
     test_int_timeouts_fromfd_blocking()
     test_closed_timeout_sendfile_checks()
+    test_herror()
 
 if __name__ == '__main__':
     test_all()

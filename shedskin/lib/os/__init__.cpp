@@ -1114,7 +1114,8 @@ static str *__walk_join(str *top, str *name) {
         return name;
     __ss_char last = top->unit.back();
 #ifdef WIN32
-    if(last == '/' || last == '\\')
+    /* (as ntpath.join: a bare drive 'C:' gets no separator, 'C:sub') */
+    if(last == '/' || last == '\\' || (top->unit.size() == 2 && last == ':'))
 #else
     if(last == '/') /* (a backslash is an ordinary character here) */
 #endif
@@ -1240,12 +1241,16 @@ __walk_iter *walk(str *top, __ss_bool topdown, void *, __ss_bool followlinks) {
 
 void *putenv(str* varname, str* value) {
     /* (::putenv() keeps the pointer it is passed, so use the copying variants) */
-    if(varname->unit.empty() || varname->find(new str("=")) != -1)
-        throw new ValueError(new str("illegal environment variable name"));
 #ifdef WIN32
+    /* as CPython: on windows a leading '=' is fine (hidden variables) */
+    if(varname->unit.empty() || varname->unit.find('=', 1) != __GC_STR::npos)
+        throw new ValueError(new str("illegal environment variable name"));
     if(::_putenv_s(__ss_cpath(varname), __ss_cpath(value)) != 0)
         __throw_oserror();
 #else
+    /* (an empty name is left to setenv(): EINVAL, as CPython) */
+    if(varname->unit.find('=') != __GC_STR::npos)
+        throw new ValueError(new str("illegal environment variable name"));
     if(::setenv(__ss_cpath(varname), __ss_cpath(value), 1) == -1)
         __throw_oserror();
 #endif
@@ -1256,9 +1261,12 @@ void *unsetenv(str* var) {
 #ifdef WIN32
     /* MSVC has no unsetenv(); passing "NAME=" to _putenv removes NAME
        from the environment. */
+    if(var->unit.empty() || var->unit.find('=', 1) != __GC_STR::npos) /* (as CPython) */
+        throw new ValueError(new str("illegal environment variable name"));
     std::stringstream ss;
     ss << __ss_cpath(var) << '=';
-    _putenv(const_cast<char*>(ss.str().c_str()));
+    if(_putenv(const_cast<char*>(ss.str().c_str())) != 0)
+        __throw_oserror();
 #else
     if (::unsetenv(__ss_cpath(var)) == -1) /* e.g. '' or 'a=b': EINVAL, as CPython */
         __throw_oserror();

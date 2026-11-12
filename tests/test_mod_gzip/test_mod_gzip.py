@@ -40,7 +40,7 @@ def test_compress_header():
     d = gzip.compress(b'abc', mtime=0x01020304)
     assert d[:4] == b'\x1f\x8b\x08\x00'
     assert d[4:8] == b'\x04\x03\x02\x01'
-    assert d[8] == 2  # level 9
+    assert d[8] == 0  # level 6 (the default since 3.15)
     assert d[9] == 255
     assert gzip.compress(b'abc', 1, mtime=0)[8] == 4
     assert gzip.compress(b'abc', 0, mtime=0)[8] == 4
@@ -49,8 +49,10 @@ def test_compress_header():
     # trailer: crc32 and size
     assert d[-4:] == b'\x03\x00\x00\x00'
     assert d[-8:-4] == b'\xc2\x41\x24\x35'
-    # mtime defaults to the current time
+    # mtime defaults to 0 (since 3.15), None is the current time
     d = gzip.compress(b'abc')
+    assert d[4:8] == b'\x00\x00\x00\x00'
+    d = gzip.compress(b'abc', mtime=None)
     assert d[4:8] != b'\x00\x00\x00\x00'
 
 
@@ -964,6 +966,33 @@ def test_fd_name_appended_members_seek():
     os.remove(name)
 
 
+def test_compress_defaults_seek_end():
+    # as CPython 3.15: level 6 and mtime 0 by default, bad mtimes become 0
+    c = gzip.compress(b'x')
+    assert c[4:8] == b'\x00\x00\x00\x00'
+    assert c[8] == 0  # (XFL: neither best nor fastest)
+    assert gzip.compress(b'x', mtime=-1)[4:8] == b'\x00\x00\x00\x00'
+    assert gzip.compress(b'x', mtime=2**32)[4:8] == b'\x00\x00\x00\x00'
+    assert gzip.compress(b'x', mtime=5)[4:8] == b'\x05\x00\x00\x00'
+    assert gzip.compress(b'x', 9)[8] == 2
+    name = 'shedskin_test_gzip_seekend.gz'
+    g = gzip.GzipFile(name, 'wb', mtime=2**32)
+    g.write(b'hello world\n')
+    g.close()
+    f = open(name, 'rb')
+    head = f.read(10)
+    f.close()
+    assert head[4:8] == b'\x00\x00\x00\x00'
+    assert head[8] == 0
+    # a huge seek from the end just ends up at the end
+    g = gzip.open(name, 'rb')
+    assert g.read(5) == b'hello'
+    assert g.seek(9223372036854775807, 2) == 12
+    assert g.read() == b''
+    g.close()
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -995,6 +1024,7 @@ def test_all():
     test_text_buffer_closed_messages()
     test_text_buffer_fileobj_types()
     test_fd_name_appended_members_seek()
+    test_compress_defaults_seek_end()
 
 if __name__ == '__main__':
     test_all()

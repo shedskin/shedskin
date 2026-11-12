@@ -704,6 +704,22 @@ static error *make_error(const char *prefix)
     return make_error(prefix, ERRNO);
 }
 
+/* herror(h_errno, hstrerror()), as CPython (set_herror) */
+static herror *make_herror()
+{
+#ifdef WIN32
+    int h = WSAGetLastError();
+    str *msg = new str("host not found"); /* (no hstrerror(), as CPython) */
+#else
+    int h = h_errno;
+    str *msg = new str(hstrerror(h));
+#endif
+    herror *e = new herror(__add_strs(4, new str("[Errno "), __str(h), new str("] "), msg));
+    e->__ss_errno = h;
+    e->strerror = msg;
+    return e;
+}
+
 /* gaierror(eai code, gai_strerror()), as CPython */
 static gaierror *make_gaierror(int r)
 {
@@ -1965,9 +1981,12 @@ str *gethostbyname(str *hostname)
 __host_tuple *gethostbyname_ex(str *hostname)
 {
     check_hostname_nul(hostname, "gethostbyname_ex");
+    /* as CPython: first setipaddr() (gaierror; '' and '<broadcast>' are
+       fine there), then gethostbyname() (herror) */
+    string_to_addr(hostname->c_str());
     hostent *he = ::gethostbyname(hostname->c_str());
     if (!he)
-        throw_host_not_found(hostname->c_str());
+        throw make_herror();
     return hostent_to_tuple(he);
 }
 
@@ -1979,7 +1998,7 @@ __host_tuple *gethostbyaddr(str *ip_address)
     addr.s_addr = (in_addr_t)string_to_addr(ip_address->c_str());
     hostent *he = ::gethostbyaddr(SOCKOPT_CAST &addr, sizeof(addr), AF_INET);
     if (!he)
-        throw new herror(host_not_found);
+        throw make_herror();
     return hostent_to_tuple(he);
 }
 

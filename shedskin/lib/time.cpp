@@ -59,12 +59,26 @@ str *const_0, *const_1;
 
 class_ *cl_struct_time;
 
-struct_time::struct_time(tuple2<__ss_int, __ss_int> *_tuple) : tuple2<__ss_int, __ss_int>(_tuple) {
-    this->__class__ = cl_struct_time;
+/* as CPython: 9 to 11 items (tm_zone, tm_gmtoff), of which 9 are visible */
+static tuple2<__ss_int, __ss_int> *__struct_time_items(tuple2<__ss_int, __ss_int> *t) {
+    __ss_int n = len(t);
+    if (n < 9)
+        throw new TypeError(__add_strs(3, new str("time.struct_time() takes an at least 9-sequence ("), __str(n), new str("-sequence given)")));
+    if (n > 11)
+        throw new TypeError(__add_strs(3, new str("time.struct_time() takes an at most 11-sequence ("), __str(n), new str("-sequence given)")));
+    return n == 9 ? t : t->__slice__(3, 0, 9, 0);
+}
 
-    if ((len(_tuple)!=9)) {
-        throw ((new TypeError(const_0)));
-    }
+/* as CPython: a plain tuple argument must have exactly 9 items */
+static tuple2<__ss_int, __ss_int> *__time_tuple_arg(tuple2<__ss_int, __ss_int> *t, const char *func) {
+    if (len(t) != 9)
+        throw new TypeError(__add_strs(2, new str(func), new str("(): illegal time tuple argument")));
+    return t;
+}
+
+struct_time::struct_time(tuple2<__ss_int, __ss_int> *_tuple) : tuple2<__ss_int, __ss_int>(__struct_time_items(_tuple)) {
+    this->__class__ = cl_struct_time;
+    _tuple = __struct_time_items(_tuple);
     this->tm_year = _tuple->__getitem__(0);
     this->tm_mon = _tuple->__getitem__(1);
     this->tm_mday = _tuple->__getitem__(2);
@@ -540,7 +554,7 @@ __ss_float mktime(struct_time *tuple) {
 }
 
 __ss_float mktime(tuple2<__ss_int, __ss_int> *tuple) {
-    return mktime(new struct_time(tuple));
+    return mktime(new struct_time(__time_tuple_arg(tuple, "mktime")));
 }
 
 /* CPython floors the seconds-since-epoch value before converting to an
@@ -668,7 +682,7 @@ str *asctime(struct_time *tuple) {
 }
 
 str *asctime(tuple2<__ss_int, __ss_int> *tuple) {
-    return asctime(new struct_time(tuple));
+    return asctime(new struct_time(__time_tuple_arg(tuple, "asctime")));
 }
 
 str *ctime() {
@@ -684,9 +698,15 @@ str *ctime(const __ss_int seconds) {
 }
 
 str *strftime(str *format, struct_time* tuple) {
-    /* (an embedded NUL would also end the format early, or make it empty) */
-    if (__ss_has_nul(format))
-        throw new ValueError(new str("embedded null character"));
+    /* as CPython (3.13+): the parts around an embedded NUL are formatted
+       separately, and the NUL is kept (C strftime() would stop there) */
+    if (__ss_has_nul(format)) {
+        list<str *> *parts = format->split(new str("", 1));
+        list<str *> *out = new list<str *>();
+        for (__ss_int i = 0; i < len(parts); i++)
+            out->append(strftime(parts->__getfast__(i), tuple));
+        return (new str("", 1))->join(out);
+    }
     tm time_tuple = tuple2tm_checked(tuple);
 #ifdef _MSC_VER
     /* as CPython: the MSVC strftime() aborts the process (0xc0000409) on
@@ -721,7 +741,7 @@ str *strftime(str *format) {
 }
 
 str *strftime(str *format, tuple2<__ss_int, __ss_int> *tuple) {
-    struct_time *st = new struct_time(tuple);
+    struct_time *st = new struct_time(__time_tuple_arg(tuple, "strftime"));
 
     return strftime(format, st);
 }
@@ -1364,7 +1384,6 @@ void __init() {
     start = std::clock();
     __init_clock_ids();
     cl_clock_info = new class_("SimpleNamespace");
-    const_0 = new str("time.struct_time() takes a 9-sequence");
     const_1 = new str("time.struct_time(tm_year=%d, tm_mon=%d, tm_mday=%d, tm_hour=%d, tm_min=%d, tm_sec=%d, tm_wday=%d, tm_yday=%d, tm_isdst=%d)");
 #ifdef WIN32
     /* as CPython: the CRT globals */
