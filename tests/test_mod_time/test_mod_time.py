@@ -39,11 +39,11 @@ def test_strftime():
                 "2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S")
         ) == "12 Nov 2001 18:31:01"
     assert time.strftime("%Y", time.strptime("2001", "%Y")) == '2001'
-    try:
-        time.strftime("%Y\x00%m")  # used to be cut short at the NUL
-        assert False
-    except ValueError as e:
-        assert str(e) == 'embedded null character'
+    # an embedded NUL is kept, as CPython 3.13+ (it used to cut it short)
+    parts = time.strftime("%Y\x00%m").split('\x00')
+    assert len(parts) == 2
+    assert len(parts[0]) == 4
+    assert len(parts[1]) == 2
 
 def test_conversions():
     t = time.time()
@@ -623,6 +623,39 @@ def test_tuple_field_overflow():
     assert time.asctime(time.struct_time((2**31 - 1, 1, 1, 0, 0, 0, 0, 0, 0))) == 'Mon Jan  1 00:00:00 2147483647'
     assert time.mktime(time.localtime(1000000)) == 1000000.0
 
+def test_strftime_nul_tuple_lengths():
+    # as CPython 3.13+: an embedded NUL is kept
+    assert time.strftime('a\x00b%Y', time.gmtime(0)) == 'a\x00b1970'
+    assert time.strftime('\x00', time.gmtime(0)) == '\x00'
+    msg = ''
+    try:
+        time.struct_time((1, 2, 3))
+    except TypeError as e:
+        msg = str(e)
+    assert msg == 'time.struct_time() takes an at least 9-sequence (3-sequence given)'
+    msg = ''
+    try:
+        time.struct_time((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))
+    except TypeError as e:
+        msg = str(e)
+    assert msg == 'time.struct_time() takes an at most 11-sequence (12-sequence given)'
+    st = time.struct_time((2000, 1, 2, 3, 4, 5, 6, 2, 0, 1))
+    assert len(st) == 9
+    assert st.tm_year == 2000
+    msg = ''
+    try:
+        time.mktime((2000, 1, 2, 3, 4, 5, 6, 2, 0, 1))
+    except TypeError as e:
+        msg = str(e)
+    assert msg == 'mktime(): illegal time tuple argument'
+    msg = ''
+    try:
+        time.asctime((2000, 1, 2))
+    except TypeError as e:
+        msg = str(e)
+    assert msg == 'asctime(): illegal time tuple argument'
+
+
 def test_all():
     # test_time() ## producing different results on linux vs macos
     #test_mktime()
@@ -672,6 +705,7 @@ def test_all():
     test_zone_gmtoff()
     test_struct_time_tuple()
     print('ok')
+    test_strftime_nul_tuple_lengths()
 
 if __name__ == '__main__':
     test_all() 

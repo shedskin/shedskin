@@ -201,7 +201,7 @@ static __GC_BYTES __header_name(str *name) {
     size_t start = 0;
     for (size_t i = 0; i < u.size(); i++) {
 #ifdef WIN32
-        if (u[i] == '/' || u[i] == '\\' || u[i] == ':')
+        if (u[i] == '/' || u[i] == '\\' || (i == 1 && u[i] == ':')) /* (as ntpath.basename: only a drive colon) */
 #else
         if (u[i] == '/')
 #endif
@@ -249,6 +249,12 @@ static void __unregister_writer(GzipFile *gz) {
 }
 
 /* GzipFile */
+
+/* as CPython 3.15: an mtime outside [0, 2**32) becomes 0 */
+static unsigned long long __header_mtime(__ss_int mtime, bool has_mtime) {
+    long long t = has_mtime ? (long long)mtime : (long long)::time(NULL);
+    return (t < 0 || t >= 4294967296LL) ? 0 : (unsigned long long)t;
+}
 
 void GzipFile::__init(str *filename, str *mode, __ss_int compresslevel, file_binary *fileobj, __ss_int mtime, bool has_mtime) {
     this->mtime = 0;
@@ -305,7 +311,7 @@ void GzipFile::__init(str *filename, str *mode, __ss_int compresslevel, file_bin
             __GC_BYTES fname = __header_name(name);
             outbuf += "\x1f\x8b\x08";
             outbuf.push_back(fname.empty() ? '\0' : '\x08'); /* FNAME */
-            __put32(outbuf, has_mtime ? (unsigned long long)mtime : (unsigned long long)::time(NULL));
+            __put32(outbuf, __header_mtime(mtime, has_mtime));
             outbuf.push_back(compresslevel == 9 ? '\x02' : (compresslevel == 1 ? '\x04' : '\0'));
             outbuf.push_back('\xff');
             if (!fname.empty()) {
@@ -673,7 +679,7 @@ __ss_int GzipFile::seek(__ss_int offset, __ss_int whence) {
     __check_closed();
     if (writing) {
         if (whence == 1)
-            offset = pos + offset;
+            offset = (offset > std::numeric_limits<__ss_int>::max() - pos) ? std::numeric_limits<__ss_int>::max() : pos + offset;
         else if (whence != 0)
             throw new ValueError(new str("Seek from end not supported"));
         if (offset < pos)
@@ -689,7 +695,7 @@ __ss_int GzipFile::seek(__ss_int offset, __ss_int whence) {
         offset = (offset > std::numeric_limits<__ss_int>::max() - pos) ? std::numeric_limits<__ss_int>::max() : pos + offset;
     else if (whence == 2) {
         while (__fill()) ; /* to learn the size */
-        offset = size + offset;
+        offset = (offset > std::numeric_limits<__ss_int>::max() - size) ? std::numeric_limits<__ss_int>::max() : size + offset;
     } else if (whence != 0)
         throw new ValueError(__add_strs(2, new str("Invalid value for whence: "), __str(whence)));
     if (offset < pos)
@@ -1078,7 +1084,7 @@ bytes *__compress(bytes *data, __ss_int compresslevel, __ss_int mtime, bool has_
     out.reserve(32 + data->unit.size() / 2);
     out += "\x1f\x8b\x08";
     out.push_back('\0');
-    __put32(out, has_mtime ? (unsigned long long)mtime : (unsigned long long)::time(NULL));
+    __put32(out, __header_mtime(mtime, has_mtime));
     /* (as zlib does: the fast and stored levels both count as fastest) */
     out.push_back(compresslevel == 9 ? '\x02' : ((compresslevel == 0 || compresslevel == 1) ? '\x04' : '\0'));
     out.push_back('\xff');

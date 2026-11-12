@@ -4,7 +4,7 @@
 
 import io
 
-__void = 0  # 'mtime not given' sentinel (defaults to the current time)
+__void = 0  # 'mtime not given' sentinel (GzipFile: the current time; compress(): 0)
 
 READ = 'rb'
 WRITE = 'wb'
@@ -22,7 +22,7 @@ __exception = BadGzipFile('')
 
 
 class GzipFile(file_binary):
-    def __init__(self, filename=None, mode=None, compresslevel=9, fileobj=None, mtime=__void):
+    def __init__(self, filename=None, mode=None, compresslevel=6, fileobj=None, mtime=__void):
         self.unit = b''
         self.closed = False
         self.name = ''
@@ -78,13 +78,13 @@ class _GzipTextFile(file):
         return True
 
 
-def open(filename, mode=None, compresslevel=9, encoding=None, errors=None, newline=None):
+def open(filename, mode=None, compresslevel=6, encoding=None, errors=None, newline=None):
     return GzipFile(filename)
 
-def open_text(filename, mode=None, compresslevel=9, encoding=None, errors=None, newline=None):  # gzip.open(.., 'rt'), see graph.py
+def open_text(filename, mode=None, compresslevel=6, encoding=None, errors=None, newline=None):  # gzip.open(.., 'rt'), see graph.py
     return _GzipTextFile(GzipFile(filename))
 
-def compress(data, compresslevel=9, mtime=__void):
+def compress(data, compresslevel=6, mtime=__void):
     return b''
 
 def decompress(data):

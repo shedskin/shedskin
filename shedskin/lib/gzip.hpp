@@ -59,12 +59,12 @@ public:
     size_t outpos;
     bool new_member, member_end, at_eof;
 
-    GzipFile(str *filename=0, str *mode=0, __ss_int compresslevel=9, file_binary *fileobj=0) {
+    GzipFile(str *filename=0, str *mode=0, __ss_int compresslevel=6, file_binary *fileobj=0) {
         __init(filename, mode, compresslevel, fileobj, 0, false);
     }
     /* mtime is __ss_void_struct when omitted by the caller (model default __void) */
     template<class V> GzipFile(str *filename, str *mode, __ss_int compresslevel, file_binary *fileobj, V mtime) {
-        if constexpr (std::is_same_v<V, __ss_void_struct>)
+        if constexpr (std::is_same_v<V, __ss_void_struct> || std::is_pointer_v<V>) /* (omitted or None: the current time) */
             __init(filename, mode, compresslevel, fileobj, 0, false);
         else
             __init(filename, mode, compresslevel, fileobj, (__ss_int)mtime, true);
@@ -182,23 +182,26 @@ public:
 };
 
 /* filename can also be a binary file object (such as an io.BytesIO) */
-GzipFile *open(str *filename, str *mode=0, __ss_int compresslevel=9, str *encoding=0, str *errors=0, str *newline=0);
-GzipFile *open(bytes *filename, str *mode=0, __ss_int compresslevel=9, str *encoding=0, str *errors=0, str *newline=0);
-GzipFile *open(file_binary *fileobj, str *mode=0, __ss_int compresslevel=9, str *encoding=0, str *errors=0, str *newline=0);
+GzipFile *open(str *filename, str *mode=0, __ss_int compresslevel=6, str *encoding=0, str *errors=0, str *newline=0);
+GzipFile *open(bytes *filename, str *mode=0, __ss_int compresslevel=6, str *encoding=0, str *errors=0, str *newline=0);
+GzipFile *open(file_binary *fileobj, str *mode=0, __ss_int compresslevel=6, str *encoding=0, str *errors=0, str *newline=0);
 
-_GzipTextFile *open_text(str *filename, str *mode=0, __ss_int compresslevel=9, str *encoding=0, str *errors=0, str *newline=0);
-_GzipTextFile *open_text(bytes *filename, str *mode=0, __ss_int compresslevel=9, str *encoding=0, str *errors=0, str *newline=0);
-_GzipTextFile *open_text(file_binary *fileobj, str *mode=0, __ss_int compresslevel=9, str *encoding=0, str *errors=0, str *newline=0);
+_GzipTextFile *open_text(str *filename, str *mode=0, __ss_int compresslevel=6, str *encoding=0, str *errors=0, str *newline=0);
+_GzipTextFile *open_text(bytes *filename, str *mode=0, __ss_int compresslevel=6, str *encoding=0, str *errors=0, str *newline=0);
+_GzipTextFile *open_text(file_binary *fileobj, str *mode=0, __ss_int compresslevel=6, str *encoding=0, str *errors=0, str *newline=0);
 
 bytes *__compress(bytes *data, __ss_int compresslevel, __ss_int mtime, bool has_mtime);
 /* mtime is __ss_void_struct when omitted by the caller (model default __void) */
+/* as CPython 3.15: mtime=0 by default (reproducible output); None: the current time */
 template<class V> bytes *compress(bytes *data, __ss_int compresslevel, V mtime) {
     if constexpr (std::is_same_v<V, __ss_void_struct>)
+        return __compress(data, compresslevel, 0, true);
+    else if constexpr (std::is_pointer_v<V>)
         return __compress(data, compresslevel, 0, false);
     else
         return __compress(data, compresslevel, (__ss_int)mtime, true);
 }
-inline bytes *compress(bytes *data, __ss_int compresslevel=9) { return __compress(data, compresslevel, 0, false); }
+inline bytes *compress(bytes *data, __ss_int compresslevel=6) { return __compress(data, compresslevel, 0, true); }
 
 bytes *decompress(bytes *data);
 

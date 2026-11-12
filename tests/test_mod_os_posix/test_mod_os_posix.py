@@ -1208,6 +1208,22 @@ def test_negative_fd_unsetenv_pipe_walk():
     os.rmdir('shedskin_test_walk\\')
 
 
+def test_putenv_empty_name():
+    # an empty name is left to setenv(): EINVAL (only '=' is a ValueError)
+    code = 0
+    try:
+        os.putenv('', 'x')
+    except OSError as e:
+        code = e.errno
+    assert code == 22
+    msg = ''
+    try:
+        os.putenv('a=b', 'x')
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'illegal environment variable name'
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1248,6 +1264,7 @@ def test_all():
     test_getrandom_conf_names()
     test_getrandom_flags()
     test_negative_fd_unsetenv_pipe_walk()
+    test_putenv_empty_name()
 
 if __name__ == '__main__':
     test_all()
