@@ -28,6 +28,7 @@ class GzipFile(file_binary):
         self.name = ''
         self.mode = ''
         self.mtime = 0  # (None in CPython, before the first header is read)
+        self.fileobj = file_binary('')  # (the C++ member is a file_binary *)
 
     def read1(self, size=-1):
         return b''
@@ -65,6 +66,7 @@ class _GzipTextFile(file):
         self.encoding = ''
         self.errors = ''
         self.line_buffering = False
+        self.buffer = file_binary('')  # (the GzipFile; the C++ member is a file_binary *)
 
     def readable(self):
         return True

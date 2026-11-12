@@ -1194,6 +1194,37 @@ def test_write_byte_range_prot_write_messages():
         pw.close()
 
 
+def test_prot_access_iter_closed():
+    m = mmap.mmap(-1, 10)
+    m.close()
+    it = iter(m)  # (as CPython: next() raises, not iter())
+    msg = ''
+    try:
+        next(it)
+    except ValueError as e:
+        msg = str(e)
+    assert msg != ''
+    if sys.platform == 'win32':
+        return
+    # a mapping that is not writable cannot be resized (the file stays)
+    name = 'shedskin_test_mmap_prot.bin'
+    f = open(name, 'wb')
+    f.write(b'x' * 8192)
+    f.close()
+    f = open(name, 'r+b')
+    m = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ | mmap.PROT_EXEC)
+    refused = False
+    try:
+        m.resize(4096)
+    except TypeError:
+        refused = True
+    assert refused
+    m.close()
+    f.close()
+    assert os.path.getsize(name) == 8192
+    os.remove(name)
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1233,6 +1264,7 @@ def test_all():
     test_read_no_arg()
     test_move_bounds_mapping_length()
     test_write_byte_range_prot_write_messages()
+    test_prot_access_iter_closed()
 
 if __name__ == '__main__':
     test_all()

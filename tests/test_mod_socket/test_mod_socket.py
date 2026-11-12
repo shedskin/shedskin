@@ -1379,6 +1379,35 @@ def test_none_timeouts_trunc_flags():
             l.close()
 
 
+def test_int_timeouts_fromfd_blocking():
+    # an int 0 (also matches the None overload in C++)
+    s = socket.socket()
+    s.settimeout(0)
+    assert s.gettimeout() == 0.0
+    s.settimeout(2)
+    assert s.gettimeout() == 2.0
+    s.close()
+    socket.setdefaulttimeout(0)
+    assert socket.socket().gettimeout() == 0.0
+    socket.setdefaulttimeout(None)
+    # fromfd() with a default of None leaves the (shared) fd as it is
+    srv = socket.socket()
+    srv.bind(('127.0.0.1', 0))
+    srv.listen()
+    a = socket.create_connection(srv.getsockname(), 5.0)
+    a.setblocking(False)
+    f = socket.fromfd(a.fileno(), socket.AF_INET, socket.SOCK_STREAM)
+    code = 0
+    try:
+        a.recv(1)
+    except OSError as e:
+        code = e.errno
+    assert code == 11 or code == 35 or code == 10035  # EAGAIN/EWOULDBLOCK
+    f.close()
+    a.close()
+    srv.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1416,6 +1445,7 @@ def test_all():
     test_gethostbyname_special()
     test_settimeout_range()
     test_none_timeouts_trunc_flags()
+    test_int_timeouts_fromfd_blocking()
 
 if __name__ == '__main__':
     test_all()

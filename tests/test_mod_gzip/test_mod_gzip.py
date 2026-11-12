@@ -908,6 +908,23 @@ def test_text_buffer_closed_messages():
     os.remove(name)
 
 
+def test_text_buffer_fileobj_types():
+    name = 'shedskin_test_gzbuf2.gz'
+    t = gzip.open(name, 'wt')
+    t.write('text\n')
+    t.flush()  # (CPython's text layer buffers separately)
+    b = t.buffer
+    b.write(b'bytes\n')
+    t.close()
+    assert b.closed
+    g = gzip.open(name, 'rb')
+    assert g.read() == b'text\nbytes\n'
+    fo = g.fileobj
+    assert fo.name == name
+    g.close()
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -937,6 +954,7 @@ def test_all():
     test_text_read_chars_invalid()
     test_text_crlf_ignore()
     test_text_buffer_closed_messages()
+    test_text_buffer_fileobj_types()
 
 if __name__ == '__main__':
     test_all()

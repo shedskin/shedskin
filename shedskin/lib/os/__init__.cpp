@@ -42,6 +42,12 @@
 #include <sysexits.h>
 #include <sys/ioctl.h>
 #include <signal.h>
+#if defined(__linux__) && defined(__has_include)
+#if __has_include(<sys/random.h>)
+#include <sys/random.h> /* getrandom(2): needs no fd, as CPython's os.urandom */
+#define __SS_HAVE_GETRANDOM
+#endif
+#endif
 #endif
 
 #ifdef __linux__
@@ -186,7 +192,7 @@ const __ss_int MAXENTRIES = 4096; /* XXX fix functions that use this */
 
 str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
-__ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_O_RDONLY, __ss_O_WRONLY, __ss_O_RDWR, __ss_O_NDELAY, __ss_O_NONBLOCK, __ss_O_APPEND, __ss_O_DSYNC, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_NOCTTY, __ss_O_CREAT, __ss_O_EXCL, __ss_O_TRUNC, __ss_O_BINARY, __ss_O_TEXT, __ss_O_LARGEFILE, __ss_O_SHLOCK, __ss_O_EXLOCK, __ss_O_NOINHERIT, __ss__O_SHORT_LIVED, __ss_O_TEMPORARY, __ss_O_RANDOM, __ss_O_SEQUENTIAL, __ss_O_ASYNC, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_NOFOLLOW, __ss_O_NOATIME, __ss_EX_OK, __ss_EX_USAGE, __ss_EX_DATAERR, __ss_EX_NOINPUT, __ss_EX_NOUSER, __ss_EX_NOHOST, __ss_EX_UNAVAILABLE, __ss_EX_SOFTWARE, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_CANTCREAT, __ss_EX_IOERR, __ss_EX_TEMPFAIL, __ss_EX_PROTOCOL, __ss_EX_NOPERM, __ss_EX_CONFIG, __ss_EX_NOTFOUND, __ss_P_WAIT, __ss_P_NOWAIT, __ss_P_OVERLAY, __ss_P_NOWAITO, __ss_P_DETACH, __ss_SEEK_SET, __ss_SEEK_CUR, __ss_SEEK_END, __ss_SEEK_DATA, __ss_SEEK_HOLE;
+__ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_O_RDONLY, __ss_O_WRONLY, __ss_O_RDWR, __ss_O_NDELAY, __ss_O_NONBLOCK, __ss_O_APPEND, __ss_O_DSYNC, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_NOCTTY, __ss_O_CREAT, __ss_O_EXCL, __ss_O_TRUNC, __ss_O_BINARY, __ss_O_TEXT, __ss_O_LARGEFILE, __ss_O_SHLOCK, __ss_O_EXLOCK, __ss_O_NOINHERIT, __ss__O_SHORT_LIVED, __ss_O_TEMPORARY, __ss_O_RANDOM, __ss_O_SEQUENTIAL, __ss_O_ASYNC, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_NOFOLLOW, __ss_O_NOATIME, __ss_EX_OK, __ss_EX_USAGE, __ss_EX_DATAERR, __ss_EX_NOINPUT, __ss_EX_NOUSER, __ss_EX_NOHOST, __ss_EX_UNAVAILABLE, __ss_EX_SOFTWARE, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_CANTCREAT, __ss_EX_IOERR, __ss_EX_TEMPFAIL, __ss_EX_PROTOCOL, __ss_EX_NOPERM, __ss_EX_CONFIG, __ss_EX_NOTFOUND, __ss_P_WAIT, __ss_P_NOWAIT, __ss_P_OVERLAY, __ss_P_NOWAITO, __ss_P_DETACH, __ss_SEEK_SET, __ss_SEEK_CUR, __ss_SEEK_END, __ss_SEEK_DATA, __ss_SEEK_HOLE, __ss_GRND_NONBLOCK, __ss_GRND_RANDOM;
 
 /* std::filesystem errors carry an error_code rather than setting errno
    (on Windows it is a system error code), so map it back to errno */
@@ -1476,10 +1482,13 @@ bytes *read(__ss_int fd, __ss_int n) {
 }
 
 __ss_int write(__ss_int fd, bytes *s) {
-    size_t r;
+    size_t r, n = s->unit.size();
+#ifdef WIN32
+    n = std::min(n, (size_t)INT_MAX); /* (as CPython: _write takes an unsigned int, and returns an int) */
+#endif
     {
         __suppress_iph guard;
-        r = (size_t)::write(__ss_cint(fd), s->c_str(), s->unit.size());
+        r = (size_t)::write(__ss_cint(fd), s->c_str(), n);
     }
     if(r == std::string::npos)
         __throw_oserror();
@@ -1693,6 +1702,26 @@ bytes *urandom(__ss_int n) {
     }
     return s;
 #else
+#ifdef __SS_HAVE_GETRANDOM
+    {
+        bytes *s = new bytes();
+        s->unit.resize((size_t)n);
+        size_t done = 0;
+        while(done < (size_t)n) {
+            ssize_t r = ::getrandom(&s->unit[done], (size_t)n - done, 0);
+            if(r < 0) {
+                if(errno == EINTR)
+                    continue;
+                if(errno == ENOSYS) /* (an old kernel: /dev/urandom below) */
+                    break;
+                __throw_oserror();
+            }
+            done += (size_t)r;
+        }
+        if(done == (size_t)n)
+            return s;
+    }
+#endif
     __ss_int fd = open(new str("/dev/urandom"), __ss_O_RDONLY);
     bytes *s = new bytes();
     s->unit.resize((size_t)n);
@@ -1714,20 +1743,30 @@ bytes *urandom(__ss_int n) {
 #endif
 }
 
-/* os.getrandom() is a thin, Linux-specific wrapper around the getrandom(2)
- * syscall in CPython, with flags (GRND_NONBLOCK, GRND_RANDOM) that have no
- * portable meaning. Rather than special-case a raw syscall() on Linux only,
- * we implement it on top of the same cross-platform source urandom() already
- * uses (/dev/urandom on POSIX, BCryptGenRandom on Windows), so
- * behavior is consistent across platforms; flags is accepted (and, like in
- * CPython, must fit a C int) but ignored. */
+/* os.getrandom(): as CPython, one getrandom(2) call with the flags where
+ * the system has it (linux); elsewhere urandom(), ignoring the flags (which,
+ * like in CPython, must fit a C int) */
 bytes *getrandom(__ss_int size, __ss_int flags) {
     __ss_cint(flags);
     if (size < 0) { /* (as CPython: from the system call, unlike urandom) */
         errno = EINVAL;
         __throw_oserror();
     }
+#ifdef __SS_HAVE_GETRANDOM
+    /* as CPython: one call, with the flags (so EINVAL for bad ones) */
+    bytes *s = new bytes();
+    s->unit.resize((size_t)size);
+    ssize_t r;
+    do
+        r = ::getrandom(size ? &s->unit[0] : 0, (size_t)size, (unsigned int)flags);
+    while(r < 0 && errno == EINTR);
+    if(r < 0)
+        __throw_oserror();
+    s->unit.resize((size_t)r);
+    return s;
+#else
     return urandom(size);
+#endif
 }
 
 #ifdef WIN32
@@ -3302,6 +3341,12 @@ void __init() {
 #endif
 #ifdef SEEK_DATA
     __ss_SEEK_DATA = SEEK_DATA;
+#endif
+#ifdef GRND_NONBLOCK
+    __ss_GRND_NONBLOCK = GRND_NONBLOCK;
+#endif
+#ifdef GRND_RANDOM
+    __ss_GRND_RANDOM = GRND_RANDOM;
 #endif
 #ifdef SEEK_HOLE
     __ss_SEEK_HOLE = SEEK_HOLE;

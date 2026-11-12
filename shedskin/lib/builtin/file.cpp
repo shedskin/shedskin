@@ -28,11 +28,15 @@ static inline void __check_not_directory(FILE *f, str *file_name) {
 #ifdef WIN32
 #define __SS_FSEEK _fseeki64
 #define __SS_FTELL _ftelli64
+#define __SS_LSEEK _lseeki64
 typedef __int64 __ss_foff;
+typedef __int64 __ss_loff;
 #else
 #define __SS_FSEEK fseek
 #define __SS_FTELL ftell
+#define __SS_LSEEK ::lseek
 typedef long __ss_foff;
+typedef off_t __ss_loff;
 #endif
 
 #ifndef HAVE_STDIO_UNLOCKED
@@ -88,12 +92,12 @@ struct __ss_file_suppress_iph { __ss_file_suppress_iph() {} };
 static int __ss_fclose(FILE *f, bool closefd=true, bool reading=false) {
     __ss_file_suppress_iph guard;
     /* (fflush() of a reading stream seeks the fd back to the stream position) */
-    off_t offset_before = closefd ? -1 : ::lseek(fileno(f), 0, SEEK_CUR);
+    __ss_loff offset_before = closefd ? -1 : __SS_LSEEK(fileno(f), 0, SEEK_CUR);
     int err = FFLUSH(f) ? errno : 0;
     /* closefd=False: there is no portable way to free a FILE * but not its
        fd, so let fclose() close a copy, and move that back in place */
     int fd = -1, saved = -1;
-    off_t offset = -1;
+    __ss_loff offset = -1;
 #ifndef WIN32
     int fdflags = -1;
 #else
@@ -105,7 +109,7 @@ static int __ss_fclose(FILE *f, bool closefd=true, bool reading=false) {
         /* as CPython, the fd stays where reading/writing left it (fclose()
            would move it back to the stream position), and keeps FD_CLOEXEC
            (which dup2() clears) */
-        offset = ::lseek(fd, 0, SEEK_CUR); /* (after writing) */
+        offset = __SS_LSEEK(fd, 0, SEEK_CUR); /* (after writing) */
         if(reading) /* (read ahead: fflush() seeked back) */
             offset = std::max(offset_before, offset);
 #ifndef WIN32
@@ -133,7 +137,7 @@ static int __ss_fclose(FILE *f, bool closefd=true, bool reading=false) {
             SetHandleInformation((HANDLE)_get_osfhandle(fd), HANDLE_FLAG_INHERIT, hflags & HANDLE_FLAG_INHERIT);
 #endif
         if(offset != -1)
-            ::lseek(fd, offset, SEEK_SET);
+            __SS_LSEEK(fd, offset, SEEK_SET);
     }
     errno = err;
     return err;
