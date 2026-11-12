@@ -929,7 +929,10 @@ def test_text_buffer_fileobj_types():
 def test_fd_name_appended_members_seek():
     # a file opened by fd has no name to write into the header
     name = 'shedskin_test_gzip_fd.gz'
-    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    # (on windows, an os.open() fd is in text mode, which translates '\n'
+    # to '\r\n' below us, in cpython too: so use O_BINARY)
+    BIN = os.O_BINARY if os.name == 'nt' else 0
+    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | BIN)
     f = open(fd, 'wb')
     g = gzip.GzipFile(fileobj=f, mode='wb', mtime=0)
     assert g.name == ''
