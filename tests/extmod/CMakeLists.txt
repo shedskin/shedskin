@@ -152,6 +152,11 @@ add_shedskin_product(
     BUILD_EXTENSION
     NAME exceptions
     MAIN_MODULE exceptions.py
+    SYS_MODULES
+        os
+        os.path
+        stat
+        sys
 )
 add_shedskin_product(
     BUILD_EXTENSION
@@ -167,6 +172,9 @@ add_shedskin_product(
     BUILD_EXTENSION
     NAME typeslots
     MAIN_MODULE typeslots.py
+)
+add_shedskin_product(
+    BUILD_EXTENSION
     NAME numslots
     MAIN_MODULE numslots.py
 )
@@ -184,4 +192,26 @@ add_shedskin_product(
     BUILD_EXTENSION
     NAME inherited
     MAIN_MODULE inherited.py
+)
+add_shedskin_product(
+    BUILD_EXTENSION
+    NAME alloc
+    MAIN_MODULE alloc.py
+)
+add_shedskin_product(
+    BUILD_EXTENSION
+    NAME arguments
+    MAIN_MODULE arguments.py
+)
+add_shedskin_product(
+    BUILD_EXTENSION
+    NAME intrange
+    MAIN_MODULE intrange.py
+    SYS_MODULES
+        sys
+)
+add_shedskin_product(
+    BUILD_EXTENSION
+    NAME threads
+    MAIN_MODULE threads.py
 )
