@@ -24,6 +24,17 @@ static inline void __check_not_directory(FILE *f, str *file_name) {
 #define HAVE_STDIO_UNLOCKED
 #endif
 
+/* file positions: 'long' is 32 bits on windows, so use the 64-bit calls there */
+#ifdef WIN32
+#define __SS_FSEEK _fseeki64
+#define __SS_FTELL _ftelli64
+typedef __int64 __ss_foff;
+#else
+#define __SS_FSEEK fseek
+#define __SS_FTELL ftell
+typedef long __ss_foff;
+#endif
+
 #ifndef HAVE_STDIO_UNLOCKED
 #define GETC   getc
 #define FWRITE fwrite
@@ -616,7 +627,7 @@ __ss_int file::seek(__ss_int i, __ss_int w) {
         throw new ValueError(__add_strs(2, new str("negative seek position "), __str(i)));
     if(f) {
         __settle_cr(f, options, __encoding, __errors);
-        if(fseek(f, i, (int)w) == -1)
+        if(__SS_FSEEK(f, i, (int)w) == -1)
             __throw_oserror();
         if (__utf8_sig)
             __sig_reset();
@@ -630,7 +641,7 @@ __ss_int file::tell() {
     __check_seekable(f, "underlying stream is not seekable");
     if(f) {
         __settle_cr(f, options, __encoding, __errors);
-        long status = ftell(f);
+        __ss_foff status = __SS_FTELL(f);
         if(status == -1)
             __throw_oserror();
         if(__bom_skipped && status == 3) /* (as CPython: after the bom is 0) */
@@ -853,7 +864,7 @@ __ss_int file::truncate() {
     flush();
     /* (as cpython: the raw position, so a pipe gives ESPIPE) */
     __settle_cr(f, options, __encoding, __errors);
-    long pos = ftell(f);
+    __ss_foff pos = __SS_FTELL(f);
     if(pos == -1)
         __throw_oserror();
     if(__bom_skipped && pos == 3) /* (as tell()) */
@@ -1029,7 +1040,7 @@ __ss_int file_binary::seek(__ss_int i, __ss_int w) {
             i = (__ss_int)pos;
             w = SEEK_SET;
         }
-        if(fseek(f, i, (int)w) == -1)
+        if(__SS_FSEEK(f, i, (int)w) == -1)
             __throw_oserror();
         return tell(); /* the new absolute position */
     }
@@ -1039,7 +1050,7 @@ __ss_int file_binary::seek(__ss_int i, __ss_int w) {
 __ss_int file_binary::tell() {
     __check_closed(__SS_CLOSED_MSG_IOBASE);
     if(f) {
-        long status = ftell(f);
+        __ss_foff status = __SS_FTELL(f);
         if(status == -1)
             __throw_oserror();
         return __ss_int(status);

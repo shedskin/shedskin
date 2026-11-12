@@ -4589,6 +4589,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                           "open", "symlink", "readlink", "mkfifo", "mknod",
                           "chmod", "chown", "access", "link")
             )
+            # a None timeout (blocking) must pick the void* overload: a bare
+            # NULL would be a timeout of 0 (non-blocking, or polling)
+            or self.library_func(funcs, "socket", "socket", "settimeout")
+            or self.library_func(funcs, "socket", None, "setdefaulttimeout")
+            or self.library_func(funcs, "socket", None, "create_connection")
+            or self.library_func(funcs, "select", None, "select")
             # print(None), but not a None sep/end/file (see below)
             or print_call
         ):

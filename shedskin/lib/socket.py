@@ -129,6 +129,26 @@ MSG_PEEK=2
 MSG_TRUNC=32
 MSG_WAITALL=256
 
+# (more linux/bsd constants)
+MSG_DONTWAIT=64
+MSG_NOSIGNAL=16384
+MSG_MORE=32768
+MSG_EOR=128
+MSG_CONFIRM=2048
+SOCK_NONBLOCK=2048
+SOCK_CLOEXEC=524288
+SO_REUSEPORT=15
+SO_PRIORITY=12
+SO_MARK=36
+SO_PROTOCOL=38
+SO_DOMAIN=39
+TCP_KEEPIDLE=4
+TCP_CORK=3
+TCP_QUICKACK=12
+TCP_USER_TIMEOUT=18
+TCP_DEFER_ACCEPT=9
+TCP_SYNCNT=7
+
 # getnameinfo() flags
 NI_DGRAM=16
 NI_MAXHOST=1025
@@ -236,7 +256,7 @@ class socket(object):
     def makefile_binary(self, mode=None, buffering=-1, __kw_encoding=None, __kw_errors=None, __kw_newline=None):  # makefile('rb'), see infer.redirect
         return file_binary('', mode)
 
-    def listen(self, backlog):
+    def listen(self, backlog=128):  # (as CPython: min(SOMAXCONN, 128))
         pass
 
     def shutdown(self, how):
@@ -259,7 +279,7 @@ class socket(object):
     def gettimeout(self):
         return 0.0
 
-    def setsockopt(self, level, optname, value):
+    def setsockopt(self, level, optname, value):  # value: int or bytes
         pass
 
     # NOTE only the int-returning form; the buflen form (returning bytes) is
@@ -311,10 +331,9 @@ class socket(object):
     def sendto(self, data, flags=0, address=0):
         return 0
 
-# FIXME CPython default is timeout=None; like settimeout()/setdefaulttimeout()
-# elsewhere in this module, None isn't supported so a negative value means
-# "no timeout given" instead.
-def create_connection(address, timeout=-1, source_address=None, all_errors=False):
+# timeout not given (__void): the default timeout; None: blocking
+__void = 0
+def create_connection(address, timeout=__void, source_address=None, all_errors=False):
     return socket()
 
 def close(fd):

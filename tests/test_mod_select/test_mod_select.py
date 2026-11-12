@@ -171,6 +171,21 @@ def test_select_timeout_range():
     os.close(w)
 
 
+def test_select_none_blocks():
+    # None: wait (a bare NULL used to be a timeout of 0)
+    r, w = os.pipe()
+    pid = os.fork()
+    if pid == 0:
+        select.select([], [], [], 0.2)
+        os.write(w, b'x')
+        os._exit(0)
+    ready = select.select([r], [], [], None)[0]
+    assert len(ready) == 1
+    os.waitpid(pid, 0)
+    os.close(r)
+    os.close(w)
+
+
 def test_all():
     test_select_basic()
     test_select_timeout_no_ready_fds()
@@ -183,6 +198,7 @@ def test_all():
     test_select_fileno_method()
     test_select_nan()
     test_select_timeout_range()
+    test_select_none_blocks()
 
 if __name__ == '__main__':
     test_all()

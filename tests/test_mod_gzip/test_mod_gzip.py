@@ -876,6 +876,38 @@ def test_enter_closed():
     os.remove(name)
 
 
+def test_text_buffer_closed_messages():
+    name = 'shedskin_test_gzbuf.gz'
+    w = gzip.open(name, 'wb')
+    w.write(b'abc\n')
+    w.close()
+    rt = gzip.open(name, 'rt')
+    rt.buffer.close()
+    assert rt.closed
+    msg = ''
+    try:
+        rt.readline()
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'I/O operation on closed file.'
+    g = gzip.GzipFile(name, 'wb')
+    g.close()
+    msg = ''
+    try:
+        with g:
+            pass
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'I/O operation on closed file.'
+    msg = ''
+    try:
+        gzip.GzipFile(name, 'wb', 10)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Invalid initialization option'
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -904,7 +936,7 @@ def test_all():
     test_text_files()
     test_text_read_chars_invalid()
     test_text_crlf_ignore()
-
+    test_text_buffer_closed_messages()
 
 if __name__ == '__main__':
     test_all()

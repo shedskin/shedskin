@@ -655,7 +655,7 @@ void *mmap::__init__(__ss_int __ss_fileno_, __ss_int length_, str *tagname_, __s
             }
             /* map from offset to the end of the file */
             file_size -= (uint64_t)offset_;
-#if SIZEOF_SIZE_T > 4
+#if SIZE_MAX > 0xFFFFFFFFu /* (SIZEOF_SIZE_T is only defined with Python.h) */
             size = (size_t)file_size;
 #else // SIZEOF_SIZE_T <= 4
             if (file_size >> 32)
@@ -673,7 +673,7 @@ void *mmap::__init__(__ss_int __ss_fileno_, __ss_int length_, str *tagname_, __s
      * consumes 4 bytes), C doesn't define what happens if we shift
      * right by 32, so we need different code.
      */
-#if SIZEOF_SIZE_T > 4
+#if SIZE_MAX > 0xFFFFFFFFu /* (SIZEOF_SIZE_T is only defined with Python.h) */
     size_hi = (DWORD)((offset_ + size) >> 32);
     size_lo = (DWORD)((offset_ + size) & 0xFFFFFFFF);
     off_hi = (DWORD)(offset_ >> 32);
@@ -773,7 +773,7 @@ void *mmap::resize(__ss_int new_size)
     CloseHandle(map_handle);
     map_handle = NULL;
     /* Move to the desired EOF position */
-#if SIZEOF_SIZE_T > 4
+#if SIZE_MAX > 0xFFFFFFFFu /* (SIZEOF_SIZE_T is only defined with Python.h) */
     newSizeHigh = (DWORD)((offset + new_size) >> 32);
     newSizeLow = (DWORD)((offset + new_size) & 0xFFFFFFFF);
     off_hi = (DWORD)(offset >> 32);
@@ -831,8 +831,7 @@ void *mmap::__exit__()
 
 void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)
 {
-    __raise_if_closed_or_not_writable();
-    __raise_if_closed_or_not_readable();
+    __raise_if_closed_or_not_writable(); /* (as CPython: not readable, e.g. PROT_WRITE, is fine) */
     __ss_int length = (__ss_int)__size(); /* the mapping, not the file (size()) */
 
     // Taken from Python 2.7
@@ -1087,6 +1086,11 @@ __ss_int mmap::write(bytes *string)
 
 void *mmap::write_byte(__ss_int value)
 {
+    /* as CPython: the argument is parsed first */
+    if (value > 255)
+        throw new OverflowError(new str("unsigned byte integer is greater than maximum"));
+    if (value < 0)
+        throw new OverflowError(new str("unsigned byte integer is less than minimum"));
     __raise_if_closed_or_not_writable();
     if (m_position + 1 > m_end)
     {
@@ -1330,8 +1334,8 @@ void __init()
         const_1  = new str("source, destination, or count out of range");
         const_2  = new str("memory mapped length must be positive");
         const_3  = new str("memory mapped offset must be positive");
-        const_4  = new str("mmap can't specify both access and flags, prot");
-        const_5  = new str("mmap invalid access parameter");
+        const_4  = new str("mmap can't specify both access and flags, prot.");
+        const_5  = new str("mmap invalid access parameter.");
         const_8  = new str("mmap assignment must be single-character string");
         const_9  = new str("mmap can't modify a readonly memory map.");
         const_10 = new str("mmap slice assignment is wrong size");

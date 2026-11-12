@@ -436,6 +436,96 @@ __ss_int __ss_MSG_OOB = MSG_OOB;
 #ifdef MSG_PEEK
 __ss_int __ss_MSG_PEEK = MSG_PEEK;
 #endif
+#ifdef MSG_DONTWAIT
+__ss_int __ss_MSG_DONTWAIT = MSG_DONTWAIT;
+#else
+__ss_int __ss_MSG_DONTWAIT = 0; /* (not on this platform) */
+#endif
+#ifdef MSG_NOSIGNAL
+__ss_int __ss_MSG_NOSIGNAL = MSG_NOSIGNAL;
+#else
+__ss_int __ss_MSG_NOSIGNAL = 0; /* (not on this platform) */
+#endif
+#ifdef MSG_MORE
+__ss_int __ss_MSG_MORE = MSG_MORE;
+#else
+__ss_int __ss_MSG_MORE = 0; /* (not on this platform) */
+#endif
+#ifdef MSG_EOR
+__ss_int __ss_MSG_EOR = MSG_EOR;
+#else
+__ss_int __ss_MSG_EOR = 0; /* (not on this platform) */
+#endif
+#ifdef MSG_CONFIRM
+__ss_int __ss_MSG_CONFIRM = MSG_CONFIRM;
+#else
+__ss_int __ss_MSG_CONFIRM = 0; /* (not on this platform) */
+#endif
+#ifdef SOCK_NONBLOCK
+__ss_int __ss_SOCK_NONBLOCK = SOCK_NONBLOCK;
+#else
+__ss_int __ss_SOCK_NONBLOCK = 0; /* (not on this platform) */
+#endif
+#ifdef SOCK_CLOEXEC
+__ss_int __ss_SOCK_CLOEXEC = SOCK_CLOEXEC;
+#else
+__ss_int __ss_SOCK_CLOEXEC = 0; /* (not on this platform) */
+#endif
+#ifdef SO_REUSEPORT
+__ss_int __ss_SO_REUSEPORT = SO_REUSEPORT;
+#else
+__ss_int __ss_SO_REUSEPORT = 0; /* (not on this platform) */
+#endif
+#ifdef SO_PRIORITY
+__ss_int __ss_SO_PRIORITY = SO_PRIORITY;
+#else
+__ss_int __ss_SO_PRIORITY = 0; /* (not on this platform) */
+#endif
+#ifdef SO_MARK
+__ss_int __ss_SO_MARK = SO_MARK;
+#else
+__ss_int __ss_SO_MARK = 0; /* (not on this platform) */
+#endif
+#ifdef SO_PROTOCOL
+__ss_int __ss_SO_PROTOCOL = SO_PROTOCOL;
+#else
+__ss_int __ss_SO_PROTOCOL = 0; /* (not on this platform) */
+#endif
+#ifdef SO_DOMAIN
+__ss_int __ss_SO_DOMAIN = SO_DOMAIN;
+#else
+__ss_int __ss_SO_DOMAIN = 0; /* (not on this platform) */
+#endif
+#ifdef TCP_KEEPIDLE
+__ss_int __ss_TCP_KEEPIDLE = TCP_KEEPIDLE;
+#else
+__ss_int __ss_TCP_KEEPIDLE = 0; /* (not on this platform) */
+#endif
+#ifdef TCP_CORK
+__ss_int __ss_TCP_CORK = TCP_CORK;
+#else
+__ss_int __ss_TCP_CORK = 0; /* (not on this platform) */
+#endif
+#ifdef TCP_QUICKACK
+__ss_int __ss_TCP_QUICKACK = TCP_QUICKACK;
+#else
+__ss_int __ss_TCP_QUICKACK = 0; /* (not on this platform) */
+#endif
+#ifdef TCP_USER_TIMEOUT
+__ss_int __ss_TCP_USER_TIMEOUT = TCP_USER_TIMEOUT;
+#else
+__ss_int __ss_TCP_USER_TIMEOUT = 0; /* (not on this platform) */
+#endif
+#ifdef TCP_DEFER_ACCEPT
+__ss_int __ss_TCP_DEFER_ACCEPT = TCP_DEFER_ACCEPT;
+#else
+__ss_int __ss_TCP_DEFER_ACCEPT = 0; /* (not on this platform) */
+#endif
+#ifdef TCP_SYNCNT
+__ss_int __ss_TCP_SYNCNT = TCP_SYNCNT;
+#else
+__ss_int __ss_TCP_SYNCNT = 0; /* (not on this platform) */
+#endif
 #ifdef MSG_TRUNC
 __ss_int __ss_MSG_TRUNC = MSG_TRUNC;
 #endif
@@ -971,6 +1061,13 @@ void *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
     return NULL;
 }
 
+void *socket::setsockopt(__ss_int level, __ss_int optname, bytes *value) {
+    int level_ = __ss_cint_i(level), optname_ = __ss_cint_i(optname);
+    if (::setsockopt(_fd, level_, optname_, SOCKOPT_CAST value->unit.data(), (socklen_t)value->unit.size()) == SOCKET_ERROR)
+        throw make_error("setsockopt");
+    return NULL;
+}
+
 void *socket::connect(socket::inet_address address) {
     if (family != AF_INET)
         throw new ValueError(invalid_address);
@@ -1187,6 +1284,12 @@ void *socket::settimeout(double val)
     return NULL;
 }
 
+void *socket::settimeout(void *)
+{
+    apply_timeout(-1); /* (negative: None) */
+    return NULL;
+}
+
 void *socket::shutdown(__ss_int how)
 {
     if (::shutdown(_fd, __ss_cint(how)) == SOCKET_ERROR)
@@ -1307,6 +1410,8 @@ bytes *socket::recv(__ss_int bufsize, __ss_int flags)
     ssize_t len = ::recv(_fd, buf.data(), (size_t)bufsize, flags_);
     if (len == SOCKET_ERROR)
         throw make_error("recv");
+    if ((size_t)len > buf.size()) /* MSG_TRUNC: the real length (as CPython; the rest is not data) */
+        buf.resize((size_t)len, 0);
     return new bytes(buf.data(), (size_t)len);
 }
 
@@ -1342,6 +1447,8 @@ tuple2<bytes *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_i
     struct sockaddr_in sin = {};
     socklen_t salen = sizeof(sin);
     size_t len = recvfrom(buf.data(), (size_t)bufsize, flags_, reinterpret_cast<sockaddr *>(&sin), &salen);
+    if (len > buf.size()) /* MSG_TRUNC, as recv() */
+        buf.resize(len, 0);
     return new tuple2<bytes *, inet_address>(2, new bytes(buf.data(), len), (salen && sin.sin_family == AF_INET) ? sin_addr_to_tuple(&sin) : 0); /* (connected tcp: None, as CPython; winsock leaves salen as is, so check the family) */
 }
 
@@ -1448,9 +1555,18 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
         set_fd_inheritable(_fd, false);
     }
     this->family = family_;
+    double timeout = __ss_default_timeout;
+#ifdef SOCK_NONBLOCK
+    if (type_ & SOCK_NONBLOCK) /* (as CPython: a timeout of 0.0, and not part of .type) */
+        timeout = 0.0;
+    type_ &= ~(__ss_int)SOCK_NONBLOCK;
+#endif
+#ifdef SOCK_CLOEXEC
+    type_ &= ~(__ss_int)SOCK_CLOEXEC;
+#endif
     this->type = type_;
     this->proto = proto_;
-    apply_timeout(__ss_default_timeout);
+    apply_timeout(timeout);
 }
 
 socket::~socket()
@@ -1557,12 +1673,14 @@ str *gethostname()
     return new str(name);
 }
 
-socket *create_connection(socket::inet_address address, double timeout, socket::inet_address source_address, __ss_bool all_errors)
+socket *__create_connection(socket::inet_address address, double timeout, socket::inet_address source_address, __ss_bool all_errors, bool blocking)
 {
     /* only one address is ever tried here, so all_errors makes no difference */
     (void)all_errors;
     socket *s = new socket(__ss_AF_INET, __ss_SOCK_STREAM, 0);
-    if (timeout >= 0)
+    if (blocking)
+        s->settimeout((void *)0);
+    else if (timeout >= 0)
         s->settimeout(timeout);
     if (source_address)
         s->bind(source_address);
@@ -1704,6 +1822,12 @@ void *setdefaulttimeout(double x)
 {
     check_timeout(x);
     __ss_default_timeout = x;
+    return NULL;
+}
+
+void *setdefaulttimeout(void *)
+{
+    __ss_default_timeout = -1; /* (negative: None) */
     return NULL;
 }
 
