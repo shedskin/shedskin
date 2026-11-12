@@ -513,6 +513,9 @@ static void __ss_check_sleep(__ss_float s) {
         throw new ValueError(new str("Invalid value NaN (not a number)"));
     if (s < 0)
         throw new ValueError(new str("sleep length must be non-negative"));
+    /* as CPython: in int64 nanoseconds (also: time_t(inf) is undefined) */
+    if (!(s * 1e9 < 9223372036854775808.0))
+        throw new OverflowError(new str("timestamp out of range for C PyTime_t"));
 }
 
 #ifndef WIN32
@@ -531,7 +534,7 @@ void *sleep(__ss_float s) {
 	    std::swap(time1, time2);
 
     if (ret == -1)
-	    throw new Exception(new str("nanosleep"));
+	    __throw_oserror();
 
     return NULL;
 }

@@ -1295,41 +1295,33 @@ size_t mmap::__subscript(__ss_int index, bool include_end) const
 
 __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, bool reverse)
 {
-    size_t length = needle.size();
-    // Taken from Python 3.2.
-    const char *p, *start_p, *end_p;
-    int sign = reverse ? -1 : 1;
+    /* as bytes.find() (CPython 3.15): a start past the end finds nothing,
+       not even b''; in integers (no pointers before m_begin) */
+    __ss_int size = (__ss_int)__size();
+    __ss_int length = (__ss_int)needle.size();
 
     if (start < 0)
-        start += (__ss_int)__size();
+        start += size;
     if (start < 0)
         start = 0;
-    else if (size_t(start) > __size())
-        start = (__ss_int)__size();
+    else if (start > size)
+        return -1;
 
     if (end < 0)
-        end += (__ss_int)__size();
+        end += size;
     if (end < 0)
         end = 0;
-    else if (size_t(end) > __size())
-        end = (__ss_int)__size();
+    else if (end > size)
+        end = size;
 
-    start_p = m_begin + start;
-    end_p = m_begin + end;
+    if (end - start < length)
+        return -1;
 
-    for (p = (reverse ? end_p - length : start_p);
-            (p >= start_p) and (p + length <= end_p); p += sign)
+    for (__ss_int i = (reverse ? end - length : start);
+            reverse ? i >= start : i + length <= end; i += (reverse ? -1 : 1))
     {
-        size_t i;
-        for (i = 0; i < length and needle[i] == p[i]; ++i)
-        {
-            /* Nothing */;
-        }
-
-        if (i == length)
-        {
-            return (__ss_int)(p - m_begin);
-        }
+        if (memcmp(m_begin + i, needle.data(), (size_t)length) == 0)
+            return i;
     }
     return -1;
 }

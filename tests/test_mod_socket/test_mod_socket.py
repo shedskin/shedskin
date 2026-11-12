@@ -312,7 +312,7 @@ def test_names():
     try:
         socket.if_indextoname(-1)
         assert False
-    except OverflowError:
+    except ValueError:  # (CPython 3.15; OverflowError before)
         pass
 
 
@@ -1526,6 +1526,31 @@ def test_herror():
     assert kind == 'herror'
 
 
+def test_getnameinfo_numeric_if_indextoname_range():
+    # as CPython: only a numeric address (getaddrinfo(AI_NUMERICHOST))
+    flags = socket.NI_NUMERICHOST | socket.NI_NUMERICSERV
+    assert socket.getnameinfo(('127.0.0.1', 80), flags) == ('127.0.0.1', '80')
+    for host in ['localhost', '', '<broadcast>']:
+        failed = False
+        try:
+            socket.getnameinfo((host, 80), flags)
+        except socket.gaierror:
+            failed = True
+        assert failed
+    msg = ''
+    try:
+        socket.if_indextoname(-1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'Cannot convert negative int'
+    msg = ''
+    try:
+        socket.if_indextoname(2**32)
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'Python int too large for C unsigned int'
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1566,6 +1591,7 @@ def test_all():
     test_int_timeouts_fromfd_blocking()
     test_closed_timeout_sendfile_checks()
     test_herror()
+    test_getnameinfo_numeric_if_indextoname_range()
 
 if __name__ == '__main__':
     test_all()

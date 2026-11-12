@@ -2253,6 +2253,36 @@ def test_popen_enter_closed():
     assert p.closed
 
 
+def test_rename_replace_existing():
+    a = 'shedskin_test_rn_a'
+    b = 'shedskin_test_rn_b'
+    for n in [a, b]:
+        f = open(n, 'w')
+        f.write(n)
+        f.close()
+    if sys.platform == 'win32':
+        # as CPython (MoveFileExW without flags)
+        failed = False
+        try:
+            os.rename(a, b)
+        except FileExistsError:
+            failed = True
+        assert failed
+    else:
+        os.rename(a, b)
+        f = open(a, 'w')
+        f.close()
+    os.replace(a, b)
+    assert not os.path.exists(a)
+    failed = False
+    try:
+        os.replace(a, b)
+    except FileNotFoundError:
+        failed = True
+    assert failed
+    os.remove(b)
+
+
 def test_all():
     test_unicode_names()
     test_undecodable_names()
@@ -2351,7 +2381,7 @@ def test_all():
         # function's body to C++ unconditionally (the `os.name == 'posix'`
         # check above is a runtime guard, not a compile-time one), so calling
         # it here breaks the Windows build even though it never runs there.
-
+    test_rename_replace_existing()
 
 if __name__ == '__main__':
     test_all()

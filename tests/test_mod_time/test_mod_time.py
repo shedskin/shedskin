@@ -656,6 +656,22 @@ def test_strftime_nul_tuple_lengths():
     assert msg == 'asctime(): illegal time tuple argument'
 
 
+def test_sleep_overflow():
+    msg = ''
+    try:
+        time.sleep(float('inf'))
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'timestamp out of range for C PyTime_t'
+    msg = ''
+    try:
+        time.sleep(1e300)
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'timestamp out of range for C PyTime_t'
+    time.sleep(0.0)
+
+
 def test_all():
     # test_time() ## producing different results on linux vs macos
     #test_mktime()
@@ -706,6 +722,7 @@ def test_all():
     test_struct_time_tuple()
     print('ok')
     test_strftime_nul_tuple_lengths()
+    test_sleep_overflow()
 
 if __name__ == '__main__':
     test_all() 

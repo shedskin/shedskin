@@ -993,6 +993,50 @@ def test_compress_defaults_seek_end():
     os.remove(name)
 
 
+def test_readinto_msgs_text_seek_wrong_direction():
+    name = 'shedskin_test_gzip_r11.gz'
+    g = gzip.open(name, 'wb')
+    msg = ''
+    try:
+        g.readinto(bytearray(4))
+    except OSError as e:
+        msg = str(e)
+    assert msg == '[Errno 9] readinto() on write-only GzipFile object'
+    msg = ''
+    try:
+        g.readinto1(bytearray(4))
+    except OSError as e:
+        msg = str(e)
+    assert msg == '[Errno 9] readinto1() on write-only GzipFile object'
+    g.write(b'0123456789')
+    g.close()
+    # text seek() returns the cookie it was given
+    t = gzip.open(name, 'rt')
+    assert t.seek(100) == 100
+    assert t.tell() == 10
+    t.close()
+    # a fileobj opened the other way: UnsupportedOperation, not EBADF
+    f = open(name, 'ab')
+    r = gzip.GzipFile(fileobj=f, mode='rb')
+    msg = ''
+    try:
+        r.read()
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'read'
+    r.close()
+    f.close()
+    f = open(name, 'rb')
+    msg = ''
+    try:
+        gzip.GzipFile(fileobj=f, mode='wb')
+    except io.UnsupportedOperation as e:
+        msg = str(e)
+    assert msg == 'write'
+    f.close()
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -1025,6 +1069,7 @@ def test_all():
     test_text_buffer_fileobj_types()
     test_fd_name_appended_members_seek()
     test_compress_defaults_seek_end()
+    test_readinto_msgs_text_seek_wrong_direction()
 
 if __name__ == '__main__':
     test_all()
