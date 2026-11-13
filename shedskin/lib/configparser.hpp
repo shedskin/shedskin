@@ -401,7 +401,8 @@ public:
     /* virtual, so a C++-side subclass could keep option case (shedskin
        itself does not support subclassing lib classes) */
     virtual str *optionxform(str *optionstr);
-    void *_set(str *section, str *option, str *value);
+    /* virtual: ConfigParser adds CPython's value type check */
+    virtual void *_set(str *section, str *option, str *value=NULL);
     __ss_bool has_section(str *section);
     __ss_bool remove_option(str *section, str *option);
     __ss_bool remove_section(str *section);
@@ -505,6 +506,7 @@ public:
         __init__(defaults, allow_no_value, delimiters, comment_prefixes, inline_comment_prefixes, strict, empty_lines_in_values, default_section_, this->_default_interpolation(), allow_unnamed_section);
     }
     Interpolation *_default_interpolation();
+    void *_set(str *section, str *option, str *value=NULL);
 };
 
 extern class_ *cl_SectionProxy;

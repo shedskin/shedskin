@@ -416,6 +416,15 @@ Interpolation *ConfigParser::_default_interpolation() {
     return new BasicInterpolation();
 }
 
+void *ConfigParser::_set(str *section, str *option, str *value) {
+    /* as CPython's ConfigParser.set(): a None value is only allowed with
+       allow_no_value=True (read_dict() and the mapping setters funnel
+       through here as well) */
+    if (value == NULL && !this->_allow_no_value)
+        throw new TypeError(new str("option values must be strings"));
+    return RawConfigParser::_set(section, option, value);
+}
+
 /* re.escape() a delimiter or comment prefix for use inside a pattern */
 static str *__re_escape(str *s_) {
     return __re__::escape(s_);
