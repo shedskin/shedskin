@@ -55,72 +55,82 @@ PyObject *OSError::__py_args__() {
 #endif
 
 /* errno is snapshotted by the caller, as allocation may clobber it */
-template<class T> [[noreturn]] static void __throw_errno(int e, str *fname, str *fname2) {
-    T *exc = new T();
-    exc->__init_errno(e, fname, fname2);
+template<class T> [[noreturn]] static void __throw_errno(int value, str *fname, str *fname2, str *strerror_) {
+    T *exc = new T(); /* (thrown as T *, so 'catch (T *)' works) */
+    exc->__init_errno(value, fname, fname2);
+    if(strerror_) {
+        exc->strerror = strerror_;
+        exc->message = exc->__str__();
+    }
     throw exc;
 }
 
-/* errno to OSError subclass mapping, following CPython (PEP 3151) */
 void __throw_oserror(str *fname, str *fname2) {
     int e = errno;
+    __throw_oserror_errno(e, e, 0, fname, fname2);
+}
+
+/* errno to OSError subclass mapping, following CPython (PEP 3151): errno
+   'value' (and strerror, default strerror(value)), as the subclass for
+   errno e (socket.cpp: e differs for winsock codes) */
+void __throw_oserror_errno(int value, int e, str *strerror_, str *fname, str *fname2) {
     if(e == EAGAIN)
-        __throw_errno<BlockingIOError>(e, fname, fname2);
+        __throw_errno<BlockingIOError>(value, fname, fname2, strerror_);
 #ifdef EALREADY
     if(e == EALREADY)
-        __throw_errno<BlockingIOError>(e, fname, fname2);
+        __throw_errno<BlockingIOError>(value, fname, fname2, strerror_);
 #endif
 #ifdef EINPROGRESS
     if(e == EINPROGRESS)
-        __throw_errno<BlockingIOError>(e, fname, fname2);
+        __throw_errno<BlockingIOError>(value, fname, fname2, strerror_);
 #endif
 #ifdef EWOULDBLOCK
     if(e == EWOULDBLOCK)
-        __throw_errno<BlockingIOError>(e, fname, fname2);
+        __throw_errno<BlockingIOError>(value, fname, fname2, strerror_);
 #endif
     if(e == EPIPE)
-        __throw_errno<BrokenPipeError>(e, fname, fname2);
+        __throw_errno<BrokenPipeError>(value, fname, fname2, strerror_);
 #ifdef ESHUTDOWN
     if(e == ESHUTDOWN)
-        __throw_errno<BrokenPipeError>(e, fname, fname2);
+        __throw_errno<BrokenPipeError>(value, fname, fname2, strerror_);
 #endif
     if(e == ECHILD)
-        __throw_errno<ChildProcessError>(e, fname, fname2);
+        __throw_errno<ChildProcessError>(value, fname, fname2, strerror_);
 #ifdef ECONNABORTED
     if(e == ECONNABORTED)
-        __throw_errno<ConnectionAbortedError>(e, fname, fname2);
+        __throw_errno<ConnectionAbortedError>(value, fname, fname2, strerror_);
 #endif
 #ifdef ECONNREFUSED
     if(e == ECONNREFUSED)
-        __throw_errno<ConnectionRefusedError>(e, fname, fname2);
+        __throw_errno<ConnectionRefusedError>(value, fname, fname2, strerror_);
 #endif
 #ifdef ECONNRESET
     if(e == ECONNRESET)
-        __throw_errno<ConnectionResetError>(e, fname, fname2);
+        __throw_errno<ConnectionResetError>(value, fname, fname2, strerror_);
 #endif
     if(e == EEXIST)
-        __throw_errno<FileExistsError>(e, fname, fname2);
+        __throw_errno<FileExistsError>(value, fname, fname2, strerror_);
     if(e == ENOENT)
-        __throw_errno<FileNotFoundError>(e, fname, fname2);
+        __throw_errno<FileNotFoundError>(value, fname, fname2, strerror_);
     if(e == EISDIR)
-        __throw_errno<IsADirectoryError>(e, fname, fname2);
+        __throw_errno<IsADirectoryError>(value, fname, fname2, strerror_);
     if(e == ENOTDIR)
-        __throw_errno<NotADirectoryError>(e, fname, fname2);
+        __throw_errno<NotADirectoryError>(value, fname, fname2, strerror_);
     if(e == EINTR)
-        __throw_errno<InterruptedError>(e, fname, fname2);
+        __throw_errno<InterruptedError>(value, fname, fname2, strerror_);
     if(e == EACCES || e == EPERM)
-        __throw_errno<PermissionError>(e, fname, fname2);
+        __throw_errno<PermissionError>(value, fname, fname2, strerror_);
 #ifdef ENOTCAPABLE
     if(e == ENOTCAPABLE)
-        __throw_errno<PermissionError>(e, fname, fname2);
+        __throw_errno<PermissionError>(value, fname, fname2, strerror_);
 #endif
     if(e == ESRCH)
-        __throw_errno<ProcessLookupError>(e, fname, fname2);
+        __throw_errno<ProcessLookupError>(value, fname, fname2, strerror_);
 #ifdef ETIMEDOUT
     if(e == ETIMEDOUT)
-        __throw_errno<TimeoutError>(e, fname, fname2);
+        __throw_errno<TimeoutError>(value, fname, fname2, strerror_);
 #endif
-    __throw_errno<OSError>(e, fname, fname2);
+    __throw_errno<OSError>(value, fname, fname2, strerror_);
 }
 
 /* Unicode errors: str() follows CPython's formatting exactly, singling

@@ -685,23 +685,49 @@ std::string strerror(int e)
 }
 #endif
 
-/* socket.error carrying the errno of the failed call, like OSError.errno.
- * Pass the errno explicitly when other calls (e.g. restoring blocking mode,
- * which on Windows resets WSAGetLastError()) come between the failure and
- * the throw. */
-static error *make_error(const char *prefix, int e)
+/* the errno that picks the OSError subclass: on Windows, CPython maps the
+ * winsock codes like the corresponding errno values (exceptions.c) */
+static int class_errno(int e)
 {
-    (void)prefix; /* as in CPython, the message does not name the call */
-    error *err = new error();
-    err->__init_errno(e, 0); /* "[Errno 9] Bad file descriptor" */
-    err->strerror = new str(std::string(strerror(e)).c_str()); /* windows: winsock codes, see strerror() above */
-    err->message = err->__str__();
-    return err;
+#ifdef WIN32
+    switch (e) {
+#ifdef EWOULDBLOCK /* (EINPROGRESS is #defined as WSAEINPROGRESS above) */
+    case WSAEWOULDBLOCK: case WSAEINPROGRESS: case WSAEALREADY: return EWOULDBLOCK;
+#endif
+#ifdef ECONNABORTED
+    case WSAECONNABORTED: return ECONNABORTED;
+#endif
+#ifdef ECONNREFUSED
+    case WSAECONNREFUSED: return ECONNREFUSED;
+#endif
+#ifdef ECONNRESET
+    case WSAECONNRESET: return ECONNRESET;
+#endif
+#ifdef ETIMEDOUT
+    case WSAETIMEDOUT: return ETIMEDOUT;
+#endif
+    case WSAESHUTDOWN: return EPIPE; /* (ESHUTDOWN: BrokenPipeError) */
+    case WSAEINTR: return EINTR;
+    case WSAEACCES: return EACCES;
+    }
+#endif
+    return e;
 }
 
-static error *make_error(const char *prefix)
+/* throw OSError for the errno of the failed call, as the errno-specific
+ * subclass (ConnectionRefusedError, BlockingIOError..), as CPython.
+ * Pass the errno explicitly when other calls (e.g. restoring blocking mode,
+ * which on Windows resets WSAGetLastError()) come between the failure and
+ * the throw. (as in CPython, the message does not name the call) */
+[[noreturn]] static void throw_error(int e)
 {
-    return make_error(prefix, ERRNO);
+    /* windows: winsock codes, see strerror() above */
+    __throw_oserror_errno(e, class_errno(e), new str(std::string(strerror(e)).c_str()));
+}
+
+[[noreturn]] static void throw_error()
+{
+    throw_error(ERRNO);
 }
 
 /* herror(h_errno, hstrerror()), as CPython (set_herror) */
@@ -753,14 +779,14 @@ static void set_fd_inheritable(socket_type fd, bool inheritable)
 {
 #ifdef WIN32
     if (!SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, inheritable ? HANDLE_FLAG_INHERIT : 0))
-        throw make_error("set_inheritable");
+        throw_error();
 #else
     int flags = ::fcntl(fd, F_GETFD);
     if (flags == -1)
-        throw make_error("set_inheritable");
+        throw_error();
     flags = inheritable ? (flags & ~FD_CLOEXEC) : (flags | FD_CLOEXEC);
     if (::fcntl(fd, F_SETFD, flags) == -1)
-        throw make_error("set_inheritable");
+        throw_error();
 #endif
 }
 
@@ -769,12 +795,12 @@ static bool get_fd_inheritable(socket_type fd)
 #ifdef WIN32
     DWORD flags;
     if (!GetHandleInformation((HANDLE)fd, &flags))
-        throw make_error("get_inheritable");
+        throw_error();
     return (flags & HANDLE_FLAG_INHERIT) != 0;
 #else
     int flags = ::fcntl(fd, F_GETFD);
     if (flags == -1)
-        throw make_error("get_inheritable");
+        throw_error();
     return (flags & FD_CLOEXEC) == 0;
 #endif
 }
@@ -805,14 +831,14 @@ static socket_type dup_socket_fd(socket_type fd)
      * duplicate the underlying socket the way CPython does. */
     WSAPROTOCOL_INFOW info;
     if (WSADuplicateSocketW(fd, GetCurrentProcessId(), &info) == SOCKET_ERROR)
-        throw make_error("dup");
+        throw_error();
     socket_type r = WSASocketW(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, &info, 0, WSA_FLAG_OVERLAPPED);
     if (r == INVALID_SOCKET)
-        throw make_error("dup");
+        throw_error();
 #else
     int r = ::dup(fd);
     if (r == SOCKET_ERROR)
-        throw make_error("dup");
+        throw_error();
 #endif
     set_fd_inheritable(r, false);
     return r;
@@ -909,7 +935,7 @@ __ss_int socket::getsockopt(__ss_int level, __ss_int optname) {
     int v = 0;
     socklen_t buflen = sizeof(v);
     if (::getsockopt(_fd, level_, optname_, SOCKOPT_CAST &v, &buflen) == SOCKET_ERROR)
-        throw make_error("getsockopt");
+        throw_error();
     return (__ss_int)v;
 }
 
@@ -925,10 +951,10 @@ __ss_int socket::connect_ex(socket::inet_address address) {
     check_port(address->second, "connect_ex");
     try {
         connect(address);
-    } catch (error *e) {
+    } catch (OSError *e) {
+        if (e->__ss_errno == 0) /* our own timeout (make_timeout()), as CPython */
+            return __ss_EWOULDBLOCK;
         return (__ss_int)e->__ss_errno;
-    } catch (timeout *) {
-        return __ss_EWOULDBLOCK;
     }
     return 0;
 }
@@ -960,7 +986,7 @@ static FILE *__makefile(socket_type _fd, str *mode) {
 		/*if (fd >= 0)
 			SOCKETCLOSE(fd);
 		return s->errorhandler(); */
-        throw make_error("makefile");
+        throw_error();
 	}
     return fp;
 }
@@ -1026,7 +1052,7 @@ file_binary *socket::makefile_binary(str *, str *, str *, str *mode, __ss_int bu
 void *socket::bind(const sockaddr *sa, socklen_t salen)
 {
     if (::bind(_fd, sa, salen) == SOCKET_ERROR) {
-        throw make_error("bind");
+        throw_error();
     }
     return NULL;
 }
@@ -1117,7 +1143,7 @@ void *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
         throw new TypeError(new str("a bytes-like object is required, not 'int'"));
     int v = (int)value;
     if (::setsockopt(_fd, level_, optname_, SOCKOPT_CAST &v, sizeof(v)) == SOCKET_ERROR)
-        throw make_error("setsockopt");
+        throw_error();
 
     return NULL;
 }
@@ -1125,7 +1151,7 @@ void *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
 void *socket::setsockopt(__ss_int level, __ss_int optname, bytes *value) {
     int level_ = __ss_cint_i(level), optname_ = __ss_cint_i(optname);
     if (::setsockopt(_fd, level_, optname_, SOCKOPT_CAST value->unit.data(), (socklen_t)value->unit.size()) == SOCKET_ERROR)
-        throw make_error("setsockopt");
+        throw_error();
     return NULL;
 }
 
@@ -1208,7 +1234,7 @@ static void set_blocking(socket_type fd)
         if (::fcntl(fd, F_SETFL, 0) == SOCKET_ERROR)
 #endif
         {
-            throw make_error("fcntl");
+            throw_error();
         }
 }
 
@@ -1221,7 +1247,7 @@ static void set_nonblocking(socket_type fd)
         if (::fcntl(fd, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
 #endif
         {
-            throw make_error("fcntl");
+            throw_error();
         }
 }
 void *socket::connect(const sockaddr *sa, socklen_t salen)
@@ -1244,10 +1270,9 @@ void *socket::connect(const sockaddr *sa, socklen_t salen)
 	 * socket raises it (EINPROGRESS), as CPython, and connect_ex()
 	 * returns it */
 	if (!in_progress || !(_blocking && _timeout > 0)) {
-	    error *err = make_error("connect", e);
 	    if (_blocking && _timeout > 0)
 		set_blocking(_fd); // turn blocking back on
-	    throw err;
+	    throw_error(e);
 	}
     }
 
@@ -1272,9 +1297,9 @@ void *socket::connect(const sockaddr *sa, socklen_t salen)
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
 
         if (::select(_fd+1, 0, &s, exceptfds, &to) == SOCKET_ERROR) {
-            error *err = make_error("select");
+            int e = ERRNO;
 	    set_blocking(_fd); // turn blocking back on
-            throw err;
+            throw_error(e);
 	}
         bool ready = FD_ISSET(_fd, &s);
 #ifdef WIN32
@@ -1289,15 +1314,15 @@ void *socket::connect(const sockaddr *sa, socklen_t salen)
         int err = 0;
         socklen_t errsize = sizeof(err);
         if (::getsockopt(_fd, SOL_SOCKET, SO_ERROR, SOCKOPT_CAST &err, &errsize) == SOCKET_ERROR) {
-            error *e2 = make_error("getsockopt");
+            int e = ERRNO;
 	    set_blocking(_fd); // turn blocking back on
-            throw e2;
+            throw_error(e);
 	}
 
         set_blocking(_fd); // turn blocking back on
 
         if (err != 0)
-            throw make_error("connect", err);
+            throw_error(err);
     }
 
     return NULL;
@@ -1367,7 +1392,7 @@ void *socket::settimeout(void *)
 void *socket::shutdown(__ss_int how)
 {
     if (::shutdown(_fd, __ss_cint(how)) == SOCKET_ERROR)
-        throw make_error("shutdown");
+        throw_error();
     return NULL;
 }
 
@@ -1382,7 +1407,7 @@ void socket::write_wait()
         to.tv_sec = static_cast<tv_sec_type>(_timeout);
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
         if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR)
-            throw make_error("select");
+            throw_error();
         if (! FD_ISSET(_fd, &s))
             throw make_timeout();
     }
@@ -1394,7 +1419,7 @@ size_t socket::send(const char *s, size_t len, int flags)
 
     ssize_t r = ::send(_fd, s, len, flags);
     if (r == SOCKET_ERROR)
-        throw make_error("send");
+        throw_error();
     return (size_t)r;
 }
 
@@ -1433,7 +1458,7 @@ __ss_int socket::sendto(bytes* msg, __ss_int flags, socket::inet_address addr)
 
     ssize_t len = ::sendto(_fd, buf, buflen, flags_, sa, salen);
     if (len == SOCKET_ERROR)
-        throw make_error("sendto");
+        throw_error();
 
     return (__ss_int)len;
 }
@@ -1450,7 +1475,7 @@ void *socket::close()
         _fd = SS_INVALID_SOCKET;
         if (::CLOSE(fd) == SOCKET_ERROR)
 #define STRINGIFY(x) #x
-            throw make_error(STRINGIFY(CLOSE));
+            throw_error();
 #undef STRINGIFY
     }
     return NULL;
@@ -1466,7 +1491,7 @@ void socket::read_wait()
         to.tv_sec = static_cast<tv_sec_type>(_timeout);
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
         if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
-            throw make_error("select");
+            throw_error();
         if (! FD_ISSET(_fd, &s))
             throw make_timeout();
     }
@@ -1484,7 +1509,7 @@ bytes *socket::recv(__ss_int bufsize, __ss_int flags)
     std::vector<char> buf((size_t)bufsize);
     ssize_t len = ::recv(_fd, buf.data(), (size_t)bufsize, flags_);
     if (len == SOCKET_ERROR)
-        throw make_error("recv");
+        throw_error();
     if ((size_t)len > buf.size()) /* MSG_TRUNC: the real length (as CPython; the rest is not data) */
         buf.resize((size_t)len, 0);
     return new bytes(buf.data(), (size_t)len);
@@ -1495,7 +1520,7 @@ static str *in_addr_to_str(const in_addr *addr)
 {
     char ip[INET_ADDRSTRLEN];
     if (!::inet_ntop(AF_INET, (void *)addr, ip, sizeof(ip)))
-        throw make_error("inet_ntop");
+        throw_error();
     return new str(ip);
 }
 
@@ -1509,7 +1534,7 @@ size_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, sock
     read_wait();
     ssize_t len = ::recvfrom(_fd, buf, bufsize, flags, sa, salen);
     if (len == SOCKET_ERROR)
-        throw make_error("recvfrom");
+        throw_error();
     return (size_t)len;
 }
 
@@ -1551,7 +1576,7 @@ __ss_int socket::recv_into(bytes *buffer, __ss_int nbytes, __ss_int flags)
     read_wait();
     ssize_t len = ::recv(_fd, &buffer->unit[0], n, (int)flags);
     if (len == SOCKET_ERROR)
-        throw make_error("recv_into");
+        throw_error();
     return (__ss_int)len;
 }
 
@@ -1583,7 +1608,7 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
             WSAPROTOCOL_INFOW info;
             socklen_t len = sizeof(info);
             if (::getsockopt(_fd, SOL_SOCKET, SO_PROTOCOL_INFOW, SOCKOPT_CAST &info, &len) == SOCKET_ERROR)
-                throw make_error("socket");
+                throw_error();
             if (family_ < 0)
                 family_ = info.iAddressFamily;
             if (type_ < 0)
@@ -1595,17 +1620,17 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
         int r = check_socket_fd(_fd, family_);
         if (r > 0) {
             _fd = SS_INVALID_SOCKET; /* (not ours to close) */
-            throw make_error("socket", r);
+            throw_error(r);
         }
         if (r < 0)
             family_ = -r;
         else if (family_ < 0)
-            throw make_error("socket");
+            throw_error();
         if (type_ < 0) {
             int v = 0;
             socklen_t len = sizeof(v);
             if (::getsockopt(_fd, SOL_SOCKET, SO_TYPE, SOCKOPT_CAST &v, &len) == SOCKET_ERROR)
-                throw make_error("socket");
+                throw_error();
             type_ = v;
         }
         if (proto_ < 0) {
@@ -1627,7 +1652,7 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
             proto_ = 0;
         _fd = ::socket((int)family_, (int)type_, (int)proto_);
         if (_fd == SS_INVALID_SOCKET)
-            throw make_error("socket");
+            throw_error();
         set_fd_inheritable(_fd, false);
     }
     this->family = family_;
@@ -1654,7 +1679,7 @@ socket::~socket()
 void *socket::listen(__ss_int backlog)
 {
     if(::listen(_fd, __ss_cint_i(backlog)) == SOCKET_ERROR)
-        throw make_error("listen");
+        throw_error();
     return NULL;
 }
 
@@ -1668,13 +1693,13 @@ socket* socket::accept(sockaddr *sa, socklen_t *salen)
         to.tv_sec = static_cast<tv_sec_type>(_timeout);
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
         if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
-            throw make_error("select");
+            throw_error();
         if (! FD_ISSET(_fd, &s))
             throw make_timeout();
     }
     socket_type r = ::accept(_fd, sa, salen);
     if (r == SS_INVALID_SOCKET)
-        throw make_error("accept");
+        throw_error();
     set_fd_inheritable(r, false);
     return new socket(wrap_fd_tag(), r, family, type, proto);
 }
@@ -1741,7 +1766,7 @@ socket::inet_address socket::getpeername()
     socklen_t sslen = sizeof(ss);
     memset(&ss, 0, sizeof(ss));
     if (::getpeername(_fd, reinterpret_cast<sockaddr *>(&ss), &sslen) == SOCKET_ERROR)
-        throw make_error("getpeername");
+        throw_error();
     inet_address addr = storage_to_tuple(&ss, sslen);
     if (!addr)
         throw new error(new str("getpeername(): only AF_INET addresses are supported"));
@@ -1754,7 +1779,7 @@ socket::inet_address socket::getsockname()
     socklen_t sslen = sizeof(ss);
     memset(&ss, 0, sizeof(ss));
     if (::getsockname(_fd, reinterpret_cast<sockaddr *>(&ss), &sslen) == SOCKET_ERROR)
-        throw make_error("getsockname");
+        throw_error();
     inet_address addr = storage_to_tuple(&ss, sslen);
     if (!addr)
         throw new error(new str("getsockname(): only AF_INET addresses are supported"));
@@ -1765,7 +1790,7 @@ str *gethostname()
 {
     char name[HOST_NAME_MAX + 1]; /* (+ the NUL) */
     if (::gethostname(name, sizeof(name)) == -1)
-        throw make_error("gethostname");
+        throw_error();
     name[HOST_NAME_MAX] = '\0';
     return new str(name);
 }
@@ -1802,7 +1827,7 @@ socket *fromfd(__ss_int fd, __ss_int family, __ss_int type, __ss_int proto)
     __ss_cint(proto);
     int r = check_socket_fd((socket_type)fd, 0);
     if (r > 0)
-        throw make_error("socket", r);
+        throw_error(r);
     return new socket(socket::wrap_fd_tag(), dup_socket_fd((socket_type)fd), family, type, proto);
 }
 
@@ -1949,8 +1974,8 @@ void __init()
     cl_socket = new class_("socket");
     cl_herror = new class_("herror");
     cl_gaierror = new class_("gaierror");
-    cl_timeout = new class_("TimeoutError"); /* socket.timeout is TimeoutError */
-    cl_error = new class_("OSError"); /* socket.error is OSError */
+    cl_timeout = cl_timeouterror; /* socket.timeout is TimeoutError */
+    cl_error = cl_oserror; /* socket.error is OSError */
 
     // string constants used by this module
     invalid_address = new str("invalid address");
@@ -2123,7 +2148,7 @@ list<tuple2<__ss_int, str *> *> *if_nameindex()
 #else
     struct if_nameindex *ni = ::if_nameindex();
     if (!ni)
-        throw make_error("if_nameindex");
+        throw_error();
     for (struct if_nameindex *i = ni; i->if_index != 0; i++)
         result->append(new tuple2<__ss_int, str *>(2, (__ss_int)i->if_index, new str(i->if_name)));
     ::if_freenameindex(ni);
@@ -2137,7 +2162,7 @@ __ss_int if_nametoindex(str *name)
         throw new ValueError(new str("embedded null byte"));
     unsigned int index = ::if_nametoindex(name->c_str());
     if (index == 0)
-        throw make_error("if_nametoindex");
+        throw_error();
     return (__ss_int)index;
 }
 
@@ -2150,7 +2175,7 @@ str *if_indextoname(__ss_int index)
         throw new OverflowError(new str("Python int too large for C unsigned int"));
     char name[IF_NAMESIZE + 1];
     if (!::if_indextoname((unsigned int)index, name))
-        throw make_error("if_indextoname");
+        throw_error();
     return new str(name);
 }
 
@@ -2191,7 +2216,7 @@ bytes *inet_pton(__ss_int address_family, str *ip_string)
     if (r == 0)
         throw new error(new str("illegal IP address string passed to inet_pton"));
     if (r < 0)
-        throw make_error("inet_pton");
+        throw_error();
     return new bytes(reinterpret_cast<const char *>(packed), address_family == AF_INET ? sizeof(in_addr) : sizeof(in6_addr));
 }
 
@@ -2211,14 +2236,14 @@ str *inet_ntop(__ss_int address_family, bytes *packed_ip)
     std::copy_n(packed_ip->unit.data(), len, packed);
     char ip[INET6_ADDRSTRLEN];
     if (!::inet_ntop(family, (void *)packed, ip, sizeof(ip)))
-        throw make_error("inet_ntop");
+        throw_error();
     return new str(ip);
 }
 
 void *close(__ss_int fd)
 {
     if (::CLOSE((socket_type)fd) == SOCKET_ERROR)
-        throw make_error("close");
+        throw_error();
     return NULL;
 }
 
