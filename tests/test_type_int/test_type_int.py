@@ -527,6 +527,32 @@ def test_as_integer_ratio():
     assert (0).as_integer_ratio() == (0, 1)
 
 
+def test_div_mod_minus_one():
+    # INT64_MIN % -1 / INT64_MIN // -1 used to trap (SIGFPE) on x86;
+    # int() keeps g++ from folding the operands away
+    m1 = int("-1")
+    x = -(2**63)
+    assert x % m1 == 0
+    assert divmod(x, m1)[1] == 0
+    assert 7 // m1 == -7
+    assert -7 // m1 == 7
+    assert 7 % m1 == 0
+    assert -7 % m1 == 0
+    assert divmod(-7, m1) == (7, 0)
+    assert 0 // m1 == 0
+    zero = int("0")
+    try:
+        x % zero
+        assert False
+    except ZeroDivisionError as e:
+        assert str(e) == "integer modulo by zero"
+    try:
+        x // zero
+        assert False
+    except ZeroDivisionError as e:
+        assert str(e) == "integer division or modulo by zero"
+
+
 def test_all():
     test_int()
     test_attributes()
@@ -546,6 +572,7 @@ def test_all():
     test_int_from_unicode_str()
     test_int_error_message()
     test_int_from_str_syntax()
+    test_div_mod_minus_one()
 
 
 if __name__ == "__main__":
