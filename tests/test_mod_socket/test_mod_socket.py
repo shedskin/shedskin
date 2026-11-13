@@ -36,7 +36,11 @@ def test_attrs_repr():
     assert r.startswith('<socket.socket fd=')
     assert 'family=' in r and 'type=' in r and 'proto=' in r
     s.close()
+    assert repr(s) == '<socket.socket [closed] fd=-1, family=2, type=1, proto=0>'
     s.close()  # close() is idempotent
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.detach()
+    assert repr(s) == '<socket.socket [closed] fd=-1, family=2, type=1, proto=0>'
 
 
 def test_with():
@@ -1125,6 +1129,18 @@ def unix_roundtrip(path):
     v.settimeout(5.0)
     assert v.connect(path) is None
     c, addr = u.accept()
+    assert not addr  # unnamed peer: '' in CPython, None in shedskin
+    # CPython gives the path; shedskin cannot type it (yet), so it raises
+    # rather than give a made-up (ip, port) tuple
+    for i in range(2):
+        try:
+            if i == 0:
+                a = u.getsockname()
+            else:
+                a = v.getpeername()
+            assert path.startswith('\x00') or str(a) == path  # abstract: bytes
+        except OSError as e:
+            assert 'only AF_INET' in str(e)
     v.sendall(b'hi')
     r = c.recv(2)
     c.close()

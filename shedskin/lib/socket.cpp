@@ -830,7 +830,7 @@ socket::socket(socket::wrap_fd_tag, socket_type fd, __ss_int family_, __ss_int t
 str *socket::__repr__() {
     std::ostringstream os;
     if (_fd == SS_INVALID_SOCKET)
-        os << "<socket.socket fd=-1";
+        os << "<socket.socket [closed] fd=-1";
     else
         os << "<socket.socket fd=" << _fd;
     os << ", family=" << family << ", type=" << type << ", proto=" << proto << ">";
@@ -1693,11 +1693,23 @@ tuple2<socket *, pyseq<str *> *> *socket::accept()
 #endif
 
 // INET sockets
+/* only AF_INET addresses can be typed (as tuple2<str *, __ss_int>) for now;
+   for other families (AF_UNIX: a str in CPython), accept() gives None as
+   the address and getsockname()/getpeername() raise, instead of reading
+   the address bytes as an IPv4 address and port */
+static socket::inet_address storage_to_tuple(const sockaddr_storage *ss, socklen_t len)
+{
+    if (len < (socklen_t)sizeof(sockaddr_in) || ss->ss_family != AF_INET)
+        return 0;
+    return sin_addr_to_tuple(reinterpret_cast<const sockaddr_in *>(ss));
+}
+
 tuple2<socket *, socket::inet_address> *socket::accept() {
-    sockaddr_in sin;
-    socklen_t sinsize = sizeof(sin);
-    socket *sock = accept(reinterpret_cast<sockaddr *>(&sin), &sinsize);
-    return new tuple2<socket *, inet_address>( 2, sock, sin_addr_to_tuple(&sin));
+    sockaddr_storage ss;
+    socklen_t sslen = sizeof(ss);
+    memset(&ss, 0, sizeof(ss));
+    socket *sock = accept(reinterpret_cast<sockaddr *>(&ss), &sslen);
+    return new tuple2<socket *, inet_address>( 2, sock, storage_to_tuple(&ss, sslen));
 }
 
 #ifndef WIN32
@@ -1725,20 +1737,28 @@ void *socket::bind(bytes *) { return unix_unsupported(family); }
 
 socket::inet_address socket::getpeername()
 {
-    struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(addr);
-    if (::getpeername(_fd, reinterpret_cast<sockaddr *>(&addr), &addrlen) == SOCKET_ERROR)
+    sockaddr_storage ss;
+    socklen_t sslen = sizeof(ss);
+    memset(&ss, 0, sizeof(ss));
+    if (::getpeername(_fd, reinterpret_cast<sockaddr *>(&ss), &sslen) == SOCKET_ERROR)
         throw make_error("getpeername");
-    return sin_addr_to_tuple(&addr);
+    inet_address addr = storage_to_tuple(&ss, sslen);
+    if (!addr)
+        throw new error(new str("getpeername(): only AF_INET addresses are supported"));
+    return addr;
 }
 
 socket::inet_address socket::getsockname()
 {
-    struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(addr);
-    if (::getsockname(_fd, reinterpret_cast<sockaddr *>(&addr), &addrlen) == SOCKET_ERROR)
+    sockaddr_storage ss;
+    socklen_t sslen = sizeof(ss);
+    memset(&ss, 0, sizeof(ss));
+    if (::getsockname(_fd, reinterpret_cast<sockaddr *>(&ss), &sslen) == SOCKET_ERROR)
         throw make_error("getsockname");
-    return sin_addr_to_tuple(&addr);
+    inet_address addr = storage_to_tuple(&ss, sslen);
+    if (!addr)
+        throw new error(new str("getsockname(): only AF_INET addresses are supported"));
+    return addr;
 }
 
 str *gethostname()
