@@ -718,9 +718,12 @@ def redirect_func(
         nargs = len(
             [kwarg for kwarg in callfunc.args if not isinstance(kwarg, ast.keyword)]
         )
-        kwarg = {'groupby': 'key', 'reduce': 'initial'}.get(func.ident)  # TODO avoid special cases..
-        if kwarg:
-            nargs += len([a for a in callfunc.keywords if a.arg == kwarg])
+        # a keyword naming a required formal fills a positional slot, e.g.
+        # groupby(it, key=f), reduce(f, it, initial=x), items(section='s')
+        if func.node:
+            posargs = func.node.args.args
+            required = [a.arg for a in posargs[:len(posargs) - len(func.node.args.defaults)]]
+            nargs += len([a for a in callfunc.keywords if a.arg in required])
         # groupby(it, None) and groupby(it, key=None) mean no key function
         if func.ident == 'groupby' and nargs == 2:
             key = [a.value for a in callfunc.keywords if a.arg == 'key']

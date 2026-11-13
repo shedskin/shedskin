@@ -165,14 +165,10 @@ class RawConfigParser:
     def get(self, section, option, raw=False, vars=None, fallback=__void):
         # __void: an explicit fallback=None must return None, not raise
         return ''
-    def items(self, section, __kw_raw=False, __kw_vars=None):
+    def items(self, section, raw=False, vars=None):
         return [('', '')]
-    def __items0(self, __kw_raw=False, __kw_vars=None):
-        # not SectionProxy(self, ''): for a zero-arg items() call the
-        # compiler misaligns the __kw_ defaults after the arity redirect and
-        # lets 'False' flow into 'self' here, which would then surface as
-        # {ConfigParser, bool} on SectionProxy.parser (see 'claude bugs')
-        return [('', SectionProxy(RawConfigParser(), ''))]
+    def __items0(self, raw=False, vars=None):  # items() without a section
+        return [('', SectionProxy(self, ''))]
     def getint(self, section, option, raw=False, vars=None, fallback=__void):
         return 1
     def getfloat(self, section, option, raw=False, vars=None, fallback=__void):

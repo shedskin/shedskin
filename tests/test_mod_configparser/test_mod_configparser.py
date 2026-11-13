@@ -113,6 +113,41 @@ def test_items_raw_and_vars():
     var_items = dict(config.items('a', raw=False, vars={'root': '/override'}))
     assert var_items['x'] == '/override/a'
 
+def check_items_args(cp):
+    cp.read_string('[s]\nx = 1\ny = %(x)s2\n')
+    # positional raw/vars (used to be dropped silently)
+    assert sorted(cp.items('s')) == [('x', '1'), ('y', '12')]
+    assert sorted(cp.items('s', True)) == [('x', '1'), ('y', '%(x)s2')]
+    assert sorted(cp.items('s', False)) == [('x', '1'), ('y', '12')]
+    assert sorted(cp.items('s', False, {'x': '9'})) == [('x', '9'), ('y', '92')]
+    assert sorted(cp.items('s', True, {'x': '9'})) == [('x', '9'), ('y', '%(x)s2')]
+    assert sorted(cp.items('s', False, None)) == [('x', '1'), ('y', '12')]
+    # keyword and mixed
+    assert sorted(cp.items('s', raw=True)) == [('x', '1'), ('y', '%(x)s2')]
+    assert sorted(cp.items('s', vars={'x': '8'})) == [('x', '8'), ('y', '82')]
+    assert sorted(cp.items('s', False, vars={'x': '7'})) == [('x', '7'), ('y', '72')]
+    assert sorted(cp.items('s', vars={'x': '6'}, raw=True)) == [('x', '6'), ('y', '%(x)s2')]
+    assert sorted(cp.items('s', vars=None)) == [('x', '1'), ('y', '12')]
+    assert sorted(cp.items(section='s')) == [('x', '1'), ('y', '12')]
+    assert sorted(cp.items(section='s', raw=True)) == [('x', '1'), ('y', '%(x)s2')]
+    assert sorted(cp.items(vars={'x': '5'}, section='s')) == [('x', '5'), ('y', '52')]
+    # no section: (name, SectionProxy) pairs
+    assert sorted(k for k, v in cp.items()) == ['DEFAULT', 's']
+    assert sorted(k for k, v in cp.items(raw=True)) == ['DEFAULT', 's']
+    assert sorted(k for k, v in cp.items(vars={'x': '4'})) == ['DEFAULT', 's']
+    assert sorted(k for k, v in cp.items(raw=True, vars=None)) == ['DEFAULT', 's']
+    assert dict(cp.items())['s']['x'] == '1'
+
+def test_items_args():
+    cp = configparser.ConfigParser()
+    check_items_args(cp)
+    rcp = configparser.RawConfigParser()
+    rcp.read_string('[s]\nx = 1\ny = %(x)s2\n')
+    assert sorted(rcp.items('s')) == [('x', '1'), ('y', '%(x)s2')]
+    assert sorted(rcp.items('s', False, {'x': '9'})) == [('x', '9'), ('y', '%(x)s2')]
+    assert sorted(rcp.items(section='s', vars={'x': '3'})) == [('x', '3'), ('y', '%(x)s2')]
+    assert sorted(k for k, v in rcp.items(raw=True)) == ['DEFAULT', 's']
+
 def test_defaults_section():
     config = configparser.ConfigParser(defaults={'shared': 'yes'})
     config.add_section('one')
@@ -1468,6 +1503,7 @@ def test_all():
     test_read_iterables()
     test_items_all_sections()
     test_items_raw_and_vars()
+    test_items_args()
     test_defaults_section()
     test_interpolation()
     test_error_str_and_repr()

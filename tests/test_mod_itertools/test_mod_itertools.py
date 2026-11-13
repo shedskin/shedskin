@@ -127,6 +127,9 @@ def test_groupby():
     assert [(k, len(list(g))) for k, g in itertools.groupby('aaabbcaa')] == [('a', 3), ('b', 2), ('c', 1), ('a', 2)]
 
     assert [k for k, g in itertools.groupby(['x', 'x', 'y'])] == ['x', 'y']
+    # keyword arguments for required formals (redirect counts them)
+    assert [k for k, g in itertools.groupby(iterable=[1, 1, 2])] == [1, 2]
+    assert [k for k, g in itertools.groupby(iterable=[1, -1, 2], key=lambda x: -x)] == [-1, 1, -2]
     assert list(itertools.groupby([])) == []
 
     # partially consumed groups

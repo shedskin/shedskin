@@ -420,8 +420,8 @@ public:
     void *read_string(str *string_, str *source=NULL);
     void *read_dict(dict<str *, dict<str *, str *> *> *dictionary, str *source=NULL);
     void *read_file(file *fp, str *source=NULL);
-    list<tuple2<str *, SectionProxy *> *> *items(dict<str *, str *> *vars, __ss_int raw);
-    list<tuple<str *> *> *items(dict<str *, str *> *vars, __ss_int raw, str *section);
+    list<tuple2<str *, SectionProxy *> *> *items(__ss_int raw=0, dict<str *, str *> *vars=NULL);
+    list<tuple<str *> *> *items(str *section, __ss_int raw=0, dict<str *, str *> *vars=NULL);
     void *_read(file *fp, str *fpname);
 
     /* Typed getters, matching CPython's _get_conv(): look the value up

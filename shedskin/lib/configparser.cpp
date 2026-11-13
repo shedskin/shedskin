@@ -745,7 +745,7 @@ __ss_bool RawConfigParser::_to_boolean(str *v) {
     return (this->BOOLEAN_STATES)->__getitem__(v->lower());
 }
 
-list<tuple2<str *, SectionProxy *> *> *RawConfigParser::items(dict<str *, str *> *, __ss_int) {
+list<tuple2<str *, SectionProxy *> *> *RawConfigParser::items(__ss_int, dict<str *, str *> *) {
     /**
     Return a list of (section_name, SectionProxy) pairs for every
     section, including the default section. Each proxy is a live,
@@ -772,7 +772,7 @@ list<tuple2<str *, SectionProxy *> *> *RawConfigParser::items(dict<str *, str *>
     return result;
 }
 
-list<tuple<str *> *> *RawConfigParser::items(dict<str *, str *> *vars, __ss_int raw, str *section) {
+list<tuple<str *> *> *RawConfigParser::items(str *section, __ss_int raw, dict<str *, str *> *vars) {
     /**
     Return a list of (name, value) tuples for each option in the section.
 
@@ -1434,7 +1434,7 @@ void ExtendedInterpolation::_interpolate_some(RawConfigParser *parser, str *opti
                 __ss_int k, n;
 
                 submap = (new dict<str *, str *>());
-                subitems = parser->items(NULL, 1, sect);
+                subitems = parser->items(sect, 1, NULL);
                 n = len(subitems);
                 for (k = 0; k < n; k++) {
                     t = subitems->__getfast__(k);

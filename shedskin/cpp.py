@@ -4531,6 +4531,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             anon_func,
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
 
+        # arity redirect (e.g. configparser items() -> __items0), as in
+        # infer.redirect, so defaults/keywords follow the redirected stub
+        if method_call:
+            funcs = [
+                infer.redirect_func(f, node)
+                if f.mv.module.builtin and f.node and not f.node.args.vararg
+                else f
+                for f in funcs
+            ]
+
         target: "python.Function"
         target = funcs[0]  # XXX
 

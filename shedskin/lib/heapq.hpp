@@ -430,12 +430,12 @@ template<class T, template <class Y, class Z> class Cmp, class Key> T nheapiter<
     return this->values[--this->index];
 }
 
-template<class T, class Key> list<T> *nlargest(Key key, __ss_int n, pyiter<T> *iterable) {
+template<class T, class Key> list<T> *nlargest(__ss_int n, pyiter<T> *iterable, Key key) {
     nheapiter<T, NCmpSecond, Key> *it = new nheapiter<T, NCmpSecond, Key>(n, iterable, key);
     return new list<T>(it);
 }
 
-template<class T, class Key> list<T> *nsmallest(Key key, __ss_int n, pyiter<T> *iterable) {
+template<class T, class Key> list<T> *nsmallest(__ss_int n, pyiter<T> *iterable, Key key) {
     nheapiter<T, InvNCmpSecond, Key> *it = new nheapiter<T, InvNCmpSecond, Key>(n, iterable, key);
     return new list<T>(it);
 }
