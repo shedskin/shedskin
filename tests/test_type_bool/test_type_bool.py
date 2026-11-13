@@ -160,6 +160,14 @@ def test_arithmetic():
     assert str(i - t) == '1'
     assert str(t + x) == '3.0'
     assert str(-t) == '-1'
+    assert str(-t // 2) == '-1'
+    assert str(divmod(-t, 2)) == '(-1, 1)'
+    assert str(pow(-t, 3)) == '-1'
+    assert str((-t) ** 2) == '1'
+    assert str(~t // 2) == '-1'
+    assert str(+t // 2) == '0'
+    assert str(-t / 2) == '-0.5'
+    assert str(-t % 5) == '4'
     assert t << 40 == 1099511627776
     assert 8 >> t == 4
     assert str(t & f) == 'False'
