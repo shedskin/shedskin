@@ -3448,13 +3448,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             types = self.mergeinh[right]  # type of temp var (see graph.py)
             ts = typestr.typestr(self.gx, types, mv=self.mv).strip()
             pointer = ts.endswith("*")
+            only_none = ts == "void *"  # e.g. 'None in ["a"]'
             self.append("(")
             for i, elem in enumerate(left.elts):
-                if ast_utils.is_none(elem) and not pointer:
-                    # None among numbers/bools: never equal
+                if only_none or (ast_utils.is_none(elem) and not pointer):
+                    # None vs anything, or None among numbers/bools: known result
+                    equal = only_none and ast_utils.is_none(elem)
                     if i == 0:
                         self.visitm("(", tmp, "=", right, ", ", func)
-                    self.append("true" if prefix == "!" else "false")
+                    self.append("true" if equal != (prefix == "!") else "false")
                     if i == 0:
                         self.append(")")
                 else:

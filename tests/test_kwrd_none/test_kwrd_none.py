@@ -92,6 +92,13 @@ def test_in_const_tuple_none():
     t = True
     assert t in (1, 2)
     assert t not in (0, None)
+    # tested value is None-typed: never equal, except to None
+    assert None not in ['a']
+    assert None in ['a', None]
+    assert None in (None, 'b')
+    assert not (None in (1, 2))
+    x = None
+    assert x not in ('a', 'b')
 
 
 def test_all():
