@@ -622,6 +622,7 @@ public:
 /* throw the OSError subclass matching errno (as CPython does), with the
    given file name(s) (or none); use this for failed calls that set errno */
 [[noreturn]] void __throw_oserror(str *fname=0, str *fname2=0);
+[[noreturn]] void __throw_oserror_errno(int value, int e, str *strerror=0, str *fname=0, str *fname2=0);
 
 class OverflowError : public ArithmeticError {
 public:

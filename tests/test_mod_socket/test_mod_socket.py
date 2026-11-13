@@ -727,9 +727,67 @@ def test_connect_ex():
             assert e.errno == 61
         else:
             assert e.errno == 111
-    except OSError:  # socket.error is an OSError
-        assert False
     client.close()
+
+
+def test_errno_subclasses():
+    # 1113-B1: socket errors are the errno-specific OSError subclass, and
+    # (socket.error being OSError) 'except socket.error' still catches them
+    a, b = socket.socketpair()
+    a.setblocking(False)
+    try:
+        a.recv(10)
+        assert False
+    except BlockingIOError as e:
+        assert e.errno != 0
+    try:
+        a.recv(10)
+        assert False
+    except socket.error as e:
+        assert e.__class__.__name__ == 'BlockingIOError'
+    b.close()
+    if sys.platform != 'win32':
+        try:
+            for i in range(100):
+                a.send(b'x')
+            assert False
+        except BrokenPipeError:
+            pass
+        except ConnectionResetError:  # (macOS, sometimes)
+            pass
+    a.close()
+
+    server = socket.create_server(('127.0.0.1', 0))
+    server.setblocking(False)
+    try:
+        server.accept()
+        assert False
+    except BlockingIOError:
+        pass
+    port = server.getsockname()[1]
+    server.close()  # (nobody listening there now)
+    client = socket.socket()
+    try:
+        client.connect(('127.0.0.1', port))
+        assert False
+    except ConnectionRefusedError as e:
+        assert e.errno != 0
+    client.close()
+
+    # socket.error is OSError, also the other way around
+    try:
+        os.stat('/nonexistent/x')
+        assert False
+    except socket.error as e:
+        assert e.__class__.__name__ == 'FileNotFoundError'
+    try:
+        raise socket.error('x')
+    except OSError as e:
+        assert str(e) == 'x'
+    try:
+        raise TimeoutError('t')
+    except socket.timeout as e:
+        assert str(e) == 't'
 
 
 def test_create_connection():
@@ -1639,6 +1697,7 @@ def test_all():
     test_makefile_binary()
     test_makefile_modes()
     test_connect_ex()
+    test_errno_subclasses()
     test_connect_nonblocking()
     test_makefile_text_args()
     test_create_connection()

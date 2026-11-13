@@ -200,8 +200,9 @@ EWOULDBLOCK=11
 
 has_ipv6 = True
 
-# CPython: error is OSError itself, and timeout is TimeoutError (an OSError
-# subclass); here error is an OSError subclass, and timeout a TimeoutError one
+# as CPython, error is OSError itself, and timeout is TimeoutError: modeled as
+# subclasses here, but socket.hpp makes them typedefs, so in C++ they are the
+# same classes (and 'except error' also catches e.g. ConnectionRefusedError)
 class error(OSError): pass
 class herror(OSError): pass
 class gaierror(OSError): pass

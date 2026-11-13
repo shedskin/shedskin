@@ -49,10 +49,14 @@ typedef int socket_type;
 using namespace __shedskin__;
 namespace __socket__ {
 
-class error;
+/* as CPython, socket.error is OSError itself, and socket.timeout is
+   TimeoutError, so 'except socket.error' catches any OSError (such as the
+   errno-specific ConnectionRefusedError that throw_error() gives), and
+   'except OSError/TimeoutError' anything raised as socket.error/timeout */
+typedef OSError error;
+typedef TimeoutError timeout;
 class herror;
 class gaierror;
-class timeout;
 class socket;
 
 extern str *__name__;
@@ -60,7 +64,7 @@ extern str *__name__;
 /* The OSError constructor snapshots the C errno, which for the socket
    exceptions below is usually stale: on Windows the CRT errno is unrelated
    to WSAGetLastError(), and a timeout has no errno at all. So start from a
-   plain message like CPython's OSError('msg'); make_error() in socket.cpp
+   plain message like CPython's OSError('msg'); throw_error() in socket.cpp
    fills in errno/strerror for failed calls. */
 inline void __init_plain_oserror(OSError *e, str *msg) {
     e->__init__(msg);
@@ -69,19 +73,7 @@ inline void __init_plain_oserror(OSError *e, str *msg) {
     e->filename = 0;
 }
 
-extern class_ *cl_error;
-class error : public OSError {
-public:
-
-    error(str *msg=0) : OSError(msg) {
-        __class__ = cl_error;
-        __init_plain_oserror(this, msg);
-    }
-    /* error(errno, strerror[, filename..]), as OSError */
-    error(__ss_int e, str *strerror_, str *filename_=0, void *winerror_=0, str *filename2_=0) : OSError(e, strerror_, filename_, winerror_, filename2_) {
-        __class__ = cl_error;
-    }
-};
+extern class_ *cl_error; /* (cl_oserror) */
 
 extern class_ *cl_herror;
 class herror : public OSError {
@@ -127,20 +119,7 @@ public:
 #endif
 };
 
-extern class_ *cl_timeout;
-class timeout : public TimeoutError {
-public:
-
-    timeout(str *msg=0) : TimeoutError(msg) {
-        __class__ = cl_timeout;
-        __init_plain_oserror(this, msg);
-    }
-    str *__str__() { return OSError::__str__(); } /* ('[Errno N] ..' when given an errno) */
-    str *__repr__() { return OSError::__repr__(); }
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_TimeoutError; } /* socket.timeout is TimeoutError */
-#endif
-};
+extern class_ *cl_timeout; /* (cl_timeouterror) */
 extern class_ *cl_socket;
 class socket : public object {
     double _timeout;
