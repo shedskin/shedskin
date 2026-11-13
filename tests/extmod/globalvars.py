@@ -4,6 +4,7 @@ counter = 0
 name = 'start'
 items = [1]
 ratio = 0.5
+_private = 1
 
 
 def bump():
@@ -30,4 +31,7 @@ def half_ratio():
 
 
 if __name__ == '__main__':
+    # bound only here, so not a module attribute on import (1113-B10)
+    main_only = get_counter() + _private
+    print(main_only)
     print(bump(), get_counter(), get_name(), get_items(), half_ratio())
