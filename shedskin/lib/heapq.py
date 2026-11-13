@@ -41,14 +41,14 @@ def merge(__kw_reverse=False, __kw_key=0, *iterables):
     __cmp(__kw_key(item), __kw_key(item))
     yield item
 
-def nlargest(n, iterable, __kw_key=None):
+def nlargest(n, iterable, key=None):  # key: positional or keyword
     item = iter(iterable).__next__()
     __cmp(item, item)
-    __cmp(__kw_key(item), __kw_key(item))
+    __cmp(key(item), key(item))
     return [item]
 
-def nsmallest(n, iterable, __kw_key=None):
+def nsmallest(n, iterable, key=None):  # key: positional or keyword
     item = iter(iterable).__next__()
     __cmp(item, item)
-    __cmp(__kw_key(item), __kw_key(item))
+    __cmp(key(item), key(item))
     return [item]

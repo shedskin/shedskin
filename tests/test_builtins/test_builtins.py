@@ -731,6 +731,8 @@ def test_round():
     assert round(1.5) == 2
     assert round(2.5) == 2
     assert round(3.5) == 4
+    assert round(number=2.5) == 2
+    assert round(number=2.567, ndigits=2) == 2.57
     assert round(4.5) == 4
 
     assert round(-1.5) == -2

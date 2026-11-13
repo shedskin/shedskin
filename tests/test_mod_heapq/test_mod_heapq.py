@@ -239,6 +239,22 @@ def test_nsmallest():
     assert list(heapq.nsmallest(5, [3, 15])) == [3, 15]
 
 
+def neg(x):
+    return -x
+
+def test_nlargest_nsmallest_key_args():
+    # key is positional-or-keyword (used to be dropped when positional)
+    l = [5, 1, 4, 2, 3]
+    assert heapq.nlargest(2, l, neg) == [1, 2]
+    assert heapq.nlargest(2, l, key=neg) == [1, 2]
+    assert heapq.nlargest(2, l, None) == [5, 4]
+    assert heapq.nlargest(2, l, key=None) == [5, 4]
+    assert heapq.nlargest(n=2, iterable=l, key=neg) == [1, 2]
+    assert heapq.nsmallest(2, l, neg) == [5, 4]
+    assert heapq.nsmallest(2, l, key=neg) == [5, 4]
+    assert heapq.nsmallest(2, l, None) == [1, 2]
+    assert heapq.nsmallest(iterable=l, n=2) == [1, 2]
+
 def test_nlargest_nsmallest_n_le_0():
     # n <= 0 must short-circuit to [] without draining the iterable
     # (regression test: used to loop forever on an infinite iterable)
@@ -341,6 +357,7 @@ def test_none_results():
 
 
 def test_all():
+    test_nlargest_nsmallest_key_args()
     test_heapify()
     test_heapify_max()
 
