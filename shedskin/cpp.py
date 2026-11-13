@@ -3593,7 +3593,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(node.op, ast.USub):
             self.visitm("(", func)
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
-                self.visitm("-", node.operand, func)
+                self.append("-")
+                self.visit_arith(node.operand, func)
             else:
                 fakefunc = infer.inode(self.gx, node.operand).fakefunc
                 assert fakefunc
@@ -3602,7 +3603,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif isinstance(node.op, ast.UAdd):
             self.visitm("(", func)
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
-                self.visitm("+", node.operand, func)
+                self.append("+")
+                self.visit_arith(node.operand, func)
             else:
                 fakefunc = infer.inode(self.gx, node.operand).fakefunc
                 assert fakefunc
@@ -3610,7 +3612,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visitm(")", func)
         elif isinstance(node.op, ast.Invert):
             if typestr.unboxable(self.gx, self.mergeinh[node.operand]):
-                self.visitm("~", node.operand, func)
+                self.append("~")
+                self.visit_arith(node.operand, func)
             else:
                 fakefunc = infer.inode(self.gx, node.operand).fakefunc
                 assert fakefunc
