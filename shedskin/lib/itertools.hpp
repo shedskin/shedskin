@@ -61,7 +61,7 @@ inline countiter<__ss_float> *count(__ss_float start, __ss_float step = 1.) {
 
 template<class T> class accumulateiter : public __iter<T> {
     __iter<T> *iter;
-    int position;
+    bool started;
     T prev;
 
 public:
@@ -76,14 +76,16 @@ public:
 };
 
 template<class T> inline accumulateiter<T>::accumulateiter(pyiter<T> *iterable) {
-    position = 0;
+    started = false;
     has_func = false;
     has_initial = false;
     iter = iterable->__iter__();
 }
 
 template<class T> T accumulateiter<T>::__next__() {
-    if(position++ == 0) {
+    /* a flag, not a counter: an int counter overflowed after 2**31 calls */
+    if(!started) {
+        started = true;
         if(has_initial)
             prev = initial;
         else
@@ -131,7 +133,7 @@ template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, void
 // pairwise
 
 template<class T> class pairwiseiter : public __iter<tuple<T> *> {
-    int position;
+    bool started;
     __iter<T> *iter;
     T prev;
 
@@ -142,13 +144,15 @@ public:
 };
 
 template<class T> inline pairwiseiter<T>::pairwiseiter(pyiter<T> *iterable) {
-    this->position = 0;
+    this->started = false;
     this->iter = iterable->__iter__();
 }
 
 template<class T> tuple<T> *pairwiseiter<T>::__next__() {
-    if(position++ == 0)
+    if(!started) {
         prev = this->iter->__next__();
+        started = true;
+    }
     T t = this->iter->__next__();
 
     tuple<T> *result = new tuple<T>(0, prev, t);
@@ -597,7 +601,13 @@ template<class T> T isliceiter<T>::__next__() {
     }
 
     ++this->current_position;
-    this->next_position += this->step;
+    /* advance without signed overflow: like CPython, clamp to 'stop' (or to
+       the maximum index when there is no stop) */
+    __ss_int limit = (this->stop == -1) ? std::numeric_limits<__ss_int>::max() : this->stop;
+    if (this->step >= limit - this->next_position)
+        this->next_position = limit;
+    else
+        this->next_position += this->step;
 
     return this->iter->__next__();
 }
@@ -670,20 +680,20 @@ template<class T> class teecache {
 template<class T> class teecache : public gc {
 #endif
 public:
-    typedef std::pair<T, int> item;
+    typedef std::pair<T, __ss_int> item;
 
-    int begin;
-    int end;
-    int clients;
+    __ss_int begin;
+    __ss_int end;
+    __ss_int clients;
     __GC_DEQUE(item) cache;
 
-    teecache(int clients);
+    teecache(__ss_int clients);
 
     void add(const T& value);
-    T get(int position);
+    T get(__ss_int position);
 };
 
-template<class T> inline teecache<T>::teecache(int clients_) {
+template<class T> inline teecache<T>::teecache(__ss_int clients_) {
     begin = 0;
     end = 0;
     clients = clients_;
@@ -694,7 +704,7 @@ template<class T> void teecache<T>::add(const T& value) {
     this->cache.push_back(std::make_pair(value, clients));
 }
 
-template<class T> T teecache<T>::get(int position) {
+template<class T> T teecache<T>::get(__ss_int position) {
     assert(!this->cache.empty());
 
     while (!this->cache.front().second) {
@@ -708,7 +718,7 @@ template<class T> T teecache<T>::get(int position) {
 
 template<class T> class teeiter : public __iter<T> {
 public:
-    int position;
+    __ss_int position;
     __iter<T> *iter;
     teecache<T> *cache;
 
@@ -733,7 +743,7 @@ template<class T> T teeiter<T>::__next__() {
     return this->cache->get(position++);
 }
 
-template<class T> inline tuple2<__iter<T> *, __iter<T> *> *tee(pyiter<T> *iterable, int n = 2) {
+template<class T> inline tuple2<__iter<T> *, __iter<T> *> *tee(pyiter<T> *iterable, __ss_int n = 2) {
     if (n < 0)
         throw new ValueError(new str("n must be >= 0"));
     if (n == 0)
@@ -746,9 +756,18 @@ template<class T> inline tuple2<__iter<T> *, __iter<T> *> *tee(pyiter<T> *iterab
         return new tuple2<__iter<T> *, __iter<T> *>(n, new teeiter<T>(iter, cache), new teeiter<T>(iter, cache));
     }
 
-    tuple2<__iter<T> *, __iter<T> *>* tuple = new tuple2<__iter<T> *, __iter<T> *>(1, new teeiter<T>(iter, cache));
+    tuple2<__iter<T> *, __iter<T> *>* tuple = new tuple2<__iter<T> *, __iter<T> *>();
+    if ((__ss_uint)n > tuple->units.max_size())
+        throw new MemoryError();
+    try {
+        tuple->units.reserve((size_t)n);
+    } catch (std::bad_alloc &) {
+        throw new MemoryError();
+    } catch (std::length_error &) {
+        throw new MemoryError();
+    }
 
-    for (int i = 1; i < n; ++i) {
+    for (__ss_int i = 0; i < n; ++i) {
         tuple->units.push_back(new teeiter<T>(iter, cache));
     }
 
@@ -1058,7 +1077,7 @@ public:
     productiter();
 
     void push_iter(pyiter<T> *iterable);
-    void repeat(int times);
+    void repeat(__ss_int times);
 
     tuple2<T, T> *__next__();
 
@@ -1089,11 +1108,33 @@ template<class T> void productiter<T, T>::push_iter(pyiter<T> *iterable) {
         this->exhausted = true;
 }
 
-template<class T> inline void productiter<T, T>::repeat(int times) {
-    if (times <= 0) // product(..., repeat=0) yields a single empty tuple
+inline void __product_check_repeat(__ss_int repeat) {
+    if (repeat < 0)
+        throw new ValueError(new str("repeat argument cannot be negative"));
+}
+
+template<class T> inline void productiter<T, T>::repeat(__ss_int times) {
+    __product_check_repeat(times);
+    if (times == 0) // product(..., repeat=0) yields a single empty tuple
         this->exhausted = false;
 
-    for (int time = 0; time < times; ++time) {
+    size_t nargs = this->values.size();
+    /* as CPython: nargs*repeat may not exceed PY_SSIZE_T_MAX/sizeof(Py_ssize_t) */
+    if (nargs && (__ss_uint)times > ((__ss_uint)std::numeric_limits<__ss_int>::max() / sizeof(__ss_int)) / nargs)
+        throw new OverflowError(new str("repeat argument too large"));
+    size_t npools = nargs * (size_t)times;
+    if (npools > this->iter.max_size())
+        throw new MemoryError();
+    try {
+        this->iter.reserve(npools);
+        this->indices.reserve(npools);
+    } catch (std::bad_alloc &) {
+        throw new MemoryError();
+    } catch (std::length_error &) {
+        throw new MemoryError();
+    }
+
+    for (__ss_int time = 0; time < times; ++time) {
         for (unsigned int iter_ = 0; iter_ < this->values.size(); ++iter_) {
             this->iter.push_back(iter_);
             this->indices.push_back(0);
@@ -1134,11 +1175,12 @@ template<class T> tuple2<T, T> *productiter<T, T>::__next__() {
     return tuple;
 }
 
-inline productiter<void*, void*> *product(int /* iterable_count */, int /* repeat */) {
+inline productiter<void*, void*> *product(int /* iterable_count */, __ss_int repeat) {
+    __product_check_repeat(repeat);
     return new productiter<void*, void*>();
 }
 
-template<class T> inline productiter<T, T> *product(int /* iterable_count */, int repeat, pyiter<T> *iterable) {
+template<class T> inline productiter<T, T> *product(int /* iterable_count */, __ss_int repeat, pyiter<T> *iterable) {
     productiter<T, T> *iter = new productiter<T, T>();
     iter->push_iter(iterable);
     iter->repeat(repeat);
@@ -1146,7 +1188,7 @@ template<class T> inline productiter<T, T> *product(int /* iterable_count */, in
 }
 
 
-template<class T> inline productiter<T, T> *product(int /* iterable_count */, int repeat, pyiter<T> *iterable1, pyiter<T> *iterable2) {
+template<class T> inline productiter<T, T> *product(int /* iterable_count */, __ss_int repeat, pyiter<T> *iterable1, pyiter<T> *iterable2) {
     productiter<T, T> *iter = new productiter<T, T>();
 
     iter->push_iter(iterable1);
@@ -1156,11 +1198,12 @@ template<class T> inline productiter<T, T> *product(int /* iterable_count */, in
 
     return iter;
 }
-template<class T, class U> inline productiter<T, U> *product(int /* iterable_count */, int /* repeat */, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+template<class T, class U> inline productiter<T, U> *product(int /* iterable_count */, __ss_int repeat, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+    __product_check_repeat(repeat);
     return new productiter<T, U>(iterable1, iterable2);
 }
 template<class T, class ... Args> inline productiter<T, T> *product(
-    int iterable_count, int repeat, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args
+    int iterable_count, __ss_int repeat, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args
 ) {
     productiter<T, T> *iter = new productiter<T, T>();
 

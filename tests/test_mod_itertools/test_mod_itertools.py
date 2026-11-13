@@ -234,6 +234,16 @@ def test_islice():
         pass
 
 
+def test_islice_huge_step():
+    # regression test (1113-B4): advancing by a huge step used to overflow,
+    # after which every following element was yielded
+    maxsize = 2**63 - 1
+    assert list(itertools.islice('abcdefg', 1, maxsize, maxsize)) == ['b']
+    assert list(itertools.islice('abcdefg', 1, None, 2**62)) == ['b']
+    assert list(itertools.islice('abcdefg', 2, maxsize - 1, maxsize - 2)) == ['c']
+    assert list(itertools.islice('abcdefg', 0, 7, 2**62)) == ['a']
+
+
 def test_permutations():
     assert list(itertools.permutations('ABDC', 0)) == [()]
     assert list(itertools.permutations('ABDC', 1)) == [('A',), ('B',), ('D',), ('C',)]
@@ -332,6 +342,25 @@ def gen():
         yield ae
 
 
+def test_product_repeat_large():
+    # regression test (1113-B5): repeat was truncated to a C int
+    try:
+        itertools.product('ab', repeat=-1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'repeat argument cannot be negative'
+    try:
+        itertools.product('ab', 'cd', repeat=2**62)
+        assert False
+    except OverflowError as e:
+        assert str(e) == 'repeat argument too large'
+    try:
+        itertools.product('ab', repeat=2**61)
+        assert False
+    except OverflowError as e:
+        assert str(e) == 'repeat argument too large'
+
+
 def test_tee():
     it1, it2 = itertools.tee(gen())
     assert list(it1) == [1, 2, 3, 4, 5]
@@ -368,6 +397,19 @@ def test_tee_zero():
         assert False
     except ValueError as e:
         assert str(e) == 'n must be >= 0'
+
+
+def test_tee_large():
+    # regression test (1113-B5): n was truncated to a C int, so
+    # tee(it, 2**32) gave 0 iterators
+    try:
+        itertools.tee(gen(), 2**62)
+        assert False
+    except MemoryError:
+        pass
+    t = itertools.tee(gen(), 4)
+    assert len(t) == 4
+    assert [list(x) for x in t] == [[1, 2, 3, 4, 5]] * 4
 
 
 def test_tee_interleaved():
@@ -601,15 +643,18 @@ def test_all():
     test_groupby_stale_groups()
     test_groupby_user_eq()
     test_islice()
+    test_islice_huge_step()
     test_permutations()
     test_combinations()
     test_combinations_with_replacement()
     test_product()
     test_product_repeat()
+    test_product_repeat_large()
     test_compress()
     test_tee()
     test_tee_short()
     test_tee_zero()
+    test_tee_large()
     test_tee_interleaved()
     test_tee_gc()
     test_filterfalse()
