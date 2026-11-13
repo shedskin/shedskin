@@ -79,6 +79,24 @@ def test_module():
         assert name in names, name
 
 
+def test_star_import():
+    # 1113-B9: the globals are not in the module dict, which 'import *' used
+    ns = {}
+    exec('from globalvars import *', ns)
+    for name in ['counter', 'name', 'items', 'ratio', 'bump']:
+        assert name in ns, name
+    assert ns['counter'] == globalvars.counter
+    assert '_private' not in ns
+    assert '_private' in dir(globalvars)
+    assert '__all__' not in dir(globalvars)
+
+
+def test_main_only():
+    # 1113-B10: the main block does not run on import
+    assert not hasattr(globalvars, 'main_only')
+    assert 'main_only' not in dir(globalvars)
+
+
 if __name__ == '__main__':
     tests = [(name, f) for (name, f) in sorted(globals().items()) if name.startswith('test_')]
     for name, f in tests:

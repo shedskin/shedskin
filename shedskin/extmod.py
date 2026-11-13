@@ -19,6 +19,7 @@ CPython side.
 
 """
 
+import ast
 import logging
 from typing import TYPE_CHECKING, List, Optional
 from collections.abc import Iterable
@@ -121,6 +122,96 @@ def clname(cl: "python.Class") -> str:
     return "__ss_{}_{}".format("_".join(cl.mv.module.name_list), cl.ident)
 
 
+def is_main_guard(test: ast.expr) -> bool:
+    """Is this the test of an 'if __name__ == "__main__":' block"""
+    if not (
+        isinstance(test, ast.Compare)
+        and len(test.ops) == 1
+        and isinstance(test.ops[0], ast.Eq)
+    ):
+        return False
+    sides = [test.left, test.comparators[0]]
+    return any(
+        isinstance(a, ast.Name) and a.id == "__name__" for a in sides
+    ) and any(isinstance(a, ast.Constant) and a.value == "__main__" for a in sides)
+
+
+class GlobalBinds(ast.NodeVisitor):
+    """Collect the names that statements bind in the module namespace
+
+    This may collect too much (for example, comprehension variables), which
+    only means that fewer names are taken to be bound in the main block alone.
+    """
+
+    def __init__(self) -> None:
+        self.names: set[str] = set()
+
+    def visit_Name(self, node: ast.Name) -> None:
+        if isinstance(node.ctx, (ast.Store, ast.Del)):
+            self.names.add(node.id)
+
+    def visit_scope(self, node: ast.AST) -> None:
+        # only names declared global in a function or class body
+        for child in ast.walk(node):
+            if isinstance(child, ast.Global):
+                self.names.update(child.names)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.names.add(node.name)
+        self.visit_scope(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self.names.add(node.name)
+        self.visit_scope(node)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self.names.add(node.name)
+        self.visit_scope(node)
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        self.visit_scope(node)
+
+    def visit_alias(self, node: ast.alias) -> None:
+        self.names.add((node.asname or node.name).split(".")[0])
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        if node.name:
+            self.names.add(node.name)
+        self.generic_visit(node)
+
+    def visit_MatchAs(self, node: ast.MatchAs) -> None:
+        if node.name:
+            self.names.add(node.name)
+        self.generic_visit(node)
+
+    def visit_MatchStar(self, node: ast.MatchStar) -> None:
+        if node.name:
+            self.names.add(node.name)
+
+    def visit_MatchMapping(self, node: ast.MatchMapping) -> None:
+        if node.rest:
+            self.names.add(node.rest)
+        self.generic_visit(node)
+
+
+def main_only_names(tree: ast.Module) -> set[str]:
+    """Names bound only in the 'if __name__ == "__main__":' block
+
+    That block does not run when the module is imported, so in CPython these
+    names do not become module attributes (1113-B10).
+    """
+    inside, outside = GlobalBinds(), GlobalBinds()
+    for stmt in tree.body:
+        if isinstance(stmt, ast.If) and is_main_guard(stmt.test):
+            for child in stmt.body:
+                inside.visit(child)
+            for child in stmt.orelse:
+                outside.visit(child)
+        else:
+            outside.visit(stmt)
+    return inside.names - outside.names
+
+
 class ExtensionModule:
     """Extension module generator"""
 
@@ -144,7 +235,7 @@ class ExtensionModule:
                 )
 
     def supported_vars(
-        self, variables: Iterable["python.Variable"]
+        self, variables: Iterable["python.Variable"], allow: Iterable[str] = ()
     ) -> list["python.Variable"]:  # XXX virtuals?
         """Supported variables, in a stable order (see python.stable_vars)
 
@@ -158,7 +249,9 @@ class ExtensionModule:
         for var in variables:
             if var not in self.gx.merged_inh or not self.gx.merged_inh[var]:
                 continue
-            if var.name is None or var.name.startswith("__"):  # XXX
+            if var.name is None or (
+                var.name.startswith("__") and var.name not in allow
+            ):  # XXX
                 continue
             if var.invisible or typestr.singletype2(
                 self.gx.merged_inh[var], python.Module
@@ -355,13 +448,19 @@ class ExtensionModule:
         """Supported global variables of the module
 
         A name that is also a function or class is left out, as the getset
-        descriptor would hide that.
+        descriptor would hide that. So is a name that is only bound in the
+        main block, which does not run on import (1113-B10).
         """
         mv = self.gv.module.mv
+        main_only = main_only_names(self.gv.module.ast)
         return [
             var
-            for var in self.supported_vars(self.gv.mv.globals.values())
-            if var.name not in mv.funcs and var.name not in mv.classes
+            for var in self.supported_vars(
+                self.gv.mv.globals.values(), allow=["__all__"]
+            )
+            if var.name not in mv.funcs
+            and var.name not in mv.classes
+            and var.name not in main_only
         ]
 
     def do_module_type(self, gvars: list["python.Variable"]) -> None:
@@ -418,11 +517,84 @@ class ExtensionModule:
             write("    return 0;")
             write("}\n")
 
+        # 'from mod import *' takes the public names of the module dict, which
+        # no longer has the global variables, unless there is an __all__. so
+        # unless the module defines one, provide one listing those as well
+        # (1113-B9). an assigned __all__ is kept in the module dict, as usual.
+        dyn_all = "__all__" not in [var.name for var in gvars]
+        if dyn_all:
+            write(
+                "static PyObject *__ss_%s_ModuleAll(PyObject *self, void *closure) {"
+                % mod
+            )
+            write("    (void)closure;")
+            write("    PyObject *dict = PyModule_GetDict(self);")
+            write("    if (!dict)")
+            write("        return NULL;")
+            write('    PyObject *all = PyDict_GetItemString(dict, "__all__");')
+            write("    if (all) {")
+            write("        Py_INCREF(all);")
+            write("        return all;")
+            write("    }")
+            write("    PyObject *names = PyList_New(0);")
+            write("    if (!names)")
+            write("        return NULL;")
+            write("    PyObject *key, *value;")
+            write("    Py_ssize_t pos = 0;")
+            write("    while (PyDict_Next(dict, &pos, &key, &value)) {")
+            write("        if (!PyUnicode_Check(key) || PyUnicode_GET_LENGTH(key) == 0 ||")
+            write("            PyUnicode_READ_CHAR(key, 0) == '_')")
+            write("            continue;")
+            write("        if (PyList_Append(names, key) < 0) {")
+            write("            Py_DECREF(names);")
+            write("            return NULL;")
+            write("        }")
+            write("    }")
+            write("    for (PyGetSetDef *d = Py_TYPE(self)->tp_getset; d->name; d++) {")
+            write("        if (d->name[0] == '_')")
+            write("            continue;")
+            write("        PyObject *name = PyUnicode_FromString(d->name);")
+            write("        if (!name || PyList_Append(names, name) < 0) {")
+            write("            Py_XDECREF(name);")
+            write("            Py_DECREF(names);")
+            write("            return NULL;")
+            write("        }")
+            write("        Py_DECREF(name);")
+            write("    }")
+            write("    return names;")
+            write("}\n")
+
+            write(
+                "static int __ss_%s_ModuleSetAll(PyObject *self, PyObject *value, void *closure) {"
+                % mod
+            )
+            write("    (void)closure;")
+            write("    PyObject *dict = PyModule_GetDict(self);")
+            write("    if (!dict)")
+            write("        return -1;")
+            write("    if (value)")
+            write('        return PyDict_SetItemString(dict, "__all__", value);')
+            write('    if (PyDict_DelItemString(dict, "__all__") < 0) {')
+            write("        PyErr_Clear();")
+            write(
+                "        PyErr_SetString(PyExc_AttributeError, %s);"
+                % c_string("__all__")
+            )
+            write("        return -1;")
+            write("    }")
+            write("    return 0;")
+            write("}\n")
+
         write("static PyGetSetDef __ss_%s_ModuleGetSet[] = {" % mod)
         for var in gvars:
             write(
                 '    {(char *)%s, (getter)__ss_gget_%s_%s, (setter)__ss_gset_%s_%s, (char *)"", NULL},'
                 % (c_string(var.name), mod, var.name, mod, var.name)
+            )
+        if dyn_all:
+            write(
+                '    {(char *)"__all__", (getter)__ss_%s_ModuleAll, (setter)__ss_%s_ModuleSetAll, (char *)"", NULL},'
+                % (mod, mod)
             )
         write("    {NULL}\n};\n")
 
@@ -434,6 +606,9 @@ class ExtensionModule:
         write("    if (!names)")
         write("        return NULL;")
         write("    for (PyGetSetDef *d = __ss_%s_ModuleGetSet; d->name; d++) {" % mod)
+        if dyn_all:  # (listed when assigned, as it is then in the dict)
+            write("        if (d->get == (getter)__ss_%s_ModuleAll)" % mod)
+            write("            continue;")
         write("        PyObject *name = PyUnicode_FromString(d->name);")
         write("        if (!name || PyList_Append(names, name) < 0) {")
         write("            Py_XDECREF(name);")
