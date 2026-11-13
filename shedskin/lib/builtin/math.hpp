@@ -184,6 +184,20 @@ static inline void __check_nonzero(int b, const char *msg) {
 #define __SS_ZERO_CHECK(b, msg) ((void)0)
 #endif
 
+/* true for b == 0 and b == -1, the two integer divisors that need care:
+   division by zero, and INT_MIN / -1 or INT_MIN % -1, which overflow and
+   trap (SIGFPE) on x86. it is a single unsigned compare, so it costs no
+   more than a plain zero check, and keeps the common path untouched */
+template<class T> static inline bool __ss_div_special(T b) {
+    typedef typename std::make_unsigned<T>::type U;
+    return (U)b + 1 <= 1;
+}
+/* -a with wraparound instead of UB (so INT_MIN // -1 gives INT_MIN) */
+template<class T> static inline T __ss_wrap_neg(T a) {
+    typedef typename std::make_unsigned<T>::type U;
+    return (T)((U)0 - (U)a);
+}
+
 template<class A> A __divs(A a, A b);
 template<> inline __ss_float __divs(__ss_float a, __ss_float b) { __SS_ZERO_CHECK(b, "float division by zero"); return a/b; }
 #ifdef __SS_LONG
@@ -264,7 +278,10 @@ template<> inline __ss_float __floordiv(__ss_float a, __ss_float b) { __SS_ZERO_
 
 #ifdef __SS_LONG /* XXX */
 template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) {
-    __SS_ZERO_CHECK(b, "integer division or modulo by zero");
+    if(__ss_div_special(b)) {
+        __SS_ZERO_CHECK(b, "integer division or modulo by zero");
+        return __ss_wrap_neg(a);
+    }
     __ss_int r = a / b;
     __ss_int m = a % b;
     if (m != 0 && ((a ^ b) < 0)) r -= 1;
@@ -272,7 +289,10 @@ template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) {
 }
 #endif
 template<> inline int __floordiv(int a, int b) {
-    __SS_ZERO_CHECK(b, "integer division or modulo by zero");
+    if(__ss_div_special(b)) {
+        __SS_ZERO_CHECK(b, "integer division or modulo by zero");
+        return __ss_wrap_neg(a);
+    }
     int r = a / b;
     int m = a % b;
     if (m != 0 && ((a ^ b) < 0)) r -= 1;
@@ -287,14 +307,20 @@ inline __ss_float __floordiv(__ss_float a, __ss_int b) { return __floordiv(a, (_
 template<class A> A __mods(A a, A b);
 #ifdef __SS_LONG /* XXX */
 template<> inline __ss_int __mods(__ss_int a, __ss_int b) {
-    __SS_ZERO_CHECK(b, "integer modulo by zero");
+    if(__ss_div_special(b)) {
+        __SS_ZERO_CHECK(b, "integer modulo by zero");
+        return 0;
+    }
     __ss_int m = a%b;
     if((m<0 && b>0)||(m>0 && b<0)) m+=b;
     return m;
 }
 #endif
 template<> inline int __mods(int a, int b) {
-    __SS_ZERO_CHECK(b, "integer modulo by zero");
+    if(__ss_div_special(b)) {
+        __SS_ZERO_CHECK(b, "integer modulo by zero");
+        return 0;
+    }
     int m = a%b;
     if((m<0 && b>0)||(m>0 && b<0)) m+=b;
     return m;
