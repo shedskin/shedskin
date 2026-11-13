@@ -3444,21 +3444,57 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and left.elts
             and all([isinstance(elt, ast.Constant) for elt in left.elts])
         ):
+            tmp = self.mv.tempcount[(left, "cmp")]
+            types = self.mergeinh[right]  # type of temp var (see graph.py)
+            ts = typestr.typestr(self.gx, types, mv=self.mv).strip()
+            pointer = ts.endswith("*")
+            only_none = ts == "void *"  # e.g. 'None in ["a"]'
             self.append("(")
             for i, elem in enumerate(left.elts):
-                if prefix == "!":
-                    self.append("!__eq(")  # XXX why does using __ne( fail test 199!?
+                if only_none or (ast_utils.is_none(elem) and not pointer):
+                    # None vs anything, or None among numbers/bools: known result
+                    equal = only_none and ast_utils.is_none(elem)
+                    if i == 0:
+                        self.visitm("(", tmp, "=", right, ", ", func)
+                    self.append("true" if equal != (prefix == "!") else "false")
+                    if i == 0:
+                        self.append(")")
                 else:
-                    self.append("__eq(")
+                    if prefix == "!":
+                        self.append("!__eq(")  # XXX why does using __ne( fail test 199!?
+                    else:
+                        self.append("__eq(")
 
-                if i == 0:
-                    self.visitm(self.mv.tempcount[(left, "cmp")], "=", right, func)
-                else:
-                    self.visitm(self.mv.tempcount[(left, "cmp")], func)
+                    # scalars: compare in common type, e.g. 1.5 in (1, 2)
+                    cmp_ts = None
+                    if not pointer and not ast_utils.is_none(elem):
+                        ets = typestr.typestr(
+                            self.gx, self.mergeinh[elem], mv=self.mv
+                        ).strip()
+                        if ts == ets:
+                            pass
+                        elif "__ss_float" in (ts, ets):
+                            cmp_ts = "__ss_float"
+                        elif "__ss_int" in (ts, ets):
+                            cmp_ts = "__ss_int"
 
-                self.append(",")
-                self.visit(elem, func)
-                self.append(")")
+                    if cmp_ts:
+                        self.append("((%s)(" % cmp_ts)
+                    if i == 0:
+                        self.visitm(tmp, "=", right, func)
+                    else:
+                        self.visitm(tmp, func)
+                    if cmp_ts:
+                        self.append("))")
+
+                    self.append(",")
+                    if ast_utils.is_none(elem):
+                        self.visit_none(types)  # typed, as bare NULL is an integer
+                    elif cmp_ts:
+                        self.visitm("((", cmp_ts, ")(", elem, "))", func)
+                    else:
+                        self.visit(elem, func)
+                    self.append(")")
                 if i != len(left.elts) - 1:
                     if prefix == "!":
                         self.append(" && ")

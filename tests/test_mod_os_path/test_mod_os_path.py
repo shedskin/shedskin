@@ -626,6 +626,16 @@ def test_os_path_supports_unicode_filenames():
         assert os.path.supports_unicode_filenames is False
 
 
+def test_os_path_module_vars():
+    # 'os.path.X' (variable via a submodule) used to be untyped
+    s = os.path.sep
+    assert s == os.sep
+    flags = [os.path.supports_unicode_filenames]
+    assert flags[0] in (True, False)
+    assert os.path.curdir in ('.', 'x')
+    assert os.path.pardir == '..'
+
+
 def test_os_path_isdir_kwarg():
     # genericpath.isdir(s) in CPython: the parameter is called 's'
     assert isdir(s=".")
@@ -817,6 +827,7 @@ def test_all():
     test_os_path_sameopenfile()
     test_os_path_isdevdrive()
     test_os_path_supports_unicode_filenames()
+    test_os_path_module_vars()
     test_os_path_isdir_kwarg()
     test_os_path_exists_bytes()
     test_os_path_kwarg_names()
