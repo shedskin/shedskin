@@ -1495,6 +1495,34 @@ def test_error_keywords():
     assert e2.source == 'g.ini' and e2.lineno == 4 and e2.line == 'y\n'
 
 
+def test_set_no_value():
+    # set() without a value stores None (allow_no_value=True)
+    cp = configparser.ConfigParser(allow_no_value=True)
+    cp.add_section('s')
+    cp.set('s', 'k')
+    assert cp.get('s', 'k') is None
+    cp.set('s', 'k2', value=None)
+    assert cp.get('s', 'k2') is None
+    assert cp.has_option('s', 'k')
+    cp.set('s', 'k', 'v')
+    assert cp.get('s', 'k') == 'v'
+
+    # ConfigParser without allow_no_value rejects None
+    cp2 = configparser.ConfigParser()
+    cp2.add_section('s')
+    try:
+        cp2.set('s', 'k')
+        assert False
+    except TypeError as e:
+        assert str(e) == 'option values must be strings'
+    assert not cp2.has_option('s', 'k')
+
+    # RawConfigParser does not check
+    rp = configparser.RawConfigParser()
+    rp.add_section('s')
+    rp.set('s', 'k')
+    assert rp.get('s', 'k') is None
+
 def test_all():
     test_minimal()
     test_configparser()
@@ -1555,6 +1583,7 @@ def test_all():
     test_add_default_section_error()
     test_read_encoding()
     test_error_keywords()
+    test_set_no_value()
 
 if __name__ == '__main__':
     test_all()

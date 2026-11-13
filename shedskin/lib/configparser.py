@@ -179,7 +179,7 @@ class RawConfigParser:
         return ''
     def has_option(self, section, option):
         return True
-    def set(self, section, option, value):
+    def set(self, section, option, value=None):
         pass
     def write(self, fp, space_around_delimiters=True):
         pass
