@@ -2966,28 +2966,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node
             )  # XXX iterative dataflow analysis: move there?
 
-            if (
-                isinstance(node.func.value, ast.Name)
-                and node.func.value.id in getmv().imports
-                and node.func.attr == "__getattr__"
-            ):  # XXX analyze_callfunc
-                assert ast_utils.is_str(node.args[0])
-                if (
-                    _const_str(node.args[0])
-                    in getmv().imports[node.func.value.id].mv.globals
-                ):  # XXX bleh
-                    self.add_constraint(
-                        (
-                            infer.inode(
-                                self.gx,
-                                getmv()
-                                .imports[node.func.value.id]
-                                .mv.globals[_const_str(node.args[0])],
-                            ),
-                            newnode,
-                        ),
-                        func,
-                    )
+            # module attribute: 'sys.maxsize', or 'os.path.sep' via a submodule
+            if node.func.attr == "__getattr__":  # XXX analyze_callfunc
+                module = python.lookup_module(node.func.value, getmv())
+                if module:
+                    assert ast_utils.is_str(node.args[0])
+                    var = module.mv.globals.get(_const_str(node.args[0]))
+                    if var:  # XXX bleh
+                        self.add_constraint(
+                            (infer.inode(self.gx, var), newnode), func
+                        )
 
         elif isinstance(node.func, ast.Name):
             # direct call
