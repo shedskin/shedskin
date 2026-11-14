@@ -19,13 +19,43 @@
    nothing is ever added to it, or only None. they can be used as any pointer
    type, and do not occur where numbers are expected */
 
+/* whether a value of type E can be used as a T without converting it, because
+   it has the same representation: an instance of a subclass as one of a base
+   class, and containers of those (at any depth), as in 'list<B *> *' for
+   'list<A *> *' (but not 'list<int> *' for 'list<double> *') */
+
+template<class E, class T> struct __ss_upcastable {
+    static constexpr bool value = std::is_same_v<E, T> || (
+        std::is_pointer_v<E> && std::is_pointer_v<T> &&
+        std::is_class_v<std::remove_pointer_t<T>> &&
+        std::is_base_of_v<std::remove_pointer_t<T>, std::remove_pointer_t<E>>);
+};
+
+template<class Es, class Ts> struct __ss_upcastable_args : std::false_type {};
+template<class... Es, class... Ts> struct __ss_upcastable_args<std::tuple<Es...>, std::tuple<Ts...>> {
+    static constexpr bool value = (__ss_upcastable<Es, Ts>::value && ...);
+};
+
+template<template<class...> class C, class... Es, class... Ts> struct __ss_upcastable<C<Es...> *, C<Ts...> *> {
+    static constexpr bool value = std::is_same_v<C<Es...>, C<Ts...>> || [] {
+        if constexpr (sizeof...(Es) == sizeof...(Ts))
+            return __ss_upcastable_args<std::tuple<Es...>, std::tuple<Ts...>>::value;
+        else
+            return false;
+    }();
+};
+
+template<class E, class T> inline constexpr bool __ss_upcastable_v = __ss_upcastable<E, T>::value;
+
 template<class T, class E> inline T __ss_elem(E e) {
     if constexpr (std::is_same_v<E, void *> && !std::is_same_v<T, void *>) {
         if constexpr (std::is_pointer_v<T>)
             return (T)e;
         else
             return T();
-    } else
+    } else if constexpr (!std::is_convertible_v<E, T> && __ss_upcastable_v<E, T>)
+        return reinterpret_cast<T>(e);
+    else
         return e;
 }
 
@@ -35,7 +65,7 @@ template<class T, class E> inline T __ss_elem(E e) {
     __ ## t = __ ## temp->for_in_init(); \
     for(__ ## i = 0; __ ## temp->for_in_has_next(__ ## t); __ ## i ++) \
     { \
-        e = __ ## temp->for_in_next(__ ## t);
+        e = __ss_elem<std::remove_cvref_t<decltype(e)>>(__ ## temp->for_in_next(__ ## t));
 
 #define FOR_IN_ZIP(a, b, k, l, t, u, n, m) \
     __ ## t = k; \

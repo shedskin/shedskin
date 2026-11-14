@@ -174,8 +174,10 @@ template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> 
     d->__setitem__(a, b);
 }
 
-template<class K, class V> static inline void __add_to_dict(dict<K, V> *d, tuple2<K, V> *t) {
-    d->__setitem__(t->__getfirst__(), t->__getsecond__());
+/* a pair of the key and value type, or of subclasses of them (as in 'dict([(B(), 1)])' for a dict<A *, ..>) */
+template<class K, class V, class K2, class V2> requires (__ss_upcastable_v<K2, K> && __ss_upcastable_v<V2, V>)
+static inline void __add_to_dict(dict<K, V> *d, tuple2<K2, V2> *t) {
+    d->__setitem__(__ss_elem<K>(t->__getfirst__()), __ss_elem<V>(t->__getsecond__()));
 }
 
 template<class K, class V> dict<K,V>::dict() {
