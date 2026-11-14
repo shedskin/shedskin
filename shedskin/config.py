@@ -437,6 +437,10 @@ class GlobalInfo:
         return self._graph_context.item_rvalue
 
     @property
+    def item_value(self) -> dict["ast.AST", "ast.AST"]:
+        return self._graph_context.item_value
+
+    @property
     def assign_target(self) -> dict["ast.AST", "ast.AST"]:
         return self._graph_context.assign_target
 

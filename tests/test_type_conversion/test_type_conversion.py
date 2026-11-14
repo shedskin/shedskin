@@ -130,23 +130,23 @@
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
 #    1. assign   0/2/0        15/4/2       -            3/0/0        0/0/2        8/0/0        13/2/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
-#    3. setitem  0/1/0        6/2/1        -            1/0/0        0/0/1        2/1/0        4/1/1
+#    3. setitem  0/1/0        7/1/1        -            1/0/0        0/0/1        3/0/0        4/1/1
 #    4. arg      0/1/0        9/2/1        -            1/0/0        0/0/1        2/0/0        7/0/1
-#    5. ret      0/1/0        5/0/1        -            1/0/0        0/0/1        2/0/0        8/0/1
-#    6. method   0/1/0        12/2/1       -            3/0/0        0/0/1        2/5/0        18/4/1
+#    5. ret      1/0/0        5/0/1        -            1/0/0        0/0/1        2/0/0        8/0/1
+#    6. method   0/1/0        12/2/1       -            3/0/0        0/0/1        8/0/0        20/3/1
 #    7. display  0/1/0        3/1/1        -            2/0/0        0/0/1        2/0/0        4/0/1
-#    8. binop    1/0/0        7/15/0       -            1/0/0        -            2/3/0        11/14/0
+#    8. binop    1/0/0        9/13/0       -            1/0/0        -            5/0/0        21/4/0
 #    9. compare  -            4/5/0        -            1/0/0        1/0/0        1/0/0        6/3/0
-#   10. lookup   1/0/0        2/8/0        0/0/1        5/0/0        0/0/1        2/2/0        4/10/0
-#   11. ctor     -            7/1/0        -            1/0/0        -            1/3/0        12/6/0
-#   12. iter     0/1/0        5/0/1        -            1/0/0        -            3/2/0        7/7/1
+#   10. lookup   1/0/0        3/7/0        0/0/1        5/0/0        0/0/1        4/0/0        7/7/0
+#   11. ctor     -            7/1/0        -            1/0/0        -            3/1/0        12/6/0
+#   12. iter     0/1/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
 #   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        8/17/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        2/8/0        84/43/13     0/0/1        25/1/0       1/0/9        32/16/0      112/64/10
+#   total        3/7/0        88/39/13     0/0/1        25/1/0       1/0/9        49/1/0       130/47/10
 #
-#   all cells: 256 work, 132 TODO, 33 correctly warn or fail
+#   all cells: 296 work, 95 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -1071,15 +1071,11 @@ def test_setitem_int_float_lit_key():
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
-#     __ss_float>*'
-#
-# def test_setitem_int_float_lit_key_tuple():
-#     e = {(1.5, 2.5): 'a'}
-#     e[(1, 2)] = 'b'
-#     assert len(e) == 2
-#     assert sum(k[0] for k in e) == 2.5
+def test_setitem_int_float_lit_key_tuple():
+    e = {(1.5, 2.5): 'a'}
+    e[(1, 2)] = 'b'
+    assert len(e) == 2
+    assert sum(k[0] for k in e) == 2.5
 
 
 # int->float, literal: build
@@ -1177,14 +1173,11 @@ def test_setitem_sub_var():
 
 
 # sub->base, new: build
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*'
-#
-# def test_setitem_sub_new_key():
-#     d = {(A(), 0): 5}
-#     b = B()
-#     d[(b, 1)] = 6
-#     assert sorted(t[0].name() for t in d) == ['A', 'B']
+def test_setitem_sub_new_key():
+    d = {(A(), 0): 5}
+    b = B()
+    d[(b, 1)] = 6
+    assert sorted(t[0].name() for t in d) == ['A', 'B']
 
 
 # empty, literal: build
@@ -1625,19 +1618,16 @@ def test_ret_int_float_lit_scalar():
 
 
 # bool->int, literal: implicit
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   expression has dynamic (sub)type: {bool, int}
-#   C++: could not convert '2' from '__ss_int' to '__ss_bool' (only when
-#     part of this file: the cell works on its own)
-#
-# def ret_bool_int(c):
-#     if c:
-#         return 2
-#     return True
-#
-# def test_ret_bool_int():
-#     assert ret_bool_int(True) + 1 == 3
-#     assert ret_bool_int(False) + 1 == 2
+def ret_bool_int(c):
+    if c:
+        return 2
+    return True
+
+def test_ret_bool_int():
+    assert ret_bool_int(True) + 1 == 3
+    assert ret_bool_int(False) + 1 == 2
 
 
 # none->scalar, literal: warn
@@ -2219,69 +2209,64 @@ def test_method_sub_var():
 
 
 # sub->base, new: copy
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'list<B*>*' to 'list<A*>*' in return
-#
-# def test_method_sub_new_nested():
-#     lla = [[A()]]
-#     lla.extend([[B()]])
-#     assert lla[1][0].name() == 'B'
-#     d = {1: [A()]}
-#     d.update({2: [B()]})
-#     assert d[2][0].name() == 'B'
+def test_method_sub_new_nested():
+    lla = [[A()]]
+    lla.extend([[B()]])
+    assert lla[1][0].name() == 'B'
+    d = {1: [A()]}
+    d.update({2: [B()]})
+    assert d[2][0].name() == 'B'
 
 
 # sub->base, new: copy
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*' in
-#        return
-#
-# def test_method_sub_new_tuple():
-#     sa = {(A(), 0)}
-#     sa.update([(B(), 1)])
-#     assert sorted(t[0].name() for t in sa) == ['A', 'B']
-#     q = deque([(A(), 0)])
-#     q.extend([(B(), 1)])
-#     assert q[1][0].name() == 'B'
-#     c = Counter([(A(), 0)])
-#     c.update([(B(), 1)])
-#     assert sorted(t[0].name() for t in c) == ['A', 'B']
+def test_method_sub_new_tuple():
+    sa = {(A(), 0)}
+    sa.update([(B(), 1)])
+    assert sorted(t[0].name() for t in sa) == ['A', 'B']
+    q = deque([(A(), 0)])
+    q.extend([(B(), 1)])
+    assert q[1][0].name() == 'B'
+    c = Counter([(A(), 0)])
+    c.update([(B(), 1)])
+    assert sorted(t[0].name() for t in c) == ['A', 'B']
 
 
 # sub->base, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'list<B*>*' to 'list<A*>*' in return
-#
-# def test_method_sub_var_nested():
-#     lla = [[A()]]
-#     llb = [[B()]]
-#     lla += llb
-#     lla.extend(llb)
-#     assert [l[0].name() for l in lla] == ['A', 'B', 'B']
+def test_method_sub_var_nested():
+    lla = [[A()]]
+    llb = [[B()]]
+    lla += llb
+    lla.extend(llb)
+    assert [l[0].name() for l in lla] == ['A', 'B', 'B']
 
 
 # sub->base, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*' in
-#        return
-#
-# def test_method_sub_var_tuple():
-#     lt = [(A(), 0)]
-#     ltb = [(B(), 1)]
-#     lt.extend(ltb)
-#     assert lt[1][0].name() == 'B'
+def test_method_sub_var_tuple():
+    lt = [(A(), 0)]
+    ltb = [(B(), 1)]
+    lt.extend(ltb)
+    assert lt[1][0].name() == 'B'
 
 
 # sub->base, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   (list.append of the same tuple works)
-#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*'
-#
-# def test_method_sub_var_tuple_deque():
-#     q = deque([(A(), 0)])
-#     tb = (B(), 1)
-#     q.append(tb)
-#     assert q[1][0].name() == 'B'
+def test_method_sub_var_tuple_deque():
+    q = deque([(A(), 0)])
+    tb = (B(), 1)
+    q.append(tb)
+    assert q[1][0].name() == 'B'
+
+
+# sub->base, variable: cast
+def test_method_sub_var_tuple_deque_more():
+    q = deque([(A(), 0)])
+    tb = (B(), 1)
+    q.insert(0, tb)
+    q.appendleft(tb)
+    q[2] = tb
+    assert [t[0].name() for t in q] == ['B', 'B', 'B']
+    assert q.count(tb) == 3 and q.index(tb) == 0 and tb in q
+    q.remove(tb)
+    assert len(q) == 2
 
 
 # empty, literal: infer
@@ -2330,6 +2315,14 @@ def test_method_empty_receiver_new():
     assert dd[1][0] == 'x'
 
 
+# empty, new: infer
+def test_method_empty_receiver_new_deque_insert():
+    q = deque()
+    q.insert(0, 1)
+    q.insert(0, 2)
+    assert sum(q) == 3
+
+
 # empty, literal: build
 def test_method_empty_lit_elem():
     ll = [[1]]
@@ -2347,16 +2340,11 @@ def test_method_empty_lit_elem():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<__ss_int>*' to 'list<__ss_float>*' (only
-#     when part of this file: the cell works on its own. the deque gets
-#     the element type of the deque in test_method_int_float_lit_list)
-#
-# def test_method_empty_lit_elem_deque():
-#     q = deque([[1]])
-#     q.append([])
-#     q[1].append(2)
-#     assert sum(q[1]) == 2
+def test_method_empty_lit_elem_deque():
+    q = deque([[1]])
+    q.append([])
+    q[1].append(2)
+    assert sum(q[1]) == 2
 
 
 # empty, new: build
@@ -2907,7 +2895,8 @@ def test_binop_int_float_lit_tuple():
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: cannot convert 'set<__ss_int>*' to 'set<__ss_float>*'
 #
 # def test_binop_int_float_lit_set():
@@ -2919,7 +2908,8 @@ def test_binop_int_float_lit_tuple():
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: cannot convert 'set<__ss_float>*' to 'set<__ss_int>*'
 #
 # def test_binop_int_float_lit_set_left():
@@ -2931,7 +2921,8 @@ def test_binop_int_float_lit_tuple():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: cannot convert 'set<__ss_int>*' to 'set<__ss_float>*'
 #
 # def test_binop_int_float_var_set():
@@ -2944,7 +2935,8 @@ def test_binop_int_float_lit_tuple():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: cannot convert 'set<__ss_float>*' to 'set<__ss_int>*'
 #
 # def test_binop_int_float_var_set_left():
@@ -2965,27 +2957,20 @@ def test_binop_int_float_var_set_method():
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'dict<__ss_int, __ss_int>*' to 'dict<__ss_int,
-#     __ss_float>*'
-#
-# def test_binop_int_float_lit_dict():
-#     d = {1: 1.5}
-#     assert sum((d | {2: 3}).values()) == 4.5
+def test_binop_int_float_lit_dict():
+    d = {1: 1.5}
+    assert sum((d | {2: 3}).values()) == 4.5
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'dict<__ss_int, __ss_float>*' to 'dict<__ss_int,
-#     __ss_int>*'
-#
-# def test_binop_int_float_lit_dict_left():
-#     d = {1: 1.5}
-#     assert sum(({2: 3} | d).values()) == 4.5
+def test_binop_int_float_lit_dict_left():
+    d = {1: 1.5}
+    assert sum(({2: 3} | d).values()) == 4.5
 
 
 # int->float, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: cannot convert 'dict<__ss_int, __ss_int>*' to 'dict<__ss_int,
 #     __ss_float>*'
 #
@@ -2996,7 +2981,8 @@ def test_binop_int_float_var_set_method():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: cannot convert 'dict<__ss_int, __ss_float>*' to 'dict<__ss_int,
 #     __ss_int>*'
 #
@@ -3069,35 +3055,26 @@ def test_binop_sub_var():
 
 
 # sub->base, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<B*>*' to 'set<A*>*'
-#
-# def test_binop_sub_var_set():
-#     sa = {A()}
-#     sb = {B()}
-#     assert sorted(x.name() for x in sa | sb) == ['A', 'B']
-#     assert len(sa & sb) == 0
+def test_binop_sub_var_set():
+    sa = {A()}
+    sb = {B()}
+    assert sorted(x.name() for x in sa | sb) == ['A', 'B']
+    assert len(sa & sb) == 0
 
 
 # sub->base, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<A*>*' to 'set<B*>*'
-#
-# def test_binop_sub_var_set_left():
-#     sa = {A()}
-#     sb = {B()}
-#     assert sorted(x.name() for x in sb | sa) == ['A', 'B']
-#     assert len(sb - sa) == 1
+def test_binop_sub_var_set_left():
+    sa = {A()}
+    sb = {B()}
+    assert sorted(x.name() for x in sb | sa) == ['A', 'B']
+    assert len(sb - sa) == 1
 
 
 # sub->base, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'dict<__ss_int, A*>*' to 'dict<__ss_int, B*>*'
-#
-# def test_binop_sub_var_dict():
-#     db = {1: B()}
-#     d = db | {2: A()}
-#     assert d[1].name() == 'B' and d[2].name() == 'A'
+def test_binop_sub_var_dict():
+    db = {1: B()}
+    d = db | {2: A()}
+    assert d[1].name() == 'B' and d[2].name() == 'A'
 
 
 # empty, literal: build
@@ -3126,65 +3103,45 @@ def test_binop_empty_lit_tuple():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'dict<__ss_int, __ss_int>*' to 'dict<void*,
-#     void*>*'
-#
-# def test_binop_empty_lit_dict():
-#     assert len({} | {1: 2}) == 1
+def test_binop_empty_lit_dict():
+    assert len({} | {1: 2}) == 1
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'dict<void*, void*>*' to 'dict<__ss_int,
-#     __ss_int>*'
-#
-# def test_binop_empty_lit_dict_right():
-#     assert len({1: 2} | {}) == 1
-#     d = {1: 'a'}
-#     assert len(d | {}) == 1
+def test_binop_empty_lit_dict_right():
+    assert len({1: 2} | {}) == 1
+    d = {1: 'a'}
+    assert len(d | {}) == 1
 
 
 # empty, new: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<__ss_int>*' to 'set<void*>*'
-#
-# def test_binop_empty_new_set():
-#     assert len(set() | {1}) == 1
+def test_binop_empty_new_set():
+    assert len(set() | {1}) == 1
 
 
 # empty, new: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<void*>*' to 'set<__ss_int>*'
-#
-# def test_binop_empty_new_set_right():
-#     assert len({1} | set()) == 1
+def test_binop_empty_new_set_right():
+    assert len({1} | set()) == 1
 
 
 # empty, new: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<void*>*' to 'set<__ss_int>*'
-#
-# def test_binop_empty_new_set_var():
-#     s = {1, 2}
-#     assert sum(s | set()) == 3
-#     assert sum(s - set()) == 3
-#     assert len(s & set()) == 0
-#     assert sum(s ^ set()) == 3
-#     strs = {'a'}
-#     assert len(strs | set()) == 1
+def test_binop_empty_new_set_var():
+    s = {1, 2}
+    assert sum(s | set()) == 3
+    assert sum(s - set()) == 3
+    assert len(s & set()) == 0
+    assert sum(s ^ set()) == 3
+    strs = {'a'}
+    assert len(strs | set()) == 1
 
 
 # empty, new: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<__ss_int>*' to 'set<void*>*'
-#
-# def test_binop_empty_new_set_var_left():
-#     s = {1, 2}
-#     assert sum(set() | s) == 3
-#     assert len(set() - s) == 0
-#     strs = {'a'}
-#     assert len(set() | strs) == 1
+def test_binop_empty_new_set_var_left():
+    s = {1, 2}
+    assert sum(set() | s) == 3
+    assert len(set() - s) == 0
+    strs = {'a'}
+    assert len(set() | strs) == 1
 
 
 # empty, new: build
@@ -3236,30 +3193,25 @@ def test_binop_empty_var_list():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<void*>*' to 'set<str*>*'
-#
-# def test_binop_empty_var_set():
-#     es = set()
-#     strs = {'a'}
-#     assert len(strs | es) == 1
-#     assert len(strs & es) == 0
-#     assert len(strs - es) == 1
+def test_binop_empty_var_set():
+    es = set()
+    strs = {'a'}
+    assert len(strs | es) == 1
+    assert len(strs & es) == 0
+    assert len(strs - es) == 1
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<str*>*' to 'set<void*>*'
-#
-# def test_binop_empty_var_set_left():
-#     es = set()
-#     strs = {'a'}
-#     assert len(es | strs) == 1
-#     assert len(es - strs) == 0
+def test_binop_empty_var_set_left():
+    es = set()
+    strs = {'a'}
+    assert len(es | strs) == 1
+    assert len(es - strs) == 0
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: cannot convert 'set<void*>*' to 'set<__ss_int>*'
 #
 # def test_binop_empty_var_set_number():
@@ -3270,7 +3222,8 @@ def test_binop_empty_var_list():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: cannot convert 'set<__ss_int>*' to 'set<void*>*'
 #
 # def test_binop_empty_var_set_number_left():
@@ -3281,23 +3234,17 @@ def test_binop_empty_var_list():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'dict<void*, void*>*' to 'dict<str*, str*>*'
-#
-# def test_binop_empty_var_dict():
-#     ed = {}
-#     d = {'a': 'b'}
-#     assert len(d | ed) == 1
+def test_binop_empty_var_dict():
+    ed = {}
+    d = {'a': 'b'}
+    assert len(d | ed) == 1
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'dict<str*, str*>*' to 'dict<void*, void*>*'
-#
-# def test_binop_empty_var_dict_left():
-#     ed = {}
-#     d = {'a': 'b'}
-#     assert len(ed | d) == 1
+def test_binop_empty_var_dict_left():
+    ed = {}
+    d = {'a': 'b'}
+    assert len(ed | d) == 1
 
 
 # empty, variable: infer
@@ -3782,17 +3729,13 @@ def test_lookup_int_float_var_scalar():
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'dict<tuple2<__ss_float,
-#     __ss_float>*, str*>::pop(tuple<__ss_int>*)'
-#
-# def test_lookup_int_float_lit_tuple_dict_method():
-#     d = {(1.0, 2.0): 'a', (3.0, 4.0): 'b'}
-#     assert d.get((3, 4)) == 'b'
-#     assert d.get((5, 6)) is None
-#     assert d.pop((1, 2)) == 'a'
-#     del d[(3, 4)]
-#     assert len(d) == 0
+def test_lookup_int_float_lit_tuple_dict_method():
+    d = {(1.0, 2.0): 'a', (3.0, 4.0): 'b'}
+    assert d.get((3, 4)) == 'b'
+    assert d.get((5, 6)) is None
+    assert d.pop((1, 2)) == 'a'
+    del d[(3, 4)]
+    assert len(d) == 0
 
 
 # int->float, variable: generic
@@ -3807,7 +3750,8 @@ def test_lookup_int_float_var_scalar():
 
 
 # int->float, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
 #     __ss_float>*'
 #
@@ -3919,26 +3863,20 @@ def test_lookup_sub_base_container():
 
 
 # sub->base, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*'
-#
-# def test_lookup_sub_var_tuple():
-#     d = {(A(), 0): 5}
-#     tb = (B(), 1)
-#     assert tb not in d
-#     assert d.pop(tb, 7) == 7
-#     q = deque([(A(), 0)])
-#     assert q.count(tb) == 0 and tb not in q
+def test_lookup_sub_var_tuple():
+    d = {(A(), 0): 5}
+    tb = (B(), 1)
+    assert tb not in d
+    assert d.pop(tb, 7) == 7
+    q = deque([(A(), 0)])
+    assert q.count(tb) == 0 and tb not in q
 
 
 # sub->base, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'list<B*>*' to 'list<A*>*'
-#
-# def test_lookup_sub_var_nested():
-#     lla = [[A()]]
-#     lb = [B()]
-#     assert lb not in lla
+def test_lookup_sub_var_nested():
+    lla = [[A()]]
+    lb = [B()]
+    assert lb not in lla
 
 
 # empty, literal: generic
@@ -4016,15 +3954,12 @@ def test_lookup_empty_container_var():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*'
-#
-# def test_lookup_empty_value_lit():
-#     # looking up an empty container
-#     ll = [[1], []]
-#     assert [] in ll
-#     names = [['a']]
-#     assert [] not in names
+def test_lookup_empty_value_lit():
+    # looking up an empty container
+    ll = [[1], []]
+    assert [] in ll
+    names = [['a']]
+    assert [] not in names
 
 
 # empty, literal: build
@@ -4061,24 +3996,18 @@ def test_lookup_empty_value_lit_method():
 
 
 # empty, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<str*>*'
-#
-# def test_lookup_empty_value_var():
-#     e = []
-#     names = [['a']]
-#     assert e not in names
-#     assert names.count(e) == 0
+def test_lookup_empty_value_var():
+    e = []
+    names = [['a']]
+    assert e not in names
+    assert names.count(e) == 0
 
 
 # empty, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<B*>*'
-#
-# def test_lookup_empty_value_var_sub():
-#     e = []
-#     g = [[B()]]
-#     assert e not in g
+def test_lookup_empty_value_var_sub():
+    e = []
+    g = [[B()]]
+    assert e not in g
 
 
 # empty, variable: generic
@@ -4250,25 +4179,18 @@ def test_ctor_sub():
 
 
 # sub->base, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'tuple2<__ss_int, B*>*' to 'tuple2<__ss_int, A*>*' in
-#        return
-#
-# def test_ctor_sub_items():
-#     db = {1: B()}
-#     li = list(db.items())
-#     li.append((2, A()))
-#     assert [t[1].name() for t in li] == ['B', 'A']
+def test_ctor_sub_items():
+    db = {1: B()}
+    li = list(db.items())
+    li.append((2, A()))
+    assert [t[1].name() for t in li] == ['B', 'A']
 
 
 # sub->base, new: copy
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: no type named 'for_in_unit' in 'tuple2<B*, __ss_int>'
-#
-# def test_ctor_sub_dict_pairs():
-#     d = dict([(B(), 1)])
-#     d[A()] = 2
-#     assert sorted(x.name() for x in d) == ['A', 'B']
+def test_ctor_sub_dict_pairs():
+    d = dict([(B(), 1)])
+    d[A()] = 2
+    assert sorted(x.name() for x in d) == ['A', 'B']
 
 
 # sub->base, new: copy
@@ -4607,26 +4529,33 @@ def test_unpack_sub_var():
 
 
 # sub->base, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<B*>*' to 'list<A*>*' in assignment
-#
-# def test_unpack_sub_var_list():
-#     lb = [B()]
-#     q, n = [A()], 0
-#     q, n = lb, 1
-#     assert q[0].name() == 'B' and n == 1
+def test_unpack_sub_var_list():
+    lb = [B()]
+    q, n = [A()], 0
+    q, n = lb, 1
+    assert q[0].name() == 'B' and n == 1
 
 
 # sub->base, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<B*>*' to 'list<A*>*' in assignment
-#
-# def test_iter_sub_var_list():
-#     llb = [[B()]]
-#     la = [A()]
-#     for la in llb:
-#         pass
-#     assert la[0].name() == 'B'
+def test_unpack_sub_var_tuple():
+    lb = [B()]
+    t = (lb, 1)
+    q, n = [A()], 0
+    q, n = t
+    assert q[0].name() == 'B' and n == 1
+    for r, m in [(lb, 2)]:
+        pass
+    r, m = [A()], 3
+    assert r[0].name() == 'A' and m == 3
+
+
+# sub->base, variable: cast
+def test_iter_sub_var_list():
+    llb = [[B()]]
+    la = [A()]
+    for la in llb:
+        pass
+    assert la[0].name() == 'B'
 
 
 # empty, literal: infer
@@ -4730,15 +4659,12 @@ def test_iter_empty_var():
 
 
 # empty, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from 'void*' to 'str*'
-#
-# def test_iter_empty_var_typed():
-#     e = []
-#     s = 'a'
-#     for s in e:
-#         pass
-#     assert s == 'a'
+def test_iter_empty_var_typed():
+    e = []
+    s = 'a'
+    for s in e:
+        pass
+    assert s == 'a'
 
 
 # empty, variable: cast
@@ -4779,13 +4705,10 @@ def test_unpack_empty_lit():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<str*>*' in assignment
-#
-# def test_unpack_empty_lit_typed():
-#     names, m = ['a'], 0
-#     names, m = [], 1
-#     assert len(names) == 0 and m == 1
+def test_unpack_empty_lit_typed():
+    names, m = ['a'], 0
+    names, m = [], 1
+    assert len(names) == 0 and m == 1
 
 
 # empty, literal: build
@@ -4797,14 +4720,11 @@ def test_unpack_empty_lit_typed_number():
 
 
 # empty, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<str*>*' in assignment
-#
-# def test_unpack_empty_var():
-#     e = []
-#     names, n = ['a'], 0
-#     names, n = e, 1
-#     assert len(names) == 0 and n == 1
+def test_unpack_empty_var():
+    e = []
+    names, n = ['a'], 0
+    names, n = e, 1
+    assert len(names) == 0 and n == 1
 
 
 # empty, call: cast
@@ -5561,6 +5481,7 @@ def test_all():
     test_attr_empty_var()
     test_setitem_int_float_lit_scalar()
     test_setitem_int_float_lit_key()
+    test_setitem_int_float_lit_key_tuple()
     test_setitem_int_float_lit_list()
     test_setitem_int_float_lit_dict_value()
     test_setitem_int_float_lit_tuple()
@@ -5568,6 +5489,7 @@ def test_all():
     test_setitem_none_lit()
     test_setitem_sub_new()
     test_setitem_sub_var()
+    test_setitem_sub_new_key()
     test_setitem_empty_lit()
     test_setitem_empty_new()
     test_setitem_empty_var()
@@ -5592,6 +5514,7 @@ def test_all():
     test_arg_empty_method()
     test_arg_empty_var()
     test_ret_int_float_lit_scalar()
+    test_ret_bool_int()
     test_ret_int_float_lit_list()
     test_ret_int_float_yield_scalar()
     test_ret_int_float_yield_list()
@@ -5624,9 +5547,17 @@ def test_all():
     test_method_none_var_iter()
     test_method_sub_new()
     test_method_sub_var()
+    test_method_sub_new_nested()
+    test_method_sub_new_tuple()
+    test_method_sub_var_nested()
+    test_method_sub_var_tuple()
+    test_method_sub_var_tuple_deque()
+    test_method_sub_var_tuple_deque_more()
     test_method_empty_receiver()
     test_method_empty_receiver_new()
+    test_method_empty_receiver_new_deque_insert()
     test_method_empty_lit_elem()
+    test_method_empty_lit_elem_deque()
     test_method_empty_new_elem()
     test_method_empty_var_elem()
     test_method_empty_lit_iter()
@@ -5660,16 +5591,31 @@ def test_all():
     test_binop_int_float_lit_mul()
     test_binop_int_float_lit_tuple()
     test_binop_int_float_var_set_method()
+    test_binop_int_float_lit_dict()
+    test_binop_int_float_lit_dict_left()
     test_binop_int_float_lit_augassign_list()
     test_binop_none()
     test_binop_sub_new()
     test_binop_sub_var()
+    test_binop_sub_var_set()
+    test_binop_sub_var_set_left()
+    test_binop_sub_var_dict()
     test_binop_empty_lit_list()
     test_binop_empty_lit_list_right()
     test_binop_empty_lit_tuple()
+    test_binop_empty_lit_dict()
+    test_binop_empty_lit_dict_right()
+    test_binop_empty_new_set()
+    test_binop_empty_new_set_right()
+    test_binop_empty_new_set_var()
+    test_binop_empty_new_set_var_left()
     test_binop_empty_new_counter()
     test_binop_empty_lit_mul()
     test_binop_empty_var_list()
+    test_binop_empty_var_set()
+    test_binop_empty_var_set_left()
+    test_binop_empty_var_dict()
+    test_binop_empty_var_dict_left()
     test_binop_empty_accumulate_list()
     test_binop_empty_accumulate_set()
     test_binop_empty_accumulate_dict()
@@ -5691,6 +5637,7 @@ def test_all():
     test_lookup_bool_int()
     test_lookup_int_float_scalar()
     test_lookup_int_float_var_scalar()
+    test_lookup_int_float_lit_tuple_dict_method()
     test_lookup_none()
     test_lookup_none_remove()
     test_lookup_none_list()
@@ -5698,10 +5645,15 @@ def test_all():
     test_lookup_none_sub()
     test_lookup_sub()
     test_lookup_sub_base_container()
+    test_lookup_sub_var_tuple()
+    test_lookup_sub_var_nested()
     test_lookup_empty_container_lit()
     test_lookup_empty_container_new()
     test_lookup_empty_container_var()
+    test_lookup_empty_value_lit()
     test_lookup_empty_value_lit_method()
+    test_lookup_empty_value_var()
+    test_lookup_empty_value_var_sub()
     test_ctor_int_float_lit()
     test_ctor_int_float_lit_collections()
     test_ctor_int_float_var_list()
@@ -5711,6 +5663,8 @@ def test_all():
     test_ctor_int_float_var_collections()
     test_ctor_none()
     test_ctor_sub()
+    test_ctor_sub_items()
+    test_ctor_sub_dict_pairs()
     test_ctor_empty_lit()
     test_ctor_empty_lit_dict()
     test_ctor_empty_lit_tuple()
@@ -5732,12 +5686,18 @@ def test_all():
     test_iter_sub_new()
     test_iter_sub_var()
     test_unpack_sub_var()
+    test_unpack_sub_var_list()
+    test_unpack_sub_var_tuple()
+    test_iter_sub_var_list()
     test_iter_empty_lit()
     test_iter_empty_lit_list()
     test_iter_empty_new()
     test_iter_empty_var()
+    test_iter_empty_var_typed()
     test_unpack_empty_lit()
+    test_unpack_empty_lit_typed()
     test_unpack_empty_lit_typed_number()
+    test_unpack_empty_var()
     test_iter_empty_call()
     test_choice_int_float_scalar()
     test_choice_int_float_lit_list()

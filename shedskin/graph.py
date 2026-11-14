@@ -2791,6 +2791,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             value: ast.AST = fakefunc
             self.gx.item_rvalue[item] = rvalue
+            self.gx.item_value[item] = fakefunc
 
             # a, *b, c = ..: b becomes a new list, holding the remaining units
             if isinstance(item, ast.Starred):

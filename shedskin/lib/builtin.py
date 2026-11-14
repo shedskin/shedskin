@@ -325,9 +325,9 @@ class list(pyseq):
 
     def __len__(self):
         return 1
-    def __add__(self, b):
+    def __add__(self, o):
         return self
-        return b
+        return o
     def __mul__(self, b):
         return self
     def __iadd__(self, b):
@@ -878,11 +878,11 @@ class dict(pyiter):
 
     def __setitem__(self, u, v):
         self.__setunit__(u, v)
-    def __getitem__(self, k):
-        self.__key__(k)
+    def __getitem__(self, u):
+        self.__key__(u)
         return self.value
-    def __delitem__(self, k):
-        self.__key__(k)
+    def __delitem__(self, u):
+        self.__key__(u)
 
     def setdefault(self, u, v=None):
         self.__setunit__(u, v)
@@ -905,12 +905,12 @@ class dict(pyiter):
         self.__key__(u)
         return self.value
         return v
-    def pop(self, key, v=None):
-        self.__key__(key)
+    def pop(self, u, v=None):
+        self.__key__(u)
         return self.value
         return v
-    def __pop1(self, key):  # no default: KeyError, never None
-        self.__key__(key)
+    def __pop1(self, u):  # no default: KeyError, never None
+        self.__key__(u)
         return self.value
     def popitem(self):
         return (self.unit, self.value)
@@ -921,8 +921,8 @@ class dict(pyiter):
         item = iter(i).__next__()
         self.__setunit__(item[0], item[1])
 
-    def __delete__(self, k):
-        self.__key__(k)
+    def __delete__(self, u):
+        self.__key__(u)
 
     def keys(self):
         yield self.unit
@@ -931,9 +931,9 @@ class dict(pyiter):
     def items(self):
         yield (self.unit, self.value)
 
-    def __or__(self, e):
+    def __or__(self, o):
         return self
-        return e
+        return o
 
     def __ior__(self, d):
         self.__setunit__(d.unit, d.value)
@@ -981,16 +981,16 @@ class pyset(pyiter):
         return self
         return set(b)  # any iterable
 
-    def __sub__(self, b):
+    def __sub__(self, o):
         return self
-    def __and__(self, b):
+    def __and__(self, o):
         return self
-    def __or__(self, b):
+    def __or__(self, o):
         return self
-        return b
-    def __xor__(self, b):
+        return o
+    def __xor__(self, o):
         return self
-        return b
+        return o
 
     def __ior__(self, b):
         self.__setunit__(iter(b).__next__())

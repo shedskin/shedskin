@@ -26,6 +26,7 @@ class GraphBuildingContext:
         bool_test_only: AST nodes used only in boolean test context.
         called: Set of attribute nodes that are called.
         item_rvalue: Maps AST nodes to their item rvalue.
+        item_value: Maps unpacking targets to the expression for their item.
         assign_target: Maps assignment nodes to their targets.
         struct_unpack: Maps struct unpack assignments to their format info.
         str_format: Maps literal str.format() nodes to per-argument temp var
@@ -47,6 +48,7 @@ class GraphBuildingContext:
     bool_test_only: Set[ast.AST] = field(default_factory=set)
     called: Set[ast.Attribute] = field(default_factory=set)
     item_rvalue: Dict[ast.AST, ast.AST] = field(default_factory=dict)
+    item_value: Dict[ast.AST, ast.AST] = field(default_factory=dict)
     assign_target: Dict[ast.AST, ast.AST] = field(default_factory=dict)
     struct_unpack: Dict[
         ast.Assign, Tuple[List[Tuple[str, str, str, int]], str, str, Optional[str]]

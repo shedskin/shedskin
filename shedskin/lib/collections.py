@@ -5,10 +5,10 @@ class deque(pyiter):
         self.unit = iter(iterable).__next__()
         self.maxlen = 1
 
-    def append(self, x):
-        self.unit = x
-    def appendleft(self, x):
-        self.unit = x
+    def append(self, u):
+        self.unit = u
+    def appendleft(self, u):
+        self.unit = u
     def extend(self, b):
         self.unit = b.unit
     def extendleft(self, b):
@@ -22,17 +22,17 @@ class deque(pyiter):
     def popleft(self):
         return self.unit
 
-    def remove(self, e):
-        e == self.unit
+    def remove(self, u):
+        u == self.unit
     def clear(self):
         pass
 
-    def count(self, value):
-        value == self.unit
+    def count(self, u):
+        u == self.unit
         return 1
 
-    def index(self, value, start=None, stop=None):
-        value == self.unit
+    def index(self, u, start=None, stop=None):
+        u == self.unit
         return 1
 
     def reverse(self):
@@ -43,13 +43,13 @@ class deque(pyiter):
         d.unit = self.unit
         return d
 
-    def insert(self, index, value):
-        pass
+    def insert(self, index, u):
+        self.unit = u
 
     def __getitem__(self, i):
         return self.unit
-    def __setitem__(self, i, e):
-        self.unit = e
+    def __setitem__(self, i, u):
+        self.unit = u
     def __delitem__(self, i):
         pass
 
@@ -66,9 +66,9 @@ class deque(pyiter):
     def __ge__(self, b):
         return self.unit >= b.unit
 
-    def __add__(self, b):
+    def __add__(self, o):
         return self
-        return b
+        return o
     def __mul__(self, n):
         return self
     def __iadd__(self, b):
@@ -77,8 +77,8 @@ class deque(pyiter):
     def __imul__(self, n):
         return self
 
-    def __contains__(self, e):
-        return self.unit == e
+    def __contains__(self, u):
+        return self.unit == u
 
     def __len__(self):
         return 1
@@ -162,8 +162,8 @@ class Counter(dict):
     def __addtoitem__(self, key, value): # backs `counter[k] += n`
         self.__setunit__(key, value)
 
-    def __delitem__(self, key): # unlike dict, never raises KeyError
-        self.__key__(key)
+    def __delitem__(self, u): # unlike dict, never raises KeyError
+        self.__key__(u)
 
     def __repr__(self):
         self.unit.__repr__()
