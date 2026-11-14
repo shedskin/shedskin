@@ -29,6 +29,15 @@ public:
     void *close() { closed = True; return NULL; }
     __ss_int write(bytes *data);
     BytesIO *__enter__() { __check_closed(); return this; }
+    /* (as CPython: iter() of a closed BytesIO is fine, next() raises) */
+    __iter<bytes *> *__iter__() { return this; }
+    bytes *__next__() {
+        file_binary::__check_closed("I/O operation on closed file.");
+        bytes *line = readline();
+        if(!len(line))
+            throw new StopIteration();
+        return line;
+    }
 
     bool __error() { return false; }
     bool __eof() { return (pos >= len(s)); }

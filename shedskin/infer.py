@@ -961,6 +961,7 @@ NONE_IS_VOID = {
     ("io", "StringIO", "truncate"),
     ("io", "BytesIO", "truncate"),
     ("socket", "socket", "sendfile"),  # count=None: send everything
+    ("socket", "socket", "__init__"),  # fileno=None: a new socket
 }
 
 

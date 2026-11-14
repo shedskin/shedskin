@@ -426,7 +426,8 @@ public:
                 if constexpr (std::is_same_v<C, str *>)
                     filename = filename_;
                 if constexpr (std::is_same_v<E, str *>)
-                    filename2 = filename2_;
+                    if (filename) /* (as CPython: only with a filename) */
+                        filename2 = filename2_;
                 message = __str__();
                 return NULL;
             }
@@ -465,8 +466,13 @@ class BlockingIOError : public OSError {
 public:
     BlockingIOError(str *msg=0) : OSError(msg) { this->__class__ = cl_blockingioerror; }
     BlockingIOError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_blockingioerror; }
+    BlockingIOError(__ss_int e, str *s, __ss_int written) : OSError(e, s), characters_written(written), __written_given(true) { this->__class__ = cl_blockingioerror; }
+    __ss_int characters_written = 0; /* (as CPython: BlockingIOError(errno, strerror, characters_written)) */
+    bool __written_given = false;
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_BlockingIOError; }
+    /* (so CPython's BlockingIOError gets characters_written too) */
+    PyObject *__py_args__();
 #endif
 };
 

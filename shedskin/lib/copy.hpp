@@ -17,6 +17,12 @@ public:
     Error(str *msg) : Exception(msg) {
         this->__class__ = cl_Error;
     }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { /* (so CPython code can catch it as copy.Error) */
+        static PyObject *t = __ss_py_exc_type("copy", "Error");
+        return t ? t : PyExc_Exception;
+    }
+#endif
 };
 
 template<class T> T deepcopy(T t) {

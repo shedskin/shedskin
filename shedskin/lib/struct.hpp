@@ -16,6 +16,12 @@ public:
     error(str *msg=0) : Exception(msg) {
         __class__ = cl_error;
     }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { /* (so CPython code can catch it as struct.error) */
+        static PyObject *t = __ss_py_exc_type("struct", "error");
+        return t ? t : PyExc_Exception;
+    }
+#endif
 };
 
 

@@ -17,7 +17,7 @@ OSError::OSError(__ss_int e, str *strerror, str *filename, void *, str *filename
     __ss_errno = e;
     this->strerror = strerror;
     this->filename = filename;
-    this->filename2 = filename2;
+    this->filename2 = filename ? filename2 : 0; /* (as CPython: only with a filename) */
     message = this->__str__();
 }
 void OSError::__init_errno(int e, str *fname, str *fname2) {
@@ -28,13 +28,16 @@ void OSError::__init_errno(int e, str *fname, str *fname2) {
     message = this->__str__();
 }
 str *OSError::__str__() {
-    if(!strerror) /* e.g. user-raised OSError('msg') */
+    /* as CPython: a filename (also one set afterwards, as e.filename = ..)
+       gives the long form, with None for a missing strerror */
+    if(!strerror && !filename) /* e.g. user-raised OSError('msg') */
         return BaseException::__str__();
+    str *s = strerror ? strerror : new str("None");
     if(!filename)
-        return __add_strs(4, new str("[Errno "), __str(__ss_errno), new str("] "), strerror);
+        return __add_strs(4, new str("[Errno "), __str(__ss_errno), new str("] "), s);
     if(!filename2)
-        return __add_strs(6, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": "), repr(filename));
-    return __add_strs(8, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": "), repr(filename), new str(" -> "), repr(filename2));
+        return __add_strs(6, new str("[Errno "), __str(__ss_errno), new str("] "), s, new str(": "), repr(filename));
+    return __add_strs(8, new str("[Errno "), __str(__ss_errno), new str("] "), s, new str(": "), repr(filename), new str(" -> "), repr(filename2));
 }
 str *OSError::__repr__() {
     if(!strerror)
@@ -51,6 +54,11 @@ PyObject *OSError::__py_args__() {
     if(!filename)
         return Py_BuildValue("(iN)", (int)__ss_errno, __to_py(strerror));
     return Py_BuildValue("(iNNON)", (int)__ss_errno, __to_py(strerror), __to_py(filename), Py_None, __to_py(filename2));
+}
+PyObject *BlockingIOError::__py_args__() {
+    if(!__written_given || !strerror)
+        return OSError::__py_args__();
+    return Py_BuildValue("(iNn)", (int)__ss_errno, __to_py(strerror), (Py_ssize_t)characters_written);
 }
 #endif
 

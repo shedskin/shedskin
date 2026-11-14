@@ -16,6 +16,9 @@ MAP_POPULATE = 32768
 MAP_STACK = 131072
 MAP_NORESERVE = 16384
 MAP_32BIT = 64
+MS_SYNC = 4  # flush() flags (3.15)
+MS_ASYNC = 1
+MS_INVALIDATE = 2
 
 # madvise() advice constants. Only MADV_NORMAL/RANDOM/SEQUENTIAL/WILLNEED/
 # DONTNEED are portable; the others are Linux-, BSD- or macOS-only. Unlike
@@ -57,10 +60,10 @@ class mmap(pyiter):
     # flags/prot defaults are spelled as literals (MAP_SHARED, PROT_READ |
     # PROT_WRITE), so no default_N variables are needed in mmap.cpp; the
     # C++ side asserts at compile-time that these values match.
-    def __init__(self, fileno, length, flags=1, prot=3, access=0, offset=0):
+    def __init__(self, fileno, length, flags=1, prot=3, access=0, offset=0, trackfd=1):
         self.closed = False
 
-    def __win32__init__(self, fileno, length, tagname=None, access=0, offset=0):
+    def __win32__init__(self, fileno, length, tagname=None, access=0, offset=0, trackfd=1):
         pass
 
     def close(self):
@@ -72,7 +75,7 @@ class mmap(pyiter):
     def __exit__(self):
         pass
 
-    def flush(self, offset=0, size=__void):
+    def flush(self, offset=0, size=__void, flags=0):
         pass
 
     def madvise(self, option, start=0, length=__void):

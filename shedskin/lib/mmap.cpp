@@ -94,6 +94,21 @@ enum
 #else
   __MAP_32BIT = -1,
 #endif
+#ifdef MS_SYNC
+  MMAP_PUSH(MS_SYNC),
+#else
+  __MS_SYNC = -1,
+#endif
+#ifdef MS_ASYNC
+  MMAP_PUSH(MS_ASYNC),
+#else
+  __MS_ASYNC = -1,
+#endif
+#ifdef MS_INVALIDATE
+  MMAP_PUSH(MS_INVALIDATE),
+#else
+  __MS_INVALIDATE = -1,
+#endif
 
   /* madvise() advice; not every option exists on every system (and none of
      them do on WIN32), so missing ones fall back to -1, which madvise()
@@ -238,6 +253,9 @@ enum
 #undef MAP_STACK
 #undef MAP_NORESERVE
 #undef MAP_32BIT
+#undef MS_SYNC
+#undef MS_ASYNC
+#undef MS_INVALIDATE
 
 #undef MADV_NORMAL
 #undef MADV_RANDOM
@@ -296,6 +314,9 @@ const __ss_int
     MAP_STACK      = __MAP_STACK,
     MAP_NORESERVE  = __MAP_NORESERVE,
     MAP_32BIT      = __MAP_32BIT,
+    MS_SYNC        = __MS_SYNC,
+    MS_ASYNC       = __MS_ASYNC,
+    MS_INVALIDATE  = __MS_INVALIDATE,
 
     MADV_NORMAL = __MADV_NORMAL,
     MADV_RANDOM = __MADV_RANDOM,
@@ -478,13 +499,13 @@ void *mmap::close()
     return NULL;
 }
 
-void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
+void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given, __ss_int flags)
 {
     __raise_if_closed();
     __check_flush_range(offset, size, size_given);
     if (access == ACCESS_READ or access == ACCESS_COPY) /* (nothing to write back; as CPython) */
         return NULL;
-    if (::msync(m_begin + offset, (size_t)size, MS_SYNC) == -1)
+    if (::msync(m_begin + offset, (size_t)size, flags ? (int)__ss_cint(flags) : MS_SYNC) == -1) /* (flags=0: MS_SYNC, as CPython) */
     {
         __throw_oserror();
     }
@@ -493,6 +514,9 @@ void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 
 void *mmap::resize(__ss_int new_size)
 {
+    __raise_if_closed();
+    if (!__trackfd)
+        throw new ValueError(new str("mmap can't resize with trackfd=False."));
     __raise_if_closed_or_not_resizeable();
     /* as CPython: before the file is truncated */
     if (new_size < 0 or (size_t)new_size > (size_t)PTRDIFF_MAX - (size_t)offset)
@@ -764,12 +788,13 @@ void *mmap::close()
     return NULL;
 }
 
-void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
+void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given, __ss_int flags)
 {
     __raise_if_closed();
     __check_flush_range(offset, size, size_given);
     if (access == ACCESS_READ or access == ACCESS_COPY) /* (nothing to write back; as CPython) */
         return NULL;
+    (void)flags;
     if (!FlushViewOfFile(m_begin + offset, (size_t)size))
     {
         throw new OSError();
@@ -779,6 +804,9 @@ void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 
 void *mmap::resize(__ss_int new_size)
 {
+    __raise_if_closed();
+    if (!__trackfd)
+        throw new ValueError(new str("mmap can't resize with trackfd=False."));
     __raise_if_closed_or_not_resizeable();
     /* as CPython: before the file is truncated */
     if (new_size < 0 or (size_t)new_size > (size_t)PTRDIFF_MAX - (size_t)offset)
@@ -1047,9 +1075,28 @@ void *mmap::set_name(str *name)
 #endif /* HAVE_ANON_VMA_NAME */
 }
 
+void mmap::__untrack()
+{
+#ifndef WIN32
+    if (fd >= 0)
+    {
+        ::close(fd);
+        fd = -1;
+    }
+#else
+    if (file_handle != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(file_handle);
+        file_handle = INVALID_HANDLE_VALUE;
+    }
+#endif
+}
+
 __ss_int mmap::size()
 {
     __raise_if_closed();
+    if (!__trackfd)
+        throw new ValueError(new str("can't get size with trackfd=False"));
 #ifdef WIN32
     if (file_handle != INVALID_HANDLE_VALUE) 
     {
@@ -1271,9 +1318,11 @@ void *mmap::__seek_failed()
 void mmap::__check_flush_range(__ss_int offset, __ss_int &size, bool size_given) const
 {
     __ss_int total = (__ss_int)__size();
-    if (not size_given)
-        size = total;
-    if (size < 0 or offset < 0 or total - offset < size)
+    if (offset < 0 or offset > total)
+        throw new ValueError(const_33);
+    if (not size_given or size == -1) /* (as 3.15: up to the end, from offset) */
+        size = total - offset;
+    if (size < 0 or total - offset < size)
         throw new ValueError(const_33);
 }
 
@@ -1376,7 +1425,11 @@ void __init()
         const_29 = new str("mmap length is greater than file size");
         const_30 = new str("mmap item value must be in range(0, 256)");
         const_31 = new str("mmap can't resize a readonly or copy-on-write memory map.");
+#ifdef __linux__
+        const_32 = new str("mmap: can't expand a shared anonymous mapping on Linux"); /* (as 3.15) */
+#else
         const_32 = new str("mmap: can't expand a shared anonymous mapping");
+#endif
         const_33 = new str("flush values out of range");
         const_34 = new str("write byte out of range");
         const_35 = new str("seek out of range");

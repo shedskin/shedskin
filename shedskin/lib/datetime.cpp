@@ -124,6 +124,14 @@ void __init() {
 
 static __ss_int is_leap(__ss_int year);
 static __ss_int days_in_month(__ss_int year, __ss_int month);
+
+/* range errors, as CPython 3.15 words them */
+static ValueError *__dt_range_error(const char *name, __ss_int lo, __ss_int hi, __ss_int v) {
+    return new ValueError(__add_strs(6, new str(name), new str(" must be in "), __str(lo), new str(".."), __str(hi), __add_strs(2, new str(", not "), __str(v))));
+}
+static ValueError *__dt_day_error(__ss_int day, __ss_int month, __ss_int year) {
+    return new ValueError(__add_strs(8, new str("day "), __str(day), new str(" must be in range 1.."), __str(days_in_month(year, month)), new str(" for month "), __str(month), new str(" in year "), __str(year)));
+}
 static __ss_int days_before_month(__ss_int year, __ss_int month);
 static __ss_int days_before_year(__ss_int year);
 static void ord_to_ymd(__ss_int ordinal, __ss_int *year, __ss_int *month, __ss_int *day);
@@ -309,9 +317,9 @@ static bool iso_datetime_separator(const __GC_STR &s, size_t &loc) {
 date::date(__ss_int year_, __ss_int month_, __ss_int day_){
     __class__ = cl_date;
 
-    if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(__mod6(new str("year %d is out of range"), 1, year_));
-    if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
-    if(day_<=0 || day_>days_in_month(year_,month_)) throw new ValueError(new str("day is out of range for month"));
+    if(year_<MINYEAR || year_>MAXYEAR)    throw __dt_range_error("year", MINYEAR, MAXYEAR, year_);
+    if(month_<=0 || month_>12)            throw __dt_range_error("month", 1, 12, month_);
+    if(day_<=0 || day_>days_in_month(year_,month_)) throw __dt_day_error(day_, month_, year_);
 
     this->year=year_;
     this->month=month_;
@@ -378,7 +386,7 @@ static void check_ordinal(__ss_int o, __ss_int *year, __ss_int *month, __ss_int 
         throw new ValueError(new str("ordinal must be >= 1"));
     ord_to_ymd(o, year, month, day);
     if(*year>MAXYEAR)
-        throw new ValueError(__mod6(new str("year %d is out of range"), 1, *year));
+        throw __dt_range_error("year", MINYEAR, MAXYEAR, *year);
 }
 
 /* date/datetime arithmetic that leaves the supported year range raises
@@ -467,18 +475,18 @@ date *date::replace(__ss_int __args, __ss_int year_, __ss_int month_, __ss_int d
     date* t = new date(this);
 
     if((__args & 1)==1) {
-        if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(__mod6(new str("year %d is out of range"), 1, year_));
+        if(year_<MINYEAR || year_>MAXYEAR)    throw __dt_range_error("year", MINYEAR, MAXYEAR, year_);
         t->year=year_;}
     if((__args & 2)==2) {
-        if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
+        if(month_<=0 || month_>12)            throw __dt_range_error("month", 1, 12, month_);
         t->month=month_;}
     if((__args & 4)==4) {
-        if(day_<=0 || day_>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
+        if(day_<=0 || day_>days_in_month(t->year,t->month)) throw __dt_day_error(day_, t->month, t->year);
         t->day=day_;
     } else if(t->day>days_in_month(t->year,t->month)) {
         /* day itself was not replaced, but a new year/month can still make
          * the existing day invalid (e.g. Jan 31 -> April) */
-        throw new ValueError(new str("day is out of range for month"));
+        throw __dt_day_error(t->day, t->month, t->year);
     }
     return t;
 }
@@ -564,7 +572,15 @@ static void __strftime_append_escaped(__GC_STR &out, str *s) {
     }
 }
 
-static str *__strftime_preprocess(str *format, __ss_int microsecond, str *z, str *Z) {
+static void __strftime_append_num(__GC_STR &out, const char *fmt, __ss_int v) {
+    char buf[32];
+    snprintf(buf, sizeof(buf), fmt, (long long)v);
+    for(char *p=buf; *p; p++)
+        out += (__ss_char)*p;
+}
+
+/* (d: as CPython 3.15, zero-padded %Y/%G/%C/%F, also for years < 1000) */
+static str *__strftime_preprocess(str *format, __ss_int microsecond, str *z, str *Z, date *dt) {
     __GC_STR out;
     const __GC_STR &f = format->unit;
     size_t n = f.size();
@@ -584,6 +600,16 @@ static str *__strftime_preprocess(str *format, __ss_int microsecond, str *z, str
             __strftime_append_escaped(out, z);
         } else if(d == U'Z') {
             __strftime_append_escaped(out, Z);
+        } else if(dt && d == U'Y') {
+            __strftime_append_num(out, "%04lld", dt->year);
+        } else if(dt && d == U'G') {
+            __strftime_append_num(out, "%04lld", dt->isocalendar()->year);
+        } else if(dt && d == U'C') {
+            __strftime_append_num(out, "%02lld", dt->year / 100);
+        } else if(dt && d == U'F') {
+            __strftime_append_num(out, "%04lld", dt->year);
+            __strftime_append_num(out, "-%02lld", dt->month);
+            __strftime_append_num(out, "-%02lld", dt->day);
         } else {
             out += U'%';
             out += d;
@@ -593,7 +619,7 @@ static str *__strftime_preprocess(str *format, __ss_int microsecond, str *z, str
 }
 
 str *date::strftime(str *format) {
-    return __time__::strftime(__strftime_preprocess(format, 0, NULL, NULL), timetuple());
+    return __time__::strftime(__strftime_preprocess(format, 0, NULL, NULL, this), timetuple());
 }
 
 /* like CPython: an empty spec gives str(self), anything else is passed on
@@ -667,10 +693,10 @@ str *tzinfo::minutes_to_str(datetime *dt) {
 datetime::datetime(__ss_int year_, __ss_int month_, __ss_int day_, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo, __ss_int fold_) : date(year_,month_,day_) {
     __class__ = cl_datetime;
 
-    if(hour_>=24 || hour_<0) throw new ValueError(new str("hour must be in 0..23"));
-    if(minute_>=60 || minute_<0) throw new ValueError(new str("minute must be in 0..59"));
-    if(second_>=60 || second_<0) throw new ValueError(new str("second must be in 0..59"));
-    if(microsecond_>=1000000 || microsecond_<0) throw new ValueError(new str("microsecond must be in 0..999999"));
+    if(hour_>=24 || hour_<0) throw __dt_range_error("hour", 0, 23, hour_);
+    if(minute_>=60 || minute_<0) throw __dt_range_error("minute", 0, 59, minute_);
+    if(second_>=60 || second_<0) throw __dt_range_error("second", 0, 59, second_);
+    if(microsecond_>=1000000 || microsecond_<0) throw __dt_range_error("microsecond", 0, 999999, microsecond_);
     if(fold_!=0 && fold_!=1) throw new ValueError(__mod6(new str("fold must be either 0 or 1, not %d"), 1, fold_));
 
     this->hour = hour_;
@@ -825,6 +851,13 @@ datetime *datetime::fromisoformat(str *date_string) {
         throw iso_invalid(date_string);
     if (loc < s.size() && !iso_parse_time(s.substr(loc + 1), t))
         throw iso_invalid(date_string);
+    if (t[0] == 24) { /* (as 3.14+: 24:00 is midnight of the next day) */
+        if (t[1] || t[2] || t[3])
+            throw new ValueError(new str("minute, second, and microsecond must be 0 when hour is 24"));
+        if (y == MAXYEAR && m == 12 && d == 31)
+            throw __dt_range_error("year", MINYEAR, MAXYEAR, MAXYEAR + 1);
+        return (new datetime(y, m, d))->__add__(new timedelta(1));
+    }
     return new datetime(y, m, d, t[0], t[1], t[2], t[3]);
 }
 
@@ -975,30 +1008,30 @@ datetime *datetime::replace(__ss_int __args, __ss_int year_, __ss_int month_, __
     datetime *t = new datetime(this);
 
    if((__args & 1)==1) {
-        if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(__mod6(new str("year %d is out of range"), 1, year_));
+        if(year_<MINYEAR || year_>MAXYEAR)    throw __dt_range_error("year", MINYEAR, MAXYEAR, year_);
         t->year=year_;}
     if((__args & 2)==2) {
-        if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
+        if(month_<=0 || month_>12)            throw __dt_range_error("month", 1, 12, month_);
         t->month=month_;}
     if((__args & 4)==4) {
-        if(day_<=0 || day_>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
+        if(day_<=0 || day_>days_in_month(t->year,t->month)) throw __dt_day_error(day_, t->month, t->year);
         t->day=day_;
     } else if(t->day>days_in_month(t->year,t->month)) {
         /* day itself was not replaced, but a new year/month can still make
          * the existing day invalid (e.g. Jan 31 -> April) */
-        throw new ValueError(new str("day is out of range for month"));
+        throw __dt_day_error(t->day, t->month, t->year);
     }
     if((__args & 8)==8) {
-        if(hour_<0 || hour_>=24)              throw new ValueError(new str("hour must be in 0..23"));
+        if(hour_<0 || hour_>=24)              throw __dt_range_error("hour", 0, 23, hour_);
         t->hour=hour_;}
     if((__args & 16)==16) {
-        if(minute_<0 || minute_>=60)          throw new ValueError(new str("minute must be in 0..59"));
+        if(minute_<0 || minute_>=60)          throw __dt_range_error("minute", 0, 59, minute_);
         t->minute=minute_;}
     if((__args & 32)==32) {
-        if(second_<0 || second_>=60)          throw new ValueError(new str("second must be in 0..59"));
+        if(second_<0 || second_>=60)          throw __dt_range_error("second", 0, 59, second_);
         t->second=second_;}
     if((__args & 64)==64) {
-        if(microsecond_<0 || microsecond_>=1000000)      throw new ValueError(new str("microsecond must be in 0..999999"));
+        if(microsecond_<0 || microsecond_>=1000000)      throw __dt_range_error("microsecond", 0, 999999, microsecond_);
         t->microsecond=microsecond_;}
     if((__args & 128)==128)
         t->_tzinfo = tzinfo;
@@ -1157,7 +1190,7 @@ str *datetime::strftime(str *format) {
         z = _tzinfo->minutes_to_str(this);
         Z = _tzinfo->tzname(this);
     }
-    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z), timetuple());
+    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z, this), timetuple());
 }
 
 str *datetime::__format__(str *format_spec) {
@@ -1170,10 +1203,10 @@ str *datetime::__format__(str *format_spec) {
 time::time(__ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo, __ss_int fold_) {
     __class__=cl_time;
 
-    if(hour_>=24 || hour_<0) throw new ValueError(new str("hour must be in 0..23"));
-    if(minute_>=60 || minute_<0) throw new ValueError(new str("minute must be in 0..59"));
-    if(second_>=60 || second_<0) throw new ValueError(new str("second must be in 0..59"));
-    if(microsecond_>=1000000 || microsecond_<0) throw new ValueError(new str("microsecond must be in 0..999999"));
+    if(hour_>=24 || hour_<0) throw __dt_range_error("hour", 0, 23, hour_);
+    if(minute_>=60 || minute_<0) throw __dt_range_error("minute", 0, 59, minute_);
+    if(second_>=60 || second_<0) throw __dt_range_error("second", 0, 59, second_);
+    if(microsecond_>=1000000 || microsecond_<0) throw __dt_range_error("microsecond", 0, 999999, microsecond_);
     if(fold_!=0 && fold_!=1) throw new ValueError(__mod6(new str("fold must be either 0 or 1, not %d"), 1, fold_));
 
     this->hour = hour_;
@@ -1197,22 +1230,27 @@ time *time::fromisoformat(str *time_string) {
     /* the T of a time-only string is optional */
     if (!iso_parse_time(s.size() > 0 && s[0] == 'T' ? s.substr(1) : s, t))
         throw iso_invalid(time_string);
+    if (t[0] == 24) { /* (as 3.14+: 24:00 is midnight) */
+        if (t[1] || t[2] || t[3])
+            throw new ValueError(new str("minute, second, and microsecond must be 0 when hour is 24"));
+        t[0] = 0;
+    }
     return new time(t[0], t[1], t[2], t[3]);
 }
 
 time *time::replace(__ss_int __args, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo, __ss_int fold_) {
     time *t = new time(this);
     if((__args & 1)==1) {
-        if(hour_<0 || hour_>=24)          throw new ValueError(new str("hour must be in 0..23"));
+        if(hour_<0 || hour_>=24)          throw __dt_range_error("hour", 0, 23, hour_);
         t->hour=hour_;}
     if((__args & 2)==2) {
-        if(minute_<0 || minute_>=60)      throw new ValueError(new str("minute must be in 0..59"));
+        if(minute_<0 || minute_>=60)      throw __dt_range_error("minute", 0, 59, minute_);
         t->minute=minute_;}
     if((__args & 4)==4) {
-        if(second_<0 || second_>=60)      throw new ValueError(new str("second must be in 0..59"));
+        if(second_<0 || second_>=60)      throw __dt_range_error("second", 0, 59, second_);
         t->second=second_;}
     if((__args & 8)==8) {
-        if(microsecond_<0 || microsecond_>=1000000)      throw new ValueError(new str("microsecond must be in 0..999999"));
+        if(microsecond_<0 || microsecond_>=1000000)      throw __dt_range_error("microsecond", 0, 999999, microsecond_);
         t->microsecond=microsecond_;}
     if((__args & 16)==16)
         t->_tzinfo = tzinfo;
@@ -1241,7 +1279,7 @@ str *time::strftime(str* format) {
         z = _tzinfo->minutes_to_str(NULL);
         Z = _tzinfo->tzname(NULL);
     }
-    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z),
+    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z, NULL),
         new __time__::struct_time(new tuple2<__ss_int, __ss_int>(9,
             (__ss_int)1900, (__ss_int)1, (__ss_int)1,
             (__ss_int)hour, (__ss_int)minute, (__ss_int)second,
@@ -1613,7 +1651,7 @@ static timedelta *timedelta_from_magnitude(timedelta_mag m, bool neg) {
 /* *q is only computed if q is non-NULL (and raises OverflowError if it does not fit) */
 static timedelta *timedelta_divmod(timedelta *a, timedelta *b, __ss_int *q) {
     if(timedelta_is_zero(b))
-        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+        throw new ZeroDivisionError(new str("division by zero")); /* (3.15 wording) */
     bool aneg, bneg;
     timedelta_mag A = timedelta_magnitude(a, &aneg);
     timedelta_mag B = timedelta_magnitude(b, &bneg);
@@ -1728,7 +1766,7 @@ static timedelta_mag timedelta_mag_div(timedelta_mag D, unsigned long long m, lo
 /* t // n and t / n (rounded half to even), exact (for n that fits 64 bits) */
 static timedelta *timedelta_div_int(timedelta *t, __ss_int n, bool round) {
     if(n == 0)
-        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+        throw new ZeroDivisionError(new str("division by zero")); /* (3.15 wording) */
     bool neg;
     timedelta_mag D = timedelta_magnitude(t, &neg);
     unsigned long long m = n < 0 ? -(unsigned long long)n : (unsigned long long)n;
@@ -1866,7 +1904,7 @@ timedelta *timedelta::__truediv__(__ss_float f) {
        below 2**53). for k < 0, the quotient is halved -k times afterwards. */
     timedelta_check_ratio(f);
     if(f == 0.0)
-        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+        throw new ZeroDivisionError(new str("division by zero")); /* (3.15 wording) */
     bool neg;
     timedelta_mag D = timedelta_magnitude(this, &neg);
     if(std::signbit(f))
@@ -1902,7 +1940,7 @@ __ss_int timedelta::__floordiv__(timedelta *other) {
 
 timedelta *timedelta::__mod__(timedelta *other) {
     if(timedelta_is_zero(other))
-        throw new ZeroDivisionError(new str("integer modulo by zero"));
+        throw new ZeroDivisionError(new str("division by zero")); /* (3.15 wording) */
     return timedelta_divmod(this, other, NULL);
 }
 
