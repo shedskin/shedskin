@@ -1242,10 +1242,11 @@ def test_fildes_overflow_popen_sigpipe():
     except OverflowError as e:
         msg = str(e)
     assert msg == 'Python int too large to convert to C int'
-    # popen children get the default SIGPIPE back, as CPython
-    f = os.popen('yes')
+    # popen children get the default SIGPIPE back, as CPython ('exec': not
+    # all shells exec a single command themselves, e.g. dash does not)
+    f = os.popen('exec yes')
     assert f.readline() == 'y\n'
-    assert f.close() == 141 << 8
+    assert f.close() == -(13 << 8)
 
 
 def test_all():
