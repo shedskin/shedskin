@@ -1747,6 +1747,35 @@ def test_fileno_minus_one_sendfile_offset():
     srv.close()
 
 
+def test_sendfile_nothing_sent():
+    if sys.platform == 'win32':
+        return
+    srv = socket.create_server(('127.0.0.1', 0))
+    c = socket.create_connection(srv.getsockname())
+    a, addr = srv.accept()
+    name = 'shedskin_test_sendfile_eof.bin'
+    f = open(name, 'wb')
+    f.write(b'0123456789')
+    f.close()
+    f = open(name, 'rb')
+    f.seek(3)
+    # nothing sent (offset past the end): the position stays, as CPython
+    assert c.sendfile(f, 20) == 0
+    assert f.tell() == 3
+    f.close()
+    # a pipe (size 0) sends nothing, and is not seeked
+    r, w = os.pipe()
+    os.write(w, b'pipedata')
+    os.close(w)
+    p = os.fdopen(r, 'rb')
+    assert c.sendfile(p) == 0
+    p.close()
+    os.remove(name)
+    a.close()
+    c.close()
+    srv.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1793,6 +1822,7 @@ def test_all():
     test_connect_ex_gaierror_select_error()
     test_fileno_negative_create_connection_proto()
     test_fileno_minus_one_sendfile_offset()
+    test_sendfile_nothing_sent()
 
 if __name__ == '__main__':
     test_all()

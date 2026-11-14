@@ -1402,6 +1402,7 @@ popen_pipe::popen_pipe(str *cmd, str *flags) {
     mode = flags;
     __errors = __SS_ERR_STRICT;
     errors = new str("strict");
+    options.universal_mode = true; /* (as CPython: text mode, newline=None) */
 }
 
 /* as CPython: the exit code shifted left by 8, minus the signal number

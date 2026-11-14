@@ -28,6 +28,12 @@ public:
     Error(str *msg): ValueError(msg) {
         this->__class__ = cl_Error;
     }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { /* (so CPython code can catch it as binascii.Error) */
+        static PyObject *t = __ss_py_exc_type("binascii", "Error");
+        return t ? t : PyExc_ValueError;
+    }
+#endif
 };
 
 extern class_ *cl_Incomplete;
@@ -38,6 +44,12 @@ public:
     Incomplete(str *msg): Exception(msg) {
         this->__class__ = cl_Incomplete;
     }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { /* (so CPython code can catch it as binascii.Incomplete) */
+        static PyObject *t = __ss_py_exc_type("binascii", "Incomplete");
+        return t ? t : PyExc_Exception;
+    }
+#endif
 };
 
 /* the a2b_* functions (and the base64 decoders) also accept an ASCII str

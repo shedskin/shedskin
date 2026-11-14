@@ -279,6 +279,7 @@ public:
     popen_pipe(FILE* pipe=0) : __popen_file(pipe) { /* (as cpython: strict, not as the std streams) */
         __errors = __SS_ERR_STRICT;
         errors = new str("strict");
+        options.universal_mode = true; /* (as CPython: text mode, newline=None) */
     }
 
     __ss_int close(__ss_int=0); /* (hides __popen_file::close on purpose) */

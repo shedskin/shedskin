@@ -279,7 +279,7 @@ __ss_int StringIO::truncate(__ss_void_struct) {
 __ss_int StringIO::truncate(__ss_int size) {
     __check_closed();
     if(size < 0)
-        throw new ValueError(__add(new str("Negative size value "), __str(size)));
+        throw new ValueError(__add(new str("negative pos value "), __str(size))); /* (3.15 wording) */
     if((size_t)size < s->unit.size()) /* never grows the buffer */
         s->unit.resize((size_t)size);
     return size;
