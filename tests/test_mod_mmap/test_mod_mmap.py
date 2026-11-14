@@ -847,7 +847,10 @@ def test_resize_refused():
         m.resize(10000)
     except ValueError as e:
         error = True
-        assert str(e) == "mmap: can't expand a shared anonymous mapping"
+        if sys.platform.startswith('linux'):  # (3.15)
+            assert str(e) == "mmap: can't expand a shared anonymous mapping on Linux"
+        else:
+            assert str(e) == "mmap: can't expand a shared anonymous mapping"
     assert error
     assert len(m) == 100
     m[10] = 5

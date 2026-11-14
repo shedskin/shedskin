@@ -1107,6 +1107,20 @@ def test_oserror_subclasses_user():
     assert x.strerror == 'io'
 
 
+def test_oserror_attrs_blockingioerror():
+    # attributes set afterwards: the long form of str()
+    e = OSError('m')
+    e.errno = 7
+    e.filename = 'f'
+    assert str(e) == "[Errno 7] None: 'f'"
+    assert str(OSError('m')) == 'm'
+    # BlockingIOError(errno, strerror, characters_written)
+    b = BlockingIOError(11, 'again', 5)
+    assert b.characters_written == 5
+    assert b.errno == 11
+    assert str(b) == '[Errno 11] again'
+
+
 def test_all():
     test_repr_escapes_argument()
     test_oserror_str_repr_filename()
@@ -1141,6 +1155,7 @@ def test_all():
     test_stopiteration_subclass_value()
     test_oserror_constructor()
     test_oserror_subclasses_user()
+    test_oserror_attrs_blockingioerror()
 
 if __name__ == '__main__':
     test_all() 

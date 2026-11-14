@@ -28,13 +28,16 @@ void OSError::__init_errno(int e, str *fname, str *fname2) {
     message = this->__str__();
 }
 str *OSError::__str__() {
-    if(!strerror) /* e.g. user-raised OSError('msg') */
+    /* as CPython: a filename (also one set afterwards, as e.filename = ..)
+       gives the long form, with None for a missing strerror */
+    if(!strerror && !filename) /* e.g. user-raised OSError('msg') */
         return BaseException::__str__();
+    str *s = strerror ? strerror : new str("None");
     if(!filename)
-        return __add_strs(4, new str("[Errno "), __str(__ss_errno), new str("] "), strerror);
+        return __add_strs(4, new str("[Errno "), __str(__ss_errno), new str("] "), s);
     if(!filename2)
-        return __add_strs(6, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": "), repr(filename));
-    return __add_strs(8, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": "), repr(filename), new str(" -> "), repr(filename2));
+        return __add_strs(6, new str("[Errno "), __str(__ss_errno), new str("] "), s, new str(": "), repr(filename));
+    return __add_strs(8, new str("[Errno "), __str(__ss_errno), new str("] "), s, new str(": "), repr(filename), new str(" -> "), repr(filename2));
 }
 str *OSError::__repr__() {
     if(!strerror)

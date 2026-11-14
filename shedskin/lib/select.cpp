@@ -16,9 +16,11 @@
 namespace __select__ {
 
 str *__name__;
+class_ *cl_error;
 
 void __init() {
     __name__ = new str("select");
+    cl_error = cl_oserror; /* select.error is OSError */
 }
 
 } // module namespace

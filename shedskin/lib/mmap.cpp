@@ -1376,7 +1376,11 @@ void __init()
         const_29 = new str("mmap length is greater than file size");
         const_30 = new str("mmap item value must be in range(0, 256)");
         const_31 = new str("mmap can't resize a readonly or copy-on-write memory map.");
+#ifdef __linux__
+        const_32 = new str("mmap: can't expand a shared anonymous mapping on Linux"); /* (as 3.15) */
+#else
         const_32 = new str("mmap: can't expand a shared anonymous mapping");
+#endif
         const_33 = new str("flush values out of range");
         const_34 = new str("write byte out of range");
         const_35 = new str("seek out of range");

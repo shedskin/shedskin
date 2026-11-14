@@ -820,6 +820,7 @@ struct __ss_sp_token {
     char kind;   /* 'l' literal, 's' white-space, 'd' directive */
     __ss_char c; /* the literal, or the directive */
     bool alt;    /* %O form */
+    bool bare = false; /* %X itself: no flags/width/alt, not from a composite */
 };
 
 static ValueError *__ss_sp_bad_directive(__GC_STR d, str *format) {
@@ -829,7 +830,7 @@ static ValueError *__ss_sp_bad_directive(__GC_STR d, str *format) {
 /* split a format into tokens, as CPython's TimeRE.pattern(), checking the
    directives (before any data is looked at, as CPython does when compiling
    the regex) */
-static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_sp_token> &out, std::string &groups) {
+static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_sp_token> &out, std::string &groups, bool nested=false) {
     size_t i = 0, n = fmt.size();
     while (i < n) {
         __ss_char c = fmt[i];
@@ -845,6 +846,7 @@ static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_s
             continue;
         }
         i++;
+        size_t start = i;
         /* flags and a width, which CPython accepts and ignores */
         while (i < n && fmt[i] < 0x80 && strchr("-_0^#", (char)fmt[i]))
             i++;
@@ -866,7 +868,7 @@ static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_s
             __GC_STR sub;
             for (const char *p = __ss_sp_composite(d); *p; p++)
                 sub += (__ss_char)*p;
-            __ss_sp_compile(sub, format, out, groups);
+            __ss_sp_compile(sub, format, out, groups, true);
             continue;
         }
         char g = __ss_sp_group(d);
@@ -876,6 +878,7 @@ static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_s
             groups += g;
         }
         out.push_back({'d', d, alt == 'O' && d != 'p'}); /* %Op is %p */
+        out.back().bare = !nested && i == start + 1;
     }
 }
 
@@ -1142,6 +1145,17 @@ void __ss_strptime(str *string, str *format, __ss_strptime_result &res) {
     std::vector<__ss_sp_token> toks;
     std::string groups;
     __ss_sp_compile(format->unit, format, toks, groups);
+    /* as CPython 3.15: %d without a year is ambiguous (Feb 29) */
+    bool has_year = false, day_d = false;
+    for (auto &t : toks)
+        if (t.kind == 'd' && t.bare) {
+            if (t.c == 'Y' || t.c == 'y' || t.c == 'G')
+                has_year = true;
+            else if (t.c == 'd')
+                day_d = true;
+        }
+    if (day_d && !has_year)
+        throw new ValueError(new str("Day of month directive '%d' may not be used without a year directive. Parsing dates involving a day of month without a year is ambiguous and fails to parse leap day. Add a year to the input and format. See https://github.com/python/cpython/issues/70647."));
 
     __ss_sp_matcher m;
     m.toks = &toks;

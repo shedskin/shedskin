@@ -1234,6 +1234,20 @@ def test_pathconf_negative_fd():
     assert code == 9
 
 
+def test_fildes_overflow_popen_sigpipe():
+    # a C int first (OverflowError), then the negative check
+    msg = ''
+    try:
+        os.fsync(-2**31 - 1)
+    except OverflowError as e:
+        msg = str(e)
+    assert msg == 'Python int too large to convert to C int'
+    # popen children get the default SIGPIPE back, as CPython
+    f = os.popen('yes')
+    assert f.readline() == 'y\n'
+    assert f.close() == 141 << 8
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1276,6 +1290,7 @@ def test_all():
     test_negative_fd_unsetenv_pipe_walk()
     test_putenv_empty_name()
     test_pathconf_negative_fd()
+    test_fildes_overflow_popen_sigpipe()
 
 if __name__ == '__main__':
     test_all()

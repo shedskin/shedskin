@@ -424,7 +424,7 @@ static const __encoding_name __encoding_modules[] = {
 
 static const __encoding_name __encoding_aliases[] = {
     {"utf8", __SS_ENC_UTF8}, {"utf", __SS_ENC_UTF8}, {"u8", __SS_ENC_UTF8}, {"cp65001", __SS_ENC_UTF8},
-    {"utf8_ucs2", __SS_ENC_UTF8}, {"utf8_ucs4", __SS_ENC_UTF8},
+    {"utf8_ucs2", __SS_ENC_UTF8}, {"utf8_ucs4", __SS_ENC_UTF8}, {"utf8_sig", __SS_ENC_UTF8_SIG},
     {"646", __SS_ENC_ASCII}, {"ansi_x3.4_1968", __SS_ENC_ASCII}, {"ansi_x3_4_1968", __SS_ENC_ASCII},
     {"ansi_x3.4_1986", __SS_ENC_ASCII}, {"cp367", __SS_ENC_ASCII}, {"csascii", __SS_ENC_ASCII},
     {"ibm367", __SS_ENC_ASCII}, {"iso646_us", __SS_ENC_ASCII}, {"iso_646.irv_1991", __SS_ENC_ASCII},

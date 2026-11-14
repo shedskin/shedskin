@@ -19,6 +19,9 @@ namespace __select__ {
 
 extern str *__name__;
 
+typedef OSError error; /* (select.error is OSError, as CPython) */
+extern class_ *cl_error;
+
 /* like CPython, select() takes file descriptors or objects with a fileno()
    method (sockets, files..), and returns the ready elements themselves */
 template<class T> inline __ss_int __select_fd(T x) {

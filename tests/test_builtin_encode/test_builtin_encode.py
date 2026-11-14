@@ -107,7 +107,7 @@ def test_encoding_lookup():
         assert 'a'.encode(name) == b'a', name
     assert 'é'.encode('UTF-8-SIG') == b'\xef\xbb\xbf\xc3\xa9'
     assert '€'.encode('Windows 1252') == b'\x80'
-    for name in ['utf.8', 'u.8', 'UTF8-SIG', 'cp-1252', '', ' ', '\u0130SO8859-1']:
+    for name in ['utf.8', 'u.8', 'cp-1252', '', ' ', '\u0130SO8859-1']:  # ('UTF8-SIG' is an alias since 3.14)
         try:
             'x'.encode(name)
             assert False, name
@@ -531,6 +531,12 @@ def test_unknown_error_handler():
     assert caught == 4
 
 
+def test_utf8_sig_alias():
+    assert 'x'.encode('utf8-sig') == b'\xef\xbb\xbfx'
+    assert 'x'.encode('UTF8_SIG') == b'\xef\xbb\xbfx'
+    assert b'\xef\xbb\xbfz'.decode('utf8_sig') == 'z'
+
+
 def test_all():
     test_unknown_error_handler()
     test_encode_utf8()
@@ -557,7 +563,7 @@ def test_all():
     test_encode_error_attrs()
     test_unicode_error_construct()
     test_surrogate_literals()
-
+    test_utf8_sig_alias()
 
 if __name__ == '__main__':
     test_all()
