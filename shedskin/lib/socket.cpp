@@ -1607,6 +1607,8 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
     _timeout = __ss_default_timeout;
     _blocking = true;
 
+    if (fileno < -1) /* (-1 is the 'not given' default) */
+        throw new ValueError(new str("negative file descriptor"));
     if (fileno >= 0) {
         /* wrap an existing fd; like CPython, detect what wasn't given */
         _fd = (socket_type)fileno;
@@ -1809,7 +1811,7 @@ socket *__create_connection(socket::inet_address address, double timeout, socket
 {
     /* only one address is ever tried here, so all_errors makes no difference */
     (void)all_errors;
-    socket *s = new socket(__ss_AF_INET, __ss_SOCK_STREAM, 0);
+    socket *s = new socket(__ss_AF_INET, __ss_SOCK_STREAM, IPPROTO_TCP); /* (as getaddrinfo() gives CPython) */
     try { /* (on failure, close the socket and re-raise, as CPython) */
     if (blocking)
         s->settimeout((void *)0);

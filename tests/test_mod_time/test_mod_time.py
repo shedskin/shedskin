@@ -405,7 +405,7 @@ def test_strptime_matching():
     assert strptime_error("1", "%q") == "'q' is a bad directive in format '%q'"
     assert strptime_error("1", "%Ey") == "'Ey' is a bad directive in format '%Ey'"
     assert strptime_error("1", "%") == "stray % in format '%'"
-    assert strptime_error("0000", "%Y") == "year 0 is out of range"
+    assert strptime_error("0000", "%Y") == "year must be in 1..9999, not 0"  # (3.15 wording)
 
 def test_strptime_zone():
     assert time.strptime("+0100", "%z").tm_gmtoff == 3600
@@ -684,6 +684,27 @@ def test_strptime_day_without_year():
     assert tuple(time.strptime('2024 Feb 29', '%Y %b %d'))[:3] == (2024, 2, 29)
 
 
+def test_strptime_315_directives():
+    # %D, %F, %n and %t (3.15)
+    assert tuple(time.strptime('11/14/23', '%D'))[:3] == (2023, 11, 14)
+    assert tuple(time.strptime('2023-11-14', '%F'))[:3] == (2023, 11, 14)
+    assert tuple(time.strptime('2024 \t 5', '%Y%n%m'))[:2] == (2024, 5)
+    assert tuple(time.strptime('20245', '%Y%t%m'))[:2] == (2024, 5)
+    # the year check comes before the regex (group) one
+    msg = ''
+    try:
+        time.strptime('05', '%d %d')
+    except ValueError as e1:
+        msg = str(e1)
+    assert msg.startswith("Day of month directive '%d' may not be used without a year directive")
+    msg = ''
+    try:
+        time.strptime('2023 4 31', '%Y %m %d')
+    except ValueError as e3:
+        msg = str(e3)
+    assert msg == 'day 31 must be in range 1..30 for month 4 in year 2023'
+
+
 def test_all():
     # test_time() ## producing different results on linux vs macos
     #test_mktime()
@@ -736,6 +757,7 @@ def test_all():
     test_strftime_nul_tuple_lengths()
     test_sleep_overflow()
     test_strptime_day_without_year()
+    test_strptime_315_directives()
 
 if __name__ == '__main__':
     test_all() 
