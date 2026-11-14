@@ -130,23 +130,23 @@
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
 #    1. assign   0/2/0        15/4/2       -            3/0/0        0/0/2        8/0/0        13/2/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
-#    3. setitem  0/1/0        6/2/1        -            1/0/0        0/0/1        2/0/0        4/1/1
+#    3. setitem  0/1/0        6/2/1        -            1/0/0        0/0/1        2/1/0        4/1/1
 #    4. arg      0/1/0        9/2/1        -            1/0/0        0/0/1        2/0/0        7/0/1
 #    5. ret      0/1/0        5/0/1        -            1/0/0        0/0/1        2/0/0        8/0/1
-#    6. method   0/1/0        12/2/1       -            3/0/0        0/0/1        2/0/0        18/4/1
+#    6. method   0/1/0        12/2/1       -            3/0/0        0/0/1        2/5/0        18/4/1
 #    7. display  0/1/0        3/1/1        -            2/0/0        0/0/1        2/0/0        4/0/1
-#    8. binop    1/0/0        7/15/0       -            1/0/0        -            2/2/0        11/14/0
+#    8. binop    1/0/0        7/15/0       -            1/0/0        -            2/3/0        11/14/0
 #    9. compare  -            4/5/0        -            1/0/0        1/0/0        1/0/0        6/3/0
-#   10. lookup   1/0/0        2/8/0        0/0/1        5/0/0        0/0/1        2/0/0        4/10/0
-#   11. ctor     -            7/1/0        -            1/0/0        -            1/0/0        12/6/0
+#   10. lookup   1/0/0        2/8/0        0/0/1        5/0/0        0/0/1        2/2/0        4/10/0
+#   11. ctor     -            7/1/0        -            1/0/0        -            1/3/0        12/6/0
 #   12. iter     0/1/0        5/0/1        -            1/0/0        -            3/2/0        7/7/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
 #   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        8/17/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        2/8/0        84/43/13     0/0/1        25/1/0       1/0/9        32/4/0       112/64/10
+#   total        2/8/0        84/43/13     0/0/1        25/1/0       1/0/9        32/16/0      112/64/10
 #
-#   all cells: 256 work, 120 TODO, 33 correctly warn or fail
+#   all cells: 256 work, 132 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -1174,6 +1174,17 @@ def test_setitem_sub_var():
     d = {1: [A()]}
     d[2] = lb
     assert d[2][0].name() == 'B'
+
+
+# sub->base, new: build
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*'
+#
+# def test_setitem_sub_new_key():
+#     d = {(A(), 0): 5}
+#     b = B()
+#     d[(b, 1)] = 6
+#     assert sorted(t[0].name() for t in d) == ['A', 'B']
 
 
 # empty, literal: build
@@ -2207,6 +2218,72 @@ def test_method_sub_var():
     assert d[2][0].name() == 'B'
 
 
+# sub->base, new: copy
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'list<B*>*' to 'list<A*>*' in return
+#
+# def test_method_sub_new_nested():
+#     lla = [[A()]]
+#     lla.extend([[B()]])
+#     assert lla[1][0].name() == 'B'
+#     d = {1: [A()]}
+#     d.update({2: [B()]})
+#     assert d[2][0].name() == 'B'
+
+
+# sub->base, new: copy
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*' in
+#        return
+#
+# def test_method_sub_new_tuple():
+#     sa = {(A(), 0)}
+#     sa.update([(B(), 1)])
+#     assert sorted(t[0].name() for t in sa) == ['A', 'B']
+#     q = deque([(A(), 0)])
+#     q.extend([(B(), 1)])
+#     assert q[1][0].name() == 'B'
+#     c = Counter([(A(), 0)])
+#     c.update([(B(), 1)])
+#     assert sorted(t[0].name() for t in c) == ['A', 'B']
+
+
+# sub->base, variable: copy
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'list<B*>*' to 'list<A*>*' in return
+#
+# def test_method_sub_var_nested():
+#     lla = [[A()]]
+#     llb = [[B()]]
+#     lla += llb
+#     lla.extend(llb)
+#     assert [l[0].name() for l in lla] == ['A', 'B', 'B']
+
+
+# sub->base, variable: copy
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*' in
+#        return
+#
+# def test_method_sub_var_tuple():
+#     lt = [(A(), 0)]
+#     ltb = [(B(), 1)]
+#     lt.extend(ltb)
+#     assert lt[1][0].name() == 'B'
+
+
+# sub->base, variable: cast
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   (list.append of the same tuple works)
+#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*'
+#
+# def test_method_sub_var_tuple_deque():
+#     q = deque([(A(), 0)])
+#     tb = (B(), 1)
+#     q.append(tb)
+#     assert q[1][0].name() == 'B'
+
+
 # empty, literal: infer
 def test_method_empty_receiver():
     # an empty container gets its element type from what is added to it
@@ -3011,6 +3088,16 @@ def test_binop_sub_var():
 #     sb = {B()}
 #     assert sorted(x.name() for x in sb | sa) == ['A', 'B']
 #     assert len(sb - sa) == 1
+
+
+# sub->base, variable: copy
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'dict<__ss_int, A*>*' to 'dict<__ss_int, B*>*'
+#
+# def test_binop_sub_var_dict():
+#     db = {1: B()}
+#     d = db | {2: A()}
+#     assert d[1].name() == 'B' and d[2].name() == 'A'
 
 
 # empty, literal: build
@@ -3831,6 +3918,29 @@ def test_lookup_sub_base_container():
     assert len(la) == 1
 
 
+# sub->base, variable: generic
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'tuple2<B*, __ss_int>*' to 'tuple2<A*, __ss_int>*'
+#
+# def test_lookup_sub_var_tuple():
+#     d = {(A(), 0): 5}
+#     tb = (B(), 1)
+#     assert tb not in d
+#     assert d.pop(tb, 7) == 7
+#     q = deque([(A(), 0)])
+#     assert q.count(tb) == 0 and tb not in q
+
+
+# sub->base, variable: generic
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'list<B*>*' to 'list<A*>*'
+#
+# def test_lookup_sub_var_nested():
+#     lla = [[A()]]
+#     lb = [B()]
+#     assert lb not in lla
+
+
 # empty, literal: generic
 def test_lookup_empty_container_lit():
     # looking up in a container that is empty
@@ -4137,6 +4247,39 @@ def test_ctor_sub():
     ta = tuple(lb)
     ta = (A(), A())
     assert ta[0].name() == 'A'
+
+
+# sub->base, variable: copy
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'tuple2<__ss_int, B*>*' to 'tuple2<__ss_int, A*>*' in
+#        return
+#
+# def test_ctor_sub_items():
+#     db = {1: B()}
+#     li = list(db.items())
+#     li.append((2, A()))
+#     assert [t[1].name() for t in li] == ['B', 'A']
+
+
+# sub->base, new: copy
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: no type named 'for_in_unit' in 'tuple2<B*, __ss_int>'
+#
+# def test_ctor_sub_dict_pairs():
+#     d = dict([(B(), 1)])
+#     d[A()] = 2
+#     assert sorted(x.name() for x in d) == ['A', 'B']
+
+
+# sub->base, new: copy
+# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
+#   C++: cannot convert 'dict<B*, __ss_int>*' to 'dict<A*, __ss_int>*' in
+#        assignment
+#
+# def test_ctor_sub_fromkeys():
+#     d = dict.fromkeys([B()], 0)
+#     d[A()] = 1
+#     assert sorted(x.name() for x in d) == ['A', 'B']
 
 
 # empty, literal: copy
