@@ -537,6 +537,14 @@ def test_utf8_sig_alias():
     assert b'\xef\xbb\xbfz'.decode('utf8_sig') == 'z'
 
 
+def test_cs_aliases():
+    # (3.15)
+    assert '€'.encode('csutf8') == b'\xe2\x82\xac'
+    assert '€'.encode('cswindows1252') == b'\x80'
+    assert b'\x80'.decode('cswindows1250') == '€'
+    assert b'\x88'.decode('cswindows1251') == '€'
+
+
 def test_all():
     test_unknown_error_handler()
     test_encode_utf8()
@@ -564,6 +572,7 @@ def test_all():
     test_unicode_error_construct()
     test_surrogate_literals()
     test_utf8_sig_alias()
+    test_cs_aliases()
 
 if __name__ == '__main__':
     test_all()

@@ -100,11 +100,13 @@ class mmap: public pyiter<bytes *>
          __ss_int flags_ = MAP_SHARED,
          __ss_int prot_  = PROT_READ | PROT_WRITE,
          __ss_int access_ = 0,
-         __ss_int offset = 0) : closed(__mbool(false)), fd(-1)
+         __ss_int offset = 0,
+         __ss_int trackfd = 1) : closed(__mbool(false)), fd(-1)
     {
         this->__class__ = cl_mmap;
         __init__(__ss_fileno, length,
                  flags_, prot_, access_, offset);
+        __trackfd = trackfd != 0;
     }
     void *__init__(__ss_int __ss_fileno, __ss_int length,
                    __ss_int flags_,  __ss_int prot_,
@@ -114,16 +116,19 @@ class mmap: public pyiter<bytes *>
          __ss_int length,
          str *tagname = 0,
          __ss_int access = 0,
-         __ss_int offset = 0) : closed(__mbool(false)), file_handle(INVALID_HANDLE_VALUE)
+         __ss_int offset = 0,
+         __ss_int trackfd = 1) : closed(__mbool(false)), file_handle(INVALID_HANDLE_VALUE)
     {
         this->__class__ = cl_mmap;
         __init__(__ss_fileno, length,
                  tagname, access, offset);
+        __trackfd = trackfd != 0;
     }
     void *__init__(__ss_int __ss_fileno, __ss_int length,
                    str *tagname, __ss_int access,
                    __ss_int offset);
 #endif /* WIN32 */
+    bool __trackfd = true; /* trackfd=False: no size() or resize(), as CPython */
     // mmap
     void *   close();
     mmap    *__enter__();

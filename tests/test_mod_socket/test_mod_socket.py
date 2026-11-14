@@ -1700,6 +1700,20 @@ def test_connect_ex_gaierror_select_error():
     os.close(w)
 
 
+def test_fileno_negative_create_connection_proto():
+    msg = ''
+    try:
+        socket.socket(fileno=-5)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'negative file descriptor'
+    srv = socket.create_server(('127.0.0.1', 0))
+    c = socket.create_connection(('127.0.0.1', srv.getsockname()[1]))
+    assert c.proto == socket.IPPROTO_TCP
+    c.close()
+    srv.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1744,6 +1758,7 @@ def test_all():
     test_getnameinfo_numeric_if_indextoname_range()
     test_sendfile_order_port_range_select_fd_herror_ctor()
     test_connect_ex_gaierror_select_error()
+    test_fileno_negative_create_connection_proto()
 
 if __name__ == '__main__':
     test_all()
