@@ -721,8 +721,14 @@ static int class_errno(int e)
  * the throw. (as in CPython, the message does not name the call) */
 [[noreturn]] static void throw_error(int e)
 {
-    /* windows: winsock codes, see strerror() above */
-    __throw_oserror_errno(e, class_errno(e), new str(std::string(strerror(e)).c_str()));
+    /* windows: winsock codes, see strerror() above; as CPython
+       (winerror_to_errno), six of them are errno values + 10000 */
+    int value = e;
+#ifdef WIN32
+    if (e == 10004 || e == 10009 || e == 10013 || e == 10014 || e == 10022 || e == 10024)
+        value = e - 10000;
+#endif
+    __throw_oserror_errno(value, class_errno(e), new str(std::string(strerror(e)).c_str()));
 }
 
 [[noreturn]] static void throw_error()
@@ -951,6 +957,10 @@ __ss_int socket::connect_ex(socket::inet_address address) {
     check_port(address->second, "connect_ex");
     try {
         connect(address);
+    } catch (gaierror *) { /* (as CPython: name resolution errors are raised) */
+        throw;
+    } catch (herror *) {
+        throw;
     } catch (OSError *e) {
         if (e->__ss_errno == 0) /* our own timeout (make_timeout()), as CPython */
             return __ss_EWOULDBLOCK;

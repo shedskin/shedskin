@@ -528,11 +528,12 @@ bytes *GzipFile::peek(__ss_int) {
     return new bytes(outbuf.data() + outpos, outbuf.size() - outpos);
 }
 
-__ss_int GzipFile::readinto(bytes *b) {
+__ss_int GzipFile::__readinto(bytes *b, const char *method) {
+    /* (as CPython: the closed/write-only checks come first) */
+    __check_can_read(method);
     /* b must be a bytearray (array.array/memoryview are not supported) */
     if (b->frozen)
-        throw new TypeError(new str("readinto() argument must be read-write bytes-like object, not bytes"));
-    __check_can_read("readinto");
+        throw new TypeError(__add_strs(2, new str(method), new str("() argument must be read-write bytes-like object, not bytes")));
     bytes *data = read((__ss_int)b->unit.size());
     size_t n = data->unit.size();
     b->unit.replace(0, n, data->unit);

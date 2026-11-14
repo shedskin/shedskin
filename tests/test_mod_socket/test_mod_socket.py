@@ -1677,6 +1677,29 @@ def test_sendfile_order_port_range_select_fd_herror_ctor():
     assert str(socket.herror('plain')) == 'plain'
 
 
+def test_connect_ex_gaierror_select_error():
+    # name resolution errors are raised, not returned
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    kind = ''
+    try:
+        s.connect_ex(('nonexistent.invalid', 80))
+        kind = 'returned'
+    except socket.gaierror:
+        kind = 'gaierror'
+    assert kind == 'gaierror'
+    s.close()
+    # select.error is OSError
+    r, w = os.pipe()
+    os.close(r)
+    code = 0
+    try:
+        select.select([r], [], [], 0)
+    except select.error as e:
+        code = e.errno
+    assert code == 9 or code == 10038  # EBADF, WSAENOTSOCK
+    os.close(w)
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1720,6 +1743,7 @@ def test_all():
     test_herror()
     test_getnameinfo_numeric_if_indextoname_range()
     test_sendfile_order_port_range_select_fd_herror_ctor()
+    test_connect_ex_gaierror_select_error()
 
 if __name__ == '__main__':
     test_all()

@@ -76,12 +76,9 @@ public:
     bytes *peek(__ss_int n=0);
     bytes *readline(__ss_int n=-1);
     list<bytes *> *readlines(__ss_int hint=-1);
-    __ss_int readinto(bytes *b);
-    __ss_int readinto1(bytes *b) {
-        if (!b->frozen)
-            __check_can_read("readinto1");
-        return readinto(b);
-    }
+    __ss_int readinto(bytes *b) { return __readinto(b, "readinto"); }
+    __ss_int readinto1(bytes *b) { return __readinto(b, "readinto1"); }
+    __ss_int __readinto(bytes *b, const char *method);
     __ss_int write(bytes *data);
     __ss_int seek(__ss_int i, __ss_int w=0);
     __ss_int tell();

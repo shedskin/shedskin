@@ -19,6 +19,11 @@ namespace __select__ {
 
 extern str *__name__;
 
+typedef OSError error; /* (select.error is OSError, as CPython) */
+extern class_ *cl_error;
+
+[[noreturn]] void __throw_select_error(); /* (winsock: WSAGetLastError(), not errno) */
+
 /* like CPython, select() takes file descriptors or objects with a fileno()
    method (sockets, files..), and returns the ready elements themselves */
 template<class T> inline __ss_int __select_fd(T x) {
@@ -113,11 +118,7 @@ template<class A, class B, class C, class D> __select_result<typename A::for_in_
     ltimeout.tv_usec = (decltype(ltimeout.tv_usec))((timeout - floor(timeout))*1E6);
 
     if(::select(maxFD + 1, &lrFDs, &lwFDs, &lxFDs, has_timeout ? &ltimeout : NULL) == -1) {
-#ifdef WIN32
-        throw new OSError(); /* winsock: WSAGetLastError(), not errno */
-#else
-        __throw_oserror(); /* e.g. EINTR -> InterruptedError */
-#endif
+        __throw_select_error(); /* e.g. EINTR -> InterruptedError */
     }
 
     return new __select_result<typename A::for_in_unit, typename B::for_in_unit, typename C::for_in_unit>(3,

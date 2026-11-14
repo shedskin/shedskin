@@ -465,6 +465,8 @@ class BlockingIOError : public OSError {
 public:
     BlockingIOError(str *msg=0) : OSError(msg) { this->__class__ = cl_blockingioerror; }
     BlockingIOError(__ss_int e, str *s, str *f=0, void *w=0, str *f2=0) : OSError(e, s, f, w, f2) { this->__class__ = cl_blockingioerror; }
+    BlockingIOError(__ss_int e, str *s, __ss_int written) : OSError(e, s), characters_written(written) { this->__class__ = cl_blockingioerror; }
+    __ss_int characters_written = 0; /* (as CPython: BlockingIOError(errno, strerror, characters_written)) */
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_BlockingIOError; }
 #endif
