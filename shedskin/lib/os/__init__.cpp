@@ -100,9 +100,10 @@ namespace __os__ {
 
 /* as CPython's fildes_converter (fsync, fchdir, ..) */
 static int __ss_fildes(__ss_int fd) {
-    if (fd < 0)
+    int fd_ = __ss_cint(fd); /* (a C int first: OverflowError, as CPython) */
+    if (fd_ < 0)
         throw new ValueError(__add_strs(3, new str("file descriptor cannot be a negative integer ("), __str(fd), new str(")")));
-    return __ss_cint(fd);
+    return fd_;
 }
 
 /* the msvc crt calls its invalid parameter handler (which aborts by default)
@@ -124,33 +125,33 @@ struct __suppress_iph { __suppress_iph() {} }; /* (avoid unused-variable warning
    picks the same OSError subclass as cpython does for the common cases (as
    cpython's winerror_to_errno(), PC/errmap.h) */
 [[noreturn]] static void __throw_winerror(DWORD err, str *fname=0, str *fname2=0) {
-    switch(err) {
-        case ERROR_FILE_NOT_FOUND:
-        case ERROR_PATH_NOT_FOUND:
-        case ERROR_INVALID_DRIVE:
-        case ERROR_BAD_NETPATH:
-        case ERROR_BAD_NET_NAME:
-        case ERROR_BAD_PATHNAME:
-        case ERROR_FILENAME_EXCED_RANGE: errno = ENOENT; break;
-        case ERROR_ACCESS_DENIED:
-        case ERROR_CURRENT_DIRECTORY:
-        case ERROR_WRITE_PROTECT:
-        case ERROR_SHARING_VIOLATION:
-        case ERROR_LOCK_VIOLATION: errno = EACCES; break;
-        case ERROR_TOO_MANY_OPEN_FILES: errno = EMFILE; break;
-        case ERROR_INVALID_HANDLE: errno = EBADF; break;
-        case ERROR_DISK_FULL: errno = ENOSPC; break;
-        case ERROR_BROKEN_PIPE:
-        case ERROR_NO_DATA: errno = EPIPE; break;
-        /* (ERROR_INVALID_NAME, ERROR_PRIVILEGE_NOT_HELD: EINVAL, as cpython) */
-        case ERROR_ALREADY_EXISTS:
-        case ERROR_FILE_EXISTS: errno = EEXIST; break;
-        case ERROR_NOT_SAME_DEVICE: errno = EXDEV; break;
-        case ERROR_DIRECTORY: errno = ENOTDIR; break;
-        case ERROR_DIR_NOT_EMPTY: errno = ENOTEMPTY; break;
-        case ERROR_NOT_ENOUGH_MEMORY:
-        case ERROR_OUTOFMEMORY: errno = ENOMEM; break;
-        default: errno = EINVAL; break;
+    if ((err & 0xFFFF0000) == 0x80070000) /* (FACILITY_WIN32 HRESULT) */
+        err &= 0x0000FFFF;
+    switch(err) { /* (the codes as numbers: not every sdk defines all names) */
+        case 2: case 3: case 15: case 18: case 53: case 67: case 161: case 206:
+            errno = ENOENT; break;
+        case 10: errno = E2BIG; break;
+        case 11: case 188: case 189: case 190: case 191: case 192: case 193: case 194:
+        case 195: case 196: case 197: case 198: case 199: case 200: case 201: case 202:
+            errno = ENOEXEC; break;
+        case 6: case 114: case 130: errno = EBADF; break;
+        case 128: case 129: errno = ECHILD; break;
+        case 89: case 164: case 215: errno = EAGAIN; break;
+        case 7: case 8: case 9: case 1816: errno = ENOMEM; break;
+        case 5: case 16: case 19: case 20: case 21: case 22: case 23: case 24: case 25:
+        case 26: case 27: case 28: case 29: case 30: case 31: case 32: case 33: case 34:
+        case 35: case 36: case 65: case 82: case 83: case 108: case 132: case 158: case 167:
+            errno = EACCES; break;
+        case 80: case 183: errno = EEXIST; break;
+        case 17: errno = EXDEV; break;
+        case 267: errno = ENOTDIR; break;
+        case 4: errno = EMFILE; break;
+        case 112: errno = ENOSPC; break;
+        case 109: case 232: errno = EPIPE; break;
+        case 145: errno = ENOTEMPTY; break;
+        case 1113: errno = EILSEQ; break;
+        case 258: errno = ETIMEDOUT; break;
+        default: errno = EINVAL; break; /* (also ERROR_INVALID_NAME, ERROR_PRIVILEGE_NOT_HELD) */
     }
     __throw_oserror(fname, fname2);
 }
@@ -1365,6 +1366,19 @@ void *renames(str* old, str* _new) {
 static FILE *__ss_popen(const char *cmd, const char *mode) {
 #ifdef _MSC_VER
     return ::_popen(cmd, mode);
+#elif defined(SIGPIPE)
+    /* as CPython (subprocess, restore_signals): the child gets the default
+       SIGPIPE/SIGXFSZ handling back, not the runtime's SIG_IGN */
+    void (*pipe_h)(int) = ::signal(SIGPIPE, SIG_DFL);
+#ifdef SIGXFSZ
+    void (*xfsz_h)(int) = ::signal(SIGXFSZ, SIG_DFL);
+#endif
+    FILE *f = ::popen(cmd, mode);
+    ::signal(SIGPIPE, pipe_h);
+#ifdef SIGXFSZ
+    ::signal(SIGXFSZ, xfsz_h);
+#endif
+    return f;
 #else
     return ::popen(cmd, mode);
 #endif

@@ -48,6 +48,9 @@ MAP_POPULATE,  /* Populate page tables.      */
 MAP_STACK,     /* Reserve for a process stack.*/
 MAP_NORESERVE, /* Don't reserve swap space.  */
 MAP_32BIT,     /* In the low 2 GiB (x86-64).*/
+MS_SYNC,       /* flush() flags (3.15).      */
+MS_ASYNC,
+MS_INVALIDATE,
 
 /* madvise() advice (value is -1 on platforms that lack them). */
 MADV_NORMAL,
@@ -100,11 +103,14 @@ class mmap: public pyiter<bytes *>
          __ss_int flags_ = MAP_SHARED,
          __ss_int prot_  = PROT_READ | PROT_WRITE,
          __ss_int access_ = 0,
-         __ss_int offset = 0) : closed(__mbool(false)), fd(-1)
+         __ss_int offset = 0,
+         __ss_int trackfd = 1) : closed(__mbool(false)), fd(-1)
     {
         this->__class__ = cl_mmap;
         __init__(__ss_fileno, length,
                  flags_, prot_, access_, offset);
+        if (!(__trackfd = trackfd != 0))
+            __untrack();
     }
     void *__init__(__ss_int __ss_fileno, __ss_int length,
                    __ss_int flags_,  __ss_int prot_,
@@ -114,27 +120,32 @@ class mmap: public pyiter<bytes *>
          __ss_int length,
          str *tagname = 0,
          __ss_int access = 0,
-         __ss_int offset = 0) : closed(__mbool(false)), file_handle(INVALID_HANDLE_VALUE)
+         __ss_int offset = 0,
+         __ss_int trackfd = 1) : closed(__mbool(false)), file_handle(INVALID_HANDLE_VALUE)
     {
         this->__class__ = cl_mmap;
         __init__(__ss_fileno, length,
                  tagname, access, offset);
+        if (!(__trackfd = trackfd != 0))
+            __untrack();
     }
     void *__init__(__ss_int __ss_fileno, __ss_int length,
                    str *tagname, __ss_int access,
                    __ss_int offset);
 #endif /* WIN32 */
+    bool __trackfd = true; /* trackfd=False: no size() or resize(), as CPython */
+    void __untrack(); /* trackfd=False: the map keeps no fd/handle of its own */
     // mmap
     void *   close();
     mmap    *__enter__();
     void    *__exit__();
-    /* size is __ss_void_struct when omitted (the whole map), so that an
-       explicit -1 is out of range, as in CPython */
-    template<class S=__ss_void_struct> void *flush(__ss_int offset=0, S size=__ss_void) {
+    /* size is __ss_void_struct when omitted (the rest of the map, as is -1
+       since 3.15); flags 0 is MS_SYNC */
+    template<class S=__ss_void_struct> void *flush(__ss_int offset=0, S size=__ss_void, __ss_int flags=0) {
         if constexpr (std::is_same_v<S, __ss_void_struct>)
-            return __flush(offset, 0, false);
+            return __flush(offset, 0, false, flags);
         else
-            return __flush(offset, size, true);
+            return __flush(offset, size, true, flags);
     }
     /* likewise, length is __ss_void_struct when omitted (the rest of the map) */
     template<class L=__ss_void_struct> void *madvise(__ss_int option, __ss_int start=0, L length=__ss_void) {
@@ -225,7 +236,7 @@ class mmap: public pyiter<bytes *>
     void *__seek_failed();
 
     inline size_t __subscript(__ss_int index, bool include_end=false) const;
-    void *__flush(__ss_int offset, __ss_int size, bool size_given);
+    void *__flush(__ss_int offset, __ss_int size, bool size_given, __ss_int flags=0);
     void *__madvise(__ss_int option, __ss_int start, __ss_int length, bool length_given);
     void __check_flush_range(__ss_int offset, __ss_int &size, bool size_given) const;
     inline size_t __tell() const { return (size_t)(m_position - m_begin); }

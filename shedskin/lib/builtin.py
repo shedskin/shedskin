@@ -1201,7 +1201,10 @@ class OSError(Exception):
         self.filename = ''
         self.filename2 = ''
 
-class BlockingIOError(OSError): pass
+class BlockingIOError(OSError):
+    # (as CPython: the third argument is characters_written, not a filename)
+    def __init__(self, arg=None, strerror=None, characters_written=0):
+        self.characters_written = 0
 class ChildProcessError(OSError): pass
 class ConnectionError(OSError): pass
 class BrokenPipeError(ConnectionError): pass

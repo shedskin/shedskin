@@ -721,8 +721,14 @@ static int class_errno(int e)
  * the throw. (as in CPython, the message does not name the call) */
 [[noreturn]] static void throw_error(int e)
 {
-    /* windows: winsock codes, see strerror() above */
-    __throw_oserror_errno(e, class_errno(e), new str(std::string(strerror(e)).c_str()));
+    /* windows: winsock codes, see strerror() above; as CPython
+       (winerror_to_errno), six of them are errno values + 10000 */
+    int value = e;
+#ifdef WIN32
+    if (e == 10004 || e == 10009 || e == 10013 || e == 10014 || e == 10022 || e == 10024)
+        value = e - 10000;
+#endif
+    __throw_oserror_errno(value, class_errno(e), new str(std::string(strerror(e)).c_str()));
 }
 
 [[noreturn]] static void throw_error()
@@ -903,8 +909,12 @@ __ss_int socket::__sendfile(file_binary *f, __ss_int offset, __ss_int count) {
     if (_timeout == 0)
         throw new ValueError(new str("non-blocking sockets are not supported"));
     /* portable fallback implementation (chunked read/send loop), like
-     * CPython uses on platforms without os.sendfile() */
+     * CPython uses on platforms without os.sendfile() (windows). where it
+     * has os.sendfile(), CPython always starts at offset (default 0), not at
+     * the current file position */
+#ifdef WIN32
     if (offset)
+#endif
         f->seek(offset, 0);
     size_t total = 0;
     for (;;) {
@@ -951,6 +961,10 @@ __ss_int socket::connect_ex(socket::inet_address address) {
     check_port(address->second, "connect_ex");
     try {
         connect(address);
+    } catch (gaierror *) { /* (as CPython: name resolution errors are raised) */
+        throw;
+    } catch (herror *) {
+        throw;
     } catch (OSError *e) {
         if (e->__ss_errno == 0) /* our own timeout (make_timeout()), as CPython */
             return __ss_EWOULDBLOCK;
@@ -1597,6 +1611,8 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
     _timeout = __ss_default_timeout;
     _blocking = true;
 
+    if (fileno < 0 && fileno != __no_fileno)
+        throw new ValueError(new str("negative file descriptor"));
     if (fileno >= 0) {
         /* wrap an existing fd; like CPython, detect what wasn't given */
         _fd = (socket_type)fileno;
@@ -1799,7 +1815,7 @@ socket *__create_connection(socket::inet_address address, double timeout, socket
 {
     /* only one address is ever tried here, so all_errors makes no difference */
     (void)all_errors;
-    socket *s = new socket(__ss_AF_INET, __ss_SOCK_STREAM, 0);
+    socket *s = new socket(__ss_AF_INET, __ss_SOCK_STREAM, IPPROTO_TCP); /* (as getaddrinfo() gives CPython) */
     try { /* (on failure, close the socket and re-raise, as CPython) */
     if (blocking)
         s->settimeout((void *)0);

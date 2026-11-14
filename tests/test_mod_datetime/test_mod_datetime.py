@@ -22,7 +22,7 @@ def test_date_day_out_of_range():
         datetime.date(2023, 2, 29)
     except ValueError as e:
         error = str(e)
-    assert error == 'day is out of range for month'
+    assert error == 'day 29 must be in range 1..28 for month 2 in year 2023'  # (3.15 wording)
 
     # 2024 is a leap year: day 29 is valid, day 30 must still be rejected
     assert datetime.date(2024, 2, 29).day == 29
@@ -32,7 +32,7 @@ def test_date_day_out_of_range():
         datetime.date(2024, 2, 30)
     except ValueError as e:
         error = str(e)
-    assert error == 'day is out of range for month'
+    assert error == 'day 30 must be in range 1..29 for month 2 in year 2024'
 
     # day 31 must be rejected for a 30-day month
     error = ''
@@ -40,7 +40,7 @@ def test_date_day_out_of_range():
         datetime.date(2024, 4, 31)
     except ValueError as e:
         error = str(e)
-    assert error == 'day is out of range for month'
+    assert error == 'day 31 must be in range 1..30 for month 4 in year 2024'
 
 def test_date_replace_keeps_unchanged_day_out_of_range():
     # replacing month/year only (day left alone) must still validate the
@@ -50,14 +50,14 @@ def test_date_replace_keeps_unchanged_day_out_of_range():
         datetime.date(2024, 1, 31).replace(month=4)
     except ValueError as e:
         error = str(e)
-    assert error == 'day is out of range for month'
+    assert error == 'day 31 must be in range 1..30 for month 4 in year 2024'
 
     error = ''
     try:
         datetime.date(2024, 2, 29).replace(year=2023)
     except ValueError as e:
         error = str(e)
-    assert error == 'day is out of range for month'
+    assert error == 'day 29 must be in range 1..28 for month 2 in year 2023'
 
     # sanity: still works fine when the resulting day is valid
     assert datetime.date(2024, 1, 15).replace(month=4) == datetime.date(2024, 4, 15)
@@ -87,17 +87,17 @@ def test_date_replace_zero():
         d.replace(10000)
     except ValueError as e:
         errors.append(str(e))
-    assert errors == ['year 0 is out of range', 'month must be in 1..12', 'day is out of range for month',
-                      'year 0 is out of range', 'month must be in 1..12', 'day is out of range for month',
-                      'year 10000 is out of range']
+    assert errors == ['year must be in 1..9999, not 0', 'month must be in 1..12, not 0', 'day 0 must be in range 1..31 for month 5 in year 2020',
+                      'year must be in 1..9999, not 0', 'month must be in 1..12, not 0', 'day 0 must be in range 1..31 for month 5 in year 2020',
+                      'year must be in 1..9999, not 10000']
     try:
         datetime.date(0, 1, 1)
     except ValueError as e:
-        assert str(e) == 'year 0 is out of range'
+        assert str(e) == 'year must be in 1..9999, not 0'
     try:
         datetime.datetime(2020, 1, 1).replace(year=0)
     except ValueError as e:
-        assert str(e) == 'year 0 is out of range'
+        assert str(e) == 'year must be in 1..9999, not 0'
     assert d.replace() == d
     assert d.replace(2021) == datetime.date(2021, 5, 6)
     assert d.replace(2021, 6) == datetime.date(2021, 6, 6)
@@ -130,7 +130,7 @@ def test_datetime_replace_keywords():
         datetime.datetime(2024, 1, 31, 10, 30).replace(month=4)
     except ValueError as e:
         error = str(e)
-    assert error == 'day is out of range for month'
+    assert error == 'day 31 must be in range 1..30 for month 4 in year 2024'
 
 
 def test_time_replace_keywords():
@@ -208,7 +208,7 @@ def test_date_fromisoformat():
         datetime.date.fromisoformat('2020-02-30')
     except ValueError as e:
         error = str(e)
-    assert error == 'day is out of range for month'
+    assert error == 'day 30 must be in range 1..29 for month 2 in year 2020'
 
     # regression test: the 3.11+ forms were rejected
     assert datetime.date.fromisoformat('20240229') == datetime.date(2024, 2, 29)
@@ -299,7 +299,7 @@ def test_datetime_fromisoformat():
         datetime.datetime.fromisoformat('2020-01-01T25:00:00')
     except ValueError as e:
         error = str(e)
-    assert error == 'hour must be in 0..23'
+    assert error == 'hour must be in 0..23, not 25'
 
     # regression test: 1024-B14, the 3.11+ forms were rejected
     assert datetime.datetime.fromisoformat('2024-01-01T10:20') == datetime.datetime(2024, 1, 1, 10, 20)
@@ -858,7 +858,7 @@ def test_fromtimestamp_out_of_range():
         else:
             assert fromtimestamp_error(kind, 2.0**62) == 'OSError'
             assert fromtimestamp_error(kind, -2.0**62) == 'OSError'
-            assert fromtimestamp_error(kind, 1e12) == 'ValueError: year 33658 is out of range'
+            assert fromtimestamp_error(kind, 1e12) == 'ValueError: year must be in 1..9999, not 33658'
 
 
 def fromtimestamp_error_int(kind, ts):
@@ -1131,13 +1131,13 @@ def test_ordinal():
         datetime.date.fromordinal(3652060)
     except ValueError as e:
         error = str(e)
-    assert error == 'year 10000 is out of range'
+    assert error == 'year must be in 1..9999, not 10000'
     error = ''
     try:
         datetime.datetime.fromordinal(1000000000)
     except ValueError as e:
         error = str(e)
-    assert error == 'year 2737908 is out of range'
+    assert error == 'year must be in 1..9999, not 2737908'
 
 def test_weekday():
     assert [datetime.date(2024, 9, d).weekday() for d in range(16, 23)] == [0, 1, 2, 3, 4, 5, 6]
@@ -1426,10 +1426,7 @@ def test_timedelta_division():
                 t / False
         except ZeroDivisionError as e:
             error = str(e)
-        if k == 0:
-            assert error == 'division by zero'
-        else:
-            assert error == 'integer division or modulo by zero'
+        assert error == 'division by zero'  # (3.15 wording, for all of them)
 
 
 def test_timedelta_multiplication():
@@ -1545,10 +1542,7 @@ def test_timedelta_modulo():
                 divmod(t, datetime.timedelta(0))
         except ZeroDivisionError as e:
             error = str(e)
-        if k == 0:
-            assert error == 'integer modulo by zero'
-        else:
-            assert error == 'integer division or modulo by zero'
+        assert error == 'division by zero'  # (3.15 wording)
 
 
 def test_timedelta_exact_ints():
@@ -1599,6 +1593,28 @@ def test_staticmethod_via_instance():
     assert dt.combine(d, datetime.time(1, 2)) == datetime.datetime(2024, 2, 29, 1, 2)
     t = datetime.time(1, 2)
     assert t.fromisoformat('03:04:05') == datetime.time(3, 4, 5)
+
+
+def test_strftime_year_padding_iso_24():
+    # (3.15) zero-padded years in date/datetime strftime
+    assert datetime.date(5, 1, 4).strftime('%Y|%G|%C|%F') == '0005|0005|00|0005-01-04'
+    assert format(datetime.datetime(999, 12, 31), '%Y') == '0999'
+    assert datetime.time(1, 2).strftime('%H') == '01'
+    # (3.14+) 24:00 is midnight of the next day
+    assert datetime.datetime.fromisoformat('2020-12-31T24:00') == datetime.datetime(2021, 1, 1)
+    assert datetime.time.fromisoformat('24:00:00') == datetime.time(0, 0)
+    msg = ''
+    try:
+        datetime.datetime.fromisoformat('2020-12-31T24:00:01')
+    except ValueError as e1:
+        msg = str(e1)
+    assert msg == 'minute, second, and microsecond must be 0 when hour is 24'
+    msg = ''
+    try:
+        datetime.datetime.fromisoformat('9999-12-31T24:00')
+    except ValueError as e2:
+        msg = str(e2)
+    assert msg == 'year must be in 1..9999, not 10000'
 
 
 def test_all():
@@ -1674,6 +1690,7 @@ def test_all():
         test_date_dict_key()
         test_tzinfo_shared_offsets()
         test_staticmethod_via_instance()
+        test_strftime_year_padding_iso_24()
 
 if __name__ == "__main__":
     test_all()

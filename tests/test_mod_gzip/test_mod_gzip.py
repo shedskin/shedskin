@@ -1060,6 +1060,30 @@ def test_header_crc_wplus_mode():
     os.remove(name)
 
 
+def test_readinto_check_order():
+    w = gzip.GzipFile(fileobj=io.BytesIO(), mode='wb')
+    msg = ''
+    try:
+        w.readinto1(b'xyz')
+    except OSError as e1:
+        msg = str(e1)
+    assert msg == '[Errno 9] readinto1() on write-only GzipFile object'
+    w.close()
+    msg = ''
+    try:
+        w.readinto(b'xyz')
+    except ValueError as e2:
+        msg = str(e2)
+    assert msg == 'I/O operation on closed file'
+    g = gzip.GzipFile(fileobj=io.BytesIO(gzip.compress(b'abc')))
+    msg = ''
+    try:
+        g.readinto1(b'xyz')
+    except TypeError as e3:
+        msg = str(e3)
+    assert msg == 'readinto1() argument must be read-write bytes-like object, not bytes'
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -1094,6 +1118,7 @@ def test_all():
     test_compress_defaults_seek_end()
     test_readinto_msgs_text_seek_wrong_direction()
     test_header_crc_wplus_mode()
+    test_readinto_check_order()
 
 if __name__ == '__main__':
     test_all()

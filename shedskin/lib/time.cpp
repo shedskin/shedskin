@@ -784,6 +784,8 @@ static const char *__ss_sp_composite(__ss_char d) {
         case 'r': return "%I:%M:%S %p";
         case 'R': return "%H:%M";
         case 'T': return "%H:%M:%S";
+        case 'D': return "%m/%d/%y"; /* (3.15) */
+        case 'F': return "%Y-%m-%d"; /* (3.15) */
     }
     return NULL;
 }
@@ -820,6 +822,7 @@ struct __ss_sp_token {
     char kind;   /* 'l' literal, 's' white-space, 'd' directive */
     __ss_char c; /* the literal, or the directive */
     bool alt;    /* %O form */
+    bool bare = false; /* %X itself: no flags/width/alt, not from a composite */
 };
 
 static ValueError *__ss_sp_bad_directive(__GC_STR d, str *format) {
@@ -829,7 +832,7 @@ static ValueError *__ss_sp_bad_directive(__GC_STR d, str *format) {
 /* split a format into tokens, as CPython's TimeRE.pattern(), checking the
    directives (before any data is looked at, as CPython does when compiling
    the regex) */
-static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_sp_token> &out, std::string &groups) {
+static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_sp_token> &out, std::string &groups, char &dupg, bool nested=false) {
     size_t i = 0, n = fmt.size();
     while (i < n) {
         __ss_char c = fmt[i];
@@ -845,6 +848,7 @@ static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_s
             continue;
         }
         i++;
+        size_t start = i;
         /* flags and a width, which CPython accepts and ignores */
         while (i < n && fmt[i] < 0x80 && strchr("-_0^#", (char)fmt[i]))
             i++;
@@ -859,23 +863,30 @@ static void __ss_sp_compile(const __GC_STR &fmt, str *format, std::vector<__ss_s
             throw __ss_sp_bad_directive(__GC_STR(1, alt), format);
         }
         __ss_char d = fmt[i++];
-        const char *valid = alt == 'O' ? "dmyCHIMSwep" : (alt ? "" : "dfHkIlGjmMSUwuVyYzAaBbpZ%ePWTRrXxc");
+        const char *valid = alt == 'O' ? "dmyCHIMSwep" : (alt ? "" : "dfHkIlGjmMSUwuVyYzAaBbpZ%ePWTRrXxcDFnt");
         if (d >= 0x80 || !*valid || !strchr(valid, (char)d))
             throw __ss_sp_bad_directive(alt ? __GC_STR({alt, d}) : __GC_STR(1, d), format);
         if (!alt && __ss_sp_composite(d)) {
             __GC_STR sub;
             for (const char *p = __ss_sp_composite(d); *p; p++)
                 sub += (__ss_char)*p;
-            __ss_sp_compile(sub, format, out, groups);
+            __ss_sp_compile(sub, format, out, groups, dupg, true);
+            continue;
+        }
+        if (!alt && (d == 'n' || d == 't')) { /* (3.15) \s* */
+            out.push_back({'w', ' ', false});
             continue;
         }
         char g = __ss_sp_group(d);
         if (g) {
-            if (groups.find(g) != std::string::npos) /* re.error in CPython */
-                throw new ValueError(__add_strs(3, new str("redefinition of group name '"), new str(__GC_STR(1, (__ss_char)g)), new str("'")));
-            groups += g;
+            if (groups.find(g) != std::string::npos) { /* re.error in CPython: after the year check, see below */
+                if (!dupg)
+                    dupg = g;
+            } else
+                groups += g;
         }
         out.push_back({'d', d, alt == 'O' && d != 'p'}); /* %Op is %p */
+        out.back().bare = !nested && i == start + 1;
     }
 }
 
@@ -984,6 +995,19 @@ static const __ss_char *__ss_sp_match(__ss_sp_matcher &m, size_t ti, const __ss_
             return NULL;
         return __ss_sp_match(m, ti + 1, p + 1);
     }
+    if (tok.kind == 'w') { /* %n, %t: \s*, greedy */
+        const __ss_char *q = p;
+        while (q < m.e && __ss_char_space(*q))
+            q++;
+        for (; q >= p; q--) {
+            const __ss_char *r = __ss_sp_match(m, ti + 1, q);
+            if (r)
+                return r;
+            if (q == p)
+                break;
+        }
+        return NULL;
+    }
     if (tok.kind == 's') { /* \s+, greedy */
         const __ss_char *q = p;
         while (q < m.e && __ss_char_space(*q))
@@ -1082,12 +1106,12 @@ static int __ss_sp_days_in_month(int year, int month) {
 
 static int __ss_sp_ordinal(int year, int month, int day) {
     /* like datetime.date(year, month, day).toordinal() */
-    if (year < 1 || year > 9999)
-        throw new ValueError(__add_strs(3, new str("year "), __str((__ss_int)year), new str(" is out of range")));
+    if (year < 1 || year > 9999) /* (worded as CPython 3.15) */
+        throw new ValueError(__add_strs(2, new str("year must be in 1..9999, not "), __str((__ss_int)year)));
     if (month < 1 || month > 12)
-        throw new ValueError(new str("month must be in 1..12"));
+        throw new ValueError(__add_strs(2, new str("month must be in 1..12, not "), __str((__ss_int)month)));
     if (day < 1 || day > __ss_sp_days_in_month(year, month))
-        throw new ValueError(new str("day is out of range for month"));
+        throw new ValueError(__add_strs(8, new str("day "), __str((__ss_int)day), new str(" must be in range 1.."), __str((__ss_int)__ss_sp_days_in_month(year, month)), new str(" for month "), __str((__ss_int)month), new str(" in year "), __str((__ss_int)year)));
     int y = year - 1;
     int ord = y * 365 + y / 4 - y / 100 + y / 400 + day;
     for (int m = 1; m < month; m++)
@@ -1116,7 +1140,7 @@ static void __ss_sp_from_ordinal(int ord, int &year, int &month, int &day) {
         day = n + 1;
     }
     if (year > 9999)
-        throw new ValueError(__add_strs(3, new str("year "), __str((__ss_int)year), new str(" is out of range")));
+        throw new ValueError(__add_strs(2, new str("year must be in 1..9999, not "), __str((__ss_int)year))); /* (3.15 wording) */
 }
 
 static void __ss_sp_from_isocalendar(int year, int week, int day, int &y, int &m, int &d) {
@@ -1141,7 +1165,21 @@ static void __ss_sp_from_isocalendar(int year, int week, int day, int &y, int &m
 void __ss_strptime(str *string, str *format, __ss_strptime_result &res) {
     std::vector<__ss_sp_token> toks;
     std::string groups;
-    __ss_sp_compile(format->unit, format, toks, groups);
+    char dupg = 0;
+    __ss_sp_compile(format->unit, format, toks, groups, dupg);
+    /* as CPython 3.15: %d without a year is ambiguous (Feb 29) */
+    bool has_year = false, day_d = false;
+    for (auto &t : toks)
+        if (t.kind == 'd' && t.bare) {
+            if (t.c == 'Y' || t.c == 'y' || t.c == 'G')
+                has_year = true;
+            else if (t.c == 'd')
+                day_d = true;
+        }
+    if (day_d && !has_year)
+        throw new ValueError(new str("Day of month directive '%d' may not be used without a year directive. Parsing dates involving a day of month without a year is ambiguous and fails to parse leap day. Add a year to the input and format. See https://github.com/python/cpython/issues/70647."));
+    if (dupg) /* (as CPython: compiling the regex comes after the checks above) */
+        throw new ValueError(__add_strs(3, new str("redefinition of group name '"), new str(__GC_STR(1, (__ss_char)dupg)), new str("'")));
 
     __ss_sp_matcher m;
     m.toks = &toks;
