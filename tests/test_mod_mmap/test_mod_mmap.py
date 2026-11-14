@@ -901,8 +901,6 @@ def test_flush_range():
             errors.append(str(e))
     assert errors == ['flush values out of range'] * 5
     # (as 3.15: the size defaults to the rest of the map, and -1 means that too)
-    m.flush(4096)
-    m.flush(4096, -1)
     m.flush(0, -1)
     m.flush()
     m.flush(0)
@@ -912,6 +910,22 @@ def test_flush_range():
         assert sys.platform != 'darwin'
     except OSError:
         assert sys.platform == 'darwin'
+    m.close()
+    f.close()
+    # msync needs a page-aligned offset (16K pages on macos arm64)
+    ps = mmap.PAGESIZE
+    with open(TESTFILE_OUT, 'wb') as f:
+        f.write(b'0' * (ps + 100))
+    f = open(TESTFILE_OUT, 'r+b')
+    m = mmap.mmap(f.fileno(), 0)
+    m.flush(ps)
+    m.flush(ps, -1)
+    m.flush(ps, 100)
+    try:
+        m.flush(ps, 101)
+        assert False
+    except ValueError:
+        pass
     m.close()
     f.close()
     os.remove(TESTFILE_OUT)
