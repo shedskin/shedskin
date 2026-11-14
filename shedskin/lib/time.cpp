@@ -1140,7 +1140,7 @@ static void __ss_sp_from_ordinal(int ord, int &year, int &month, int &day) {
         day = n + 1;
     }
     if (year > 9999)
-        throw new ValueError(__add_strs(3, new str("year "), __str((__ss_int)year), new str(" is out of range")));
+        throw new ValueError(__add_strs(2, new str("year must be in 1..9999, not "), __str((__ss_int)year))); /* (3.15 wording) */
 }
 
 static void __ss_sp_from_isocalendar(int year, int week, int day, int &y, int &m, int &d) {

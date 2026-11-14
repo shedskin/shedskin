@@ -426,7 +426,8 @@ public:
                 if constexpr (std::is_same_v<C, str *>)
                     filename = filename_;
                 if constexpr (std::is_same_v<E, str *>)
-                    filename2 = filename2_;
+                    if (filename) /* (as CPython: only with a filename) */
+                        filename2 = filename2_;
                 message = __str__();
                 return NULL;
             }

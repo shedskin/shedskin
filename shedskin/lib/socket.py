@@ -218,11 +218,11 @@ __exception.filename = ''
 __exception.strerror = ''
 
 # NOTE CPython defaults are -1 (meaning AF_INET/SOCK_STREAM/0) and fileno=None;
-# a negative fileno means 'create a new socket' instead (the convention for
-# None used throughout this module). literal defaults, so the compiler emits
-# them directly instead of default_N globals
+# fileno not given (or None) is the __void overload in C++, a new socket.
+# literal defaults, so the compiler emits them directly instead of default_N
+# globals
 class socket(object):
-    def __init__(self, family=-1, type=-1, proto=-1, fileno=-1):
+    def __init__(self, family=-1, type=-1, proto=-1, fileno=__void):  # fileno not given/None: a new socket
         self.family = family
         self.type = type
         self.proto = proto

@@ -1121,6 +1121,22 @@ def test_oserror_attrs_blockingioerror():
     assert str(b) == '[Errno 11] again'
 
 
+def test_oserror_filename2_sysexit_float():
+    # filename2 only with a filename, as CPython
+    e = OSError(2, 'x', None, None, 'b2')
+    assert e.filename2 is None
+    assert str(e) == '[Errno 2] x'
+    e2 = OSError(2, 'x', 'a', None, 'b2')
+    assert e2.filename2 == 'b2'
+    # sys.exit(<float>): printed, not an exit code
+    msg = ''
+    try:
+        sys.exit(3.0)
+    except SystemExit as e3:
+        msg = str(e3)
+    assert msg == '3.0'
+
+
 def test_all():
     test_repr_escapes_argument()
     test_oserror_str_repr_filename()
@@ -1156,6 +1172,7 @@ def test_all():
     test_oserror_constructor()
     test_oserror_subclasses_user()
     test_oserror_attrs_blockingioerror()
+    test_oserror_filename2_sysexit_float()
 
 if __name__ == '__main__':
     test_all() 

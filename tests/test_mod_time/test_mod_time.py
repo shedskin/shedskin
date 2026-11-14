@@ -705,6 +705,15 @@ def test_strptime_315_directives():
     assert msg == 'day 31 must be in range 1..30 for month 4 in year 2023'
 
 
+def test_strptime_week_year_range():
+    msg = ''
+    try:
+        time.strptime('9999 53 6', '%Y %W %w')
+    except ValueError as e1:
+        msg = str(e1)
+    assert msg == 'year must be in 1..9999, not 10000'
+
+
 def test_all():
     # test_time() ## producing different results on linux vs macos
     #test_mktime()
@@ -758,6 +767,7 @@ def test_all():
     test_sleep_overflow()
     test_strptime_day_without_year()
     test_strptime_315_directives()
+    test_strptime_week_year_range()
 
 if __name__ == '__main__':
     test_all() 

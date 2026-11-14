@@ -1305,6 +1305,29 @@ def test_trackfd():
     m.close()
 
 
+def test_flush_flags_trackfd_fd():
+    m = mmap.mmap(-1, 4096)
+    if sys.platform != 'win32':
+        assert (mmap.MS_SYNC, mmap.MS_ASYNC, mmap.MS_INVALIDATE) == (4, 1, 2)
+        m.flush(0, 4096, flags=mmap.MS_ASYNC)
+        m.flush(flags=mmap.MS_INVALIDATE)
+    m.flush(0, 4096, flags=0)
+    m.close()
+    if os.path.isdir('/proc/self/fd'):
+        # trackfd=False: the map keeps no fd of its own
+        name = 'shedskin_test_trackfd.bin'
+        f = open(name, 'wb+')
+        f.write(b'abcdefgh')
+        f.flush()
+        n0 = len(os.listdir('/proc/self/fd'))
+        m = mmap.mmap(f.fileno(), 0, trackfd=False)
+        assert len(os.listdir('/proc/self/fd')) == n0
+        assert m[:3] == b'abc'
+        m.close()
+        f.close()
+        os.remove(name)
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1348,6 +1371,7 @@ def test_all():
     test_move_seek_flush_limits()
     test_find_past_end()
     test_trackfd()
+    test_flush_flags_trackfd_fd()
 
 if __name__ == '__main__':
     test_all()
