@@ -395,32 +395,64 @@ template<class T> inline __ss_bool __lt(deque<T> *a, deque<T> *b) { return __deq
 template<class T> inline __ss_bool __le(deque<T> *a, deque<T> *b) { return __deque_order(a, b, [](auto x, auto y) { return __le(x, y); }); }
 
 template <class K, class V> class defaultdict final : public dict<K, V> {
-    V (*func)();
+    /* the factory may return a type other than V (e.g. 'lambda: None' with
+       object values, 'lambda: 0' with float values, a subclass instance),
+       so it is stored type-erased, together with a caller that converts
+       its result to V */
+    typedef void (*__rawfunc)();
+    __rawfunc func = NULL;
+    V (*call)(__rawfunc) = NULL;
     str *factory_name = NULL; /* e.g. "int" for defaultdict(int) */
+
+    template<class R> static V __call_factory(__rawfunc f) {
+        return static_cast<V>(reinterpret_cast<R (*)()>(f)());
+    }
+
+    template<class R> void __set_factory(R (*func_)()) {
+        func = reinterpret_cast<__rawfunc>(func_);
+        call = func_ ? &__call_factory<R> : NULL;
+    }
+
+    void __copy_factory(defaultdict<K, V> *c) {
+        c->func = func;
+        c->call = call;
+        c->factory_name = factory_name;
+    }
 
 public:
     defaultdict(V (*func_)()=NULL) {
         this->__class__ = cl_defaultdict;
-        func = func_;
+        __set_factory(func_);
+    }
+
+    template<class R> defaultdict(R (*func_)()) {
+        this->__class__ = cl_defaultdict;
+        __set_factory(func_);
     }
 
     defaultdict(V (*func_)(), dict<K, V> *d) : dict<K,V>(d) {
         this->__class__ = cl_defaultdict;
-        func = func_;
+        __set_factory(func_);
     }
 
     /* any iterable of pairs (tuples, 2-element lists, 2-char strings..),
        or another mapping, like dict(iterable) */
     template<class U> defaultdict(V (*func_)(), U *other) {
         this->__class__ = cl_defaultdict;
-        func = func_;
+        __set_factory(func_);
+        this->update(other);
+    }
+
+    template<class R, class U> defaultdict(R (*func_)(), U *other) {
+        this->__class__ = cl_defaultdict;
+        __set_factory(func_);
         this->update(other);
     }
 
     /* called by dict::__getitem__/__addtoitem__ for a missing key */
     V __missing__(K k) {
-        if(func) {
-            V v = func();
+        if(call) {
+            V v = call(func);
             this->__setitem__(k, v);
             return v;
         }
@@ -434,7 +466,7 @@ public:
 
     str *__repr__() {
         str *f;
-        if(!func)
+        if(!call)
             f = new str("None, ");
         else if(factory_name)
             f = __add_strs(3, new str("<class '"), factory_name, new str("'>, "));
@@ -444,8 +476,8 @@ public:
     }
 
     defaultdict<K, V> *copy() {
-        defaultdict<K,V> *c = new defaultdict<K,V>(func);
-        c->factory_name = factory_name;
+        defaultdict<K,V> *c = new defaultdict<K,V>();
+        __copy_factory(c);
         c->gcd = this->gcd;
         return c;
     }
@@ -455,8 +487,8 @@ public:
     }
 
     defaultdict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo) {
-        defaultdict<K,V> *c = new defaultdict<K,V>(func);
-        c->factory_name = factory_name;
+        defaultdict<K,V> *c = new defaultdict<K,V>();
+        __copy_factory(c);
         memo->__setitem__(this, c);
         K e;
         typename dict<K,V>::for_in_loop __3;
@@ -479,8 +511,8 @@ public:
         return __or__(other);
     }
     dict<K, V> *__ror_dict__(dict<K, V> *other) {
-        defaultdict<K,V> *result = new defaultdict<K,V>(func);
-        result->factory_name = factory_name;
+        defaultdict<K,V> *result = new defaultdict<K,V>();
+        __copy_factory(result);
         result->gcd = other->gcd;
         result->dict<K,V>::__update_dict__(this);
         return result;

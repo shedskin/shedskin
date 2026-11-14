@@ -286,6 +286,45 @@ def test_defaultdict_ior():
     assert alias[6] == [6]
 
 
+class DDBase:
+    def __init__(self, n):
+        self.n = n
+
+class DDSub(DDBase):
+    pass
+
+def dd_none_factory():
+    return None
+
+def test_defaultdict_factory_conversion():
+    # regression test: a factory whose return type differs from the
+    # value type failed to compile
+    d1 = defaultdict(lambda: None)
+    assert d1[1] is None
+    d1[2] = DDBase(2)
+    assert d1[2].n == 2
+    assert len(d1) == 2
+    d2 = defaultdict(lambda: 0)
+    d2[1] = 1.5
+    assert d2[2] == 0
+    assert d2[1] == 1.5
+    d3 = defaultdict(lambda: DDSub(1))
+    d3[1] = DDBase(2)
+    assert d3[0].n == 1
+    assert d3[1].n == 2
+    d4 = defaultdict(dd_none_factory, {'x': 'y'})
+    assert d4['z'] is None
+    assert d4['x'] == 'y'
+    # the factory survives copying and |
+    e = d3.copy()
+    assert e[5].n == 1
+    f = d3 | {7: DDBase(7)}
+    assert f[8].n == 1
+    g = copy.deepcopy(d4)
+    assert g['w'] is None
+    assert len(g) == 3
+
+
 def test_deque1():
     d = deque([3, 2, 1])
     d.append(4)
@@ -1266,6 +1305,7 @@ def test_all():
     test_defaultdict_values()
     test_defaultdict_or()
     test_defaultdict_ior()
+    test_defaultdict_factory_conversion()
     test_deque1()
     test_deque2()
     test_deque_rotate_default()
