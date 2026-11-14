@@ -493,6 +493,9 @@ void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 
 void *mmap::resize(__ss_int new_size)
 {
+    __raise_if_closed();
+    if (!__trackfd)
+        throw new ValueError(new str("mmap can't resize with trackfd=False."));
     __raise_if_closed_or_not_resizeable();
     /* as CPython: before the file is truncated */
     if (new_size < 0 or (size_t)new_size > (size_t)PTRDIFF_MAX - (size_t)offset)
@@ -779,6 +782,9 @@ void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
 
 void *mmap::resize(__ss_int new_size)
 {
+    __raise_if_closed();
+    if (!__trackfd)
+        throw new ValueError(new str("mmap can't resize with trackfd=False."));
     __raise_if_closed_or_not_resizeable();
     /* as CPython: before the file is truncated */
     if (new_size < 0 or (size_t)new_size > (size_t)PTRDIFF_MAX - (size_t)offset)
@@ -1050,6 +1056,8 @@ void *mmap::set_name(str *name)
 __ss_int mmap::size()
 {
     __raise_if_closed();
+    if (!__trackfd)
+        throw new ValueError(new str("can't get size with trackfd=False"));
 #ifdef WIN32
     if (file_handle != INVALID_HANDLE_VALUE) 
     {
@@ -1271,9 +1279,11 @@ void *mmap::__seek_failed()
 void mmap::__check_flush_range(__ss_int offset, __ss_int &size, bool size_given) const
 {
     __ss_int total = (__ss_int)__size();
-    if (not size_given)
-        size = total;
-    if (size < 0 or offset < 0 or total - offset < size)
+    if (offset < 0 or offset > total)
+        throw new ValueError(const_33);
+    if (not size_given or size == -1) /* (as 3.15: up to the end, from offset) */
+        size = total - offset;
+    if (size < 0 or total - offset < size)
         throw new ValueError(const_33);
 }
 

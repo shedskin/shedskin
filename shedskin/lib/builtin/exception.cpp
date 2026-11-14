@@ -55,6 +55,11 @@ PyObject *OSError::__py_args__() {
         return Py_BuildValue("(iN)", (int)__ss_errno, __to_py(strerror));
     return Py_BuildValue("(iNNON)", (int)__ss_errno, __to_py(strerror), __to_py(filename), Py_None, __to_py(filename2));
 }
+PyObject *BlockingIOError::__py_args__() {
+    if(!__written_given || !strerror)
+        return OSError::__py_args__();
+    return Py_BuildValue("(iNn)", (int)__ss_errno, __to_py(strerror), (Py_ssize_t)characters_written);
+}
 #endif
 
 /* errno is snapshotted by the caller, as allocation may clobber it */

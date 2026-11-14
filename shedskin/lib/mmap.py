@@ -57,10 +57,10 @@ class mmap(pyiter):
     # flags/prot defaults are spelled as literals (MAP_SHARED, PROT_READ |
     # PROT_WRITE), so no default_N variables are needed in mmap.cpp; the
     # C++ side asserts at compile-time that these values match.
-    def __init__(self, fileno, length, flags=1, prot=3, access=0, offset=0):
+    def __init__(self, fileno, length, flags=1, prot=3, access=0, offset=0, trackfd=1):
         self.closed = False
 
-    def __win32__init__(self, fileno, length, tagname=None, access=0, offset=0):
+    def __win32__init__(self, fileno, length, tagname=None, access=0, offset=0, trackfd=1):
         pass
 
     def close(self):

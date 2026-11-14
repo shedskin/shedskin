@@ -894,17 +894,14 @@ def test_flush_range():
     f = open(TESTFILE_OUT, 'r+b')
     m = mmap.mmap(f.fileno(), 0)
     errors = []
-    for offset, size in [(0, 100000), (-1, 1), (4096, 5000), (6000, 1), (0, -2), (0, -1)]:
+    for offset, size in [(0, 100000), (-1, 1), (4096, 5000), (6000, 1), (0, -2)]:
         try:
             m.flush(offset, size)
         except ValueError as e:
             errors.append(str(e))
-    assert errors == ['flush values out of range'] * 6
-    try:  # the size defaults to the whole map, as cpython
-        m.flush(4096)
-        assert False
-    except ValueError:
-        pass
+    assert errors == ['flush values out of range'] * 5
+    # (as 3.15: the size defaults to the rest of the map, and -1 means that too)
+    m.flush(0, -1)
     m.flush()
     m.flush(0)
     m.flush(0, 5000)
@@ -913,6 +910,22 @@ def test_flush_range():
         assert sys.platform != 'darwin'
     except OSError:
         assert sys.platform == 'darwin'
+    m.close()
+    f.close()
+    # msync needs a page-aligned offset (16K pages on macos arm64)
+    ps = mmap.PAGESIZE
+    with open(TESTFILE_OUT, 'wb') as f:
+        f.write(b'0' * (ps + 100))
+    f = open(TESTFILE_OUT, 'r+b')
+    m = mmap.mmap(f.fileno(), 0)
+    m.flush(ps)
+    m.flush(ps, -1)
+    m.flush(ps, 100)
+    try:
+        m.flush(ps, 101)
+        assert False
+    except ValueError:
+        pass
     m.close()
     f.close()
     os.remove(TESTFILE_OUT)
@@ -1288,6 +1301,24 @@ def test_find_past_end():
     m.close()
 
 
+def test_trackfd():
+    m = mmap.mmap(-1, 10, trackfd=False)
+    assert len(m) == 10
+    msg = ''
+    try:
+        m.size()
+    except ValueError as e1:
+        msg = str(e1)
+    assert msg == "can't get size with trackfd=False"
+    msg = ''
+    try:
+        m.resize(5)
+    except ValueError as e2:
+        msg = str(e2)
+    assert msg == "mmap can't resize with trackfd=False."
+    m.close()
+
+
 def test_all():
     if sys.platform != 'win32':
         test_c_int_overflow()
@@ -1330,6 +1361,7 @@ def test_all():
     test_prot_access_iter_closed()
     test_move_seek_flush_limits()
     test_find_past_end()
+    test_trackfd()
 
 if __name__ == '__main__':
     test_all()
