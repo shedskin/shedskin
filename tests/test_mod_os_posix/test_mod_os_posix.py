@@ -1258,6 +1258,26 @@ def test_popen_universal_newlines():
     p.close()
 
 
+def test_cloexec_fchown_link_follow():
+    name = 'shedskin_test_cloexec.txt'
+    fd = os.open(name, os.O_RDWR | os.O_CREAT | os.O_CLOEXEC)
+    assert not os.get_inheritable(fd)
+    os.fchown(fd, -1, -1)  # (no change)
+    os.close(fd)
+    try:
+        os.fchown(fd, -1, -1)
+        assert False
+    except OSError as e:
+        assert e.errno == 9  # (EBADF)
+    # link() follows a symlink src by default, as CPython 3.14+
+    os.symlink(name, 'shedskin_test_cloexec.ln')
+    os.link('shedskin_test_cloexec.ln', 'shedskin_test_cloexec.hl')
+    assert not os.path.islink('shedskin_test_cloexec.hl')
+    assert os.stat(name).st_nlink == 2
+    for n in [name, 'shedskin_test_cloexec.ln', 'shedskin_test_cloexec.hl']:
+        os.remove(n)
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1302,6 +1322,7 @@ def test_all():
     test_pathconf_negative_fd()
     test_fildes_overflow_popen_sigpipe()
     test_popen_universal_newlines()
+    test_cloexec_fchown_link_follow()
 
 if __name__ == '__main__':
     test_all()
