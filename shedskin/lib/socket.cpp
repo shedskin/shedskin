@@ -26,6 +26,7 @@
 
 #ifndef WIN32
 #include <unistd.h>
+#include <sys/stat.h>
 #include <net/if.h>
 #endif
 
@@ -908,13 +909,26 @@ __ss_int socket::__sendfile(file_binary *f, __ss_int offset, __ss_int count) {
         throw new ValueError(new str("only SOCK_STREAM type sockets are supported"));
     if (_timeout == 0)
         throw new ValueError(new str("non-blocking sockets are not supported"));
-    /* portable fallback implementation (chunked read/send loop), like
-     * CPython uses on platforms without os.sendfile() (windows). where it
-     * has os.sendfile(), CPython always starts at offset (default 0), not at
-     * the current file position */
-#ifdef WIN32
-    if (offset)
+    /* a chunked read/send loop. as CPython: with os.sendfile() (not on
+     * windows), an empty file (or a pipe) sends nothing, the data comes from
+     * offset (default 0), and the file is left at offset + sent, or as it was
+     * when nothing was sent; without it (windows, _sendfile_use_send), from
+     * the file position if offset is 0, then at offset + sent if anything was */
+#ifndef WIN32
+    bool native = f->f != 0; /* (BytesIO etc.: no fileno(), the fallback) */
+#else
+    bool native = false;
 #endif
+    __ss_int pos0 = 0;
+    if (native) {
+#ifndef WIN32
+        struct stat st;
+        if (::fstat(fileno(f->f), &st) == 0 && st.st_size == 0)
+            return 0;
+#endif
+        pos0 = f->tell();
+        f->seek(offset, 0);
+    } else if (offset)
         f->seek(offset, 0);
     size_t total = 0;
     for (;;) {
@@ -936,6 +950,10 @@ __ss_int socket::__sendfile(file_binary *f, __ss_int offset, __ss_int count) {
             off += send(s + off, len - off, 0);
         total += len;
     }
+    if (native && total == 0)
+        f->seek(pos0, 0);
+    else if (!native && total > 0)
+        f->seek(offset + (__ss_int)total, 0);
     return (__ss_int)total;
 }
 

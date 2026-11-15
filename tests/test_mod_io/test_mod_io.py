@@ -788,7 +788,7 @@ def test_truncate_negative():
         s.truncate(-1)
     except ValueError as e:
         msg = str(e)
-    assert msg == 'Negative size value -1'
+    assert msg == 'negative pos value -1'  # (3.15 wording)
     assert s.getvalue() == 'hello'
     assert s.truncate() == 2
     assert s.getvalue() == 'he'
@@ -852,6 +852,18 @@ def test_huge_sizes():
     assert s.read() == ''
 
 
+def test_bytesio_iter_closed():
+    b = io.BytesIO(b'a\nb\n')
+    b.close()
+    it = iter(b)  # (as CPython: fine, next() raises)
+    msg = ''
+    try:
+        next(it)
+    except ValueError as e:
+        msg = str(e)
+    assert msg == 'I/O operation on closed file.'
+
+
 def test_all():
     test_stringio()
     test_bytesio()
@@ -895,6 +907,7 @@ def test_all():
     test_with_closed_message()
     test_next_closed_message()
     test_huge_sizes()
+    test_bytesio_iter_closed()
 
 if __name__ == '__main__':
     test_all() 

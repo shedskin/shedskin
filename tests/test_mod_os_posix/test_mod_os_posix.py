@@ -1249,6 +1249,15 @@ def test_fildes_overflow_popen_sigpipe():
     assert f.close() == -(13 << 8)
 
 
+def test_popen_universal_newlines():
+    p = os.popen("printf 'a\\r\\nb\\rc\\n'")
+    assert p.read() == 'a\nb\nc\n'
+    p.close()
+    p = os.popen("printf 'q\\r\\nw'")
+    assert p.readlines() == ['q\n', 'w']
+    p.close()
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1292,6 +1301,7 @@ def test_all():
     test_putenv_empty_name()
     test_pathconf_negative_fd()
     test_fildes_overflow_popen_sigpipe()
+    test_popen_universal_newlines()
 
 if __name__ == '__main__':
     test_all()
