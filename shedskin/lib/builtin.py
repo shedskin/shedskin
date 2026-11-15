@@ -397,7 +397,7 @@ class tuple(pyseq):
         a = self.unit
         return a
 
-    def __slice__(self, x, l, u, s):
+    def __slice__(self, x, lower, upper, step):
         return self
     def __hash__(self):
         return 1
