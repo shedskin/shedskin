@@ -1842,6 +1842,17 @@ def test_closefd_read_write_wb_messages():
     os.remove(name)
 
 
+def test_read0_empty_pipe():
+    # read(0) returns at once, also on an empty pipe
+    r, w = os.pipe()
+    fr = os.fdopen(r)
+    assert fr.read(0) == ''
+    os.write(w, b'ab\n')
+    os.close(w)
+    assert fr.read() == 'ab\n'
+    fr.close()
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1901,6 +1912,7 @@ def test_all():
     test_closefd_fd_state_line_buffering_sig()
     test_read1_bom_only_next_closed()
     test_closefd_read_write_wb_messages()
+    test_read0_empty_pipe()
 
 if __name__ == '__main__':
     test_all()

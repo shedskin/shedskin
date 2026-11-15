@@ -2283,6 +2283,28 @@ def test_rename_replace_existing():
     os.remove(b)
 
 
+def test_cloexec_fchown_link_follow():
+    if os.name == 'nt':
+        return
+    name = 'shedskin_test_cloexec.txt'
+    fd = os.open(name, os.O_RDWR | os.O_CREAT | os.O_CLOEXEC)
+    assert not os.get_inheritable(fd)
+    os.fchown(fd, -1, -1)  # (no change)
+    os.close(fd)
+    try:
+        os.fchown(fd, -1, -1)
+        assert False
+    except OSError as e:
+        assert e.errno == 9  # (EBADF)
+    # link() follows a symlink src by default, as CPython 3.14+
+    os.symlink(name, 'shedskin_test_cloexec.ln')
+    os.link('shedskin_test_cloexec.ln', 'shedskin_test_cloexec.hl')
+    assert not os.path.islink('shedskin_test_cloexec.hl')
+    assert os.stat(name).st_nlink == 2
+    for n in [name, 'shedskin_test_cloexec.ln', 'shedskin_test_cloexec.hl']:
+        os.remove(n)
+
+
 def test_all():
     test_unicode_names()
     test_undecodable_names()
@@ -2382,6 +2404,7 @@ def test_all():
         # check above is a runtime guard, not a compile-time one), so calling
         # it here breaks the Windows build even though it never runs there.
     test_rename_replace_existing()
+    test_cloexec_fchown_link_follow()
 
 if __name__ == '__main__':
     test_all()

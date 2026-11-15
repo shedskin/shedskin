@@ -738,6 +738,8 @@ str *file::read(__ss_int n) {
     if(n != 0) /* (as cpython: tell() is 0 after a bom only until a read) */
         __bom_skipped = false;
     __switch_op(f, options, 'r', __encoding, __errors);
+    if(n == 0) /* (as CPython, without a GETC, which may block on a pipe) */
+        return new str();
     __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
         __read_cache.clear();

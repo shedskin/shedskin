@@ -35,7 +35,9 @@ EX_USAGE = 0
 F_OK = 0
 NGROUPS_MAX = 0
 O_APPEND = 0
+O_ASYNC = 0
 O_BINARY = 0  # (windows only)
+O_CLOEXEC = 0
 O_CREAT = 0
 O_DIRECT = 0
 O_DIRECTORY = 0
@@ -43,6 +45,7 @@ O_DSYNC = 0
 O_EXCL = 0
 O_LARGEFILE = 0
 O_NDELAY = 0
+O_NOATIME = 0
 O_NOCTTY = 0
 O_NOFOLLOW = 0
 O_NONBLOCK = 0
@@ -348,6 +351,9 @@ def chmod(path, mode, __kw_dir_fd=None, __kw_follow_symlinks=True):
     pass
 
 def fchmod(fd, mode):
+    pass
+
+def fchown(fd, uid, gid):
     pass
 
 def unsetenv(name):

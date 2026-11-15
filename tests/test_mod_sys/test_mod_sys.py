@@ -438,6 +438,17 @@ def test_reassigned_std_streams():
     os.remove(name)
 
 
+def test_recursionlimit_overflow():
+    old = sys.getrecursionlimit()
+    for bad in (2**31, 2**40, -2**40):
+        try:
+            sys.setrecursionlimit(bad)
+            assert False
+        except OverflowError as e:
+            assert str(e) == 'Python int too large to convert to C int'
+    assert sys.getrecursionlimit() == old
+
+
 def test_all():
     test_sys()
     test_version_consistency()
@@ -467,6 +478,7 @@ def test_all():
     test_int_info()
     test_hash_info()
     test_getsizeof()
+    test_recursionlimit_overflow()
     test_input_eof() # last: replaces stdin
     test_reassigned_std_streams()
 

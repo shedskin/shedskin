@@ -158,8 +158,10 @@ add_shedskin_product(
     NAME exceptions
     MAIN_MODULE exceptions.py
     SYS_MODULES
+        getopt
         os
         os.path
+        re
         stat
         sys
 )

@@ -903,6 +903,13 @@ __ss_int socket::sendfile(file_binary *f, __ss_int offset, __ss_int count) {
     return __sendfile(f, offset, count);
 }
 
+static void __sendfile_reposition(file_binary *f, bool native, __ss_int pos0, __ss_int offset, size_t total) {
+    if (native && total == 0)
+        f->seek(pos0, 0);
+    else if (total > 0)
+        f->seek(offset + (__ss_int)total, 0);
+}
+
 __ss_int socket::__sendfile(file_binary *f, __ss_int offset, __ss_int count) {
     /* (the checks of CPython's _check_sendfile_params and _sendfile_use_send) */
     if (!(type & SOCK_STREAM))
@@ -930,30 +937,34 @@ __ss_int socket::__sendfile(file_binary *f, __ss_int offset, __ss_int count) {
         f->seek(offset, 0);
     } else if (offset)
         f->seek(offset, 0);
-    size_t total = 0;
-    for (;;) {
-        __ss_int toread = 8192;
-        if (count >= 0) {
-            __ss_int remaining = count - (__ss_int)total;
-            if (remaining <= 0)
+    size_t total = 0; /* (bytes sent) */
+    try {
+        for (;;) {
+            __ss_int toread = 8192;
+            if (count >= 0) {
+                __ss_int remaining = count - (__ss_int)total;
+                if (remaining <= 0)
+                    break;
+                if (toread > remaining)
+                    toread = remaining;
+            }
+            bytes *b = f->read(toread);
+            size_t len = b->unit.size();
+            if (len == 0)
                 break;
-            if (toread > remaining)
-                toread = remaining;
+            const char *s = b->unit.data();
+            size_t off = 0;
+            while (off < len) {
+                size_t sent = send(s + off, len - off, 0);
+                off += sent;
+                total += sent;
+            }
         }
-        bytes *b = f->read(toread);
-        size_t len = b->unit.size();
-        if (len == 0)
-            break;
-        const char *s = b->unit.data();
-        size_t off = 0;
-        while (off < len)
-            off += send(s + off, len - off, 0);
-        total += len;
+    } catch (...) { /* (as CPython, also when read() or send() raises) */
+        __sendfile_reposition(f, native, pos0, offset, total);
+        throw;
     }
-    if (native && total == 0)
-        f->seek(pos0, 0);
-    else if (!native && total > 0)
-        f->seek(offset + (__ss_int)total, 0);
+    __sendfile_reposition(f, native, pos0, offset, total);
     return (__ss_int)total;
 }
 
@@ -1991,7 +2002,7 @@ double getdefaulttimeout()
 void *setdefaulttimeout(double x)
 {
     check_timeout(x);
-    __ss_default_timeout = x;
+    __ss_default_timeout = (x == 0) ? 0.0 : x; /* (as CPython: no -0.0) */
     return NULL;
 }
 
