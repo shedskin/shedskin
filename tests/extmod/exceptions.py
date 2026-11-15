@@ -108,6 +108,8 @@ def lib_error(n):
         re.compile('a(')
     if n == 2:
         raise re.error('plain')
+    if n == 3:
+        raise re.error('bad', 'pat')
     return n
 
 def read_missing(name):
@@ -148,7 +150,7 @@ if __name__ == '__main__':
             stop(i)
         except BaseException:
             pass
-    for i in range(4):
+    for i in range(5):
         try:
             lib_error(i)
         except Exception:

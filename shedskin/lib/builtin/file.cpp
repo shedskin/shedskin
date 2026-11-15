@@ -387,6 +387,14 @@ FILE *__ss_fdopen(__ss_int fd, str *mode) {
     /* C fdopen() does not know 'x' (and never creates or truncates). like
        open(), a text file is opened in binary mode: we translate newlines
        ourselves */
+#ifndef WIN32
+    /* as CPython: a directory fd raises IsADirectoryError, leaving the fd open */
+    struct stat st;
+    if(fstat((int)fd, &st) == 0 && S_ISDIR(st.st_mode)) {
+        errno = EISDIR;
+        __throw_oserror();
+    }
+#endif
     str *cmode = __c_open_mode(mode, false);
     if(cmode->unit.find('b') == std::string::npos)
         cmode->unit += 'b';

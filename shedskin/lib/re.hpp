@@ -36,8 +36,10 @@ public:
         return t ? t : PyExc_Exception;
     }
     PyObject *__py_args__() { /* (msg, pattern, pos): CPython adds the position */
-        if(!msg || !pattern || lineno == 0) /* (lineno: 0 if no pos) */
+        if(!msg || !pattern)
             return 0;
+        if(lineno == 0) /* (no pos) */
+            return Py_BuildValue("(NN)", __to_py(msg), __to_py(pattern));
         return Py_BuildValue("(NNn)", __to_py(msg), __to_py(pattern), (Py_ssize_t)pos);
     }
 #endif

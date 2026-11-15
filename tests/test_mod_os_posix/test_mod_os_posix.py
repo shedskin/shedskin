@@ -1278,6 +1278,20 @@ def test_cloexec_fchown_link_follow():
         os.remove(n)
 
 
+def test_pid_overflow_message():
+    for big in (2**31, -2**31 - 1):
+        try:
+            os.getpgid(big)
+            assert False
+        except OverflowError as e:
+            assert str(e) == 'Python int too large to convert to C int'
+    try:
+        os.kill(2**31, 0)
+        assert False
+    except OverflowError as e:
+        assert str(e) == 'Python int too large to convert to C int'
+
+
 def test_all():
     test_kill()
     test_link_unlink_lstat_readlink()
@@ -1323,6 +1337,7 @@ def test_all():
     test_fildes_overflow_popen_sigpipe()
     test_popen_universal_newlines()
     test_cloexec_fchown_link_follow()
+    test_pid_overflow_message()
 
 if __name__ == '__main__':
     test_all()
