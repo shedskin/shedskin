@@ -1629,6 +1629,16 @@ def test_ret_bool_int():
     assert ret_bool_int(True) + 1 == 3
     assert ret_bool_int(False) + 1 == 2
 
+# the widest scalar type is used, not an arbitrary one
+def ret_bool_float(c):
+    if c:
+        return 1.5
+    return True
+
+def test_ret_bool_float():
+    assert ret_bool_float(True) + 1 == 2.5
+    assert ret_bool_float(False) + 1 == 2.0
+
 
 # none->scalar, literal: warn
 # -> warning, then wrong result (see tests/errs/103.py)
@@ -5515,6 +5525,7 @@ def test_all():
     test_arg_empty_var()
     test_ret_int_float_lit_scalar()
     test_ret_bool_int()
+    test_ret_bool_float()
     test_ret_int_float_lit_list()
     test_ret_int_float_yield_scalar()
     test_ret_int_float_yield_list()
