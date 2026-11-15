@@ -1763,9 +1763,12 @@ def test_sendfile_nothing_sent():
     assert c.sendfile(f, 20) == 0
     assert f.tell() == 3
     f.close()
-    # a pipe (size 0) sends nothing, and is not seeked
+    # a pipe (size 0) sends nothing, and is not seeked. (on linux fstat()
+    # gives size 0 for any pipe, but on macOS the number of bytes in it,
+    # so a non-empty pipe is sent there, after which seek() fails, as CPython)
     r, w = os.pipe()
-    os.write(w, b'pipedata')
+    if sys.platform == 'linux':
+        os.write(w, b'pipedata')
     os.close(w)
     p = os.fdopen(r, 'rb')
     assert c.sendfile(p) == 0
