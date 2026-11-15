@@ -139,7 +139,7 @@ public:
     typedef tuple2<str *, __ss_int> *inet_address;
 
     /* fileno not given: a new socket (a given negative fileno is a ValueError) */
-    static constexpr __ss_int __no_fileno = std::numeric_limits<__ss_int>::min();
+    static constexpr __ss_int __no_fileno = (std::numeric_limits<__ss_int>::min)(); /* (parenthesized: windows.h min macro) */
     socket(__ss_int family=-1, __ss_int type=-1, __ss_int proto=-1, __ss_int fileno=__no_fileno);
     socket(__ss_int family, __ss_int type, __ss_int proto, __ss_void_struct) : socket(family, type, proto, __no_fileno) {}
     /* internal: put the socket in the mode a timeout value means (0.0

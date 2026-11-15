@@ -1322,7 +1322,10 @@ def test_trackfd():
 def test_flush_flags_trackfd_fd():
     m = mmap.mmap(-1, 4096)
     if sys.platform != 'win32':
-        assert (mmap.MS_SYNC, mmap.MS_ASYNC, mmap.MS_INVALIDATE) == (4, 1, 2)
+        if sys.platform == 'darwin':  # (MS_SYNC is 0x10 on macos/BSD)
+            assert (mmap.MS_SYNC, mmap.MS_ASYNC, mmap.MS_INVALIDATE) == (16, 1, 2)
+        elif sys.platform.startswith('linux'):
+            assert (mmap.MS_SYNC, mmap.MS_ASYNC, mmap.MS_INVALIDATE) == (4, 1, 2)
         m.flush(0, 4096, flags=mmap.MS_ASYNC)
         m.flush(flags=mmap.MS_INVALIDATE)
     m.flush(0, 4096, flags=0)
