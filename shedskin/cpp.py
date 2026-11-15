@@ -2654,8 +2654,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("((" + cast + ")(" + self.mv.tempcount[node] + "))")
             else:
                 self.append(self.mv.tempcount[node])
+        elif isinstance(node, ast.IfExp) and self.builds_new_container(
+            node, argtypes, check_temp=False
+        ):
+            self.append("((")
+            self.bool_test(node.test, func)
+            self.append(")?(")
+            self.impl_visit_conv(node.body, argtypes, func)
+            self.append("):(")
+            self.impl_visit_conv(node.orelse, argtypes, func)
+            self.append("))")
         elif self.builds_new_container(node, argtypes, check_temp=False):
-            if isinstance(node, ast.Dict):
+            if isinstance(node, ast.Set):
+                self.visit_Set(node, func, argtypes=argtypes)
+            elif isinstance(node, ast.Dict):
                 self.visit_Dict(node, func, argtypes=argtypes)
             elif isinstance(node, ast.Tuple):
                 self.visit_Tuple(node, func, argtypes=argtypes)
@@ -2685,8 +2697,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         types it is converted to, rather than casting it"""
         if check_temp and node in self.mv.tempcount:
             return False
-        if isinstance(node, (ast.List, ast.Tuple, ast.Dict)):
+        if isinstance(node, (ast.List, ast.Tuple, ast.Dict, ast.Set)):
             return True
+        if isinstance(node, ast.IfExp):
+            return self.builds_new_container(
+                node.body, argtypes, check_temp
+            ) and self.builds_new_container(node.orelse, argtypes, check_temp)
         return (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Name)
@@ -3177,12 +3193,21 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append("(")
         if convert:
             self.impl_visit_conv(node.right, argtypes, func)
+        elif (
+            msg in ("__ior__", "__iand__", "__ixor__")
+            and self.same_container_operands(ltypes, rtypes)
+            and self.builds_new_container(node.right, ltypes)
+        ):
+            # 's |= {1}': build the display as the type of the target
+            self.impl_visit_conv(node.right, ltypes, func)
         else:
             self.visit(node.right, func)
         self.append(")")
         self.append(")")
 
-    def same_container_operands(self, ltypes: Types, rtypes: Types) -> bool:
+    def same_container_operands(
+        self, ltypes: Types, rtypes: Types, extra: tuple[str, ...] = ()
+    ) -> bool:
         """Whether both operands of a set or dict operator ('|', '&', '^',
         '-') are of the same builtin class, so they can be converted to
         their common type, as for '+' (e.g. 'sa | sb', with sets of
@@ -3191,7 +3216,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return (
             len(lcls) == 1
             and lcls == {t[0] for t in rtypes}
-            and next(iter(lcls)).ident in ("set", "frozenset", "dict")
+            and next(iter(lcls)).ident in ("set", "frozenset", "dict") + extra
         )
 
     def visit_arith(
@@ -3440,6 +3465,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(self.connector(left, func) + middle + "(")
         if convert:
             self.impl_visit_conv(right, argtypes, func)
+        elif (
+            middle in ("__iadd__", "__ior__", "__iand__", "__isub__", "__ixor__")
+            and self.same_container_operands(ltypes, rtypes, ("list", "tuple"))
+            and self.builds_new_container(right, ltypes)
+        ):
+            # 's |= {1}': build the display as the type of the target
+            self.impl_visit_conv(right, ltypes, func)
         else:
             self.visit(right, func)
         self.append(")")
@@ -3599,10 +3631,31 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append(self.connector(left, func) + middle + "(")
         if cast:
             self.append("((" + cast + ")(")
-        self.visit2(right, argtypes, middle, func)
+        if middle == "__contains__" and not cast and self.builds_key(left, right):
+            # '(1, 2) in pairs': build the key as the element type
+            self.impl_visit_conv(right, self.subtypes(ltypes, "unit"), func)
+        else:
+            self.visit2(right, argtypes, middle, func)
         if cast:
             self.append("))")
         self.append(")" + postfix)
+
+    def builds_key(self, container: ast.AST, key: ast.AST) -> bool:
+        """Whether a display that is looked up in a builtin container can be
+        built as its element (key) type, as for 'l.index(..)'"""
+        ctypes = self.mergeinh[container]
+        return (
+            isinstance(key, (ast.Tuple, ast.List, ast.Set, ast.Dict))
+            and key not in self.mv.tempcount
+            and bool(ctypes)
+            and not self.hetero_tuple(ctypes)
+            and all(
+                isinstance(t[0], python.Class)
+                and t[0].mv.module.builtin
+                and t[0].ident not in ("str_", "bytes_", "bytearray")
+                for t in ctypes
+            )
+        )
 
     def lookup_other_type(
         self,
