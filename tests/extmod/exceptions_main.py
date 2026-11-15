@@ -5,7 +5,9 @@
 # the checks themselves.
 
 import errno
+import getopt
 import os
+import re
 import pickle
 import sys
 
@@ -179,6 +181,27 @@ def test_base_exceptions():
     e = stopped(5)
     assert type(e) is SystemExit and e.code == 0 and e.args == (0,)
     assert stopped(6) is None
+
+
+def test_lib_errors():
+    # library exceptions are raised as the CPython types, with attributes
+    try:
+        exceptions.lib_error(0)
+    except getopt.GetoptError as e:
+        assert type(e) is getopt.GetoptError
+        assert e.args == ('option -x not recognized', 'x'), e.args
+        assert e.msg == 'option -x not recognized' and e.opt == 'x'
+    try:
+        exceptions.lib_error(1)
+    except re.error as e:
+        assert type(e) is re.error
+        assert str(e) == 'missing ), unterminated subpattern at position 1', str(e)
+        assert e.msg == 'missing ), unterminated subpattern' and e.pattern == 'a(' and e.pos == 1
+    try:
+        exceptions.lib_error(2)
+    except re.error as e:
+        assert str(e) == 'plain' and e.pattern is None
+    assert exceptions.lib_error(3) == 3
 
 
 def test_python_side():

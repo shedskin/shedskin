@@ -31,7 +31,15 @@ public:
     PatternError(str *msg = 0, str *pattern = 0, __ss_int pos = -1);
 
 #ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_Exception; } // TODO re.PatternError?
+    PyObject *__to_py__() { /* (so CPython code can catch it as re.error) */
+        static PyObject *t = __ss_py_exc_type("re", "error");
+        return t ? t : PyExc_Exception;
+    }
+    PyObject *__py_args__() { /* (msg, pattern, pos): CPython adds the position */
+        if(!msg || !pattern || lineno == 0) /* (lineno: 0 if no pos) */
+            return 0;
+        return Py_BuildValue("(NNn)", __to_py(msg), __to_py(pattern), (Py_ssize_t)pos);
+    }
 #endif
 };
 

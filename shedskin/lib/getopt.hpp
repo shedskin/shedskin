@@ -26,6 +26,18 @@ public:
 
     str *__str__();
     str *__repr__();
+
+#ifdef __SS_BIND
+    PyObject *__to_py__() { /* (so CPython code can catch it as getopt.GetoptError) */
+        static PyObject *t = __ss_py_exc_type("getopt", "GetoptError");
+        return t ? t : PyExc_Exception;
+    }
+    PyObject *__py_args__() { /* (msg, opt): CPython sets .msg and .opt */
+        if(!msg)
+            return 0;
+        return Py_BuildValue("(NN)", __to_py(msg), __to_py(opt ? opt : new str("")));
+    }
+#endif
 };
 
 

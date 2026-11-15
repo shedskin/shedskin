@@ -1,4 +1,6 @@
+import getopt
 import os
+import re
 import sys
 
 # exception subclasses defined in an extension module are exported as Python
@@ -98,6 +100,16 @@ def catch_inside(n):
         return 'OSError ' + str(e)
     return 'none'
 
+def lib_error(n):
+    # library exceptions are raised as their CPython types (getopt, re)
+    if n == 0:
+        getopt.getopt(['-x'], 'a')
+    if n == 1:
+        re.compile('a(')
+    if n == 2:
+        raise re.error('plain')
+    return n
+
 def read_missing(name):
     # OSError attributes are passed on (1025-B9)
     return open(name).read()
@@ -135,6 +147,11 @@ if __name__ == '__main__':
         try:
             stop(i)
         except BaseException:
+            pass
+    for i in range(4):
+        try:
+            lib_error(i)
+        except Exception:
             pass
     try:
         read_missing('missing')

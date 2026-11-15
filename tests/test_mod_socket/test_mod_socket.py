@@ -1779,6 +1779,34 @@ def test_sendfile_nothing_sent():
     srv.close()
 
 
+def test_sendfile_error_position_negzero_timeout():
+    socket.setdefaulttimeout(-0.0)
+    assert str(socket.getdefaulttimeout()) == '0.0'
+    socket.setdefaulttimeout(None)
+    if sys.platform == 'win32':
+        return
+    srv = socket.create_server(('127.0.0.1', 0))
+    c = socket.create_connection(srv.getsockname())
+    a, addr = srv.accept()
+    name = 'shedskin_test_sendfile_ab.bin'
+    f = open(name, 'wb')
+    f.write(b'0123456789')
+    f.close()
+    # a write-only file cannot be read: the position stays, as CPython
+    f = open(name, 'ab')
+    try:
+        c.sendfile(f)
+        assert False
+    except OSError:
+        pass
+    assert f.tell() == 10
+    f.close()
+    os.remove(name)
+    a.close()
+    c.close()
+    srv.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1826,6 +1854,7 @@ def test_all():
     test_fileno_negative_create_connection_proto()
     test_fileno_minus_one_sendfile_offset()
     test_sendfile_nothing_sent()
+    test_sendfile_error_position_negzero_timeout()
 
 if __name__ == '__main__':
     test_all()
