@@ -1617,6 +1617,24 @@ def test_strftime_year_padding_iso_24():
     assert msg == 'year must be in 1..9999, not 10000'
 
 
+def test_datetime_date_compare():
+    x = datetime.datetime(2020, 1, 1)
+    d = datetime.date(2020, 1, 1)
+    assert not (x == d)
+    assert not (d == x)
+    assert x != d
+    try:
+        t = x < d
+        assert False
+    except TypeError as e:
+        assert str(e) == "'<' not supported between instances of 'datetime.datetime' and 'datetime.date'"
+    assert x not in [d]
+    # two datetimes held as dates compare as datetimes
+    l = [datetime.date(2020, 1, 2), datetime.datetime(2020, 1, 1, 12), datetime.datetime(2020, 1, 1, 6)]
+    assert l[2] < l[1] and not (l[1] == l[2])
+    assert l[0] == datetime.date(2020, 1, 2)
+
+
 def test_all():
         test_augmented_assignment()
         test_timedelta_division()
@@ -1691,6 +1709,7 @@ def test_all():
         test_tzinfo_shared_offsets()
         test_staticmethod_via_instance()
         test_strftime_year_padding_iso_24()
+        test_datetime_date_compare()
 
 if __name__ == "__main__":
     test_all()

@@ -61,6 +61,9 @@ template<class T> inline complex mcomplex(T t) {
 template<> inline complex mcomplex(complex c) {
     return mcomplex(c.real, c.imag);
 }
+template<> inline complex mcomplex(__ss_bool b) {
+    return mcomplex((__ss_float)b.value, 0);
+}
 template<> inline complex mcomplex(__ss_int i) {
     return mcomplex((__ss_float)i, 0);
 }

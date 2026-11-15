@@ -2314,6 +2314,22 @@ def test_stat_dir_trailing_sep():
     os.rmdir(d)
 
 
+def test_chdir_rmdir_file():
+    name = 'shedskin_test_notadir.txt'
+    open(name, 'w').close()
+    try:
+        os.rmdir(name)
+        assert False
+    except NotADirectoryError:
+        pass
+    try:
+        os.chdir(name)
+        assert False
+    except NotADirectoryError:
+        pass
+    os.remove(name)
+
+
 def test_all():
     test_unicode_names()
     test_undecodable_names()
@@ -2415,6 +2431,7 @@ def test_all():
     test_rename_replace_existing()
     test_stat_nul_name_utime_ns_float()
     test_stat_dir_trailing_sep()
+    test_chdir_rmdir_file()
 
 if __name__ == '__main__':
     test_all()

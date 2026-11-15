@@ -448,20 +448,45 @@ timedelta *date::__sub__(date *other) {
     return new timedelta((double)(toordinal()-other->toordinal()), 0, 0, 0 ,0, 0, 0);
 }
 
-__ss_int date::__cmp__(date *other) {
-    if(year==other->year && month==other->month && day==other->day)
+/* a date variable may hold a datetime (a subclass): as CPython, two
+   datetimes compare as datetimes, while a datetime and a plain date are
+   never equal, and cannot be ordered */
+static inline bool __is_datetime(date *d) { return dynamic_cast<datetime *>(d) != 0; }
+
+static void __date_order_check(date *a, date *b, const char *op) {
+    bool x = __is_datetime(a), y = __is_datetime(b);
+    if (x != y)
+        throw new TypeError(new str((std::string("'") + op + "' not supported between instances of '" + (x ? "datetime.datetime" : "datetime.date") + "' and '" + (y ? "datetime.datetime" : "datetime.date") + "'").c_str()));
+}
+
+static __ss_int __date_cmp(date *a, date *b) {
+    if(a->year==b->year && a->month==b->month && a->day==b->day)
         return 0;
-    if (toordinal() > other->toordinal())
+    if (a->toordinal() > b->toordinal())
         return 1;
     return -1;
 }
 
-__ss_bool date::__eq__(date *other) { return __mbool(__cmp__(other) == 0); }
-__ss_bool date::__ne__(date *other) { return __mbool(__cmp__(other) != 0); }
-__ss_bool date::__gt__(date *other) { return __mbool(__cmp__(other) == 1); }
-__ss_bool date::__lt__(date *other) { return __mbool(__cmp__(other) == -1); }
-__ss_bool date::__ge__(date *other) { return __mbool(__cmp__(other) != -1); }
-__ss_bool date::__le__(date *other) { return __mbool(__cmp__(other) != 1); }
+__ss_int date::__cmp__(date *other) {
+    __date_order_check(this, other, "<");
+    if (__is_datetime(this))
+        return ((datetime *)this)->__cmp__((datetime *)other);
+    return __date_cmp(this, other);
+}
+
+__ss_bool date::__eq__(date *other) {
+    bool x = __is_datetime(this), y = __is_datetime(other);
+    if (x != y)
+        return False;
+    if (x)
+        return ((datetime *)this)->__eq__((datetime *)other);
+    return __mbool(__date_cmp(this, other) == 0);
+}
+__ss_bool date::__ne__(date *other) { return __NOT(__eq__(other)); }
+__ss_bool date::__gt__(date *other) { __date_order_check(this, other, ">"); return __mbool(__cmp__(other) == 1); }
+__ss_bool date::__lt__(date *other) { __date_order_check(this, other, "<"); return __mbool(__cmp__(other) == -1); }
+__ss_bool date::__ge__(date *other) { __date_order_check(this, other, ">="); return __mbool(__cmp__(other) != -1); }
+__ss_bool date::__le__(date *other) { __date_order_check(this, other, "<="); return __mbool(__cmp__(other) != 1); }
 
 str *date::__repr__() {
     return __mod6(date_repr_format, 3, year, month, day);

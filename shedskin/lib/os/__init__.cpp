@@ -368,7 +368,14 @@ void *chdir(__ss_int fd) {
 
 void *chdir(str *dir) {
 #ifdef WIN32
-    if(::_wchdir(__to_wide(dir, "chdir").c_str()) == -1)
+    /* (the CRT maps e.g. ERROR_DIRECTORY to EINVAL: as CPython, map the
+       windows error itself, giving NotADirectoryError) */
+    _doserrno = 0;
+    if(::_wchdir(__to_wide(dir, "chdir").c_str()) == -1) {
+        if(_doserrno)
+            __throw_winerror((DWORD)_doserrno, dir);
+        __throw_oserror(dir);
+    }
 #else
     if(::chdir(__ss_cpath(dir, "chdir")) == -1)
 #endif
@@ -611,7 +618,12 @@ void *unlink(str *path) {
 
 void *rmdir(str *a) {
 #ifdef WIN32
-    if (::_wrmdir(__to_wide(a, "rmdir").c_str()) == -1)
+    _doserrno = 0;
+    if (::_wrmdir(__to_wide(a, "rmdir").c_str()) == -1) {
+        if(_doserrno) /* (as chdir) */
+            __throw_winerror((DWORD)_doserrno, a);
+        __throw_oserror(a);
+    }
 #else
     if (::rmdir(__ss_cpath(a, "rmdir")) == -1)
 #endif

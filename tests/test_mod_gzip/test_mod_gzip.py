@@ -1105,6 +1105,33 @@ def test_read1_default_size():
     os.remove(name)
 
 
+def test_read1_truncated_peek_size():
+    # a truncated file: the data decompressed so far comes first
+    c = gzip.compress(bytes(range(256)) * 600)
+    name = 'shedskin_test_truncated.gz'
+    o = open(name, 'wb')
+    o.write(c[:len(c) // 2])
+    o.close()
+    f = gzip.open(name, 'rb')
+    assert len(f.read1(10**6)) > 0
+    try:
+        f.read1(10**6)
+        assert False
+    except EOFError:
+        pass
+    f.close()
+    # peek() gives up to 128 KiB too
+    o = open(name, 'wb')
+    o.write(gzip.compress(b'x' * 300000))
+    o.close()
+    f = gzip.open(name, 'rb')
+    assert len(f.peek(1)) == 131072
+    assert len(f.read1(5)) == 5
+    assert len(f.read1()) == 131067
+    f.close()
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -1141,6 +1168,7 @@ def test_all():
     test_header_crc_wplus_mode()
     test_readinto_check_order()
     test_read1_default_size()
+    test_read1_truncated_peek_size()
 
 if __name__ == '__main__':
     test_all()
