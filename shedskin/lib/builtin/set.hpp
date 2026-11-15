@@ -84,13 +84,13 @@ public:
     void *symmetric_difference_update(set<T> *s);
     template <class U> void *symmetric_difference_update(U *other);
 
-    set<T> *__and__(set<T> *s);
-    set<T> *__or__(set<T> *s);
-    set<T> *__xor__(set<T> *s);
-    set<T> *__sub__(set<T> *s);
+    template <class U> set<T> *__and__(U *s);
+    template <class U> set<T> *__or__(U *s);
+    template <class U> set<T> *__xor__(U *s);
+    template <class U> set<T> *__sub__(U *s);
 
     set<T> *__iand__(set<T> *s);
-    set<T> *__ior__(set<T> *s);
+    template <class U> set<T> *__ior__(U *s);
     set<T> *__ixor__(set<T> *s);
     set<T> *__isub__(set<T> *s);
 
@@ -272,6 +272,34 @@ template<class T> __ss_bool set<T>::__lt__(set<T> *s) {
 template<class T> __ss_bool set<T>::__gt__(set<T> *s) {
     return __mbool(__len__() > s->__len__() && issuperset(s).value);
 }
+
+/* comparing sets of different element types (e.g. ints and floats): in the wider one */
+template<class W, class E> inline set<W> *__ss_set_as(set<E> *s) {
+    if constexpr (std::is_same_v<W, E>)
+        return s;
+    else {
+        if(!s)
+            return NULL;
+        set<W> *c = new set<W>(s->frozen);
+        c->update(1, s);
+        return c;
+    }
+}
+
+#define __SS_SET_CMP(op) \
+template<class A, class B> requires (!std::is_same_v<A, B>) inline __ss_bool op(set<A> *a, set<B> *b) { \
+    static_assert(__ss_widens_v<A, B> || __ss_widens_v<B, A>, \
+        "set comparison: element types cannot be converted to each other"); \
+    using W = std::conditional_t<__ss_widens_v<A, B>, B, A>; \
+    return op(__ss_set_as<W>(a), __ss_set_as<W>(b)); \
+}
+__SS_SET_CMP(__eq)
+__SS_SET_CMP(__ne)
+__SS_SET_CMP(__lt)
+__SS_SET_CMP(__le)
+__SS_SET_CMP(__gt)
+__SS_SET_CMP(__ge)
+#undef __SS_SET_CMP
 
 template<class T> __ss_int set<T>::__hash__() {
     if(!frozen)
@@ -519,16 +547,25 @@ template <class T> set<T>* set<T>::difference(int, set<T> *other)
     return result;
 }
 
-template<class T> set<T> *set<T>::__and__(set<T> *s) {
+/* other element types: converted on the way (e.g. ints into a set of floats) */
+#define __SS_SET_ELEMS_WIDEN(U, T, what) \
+    static_assert(__ss_widens_v<std::remove_cvref_t<typename U::for_in_unit>, T>, \
+        "set." what ": elements of the other set do not fit (e.g. floats into a set of ints)")
+
+template<class T> template<class U> set<T> *set<T>::__and__(U *s) {
+    __SS_SET_ELEMS_WIDEN(U, T, "__and__");
     return intersection(1, s);
 }
-template<class T> set<T> *set<T>::__or__(set<T> *s) {
+template<class T> template<class U> set<T> *set<T>::__or__(U *s) {
+    __SS_SET_ELEMS_WIDEN(U, T, "__or__");
     return __ss_union(1, s);
 }
-template<class T> set<T> *set<T>::__xor__(set<T> *s) {
+template<class T> template<class U> set<T> *set<T>::__xor__(U *s) {
+    __SS_SET_ELEMS_WIDEN(U, T, "__xor__");
     return symmetric_difference(s);
 }
-template<class T> set<T> *set<T>::__sub__(set<T> *s) {
+template<class T> template<class U> set<T> *set<T>::__sub__(U *s) {
+    __SS_SET_ELEMS_WIDEN(U, T, "__sub__");
     return difference(1, s);
 }
 template<class T> set<T> *set<T>::__iand__(set<T> *s) {
@@ -537,7 +574,9 @@ template<class T> set<T> *set<T>::__iand__(set<T> *s) {
     this->gcs = intersection(1, s)->gcs;
     return this;
 }
-template<class T> set<T> *set<T>::__ior__(set<T> *s) {
+/* any element type: converted on the way (e.g. ints into a set of floats) */
+template<class T> template<class U> set<T> *set<T>::__ior__(U *s) {
+    __SS_SET_ELEMS_WIDEN(U, T, "__ior__");
     if(this->frozen) /* frozenset: rebind to a new object */
         return __ss_union(1, s);
     this->gcs = __ss_union(1, s)->gcs;

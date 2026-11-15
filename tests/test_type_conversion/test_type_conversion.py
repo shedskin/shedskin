@@ -128,25 +128,25 @@
 # OVERVIEW (number of cells that work / TODO / correctly warn or fail)
 #
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
-#    1. assign   0/2/0        15/4/2       -            3/0/0        0/0/2        8/0/0        13/2/2
+#    1. assign   2/0/0        17/2/2       -            3/0/0        0/0/2        8/0/0        13/2/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
-#    3. setitem  0/1/0        7/1/1        -            1/0/0        0/0/1        3/0/0        4/1/1
-#    4. arg      0/1/0        9/2/1        -            1/0/0        0/0/1        2/0/0        7/0/1
+#    3. setitem  1/0/0        7/1/1        -            1/0/0        0/0/1        3/0/0        4/1/1
+#    4. arg      1/0/0        11/0/1       -            1/0/0        0/0/1        2/0/0        7/0/1
 #    5. ret      1/0/0        5/0/1        -            1/0/0        0/0/1        2/0/0        8/0/1
-#    6. method   0/1/0        12/2/1       -            3/0/0        0/0/1        8/0/0        20/3/1
-#    7. display  0/1/0        3/1/1        -            2/0/0        0/0/1        2/0/0        4/0/1
-#    8. binop    1/0/0        9/13/0       -            1/0/0        -            5/0/0        21/4/0
-#    9. compare  -            4/5/0        -            1/0/0        1/0/0        1/0/0        6/3/0
-#   10. lookup   1/0/0        3/7/0        0/0/1        5/0/0        0/0/1        4/0/0        7/7/0
+#    6. method   1/0/0        14/0/1       -            3/0/0        0/0/1        8/0/0        23/0/1
+#    7. display  1/0/0        4/0/1        -            2/0/0        0/0/1        2/0/0        4/0/1
+#    8. binop    1/0/0        15/7/0       -            1/0/0        -            5/0/0        22/3/0
+#    9. compare  -            6/3/0        -            1/0/0        1/0/0        1/0/0        7/2/0
+#   10. lookup   1/0/0        7/3/0        0/0/1        5/0/0        0/0/1        4/0/0        9/5/0
 #   11. ctor     -            7/1/0        -            1/0/0        -            3/1/0        12/6/0
-#   12. iter     0/1/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
+#   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
 #   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        8/17/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        3/7/0        88/39/13     0/0/1        25/1/0       1/0/9        49/1/0       130/47/10
+#   total        10/0/0       107/20/13    0/0/1        25/1/0       1/0/9        49/1/0       137/40/10
 #
-#   all cells: 296 work, 95 TODO, 33 correctly warn or fail
+#   all cells: 329 work, 62 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -182,15 +182,13 @@ class B2(A):
 
 
 # bool->int, literal: implicit
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'a' has dynamic (sub)type: {bool, int}
 #   expression has dynamic (sub)type: {bool, int}
-#   C++: invalid conversion from '__ss_int' to 'pyobj*'
-#
-# def test_assign_bool_int_lit_scalar():
-#     a = 1
-#     a = True
-#     assert a + 1 == 2
+def test_assign_bool_int_lit_scalar():
+    a = 1
+    a = True
+    assert a + 1 == 2
 
 
 # int->float, literal: implicit
@@ -219,20 +217,18 @@ def test_assign_int_float_call_scalar():
 
 
 # int->complex, literal: implicit
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'z' has dynamic (sub)type: {complex, int}
 #   variable 'w' has dynamic (sub)type: {complex, float}
 #   expression has dynamic (sub)type: {complex, int}
 #   expression has dynamic (sub)type: {complex, float}
-#   C++: cannot convert 'complex' to 'pyobj*' in assignment
-#
-# def test_assign_complex_lit_scalar():
-#     z = 1j
-#     z = 1
-#     assert z + 1j == complex(1, 1)
-#     w = 1j
-#     w = 2.5
-#     assert w + 1j == complex(2.5, 1)
+def test_assign_complex_lit_scalar():
+    z = 1j
+    z = 1
+    assert z + 1j == complex(1, 1)
+    w = 1j
+    w = 2.5
+    assert w + 1j == complex(2.5, 1)
 
 
 # none->scalar, literal: warn
@@ -297,16 +293,14 @@ def test_assign_sub_siblings():
 
 
 # bool->int, literal: build
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'a' has dynamic (sub)type: {bool, int}
 #   expression has dynamic (sub)type: {bool, int}
-#   C++: cannot convert 'list<__ss_int>*' to 'list<pyobj*>*' in assignment
-#
-# def test_assign_bool_int_lit_list():
-#     a = [1, 2]
-#     a = [True, False]
-#     a.append(5)
-#     assert sum(a) == 6
+def test_assign_bool_int_lit_list():
+    a = [1, 2]
+    a = [True, False]
+    a.append(5)
+    assert sum(a) == 6
 
 
 # int->float, literal: build
@@ -364,21 +358,19 @@ def test_assign_int_float_lit_nested():
 
 
 # int->complex, literal: build
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'a' has dynamic (sub)type: {complex, int}
 #   variable 'b' has dynamic (sub)type: {complex, float}
 #   expression has dynamic (sub)type: {complex, int}
 #   expression has dynamic (sub)type: {complex, float}
-#   C++: cannot convert 'list<complex>*' to 'list<pyobj*>*' in assignment
-#
-# def test_assign_complex_lit_list():
-#     a = [1j]
-#     a = [1, 2]
-#     a.append(1j)
-#     assert sum(a) == complex(3, 1)
-#     b = [1j]
-#     b = [1.5]
-#     assert b[0] + 1j == complex(1.5, 1)
+def test_assign_complex_lit_list():
+    a = [1j]
+    a = [1, 2]
+    a.append(1j)
+    assert sum(a) == complex(3, 1)
+    b = [1j]
+    b = [1.5]
+    assert b[0] + 1j == complex(1.5, 1)
 
 
 # int->float, literal: build
@@ -1026,19 +1018,17 @@ def test_attr_empty_var():
 
 
 # bool->int, literal: implicit
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'd' has dynamic (sub)type: {bool, int}
 #   variable 'l' has dynamic (sub)type: {bool, int}
 #   expression has dynamic (sub)type: {bool, int}
-#   C++: cannot convert 'list<__ss_int>*' to 'list<pyobj*>*' in assignment
-#
-# def test_setitem_bool_int_lit():
-#     l = [1, 2]
-#     l[0] = True
-#     assert sum(l) == 3
-#     d = {1: 2}
-#     d[3] = True
-#     assert sum(d.values()) == 3
+def test_setitem_bool_int_lit():
+    l = [1, 2]
+    l[0] = True
+    assert sum(l) == 3
+    d = {1: 2}
+    d[3] = True
+    assert sum(d.values()) == 3
 
 
 # none->scalar, literal: warn
@@ -1278,17 +1268,15 @@ def test_arg_int_float_lit_scalar():
 
 
 # bool->int, literal: implicit
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'i' has dynamic (sub)type: {bool, int}
 #   expression has dynamic (sub)type: {bool, int}
-#   C++: invalid conversion from 'pyobj*' to '__ss_int'
-#
-# def arg_inc(i):
-#     return i + 1
-#
-# def test_arg_bool_int():
-#     assert arg_inc(1) == 2
-#     assert arg_inc(True) == 2
+def arg_inc(i):
+    return i + 1
+
+def test_arg_bool_int():
+    assert arg_inc(1) == 2
+    assert arg_inc(True) == 2
 
 
 # none->scalar, literal: warn
@@ -1319,16 +1307,12 @@ def test_arg_int_float_lit_list():
 
 
 # int->float, literal: build
-# TODO doesn't work today: warning, then C++ compile error
-#   incompatible types
-#   C++: cannot convert 'set<__ss_int>*' to 'set<__ss_float>*'
-#
-# def arg_total_set(s):
-#     return sum(s)
-#
-# def test_arg_int_float_lit_set():
-#     assert arg_total_set({0.5}) == 0.5
-#     assert arg_total_set({1, 2}) == 3
+def arg_total_set(s):
+    return sum(s)
+
+def test_arg_int_float_lit_set():
+    assert arg_total_set({0.5}) == 0.5
+    assert arg_total_set({1, 2}) == 3
 
 
 # int->float, literal: build
@@ -1359,18 +1343,14 @@ def test_arg_int_float_lit_nested():
 
 
 # int->float, ifexp: build
-# TODO doesn't work today: warning, then C++ compile error
-#   incompatible types
-#   C++: cannot convert 'list<__ss_int>*' to 'list<__ss_float>*'
-#
-# def arg_total_ifexp(l):
-#     return sum(l)
-#
-# def test_arg_int_float_ifexp():
-#     c = 3
-#     assert arg_total_ifexp([0.5]) == 0.5
-#     assert arg_total_ifexp([1] if c > 2 else [2, 3]) == 1
-#     assert arg_total_ifexp([1] if c < 2 else [2, 3]) == 5
+def arg_total_ifexp(l):
+    return sum(l)
+
+def test_arg_int_float_ifexp():
+    c = 3
+    assert arg_total_ifexp([0.5]) == 0.5
+    assert arg_total_ifexp([1] if c > 2 else [2, 3]) == 1
+    assert arg_total_ifexp([1] if c < 2 else [2, 3]) == 5
 
 
 # int->float, variable: warn
@@ -1951,19 +1931,17 @@ def test_ret_empty_call():
 
 
 # bool->int, literal: implicit
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'l' has dynamic (sub)type: {bool, int}
 #   variable 's' has dynamic (sub)type: {bool, int}
 #   expression has dynamic (sub)type: {bool, int}
-#   C++: cannot convert 'list<__ss_int>*' to 'list<pyobj*>*' in assignment
-#
-# def test_method_bool_int_lit():
-#     l = [1]
-#     l.append(True)
-#     assert sum(l) == 2
-#     s = {2}
-#     s.add(True)
-#     assert sum(s) == 3
+def test_method_bool_int_lit():
+    l = [1]
+    l.append(True)
+    assert sum(l) == 2
+    s = {2}
+    s.add(True)
+    assert sum(s) == 3
 
 
 # none->scalar, literal: warn
@@ -2058,13 +2036,10 @@ def test_method_int_float_lit_iter_set():
 
 
 # int->float, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<__ss_int>*' to 'set<__ss_float>*'
-#
-# def test_method_int_float_lit_iter_set_ior():
-#     s = {1.5}
-#     s |= {3}
-#     assert sum(s) == 4.5
+def test_method_int_float_lit_iter_set_ior():
+    s = {1.5}
+    s |= {3}
+    assert sum(s) == 4.5
 
 
 # int->float, literal: copy
@@ -2109,14 +2084,11 @@ def test_method_int_float_var_iter_set():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<__ss_int>*' to 'set<__ss_float>*'
-#
-# def test_method_int_float_var_iter_set_ior():
-#     intset = {1, 2}
-#     s = {2.5}
-#     s |= intset
-#     assert sum(s) == 5.5 and sum(intset) == 3
+def test_method_int_float_var_iter_set_ior():
+    intset = {1, 2}
+    s = {2.5}
+    s |= intset
+    assert sum(s) == 5.5 and sum(intset) == 3
 
 
 # int->float, variable: copy
@@ -2462,13 +2434,10 @@ def test_method_empty_new_iter_list():
 
 
 # empty, new: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<void*>*' to 'set<__ss_int>*'
-#
-# def test_method_empty_new_iter_set_ior():
-#     s = {1}
-#     s |= set()
-#     assert sum(s) == 1
+def test_method_empty_new_iter_set_ior():
+    s = {1}
+    s |= set()
+    assert sum(s) == 1
 
 
 # empty, variable: copy
@@ -2488,17 +2457,14 @@ def test_method_empty_var_iter_iadd():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<void*>*' to 'set<str*>*'
-#
-# def test_method_empty_var_iter_set():
-#     e = []
-#     strs = {'a'}
-#     strs.update(e)
-#     assert len(strs) == 1
-#     es = set()
-#     strs |= es
-#     assert len(strs) == 1
+def test_method_empty_var_iter_set():
+    e = []
+    strs = {'a'}
+    strs.update(e)
+    assert len(strs) == 1
+    es = set()
+    strs |= es
+    assert len(strs) == 1
 
 
 # empty, variable: copy
@@ -2518,17 +2484,14 @@ def test_method_empty_var_iter_iadd_number():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<void*>*' to 'set<__ss_int>*'
-#
-# def test_method_empty_var_iter_set_number():
-#     e = []
-#     s = {1}
-#     s.update(e)
-#     assert sum(s) == 1
-#     es = set()
-#     s |= es
-#     assert sum(s) == 1
+def test_method_empty_var_iter_set_number():
+    e = []
+    s = {1}
+    s.update(e)
+    assert sum(s) == 1
+    es = set()
+    s |= es
+    assert sum(s) == 1
 
 
 # empty, variable: copy
@@ -2557,17 +2520,15 @@ def test_method_empty_var_iter_dict_number():
 
 
 # bool->int, literal: implicit
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'l' has dynamic (sub)type: {bool, int}
 #   variable 'd' has dynamic (sub)type: {bool, int}
 #   expression has dynamic (sub)type: {bool, int}
-#   C++: cannot convert 'list<__ss_int>*' to 'list<pyobj*>*' in assignment
-#
-# def test_display_bool_int():
-#     l = [1, True]
-#     assert sum(l) == 2
-#     d = {1: 2, 3: True}
-#     assert sum(d.values()) == 3
+def test_display_bool_int():
+    l = [1, True]
+    assert sum(l) == 2
+    d = {1: 2, 3: True}
+    assert sum(d.values()) == 3
 
 
 # none->scalar, literal: warn
@@ -2596,14 +2557,12 @@ def test_display_int_float_scalar():
 
 
 # int->complex, literal: implicit
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'l' has dynamic (sub)type: {complex, float, int}
 #   expression has dynamic (sub)type: {complex, float, int}
-#   C++: cannot convert 'list<complex>*' to 'list<pyobj*>*' in assignment
-#
-# def test_display_complex():
-#     l = [1, 2.5, 1j]
-#     assert sum(l) == complex(3.5, 1)
+def test_display_complex():
+    l = [1, 2.5, 1j]
+    assert sum(l) == complex(3.5, 1)
 
 
 # int->float, variable: implicit
@@ -2818,14 +2777,12 @@ def test_binop_complex_scalar():
 
 
 # int->complex, literal: build
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'l' has dynamic (sub)type: {complex, int}
 #   expression has dynamic (sub)type: {complex, int}
-#   C++: cannot convert 'list<complex>*' to 'list<pyobj*>*' in assignment
-#
-# def test_binop_complex_lit_list():
-#     l = [1j] + [1]
-#     assert sum(l) == complex(1, 1)
+def test_binop_complex_lit_list():
+    l = [1j] + [1]
+    assert sum(l) == complex(1, 1)
 
 
 # int->float, literal: build
@@ -2905,49 +2862,41 @@ def test_binop_int_float_lit_tuple():
 
 
 # int->float, literal: build
-# TODO doesn't work today: warning, then C++ compile error
-#   incompatible types
-#   C++: cannot convert 'set<__ss_int>*' to 'set<__ss_float>*'
-#
-# def test_binop_int_float_lit_set():
-#     s = {1.0, 2.5}
-#     assert sum(s | {3}) == 6.5
-#     assert sum(s & {1}) == 1
-#     assert sum(s - {1}) == 2.5
-#     assert sum(s ^ {1, 5}) == 7.5
+def test_binop_int_float_lit_set():
+    s = {1.0, 2.5}
+    assert sum(s | {3}) == 6.5
+    assert sum(s & {1}) == 1
+    assert sum(s - {1}) == 2.5
+    assert sum(s ^ {1, 5}) == 7.5
 
 
 # int->float, literal: build
-# TODO doesn't work today: warning, then C++ compile error
+def test_binop_int_float_lit_set_left():
+    s = {1.0, 2.5}
+    assert sum({3} | s) == 6.5
+    assert sum({1, 5} ^ s) == 7.5
+    assert sum({1, 5} & s) == 1
+    assert sum({1, 5} - s) == 5
+
+
+# int->float, variable: copy
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'set<__ss_float>*' to 'set<__ss_int>*'
-#
-# def test_binop_int_float_lit_set_left():
-#     s = {1.0, 2.5}
-#     assert sum({3} | s) == 6.5
-#     assert sum({1, 5} ^ s) == 7.5
-#     assert sum({1, 5} & s) == 1
-#     assert sum({1, 5} - s) == 5
+def test_binop_int_float_var_set():
+    s = {1.0, 2.5}
+    t = {1, 5}
+    assert sum(s | t) == 8.5
+    assert sum(s & t) == 1
+    assert sum(s - t) == 2.5
+    assert sum(s ^ t) == 7.5
 
 
 # int->float, variable: copy
 # TODO doesn't work today: warning, then C++ compile error
 #   incompatible types
-#   C++: cannot convert 'set<__ss_int>*' to 'set<__ss_float>*'
-#
-# def test_binop_int_float_var_set():
-#     s = {1.0, 2.5}
-#     t = {1, 5}
-#     assert sum(s | t) == 8.5
-#     assert sum(s & t) == 1
-#     assert sum(s - t) == 2.5
-#     assert sum(s ^ t) == 7.5
-
-
-# int->float, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
-#   incompatible types
-#   C++: cannot convert 'set<__ss_float>*' to 'set<__ss_int>*'
+#   C++: static assertion failed: set.__or__: elements of the other set do
+#     not fit (the result should be a set of floats, but it is computed as a
+#     set of ints)
 #
 # def test_binop_int_float_var_set_left():
 #     s = {1.0, 2.5}
@@ -3011,27 +2960,20 @@ def test_binop_int_float_lit_augassign_list():
 
 
 # int->float, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'set<__ss_int>*' to 'set<__ss_float>*'
-#
-# def test_binop_int_float_lit_augassign_set():
-#     s = {1.5, 2.0}
-#     s |= {1}
-#     s -= {2}
-#     s ^= {4}
-#     s &= {1, 4, 1.5}
-#     assert sum(s) == 6.5
+def test_binop_int_float_lit_augassign_set():
+    s = {1.5, 2.0}
+    s |= {1}
+    s -= {2}
+    s ^= {4}
+    s &= {1, 4, 1.5}
+    assert sum(s) == 6.5
 
 
 # int->float, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
-#     __ss_float>*'
-#
-# def test_binop_int_float_lit_augassign_tuple():
-#     t = (1.5,)
-#     t += (1,)
-#     assert sum(t) == 2.5
+def test_binop_int_float_lit_augassign_tuple():
+    t = (1.5,)
+    t += (1,)
+    assert sum(t) == 2.5
 
 
 # none, literal: cast
@@ -3220,21 +3162,21 @@ def test_binop_empty_var_set_left():
 
 
 # empty, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'set<void*>*' to 'set<__ss_int>*'
-#
-# def test_binop_empty_var_set_number():
-#     es = set()
-#     s = {1, 2}
-#     assert sum(s | es) == 3
-#     assert sum(s - es) == 3
+def test_binop_empty_var_set_number():
+    es = set()
+    s = {1, 2}
+    assert sum(s | es) == 3
+    assert sum(s - es) == 3
 
 
 # empty, variable: copy
 # TODO doesn't work today: warning, then C++ compile error
 #   incompatible types
-#   C++: cannot convert 'set<__ss_int>*' to 'set<void*>*'
+#   C++: static assertion failed: set.__or__: elements of the other set do
+#     not fit (the result should be a set of ints, but it is computed as a
+#     set without element type)
 #
 # def test_binop_empty_var_set_number_left():
 #     es = set()
@@ -3402,15 +3344,10 @@ def test_compare_int_float_lit_list():
 
 
 # int->float, literal: build
-# TODO doesn't work today: warning, then C++ compile error
-#   incompatible types
-#   C++: no matching function for call to '__eq(set<__ss_float>*&,
-#     set<__ss_int>*)'
-#
-# def test_compare_int_float_lit_set():
-#     s = {1.0, 2.0}
-#     assert s == {1, 2} and {1} < s and s >= {1}
-#     assert {1, 2} == {1.0, 2.0}
+def test_compare_int_float_lit_set():
+    s = {1.0, 2.0}
+    assert s == {1, 2} and {1} < s and s >= {1}
+    assert {1, 2} == {1.0, 2.0}
 
 
 # int->float, literal: build
@@ -3444,15 +3381,12 @@ def test_compare_int_float_lit_tuple():
 
 
 # int->float, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: no matching function for call to '__eq(set<__ss_int>*&,
-#     set<__ss_float>*&)'
-#
-# def test_compare_int_float_var_set():
-#     si = {1, 2}
-#     sf = {1.0, 2.0}
-#     assert si == sf and sf == si and si <= sf
+def test_compare_int_float_var_set():
+    si = {1, 2}
+    sf = {1.0, 2.0}
+    assert si == sf and sf == si and si <= sf
 
 
 # int->float, variable: generic
@@ -3566,15 +3500,12 @@ def test_compare_empty_var_set():
 
 
 # empty, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: no matching function for call to '__ne(set<void*>*&,
-#     set<__ss_int>*&)'
-#
-# def test_compare_empty_var_set_number():
-#     es = set()
-#     s = {1}
-#     assert es != s and s != es
+def test_compare_empty_var_set_number():
+    es = set()
+    s = {1}
+    assert es != s and s != es
 
 
 # empty, variable: generic
@@ -3693,49 +3624,34 @@ def test_lookup_int_float_var_scalar():
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
-#     __ss_float>*'
-#
-# def test_lookup_int_float_lit_tuple_set():
-#     visited = {(1.0, 2.0)}
-#     assert (1, 2) in visited
-#     assert (2, 1) not in visited
+def test_lookup_int_float_lit_tuple_set():
+    visited = {(1.0, 2.0)}
+    assert (1, 2) in visited
+    assert (2, 1) not in visited
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
-#     __ss_float>*'
-#
-# def test_lookup_int_float_lit_tuple_list():
-#     l = [(0.0, 0.0), (1.0, 2.0)]
-#     assert (1, 2) in l
-#     assert l.index((1, 2)) == 1
-#     assert l.count((1, 2)) == 1
-#     l.remove((0, 0))
-#     assert len(l) == 1
+def test_lookup_int_float_lit_tuple_list():
+    l = [(0.0, 0.0), (1.0, 2.0)]
+    assert (1, 2) in l
+    assert l.index((1, 2)) == 1
+    assert l.count((1, 2)) == 1
+    l.remove((0, 0))
+    assert len(l) == 1
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<__ss_int>*' to 'list<__ss_float>*'
-#
-# def test_lookup_int_float_lit_list_list():
-#     lists = [[1.5], [2.0]]
-#     assert [2] in lists
-#     assert lists.index([2]) == 1
+def test_lookup_int_float_lit_list_list():
+    lists = [[1.5], [2.0]]
+    assert [2] in lists
+    assert lists.index([2]) == 1
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
-#     __ss_float>*'
-#
-# def test_lookup_int_float_lit_tuple_dict():
-#     d = {(1.0, 2.0): 'a'}
-#     assert d[(1, 2)] == 'a'
-#     assert (1, 2) in d
+def test_lookup_int_float_lit_tuple_dict():
+    d = {(1.0, 2.0): 'a'}
+    assert d[(1, 2)] == 'a'
+    assert (1, 2) in d
 
 
 # int->float, literal: build
@@ -3982,27 +3898,21 @@ def test_lookup_empty_value_lit_method():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'tuple<void*>*' to 'tuple2<str*, str*>*'
-#
-# def test_lookup_empty_value_lit_tuple():
-#     visited = {('a', 'b'), ()}
-#     assert () in visited
-#     d = {(): 'a', ('a', 'b'): 'b'}
-#     assert d[()] == 'a'
-#     assert () in d
+def test_lookup_empty_value_lit_tuple():
+    visited = {('a', 'b'), ()}
+    assert () in visited
+    d = {(): 'a', ('a', 'b'): 'b'}
+    assert d[()] == 'a'
+    assert () in d
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'tuple<void*>*' to 'tuple2<__ss_int, __ss_int>*'
-#
-# def test_lookup_empty_value_lit_tuple_number():
-#     visited = {(1, 2), ()}
-#     assert () in visited
-#     d = {(): 'a', (1, 2): 'b'}
-#     assert d[()] == 'a'
-#     assert () in d
+def test_lookup_empty_value_lit_tuple_number():
+    visited = {(1, 2), ()}
+    assert () in visited
+    d = {(): 'a', (1, 2): 'b'}
+    assert d[()] == 'a'
+    assert () in d
 
 
 # empty, variable: generic
@@ -4427,21 +4337,19 @@ def test_iter_int_float_var_scalar():
 
 
 # bool->int, literal: implicit
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'j' has dynamic (sub)type: {bool, int}
 #   variable 'i' has dynamic (sub)type: {bool, int}
 #   expression has dynamic (sub)type: {bool, int}
-#   C++: invalid conversion from '__ss_int' to 'pyobj*'
-#
-# def test_iter_bool_int():
-#     total = 0
-#     for i in [1, True]:
-#         total += i
-#     assert total == 2
-#     j = 5
-#     for j in [True, False]:
-#         pass
-#     assert j + 1 == 1
+def test_iter_bool_int():
+    total = 0
+    for i in [1, True]:
+        total += i
+    assert total == 2
+    j = 5
+    for j in [True, False]:
+        pass
+    assert j + 1 == 1
 
 
 # int->float, literal: build
@@ -5442,19 +5350,23 @@ def test_empty_call_contexts():
 
 
 def test_all():
+    test_assign_bool_int_lit_scalar()
     test_assign_int_float_lit_scalar()
     test_assign_int_float_var_scalar()
     test_assign_int_float_call_scalar()
+    test_assign_complex_lit_scalar()
     test_assign_none_lit()
     test_assign_sub_new()
     test_assign_sub_var()
     test_assign_sub_call()
     test_assign_sub_siblings()
+    test_assign_bool_int_lit_list()
     test_assign_int_float_lit_list()
     test_assign_int_float_lit_set()
     test_assign_int_float_lit_dict()
     test_assign_int_float_lit_tuple()
     test_assign_int_float_lit_nested()
+    test_assign_complex_lit_list()
     test_assign_int_float_lit_global()
     test_assign_int_float_new_list()
     test_assign_int_float_new_set_dict()
@@ -5489,6 +5401,7 @@ def test_all():
     test_attr_empty_lit()
     test_attr_empty_lit_never()
     test_attr_empty_var()
+    test_setitem_bool_int_lit()
     test_setitem_int_float_lit_scalar()
     test_setitem_int_float_lit_key()
     test_setitem_int_float_lit_key_tuple()
@@ -5505,10 +5418,13 @@ def test_all():
     test_setitem_empty_var()
     test_setitem_empty_lit_slice()
     test_arg_int_float_lit_scalar()
+    test_arg_bool_int()
     test_arg_int_float_lit_list()
+    test_arg_int_float_lit_set()
     test_arg_int_float_lit_dict()
     test_arg_int_float_lit_tuple()
     test_arg_int_float_lit_nested()
+    test_arg_int_float_ifexp()
     test_arg_int_float_default()
     test_arg_int_float_keyword()
     test_arg_int_float_method()
@@ -5541,16 +5457,19 @@ def test_all():
     test_ret_empty_yield()
     test_ret_empty_lambda()
     test_ret_empty_call()
+    test_method_bool_int_lit()
     test_method_int_float_lit_scalar()
     test_method_int_float_var_scalar()
     test_method_int_float_lit_list()
     test_method_int_float_lit_iter_list()
     test_method_int_float_lit_iter_set()
+    test_method_int_float_lit_iter_set_ior()
     test_method_int_float_lit_iter_dict()
     test_method_int_float_lit_iter_deque()
     test_method_int_float_var_iter_list()
     test_method_int_float_var_iter_list_iadd()
     test_method_int_float_var_iter_set()
+    test_method_int_float_var_iter_set_ior()
     test_method_int_float_var_iter_dict()
     test_method_int_float_var_iter_deque()
     test_method_none()
@@ -5578,13 +5497,18 @@ def test_all():
     test_method_empty_new_iter_set()
     test_method_empty_lit_iter_set()
     test_method_empty_new_iter_list()
+    test_method_empty_new_iter_set_ior()
     test_method_empty_var_iter()
     test_method_empty_var_iter_iadd()
+    test_method_empty_var_iter_set()
     test_method_empty_var_iter_number()
     test_method_empty_var_iter_iadd_number()
+    test_method_empty_var_iter_set_number()
     test_method_empty_var_iter_dict()
     test_method_empty_var_iter_dict_number()
+    test_display_bool_int()
     test_display_int_float_scalar()
+    test_display_complex()
     test_display_int_float_var_scalar()
     test_display_int_float_nested()
     test_display_none()
@@ -5598,13 +5522,19 @@ def test_all():
     test_binop_bool_arith()
     test_binop_int_float_scalar()
     test_binop_complex_scalar()
+    test_binop_complex_lit_list()
     test_binop_int_float_lit_list()
     test_binop_int_float_lit_mul()
     test_binop_int_float_lit_tuple()
+    test_binop_int_float_lit_set()
+    test_binop_int_float_lit_set_left()
+    test_binop_int_float_var_set()
     test_binop_int_float_var_set_method()
     test_binop_int_float_lit_dict()
     test_binop_int_float_lit_dict_left()
     test_binop_int_float_lit_augassign_list()
+    test_binop_int_float_lit_augassign_set()
+    test_binop_int_float_lit_augassign_tuple()
     test_binop_none()
     test_binop_sub_new()
     test_binop_sub_var()
@@ -5625,6 +5555,7 @@ def test_all():
     test_binop_empty_var_list()
     test_binop_empty_var_set()
     test_binop_empty_var_set_left()
+    test_binop_empty_var_set_number()
     test_binop_empty_var_dict()
     test_binop_empty_var_dict_left()
     test_binop_empty_accumulate_list()
@@ -5635,19 +5566,26 @@ def test_all():
     test_compare_int_float_scalar()
     test_compare_none_scalar()
     test_compare_int_float_lit_list()
+    test_compare_int_float_lit_set()
     test_compare_int_float_lit_dict()
     test_compare_int_float_lit_tuple()
+    test_compare_int_float_var_set()
     test_compare_none()
     test_compare_sub()
     test_compare_empty_lit_list()
     test_compare_empty_new()
     test_compare_empty_var()
     test_compare_empty_var_set()
+    test_compare_empty_var_set_number()
     test_compare_empty_var_dict()
     test_compare_empty_call()
     test_lookup_bool_int()
     test_lookup_int_float_scalar()
     test_lookup_int_float_var_scalar()
+    test_lookup_int_float_lit_tuple_set()
+    test_lookup_int_float_lit_tuple_list()
+    test_lookup_int_float_lit_list_list()
+    test_lookup_int_float_lit_tuple_dict()
     test_lookup_int_float_lit_tuple_dict_method()
     test_lookup_none()
     test_lookup_none_remove()
@@ -5663,6 +5601,8 @@ def test_all():
     test_lookup_empty_container_var()
     test_lookup_empty_value_lit()
     test_lookup_empty_value_lit_method()
+    test_lookup_empty_value_lit_tuple()
+    test_lookup_empty_value_lit_tuple_number()
     test_lookup_empty_value_var()
     test_lookup_empty_value_var_sub()
     test_ctor_int_float_lit()
@@ -5690,6 +5630,7 @@ def test_all():
     test_ctor_empty_var_dict_number()
     test_iter_int_float_lit_scalar()
     test_iter_int_float_var_scalar()
+    test_iter_bool_int()
     test_iter_int_float_lit_list()
     test_unpack_int_float_lit()
     test_unpack_int_float_var()

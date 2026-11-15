@@ -47,6 +47,14 @@ template<template<class...> class C, class... Es, class... Ts> struct __ss_upcas
 
 template<class E, class T> inline constexpr bool __ss_upcastable_v = __ss_upcastable<E, T>::value;
 
+/* elements of type E can be consumed as T without losing anything: the same type,
+   none at all (an empty container), an instance of a subclass, or a widened number.
+   used to reject e.g. floats into a set of ints, which would silently truncate */
+template<class E, class T> inline constexpr bool __ss_widens_v =
+    std::is_same_v<E, T> || std::is_same_v<E, void *> || __ss_upcastable_v<E, T> ||
+    ((std::is_integral_v<E> || std::is_same_v<E, __ss_bool>) && std::is_floating_point_v<T>) ||
+    (std::is_same_v<E, __ss_bool> && std::is_integral_v<T>);
+
 template<class T, class E> inline T __ss_elem(E e) {
     if constexpr (std::is_same_v<E, void *> && !std::is_same_v<T, void *>) {
         if constexpr (std::is_pointer_v<T>)

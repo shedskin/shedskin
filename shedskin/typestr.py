@@ -297,6 +297,11 @@ def dynamic_variable_error(
             )
 
 
+def _all_scalars(lcp: "set[python.Class]") -> bool:
+    """Whether all classes are builtin scalars (bool, int, float, complex)"""
+    return all(cl.ident in ("int_", "float_", "bool_", "complex") for cl in lcp)
+
+
 def typestrnew(
     gx: "config.GlobalInfo",
     types: Types,
@@ -396,7 +401,8 @@ def typestrnew(
                 return "pyobj *"
         elif isinstance(node, python.Variable):
             dynamic_variable_error(gx, node, types, conv2)
-            return "pyobj *"
+            if not _all_scalars(lcp):
+                return "pyobj *"
         elif node not in gx.bool_test_only:
             if tuple_check:
                 error.error(
@@ -417,12 +423,10 @@ def typestrnew(
 
         # scalars only (e.g. {bool, int}): pick the widest one, rather than
         # an arbitrary one (classes hash by id, so pop() is not deterministic)
-        for ident in ("complex", "float_", "int_", "bool_"):
-            scalar = python.def_class(gx, ident)
-            if scalar in lcp and all(
-                cl.ident in ("int_", "float_", "bool_", "complex") for cl in lcp
-            ):
-                return conv[ident]
+        if _all_scalars(lcp):
+            for ident in ("complex", "float_", "int_", "bool_"):
+                if python.def_class(gx, ident) in lcp:
+                    return conv[ident]
     elif not classes:
         if cplusplus:
             return "void *"
