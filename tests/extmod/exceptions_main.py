@@ -201,7 +201,11 @@ def test_lib_errors():
         exceptions.lib_error(2)
     except re.error as e:
         assert str(e) == 'plain' and e.pattern is None
-    assert exceptions.lib_error(3) == 3
+    try:
+        exceptions.lib_error(3)
+    except re.error as e:
+        assert str(e) == 'bad' and e.pattern == 'pat' and e.pos is None
+    assert exceptions.lib_error(4) == 4
 
 
 def test_python_side():

@@ -1853,6 +1853,23 @@ def test_read0_empty_pipe():
     fr.close()
 
 
+def test_open_directory_fd():
+    if os.name == 'nt':
+        return
+    fd = os.open('.', os.O_RDONLY)
+    try:
+        open(fd, 'rb')
+        assert False
+    except IsADirectoryError:
+        pass
+    try:
+        open(fd, 'r')
+        assert False
+    except IsADirectoryError:
+        pass
+    os.close(fd)  # (still open)
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1913,6 +1930,7 @@ def test_all():
     test_read1_bom_only_next_closed()
     test_closefd_read_write_wb_messages()
     test_read0_empty_pipe()
+    test_open_directory_fd()
 
 if __name__ == '__main__':
     test_all()

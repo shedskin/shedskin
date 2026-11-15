@@ -109,17 +109,17 @@ Dialect *_make_dialect(
     dialect->strict = from->strict;
 
     if (delimiter == __csv_none)
-        throw new TypeError(new str("\"delimiter\" must be string, not NoneType"));
+        throw new TypeError(new str("\"delimiter\" must be a unicode character, not NoneType")); /* (3.15 wording) */
     if ((delimiter!=NULL)) {
         if(len(delimiter) != 1)
-            throw new TypeError(new str("\"delimiter\" must be a 1-character string"));
+            throw new TypeError(__add_strs(3, new str("\"delimiter\" must be a unicode character, not a string of length "), __str(len(delimiter)), new str("")));
         dialect->delimiter = delimiter;
     }
     if (quotechar == __csv_none)
         dialect->quotechar = NULL;
     else if ((quotechar!=NULL)) {
         if(len(quotechar) != 1)
-            throw new TypeError(new str("\"quotechar\" must be a 1-character string"));
+            throw new TypeError(__add_strs(3, new str("\"quotechar\" must be a unicode character or None, not a string of length "), __str(len(quotechar)), new str("")));
         dialect->quotechar = quotechar;
     }
     if ((doublequote!=(-1))) {
@@ -129,7 +129,7 @@ Dialect *_make_dialect(
         dialect->skipinitialspace = __mbool(skipinitialspace);
     }
     if (lineterminator == __csv_none)
-        throw new TypeError(new str("lineterminator must be set"));
+        throw new TypeError(new str("\"lineterminator\" must be a string, not NoneType"));
     if ((lineterminator!=NULL)) {
         dialect->lineterminator = lineterminator;
     }
@@ -142,7 +142,7 @@ Dialect *_make_dialect(
         dialect->escapechar = NULL;
     else if ((escapechar!=NULL)) {
         if(len(escapechar) != 1)
-            throw new TypeError(new str("\"escapechar\" must be a 1-character string"));
+            throw new TypeError(__add_strs(3, new str("\"escapechar\" must be a unicode character or None, not a string of length "), __str(len(escapechar)), new str("")));
         dialect->escapechar = escapechar;
     }
     if ((strict!=(-1))) {

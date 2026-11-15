@@ -1807,6 +1807,40 @@ def test_sendfile_error_position_negzero_timeout():
     srv.close()
 
 
+def test_socket_negative_args_sendfile_fallback():
+    # only -1 means the default family/type/proto, as CPython
+    for fam, ty, pr in [(-5, 1, 0), (2, -7, 0), (2, 1, -3)]:
+        try:
+            socket.socket(fam, ty, pr)
+            assert False
+        except OSError:
+            pass
+    if sys.platform == 'win32':
+        return
+    name = 'shedskin_test_sendfile_fallback.bin'
+    f = open(name, 'wb')
+    f.write(b'x' * 20000)
+    f.close()
+    f = open(name, 'rb')
+    s = socket.socket()  # (not connected: send() fails)
+    # as CPython: os.sendfile() failing with nothing sent falls back on
+    # read()/send(), which leaves the file after what it read
+    for offset, count, pos in [(0, 0, 8292), (50, 0, 8242), (50, 10, 60)]:
+        f.seek(100)
+        try:
+            if count == 0:
+                s.sendfile(f, offset)
+            else:
+                s.sendfile(f, offset, count)
+            assert False
+        except OSError:
+            pass
+        assert f.tell() == pos
+    f.close()
+    s.close()
+    os.remove(name)
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1855,6 +1889,7 @@ def test_all():
     test_fileno_minus_one_sendfile_offset()
     test_sendfile_nothing_sent()
     test_sendfile_error_position_negzero_timeout()
+    test_socket_negative_args_sendfile_fallback()
 
 if __name__ == '__main__':
     test_all()

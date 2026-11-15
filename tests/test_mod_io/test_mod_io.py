@@ -424,7 +424,7 @@ def test_text_encoding():
     assert 'h\xe9'.encode(io.text_encoding(None)) == b'h\xc3\xa9'
 
 def test_module_constants():
-    assert io.DEFAULT_BUFFER_SIZE == 8192
+    assert io.DEFAULT_BUFFER_SIZE == 131072  # (as CPython 3.15)
     assert io.SEEK_SET == 0
     assert io.SEEK_CUR == 1
     assert io.SEEK_END == 2

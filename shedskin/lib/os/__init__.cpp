@@ -1979,8 +1979,8 @@ __ss_int tcgetpgrp(__ss_int fd) {
 }
 
 void *tcsetpgrp(__ss_int fd, __ss_int pg) {
-    int fd_ = __ss_cint_i(fd);
-    pid_t pg_ = __ss_cint_i(pg);
+    int fd_ = __ss_cint(fd);
+    pid_t pg_ = __ss_cint(pg);
     if(::tcsetpgrp(fd_, pg_) == -1)
         __throw_oserror();
     return NULL;
@@ -2020,8 +2020,8 @@ tuple<__ss_int> *wait() {
 
 tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
     int status = 0; /* (WNOHANG: unset when no child is ready) */
-    pid_t pid_ = __ss_cint_i(pid);
-    int options_ = __ss_cint_i(options);
+    pid_t pid_ = __ss_cint(pid);
+    int options_ = __ss_cint(options);
     if((pid = ::waitpid(pid_, &status, options_)) == -1)
         __throw_oserror();
     return new tuple<__ss_int>(2, pid, (__ss_int)status);
@@ -2038,13 +2038,13 @@ __ss_int nice(__ss_int n) {
 
 void *kill(__ss_int pid, __ss_int sig) {
     /* (like cpython, sig is truncated) */
-    if(::kill((pid_t)__ss_cint_i(pid), (int)sig) == -1)
+    if(::kill((pid_t)__ss_cint(pid), (int)sig) == -1)
         __throw_oserror();
     return NULL;
 }
 void *killpg(__ss_int pgid, __ss_int sig) {
-    pid_t pgid_ = __ss_cint_i(pgid);
-    int sig_ = __ss_cint_i(sig);
+    pid_t pgid_ = __ss_cint(pgid);
+    int sig_ = __ss_cint(sig);
     if(::killpg(pgid_, sig_) == -1)
         __throw_oserror();
     return NULL;
@@ -2159,7 +2159,7 @@ void *setgroups(pyseq<__ss_int> *groups) {
 }
 
 __ss_int getsid(__ss_int pid) {
-    __ss_int nr = ::getsid((pid_t)__ss_cint_i(pid));
+    __ss_int nr = ::getsid((pid_t)__ss_cint(pid));
     if(nr == -1)
         __throw_oserror();
     return nr;
@@ -2171,13 +2171,13 @@ void *setsid() {
 }
 
 __ss_int getpgid(__ss_int pid) {
-    __ss_int nr = ::getpgid((pid_t)__ss_cint_i(pid));
+    __ss_int nr = ::getpgid((pid_t)__ss_cint(pid));
     if(nr == -1)
         __throw_oserror();
     return nr;
 }
 void *setpgid(__ss_int pid, __ss_int pgrp) {
-    pid_t pid_ = __ss_cint_i(pid), pgrp_ = __ss_cint_i(pgrp);
+    pid_t pid_ = __ss_cint(pid), pgrp_ = __ss_cint(pgrp);
     if(::setpgid(pid_, pgrp_) == -1)
         __throw_oserror();
     return NULL;
@@ -2368,7 +2368,7 @@ tuple<__ss_int> *waitpid(__ss_int pid, __ss_int options) {
     intptr_t res;
     {
         __suppress_iph guard;
-        res = ::_cwait(&status, (intptr_t)pid, __ss_cint_i(options));
+        res = ::_cwait(&status, (intptr_t)pid, __ss_cint(options));
     }
     if (res == -1)
         __throw_oserror();

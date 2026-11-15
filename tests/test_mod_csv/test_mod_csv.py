@@ -177,21 +177,21 @@ def test_errors():
         csv.reader(open(csvfile_out, "w"), delimiter='xyz')
     except TypeError as e:
         error = str(e)
-    assert error == '"delimiter" must be a 1-character string'
+    assert error == '"delimiter" must be a unicode character, not a string of length 3'
 
     error = ''
     try:
         csv.reader(open(csvfile_out, "w"), quotechar='"""')
     except TypeError as e:
         error = str(e)
-    assert error == '"quotechar" must be a 1-character string'
+    assert error == '"quotechar" must be a unicode character or None, not a string of length 3'
 
     error = ''
     try:
         csv.reader(open(csvfile_out, "w"), escapechar='hoei')
     except TypeError as e:
         error = str(e)
-    assert error == '"escapechar" must be a 1-character string'
+    assert error == '"escapechar" must be a unicode character or None, not a string of length 4'
 
     error = ''
     try:
@@ -556,7 +556,7 @@ def test_unknown_dialect():
         csv.reader(['a'], delimiter='')
     except TypeError as e:
         error = str(e)
-    assert error == '"delimiter" must be a 1-character string'
+    assert error == '"delimiter" must be a unicode character, not a string of length 0'
 
 
 def test_quote_none_single_empty_field():
@@ -1044,7 +1044,7 @@ def test_register_dialect_kwargs():
         csv.register_dialect('bad', delimiter=';;')
     except TypeError as e:
         error = str(e)
-    assert error == '"delimiter" must be a 1-character string'
+    assert error == '"delimiter" must be a unicode character, not a string of length 2'
     assert 'bad' not in csv.list_dialects()
 
     csv.unregister_dialect('weird')
@@ -1312,17 +1312,17 @@ def test_none_args():
         csv.reader(['x'], delimiter=None)
         assert False
     except TypeError as e:
-        assert str(e) == '"delimiter" must be string, not NoneType'
+        assert str(e) == '"delimiter" must be a unicode character, not NoneType'
     try:
         csv.writer(io.StringIO(), lineterminator=None)
         assert False
     except TypeError as e:
-        assert str(e) == 'lineterminator must be set'
+        assert str(e) == '"lineterminator" must be a string, not NoneType'
     try:
         csv.register_dialect('bad', delimiter=None)
         assert False
     except TypeError as e:
-        assert str(e) == '"delimiter" must be string, not NoneType'
+        assert str(e) == '"delimiter" must be a unicode character, not NoneType'
 
     # a str variable that may hold None
     q = None

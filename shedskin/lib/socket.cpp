@@ -938,31 +938,48 @@ __ss_int socket::__sendfile(file_binary *f, __ss_int offset, __ss_int count) {
     } else if (offset)
         f->seek(offset, 0);
     size_t total = 0; /* (bytes sent) */
-    try {
-        for (;;) {
-            __ss_int toread = 8192;
-            if (count >= 0) {
-                __ss_int remaining = count - (__ss_int)total;
-                if (remaining <= 0)
+    for (;;) { /* (at most twice: os.sendfile(), then the read()/send() fallback) */
+        try {
+            for (;;) {
+                __ss_int toread = 8192;
+                if (count >= 0) {
+                    __ss_int remaining = count - (__ss_int)total;
+                    if (remaining <= 0)
+                        break;
+                    if (toread > remaining)
+                        toread = remaining;
+                }
+                bytes *b = f->read(toread);
+                size_t len = b->unit.size();
+                if (len == 0)
                     break;
-                if (toread > remaining)
-                    toread = remaining;
+                const char *s = b->unit.data();
+                size_t off = 0;
+                while (off < len) {
+                    size_t sent = send(s + off, len - off, 0);
+                    off += sent;
+                    total += sent;
+                }
             }
-            bytes *b = f->read(toread);
-            size_t len = b->unit.size();
-            if (len == 0)
-                break;
-            const char *s = b->unit.data();
-            size_t off = 0;
-            while (off < len) {
-                size_t sent = send(s + off, len - off, 0);
-                off += sent;
-                total += sent;
+            break;
+        } catch (TimeoutError *) {
+            __sendfile_reposition(f, native, pos0, offset, total);
+            throw;
+        } catch (OSError *) {
+            /* as CPython: an OSError before anything was sent gives up on
+               os.sendfile() and falls back on read()/send(), from offset if
+               given, else from the file position (_sendfile_use_send) */
+            if (native && total == 0) {
+                native = false;
+                f->seek(offset ? offset : pos0, 0);
+                continue;
             }
+            __sendfile_reposition(f, native, pos0, offset, total);
+            throw;
+        } catch (...) {
+            __sendfile_reposition(f, native, pos0, offset, total);
+            throw;
         }
-    } catch (...) { /* (as CPython, also when read() or send() raises) */
-        __sendfile_reposition(f, native, pos0, offset, total);
-        throw;
     }
     __sendfile_reposition(f, native, pos0, offset, total);
     return (__ss_int)total;
@@ -1688,12 +1705,12 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
 #endif
         }
 #endif /* WIN32 */
-    } else {
-        if (family_ < 0)
+    } else { /* (as CPython: only -1 means the default) */
+        if (family_ == -1)
             family_ = AF_INET;
-        if (type_ < 0)
+        if (type_ == -1)
             type_ = SOCK_STREAM;
-        if (proto_ < 0)
+        if (proto_ == -1)
             proto_ = 0;
         _fd = ::socket((int)family_, (int)type_, (int)proto_);
         if (_fd == SS_INVALID_SOCKET)
