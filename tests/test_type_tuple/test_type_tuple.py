@@ -296,6 +296,23 @@ def test_tuple_hash():
     assert d[199, 3] == 597 and d[3, 199] == 597
 
 
+class SliceNode:
+    def __init__(self, n, args=None):
+        self.n = n
+        self.args = args
+
+
+def test_slice_instances():
+    # slice bounds are not cast to the element type (examples/genetic2)
+    node = SliceNode(0)
+    node.args = tuple([SliceNode(i) for i in range(1, 4)])
+    choice = 1
+    node.args = node.args[:choice] + (SliceNode(4),) + node.args[choice+1:]
+    assert [a.n for a in node.args] == [1, 4, 3]
+    assert [a.n for a in node.args[choice:]] == [4, 3]
+    assert [a.n for a in node.args[::choice+1]] == [1, 3]
+
+
 def test_all():
     test_tuple_hash()
     test_tuple_literal_long()
@@ -315,6 +332,7 @@ def test_all():
     test_tuple_search()
     test_tuple2_search()
     test_int_pairs()
+    test_slice_instances()
 
 
 

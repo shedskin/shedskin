@@ -2642,8 +2642,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         decltypes = self.expr_decl_types(node)
         if decltypes is not None:
             actualtypes = decltypes
-        if check_temp and node in self.mv.tempcount:  # XXX
-            self.append(self.mv.tempcount[node])
+        if check_temp and node in self.mv.tempcount:
+            # the temp has the type of the node, so cast it as the node
+            # itself would be (e.g. 'la, n = lb, 1')
+            cast = None
+            if actualtypes:
+                cast = self.conv_cast(node, actualtypes, argtypes)
+            if cast == "complex":
+                self.append("(mcomplex(" + self.mv.tempcount[node] + "))")
+            elif cast:
+                self.append("((" + cast + ")(" + self.mv.tempcount[node] + "))")
+            else:
+                self.append(self.mv.tempcount[node])
         elif self.builds_new_container(node, argtypes, check_temp=False):
             if isinstance(node, ast.Dict):
                 self.visit_Dict(node, func, argtypes=argtypes)
@@ -2704,6 +2714,26 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             error.error("incompatible types", self.gx, node, warning=True, mv=self.mv)
             return None
         return argstr.strip()
+
+    def upcast_item(
+        self, item: ast.AST, func: Optional["python.Function"]
+    ) -> Optional[str]:
+        """Return the C++ type to cast an unpacked item to, if it is (a
+        container of) instances of a subclass of what the target holds, as
+        in 'la, n = lb, 1'"""
+        value = self.gx.item_value.get(item)
+        if not isinstance(item, ast.Name) or value not in self.mergeinh:
+            return None
+        var = python.lookup_var(item.id, func, self.mv)
+        if var is None or var not in self.mergeinh:
+            return None
+        rtypes, ltypes = self.mergeinh[value], self.mergeinh[var]
+        if not (rtypes and ltypes and typestr.upcast_only(self.gx, rtypes, ltypes)):
+            return None
+        lts = typestr.typestr(self.gx, ltypes, mv=self.mv)
+        if lts == typestr.typestr(self.gx, rtypes, mv=self.mv):
+            return None
+        return lts.strip()
 
     def visit_Break(
         self, node: ast.Break, func: Optional["python.Function"] = None
@@ -3126,19 +3156,43 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     ) -> None:
         """Generate a bitwise operation"""
         ltypes = self.mergeinh[node.left]
+        rtypes = self.mergeinh[node.right]
         ul = typestr.unboxable(self.gx, ltypes)
+        # 'sa | sb': convert the operands to their common type, as for '+'
+        convert = msg in ("__or__", "__and__", "__xor__") and (
+            self.same_container_operands(ltypes, rtypes)
+        )
+        argtypes = ltypes | rtypes
         self.append("(")
         self.append("(")
-        self.visit(node.left, func)
+        if convert:
+            self.impl_visit_conv(node.left, argtypes, func)
+        else:
+            self.visit(node.left, func)
         self.append(")")
         if ul:
             self.append(inline)
         else:
             self.append("->" + msg)
         self.append("(")
-        self.visit(node.right, func)
+        if convert:
+            self.impl_visit_conv(node.right, argtypes, func)
+        else:
+            self.visit(node.right, func)
         self.append(")")
         self.append(")")
+
+    def same_container_operands(self, ltypes: Types, rtypes: Types) -> bool:
+        """Whether both operands of a set or dict operator ('|', '&', '^',
+        '-') are of the same builtin class, so they can be converted to
+        their common type, as for '+' (e.g. 'sa | sb', with sets of
+        instances of A and of its subclass B)"""
+        lcls = {t[0] for t in ltypes}
+        return (
+            len(lcls) == 1
+            and lcls == {t[0] for t in rtypes}
+            and next(iter(lcls)).ident in ("set", "frozenset", "dict")
+        )
 
     def visit_arith(
         self, node: ast.AST, func: Optional["python.Function"] = None
@@ -3374,6 +3428,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         convert = middle == "__add__" and (
             typestr.typestr(self.gx, argtypes, mv=self.mv).strip() != "pyobj *"
         )
+        if middle == "__sub__" and self.same_container_operands(ltypes, rtypes):
+            convert = True
 
         self.append("(")
         if convert:
@@ -3598,6 +3654,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # 'node in leaves': the value may be an instance of other subclasses than the
         # elements, so it has a base class type (list.count and such cast in the same way)
         elif all(not cl.mv.module.builtin for cl in ecls) and ecls <= vcls:
+            etype = typestr.typestr(self.gx, etypes, mv=self.mv)
+            if etype != typestr.nodetypestr(self.gx, value, func, mv=self.mv):
+                return etype
+        # '(b, 1) in pairs', '[b] in lists': a container of instances of a
+        # subclass has the same representation, so it can be cast as well
+        elif typestr.upcast_only(self.gx, self.mergeinh[value], etypes):
             etype = typestr.typestr(self.gx, etypes, mv=self.mv)
             if etype != typestr.nodetypestr(self.gx, value, func, mv=self.mv):
                 return etype
@@ -4842,17 +4904,38 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         objexpr: Optional[ast.AST],
     ) -> Optional[Types]:
         """Check if a cast to a builtin type is necessary"""
-        # type inference cannot deduce all necessary casts to builtin formals
+        # type inference cannot deduce all necessary casts to builtin formals:
+        # 'u' and 'v' are an element (key) and a value of the container, 'o'
+        # another container of the same kind (as in 'l1 + l2')
         vars = {"u": "unit", "v": "value", "o": None}
         if (
             target.mv.module.builtin
             and method_call
             and formal.name in vars
             and isinstance(target.parent, python.Class)
-            and target.parent.ident in ("list", "dict", "set")
+            and target.parent.ident
+            in (
+                "list",
+                "tuple",
+                "dict",
+                "set",
+                "pyset",
+                "deque",
+                "defaultdict",
+                "Counter",
+            )
         ):
             assert objexpr
-            subtypes = self.subtypes(self.mergeinh[objexpr], vars[formal.name])
+            objtypes = self.mergeinh[objexpr]
+            if formal.name == "o":
+                # only for a container of the same kind: not a set for a
+                # frozenset, or any iterable where that is allowed
+                argcls = {t[0] for t in self.mergeinh[arg]}
+                if not argcls or argcls != {t[0] for t in objtypes}:
+                    return None
+                subtypes = objtypes
+            else:
+                subtypes = self.subtypes(objtypes, vars[formal.name])
             if typestr.nodetypestr(self.gx, arg, func, mv=self.mv) != typestr.typestr(
                 self.gx, subtypes, mv=self.mv
             ):
@@ -5012,7 +5095,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             if isinstance(item, ast.Name):
                 self.start()
-                self.visitm(item, " = ", selector, func)
+                cast = self.upcast_item(item, func)
+                if cast:
+                    self.visitm(item, " = ((", cast, ")(", selector, "))", func)
+                else:
+                    self.visitm(item, " = ", selector, func)
                 self.eol()
             elif ast_utils.is_assign_list_or_tuple(item):  # a, (b,c) = d, e
                 assert isinstance(item, (ast.List, ast.Tuple))
@@ -5106,13 +5193,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             subs = lvalue.slice
         self.visitm(
-            lvalue.value,
-            self.connector(lvalue.value, func),
-            "__setitem__(",
-            subs,
-            ", ",
-            func,
+            lvalue.value, self.connector(lvalue.value, func), "__setitem__(", func
         )
+        # convert a dict key as for a method argument (see visit_Call)
+        builtin_types = None
+        if subs not in self.mv.tempcount:
+            builtin_types = self.cast_to_builtin2(
+                subs, func, lvalue.value, "__setitem__", 1
+            )
+        if builtin_types:
+            self.impl_visit_conv(subs, builtin_types, func)
+        else:
+            self.visit(subs, func)
+        self.append(", ")
 
     def struct_unpack_cpp(
         self, node: ast.Assign, func: Optional["python.Function"]

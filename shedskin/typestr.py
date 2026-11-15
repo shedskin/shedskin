@@ -414,6 +414,15 @@ def typestrnew(
                     node,
                     warning=True,
                 )
+
+        # scalars only (e.g. {bool, int}): pick the widest one, rather than
+        # an arbitrary one (classes hash by id, so pop() is not deterministic)
+        for ident in ("complex", "float_", "int_", "bool_"):
+            scalar = python.def_class(gx, ident)
+            if scalar in lcp and all(
+                cl.ident in ("int_", "float_", "bool_", "complex") for cl in lcp
+            ):
+                return conv[ident]
     elif not classes:
         if cplusplus:
             return "void *"
