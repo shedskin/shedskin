@@ -2283,6 +2283,37 @@ def test_rename_replace_existing():
     os.remove(b)
 
 
+def test_stat_nul_name_utime_ns_float():
+    try:
+        os.stat('x\0y', follow_symlinks=False)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'stat: embedded null character in path'
+    name = 'shedskin_test_utime_float.txt'
+    open(name, 'w').close()
+    try:
+        os.utime(name, ns=(1, 2.9))
+        assert False
+    except TypeError as e2:
+        assert str(e2) == "'float' object cannot be interpreted as an integer"
+    os.remove(name)
+
+
+def test_stat_dir_trailing_sep():
+    # (the windows CRT stat() fails on 'sub\\')
+    d = 'shedskin_test_trailing_sep'
+    os.mkdir(d)
+    assert os.path.isdir(d + '/')
+    assert os.path.isdir(d + os.sep)
+    assert os.path.exists(d + os.sep + os.sep)
+    assert stat.S_ISDIR(os.stat(d + os.sep).st_mode)
+    f = open(d + os.sep + 'f', 'w')
+    f.close()
+    assert not os.path.exists(d + os.sep + 'f' + os.sep)
+    os.remove(d + os.sep + 'f')
+    os.rmdir(d)
+
+
 def test_all():
     test_unicode_names()
     test_undecodable_names()
@@ -2382,6 +2413,8 @@ def test_all():
         # check above is a runtime guard, not a compile-time one), so calling
         # it here breaks the Windows build even though it never runs there.
     test_rename_replace_existing()
+    test_stat_nul_name_utime_ns_float()
+    test_stat_dir_trailing_sep()
 
 if __name__ == '__main__':
     test_all()

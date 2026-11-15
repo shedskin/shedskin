@@ -639,6 +639,10 @@ template<class T> void *array<T>::tofile(file_binary *f) {
 }
 
 template<class T> void *array<T>::fromfile(file_binary *f, __ss_int n) {
+    if(n < 0)
+        throw new ValueError(new str("n cannot be negative"));
+    if(n > std::numeric_limits<__ss_int>::max() / (__ss_int)itemsize)
+        throw new MemoryError();
     bytes *s = f->read(n*(__ss_int)itemsize);
     size_t len = s->__len__();
     if(len % itemsize != 0)

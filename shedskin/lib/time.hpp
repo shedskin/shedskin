@@ -132,7 +132,7 @@ str *strftime(str *format, struct_time* tuple);
 str *strftime(str *format);
 str *strftime(str *format, tuple2<__ss_int, __ss_int> *tuple);
 
-struct_time *strptime(str *string, str *format);
+struct_time *strptime(str *string, str *format=0);
 
 /* what CPython's _strptime() returns, shared with datetime.strptime */
 struct __ss_strptime_result {

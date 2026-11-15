@@ -714,6 +714,11 @@ def test_strptime_week_year_range():
     assert msg == 'year must be in 1..9999, not 10000'
 
 
+def test_strptime_default_format():
+    t = time.strptime('Tue Feb 29 12:00:00 2000')
+    assert (t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_yday) == (2000, 2, 29, 12, 60)
+
+
 def test_all():
     # test_time() ## producing different results on linux vs macos
     #test_mktime()
@@ -768,6 +773,7 @@ def test_all():
     test_strptime_day_without_year()
     test_strptime_315_directives()
     test_strptime_week_year_range()
+    test_strptime_default_format()
 
 if __name__ == '__main__':
     test_all() 

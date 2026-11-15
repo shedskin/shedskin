@@ -5349,6 +5349,13 @@ def test_empty_call_contexts():
 
 
 
+# a variable mixing bool and int: still a warning, but typed int
+def test_var_bool_int():
+    x = 1
+    x = True
+    assert x + 1 == 2
+
+
 def test_all():
     test_assign_bool_int_lit_scalar()
     test_assign_int_float_lit_scalar()
@@ -5680,7 +5687,7 @@ def test_all():
     test_lib_empty_var_mixed_chain()
     test_lib_empty_var_mixed_number()
     test_empty_call_contexts()
-
+    test_var_bool_int()
 
 if __name__ == '__main__':
     test_all()

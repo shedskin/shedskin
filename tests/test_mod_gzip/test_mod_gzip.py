@@ -1084,6 +1084,27 @@ def test_readinto_check_order():
     assert msg == 'readinto1() argument must be read-write bytes-like object, not bytes'
 
 
+def test_read1_default_size():
+    # read1() gives up to io.DEFAULT_BUFFER_SIZE (128 KiB), within a member
+    name = 'shedskin_test_read1.gz'
+    f = gzip.open(name, 'wb')
+    f.write(b'x' * 300000)
+    f.close()
+    f = gzip.open(name, 'ab')
+    f.write(b'y' * 1000)
+    f.close()
+    g = gzip.open(name, 'rb')
+    sizes = []
+    while True:
+        b = g.read1()
+        if not b:
+            break
+        sizes.append(len(b))
+    g.close()
+    assert sizes == [131072, 131072, 37856, 1000]
+    os.remove(name)
+
+
 def test_all():
     test_roundtrip()
     test_compress_header()
@@ -1119,6 +1140,7 @@ def test_all():
     test_readinto_msgs_text_seek_wrong_direction()
     test_header_crc_wplus_mode()
     test_readinto_check_order()
+    test_read1_default_size()
 
 if __name__ == '__main__':
     test_all()

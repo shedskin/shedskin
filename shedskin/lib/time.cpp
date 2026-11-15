@@ -1371,6 +1371,8 @@ void __ss_strptime(str *string, str *format, __ss_strptime_result &res) {
 }
 
 struct_time *strptime(str *string, str *format) {
+    if(!format) /* (as CPython) */
+        format = new str("%a %b %d %H:%M:%S %Y");
     __ss_strptime_result r;
     __ss_strptime(string, format, r);
     struct_time *st = new struct_time(new tuple2<__ss_int, __ss_int>(9,

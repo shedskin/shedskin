@@ -335,6 +335,8 @@ template<class D, class P, class T> void *utime(__ss_bool follow_symlinks, D dir
 }
 template<class D, class N, class P> void *utime(__ss_bool follow_symlinks, D dir_fd, N *ns, P path, void *) {
     __utime_check_pair(ns, "utime: 'ns' must be a tuple of two ints");
+    if constexpr (std::is_floating_point_v<decltype(ns->__getfirst__())> || std::is_floating_point_v<decltype(ns->__getsecond__())>)
+        throw new TypeError(new str("'float' object cannot be interpreted as an integer")); /* (as CPython) */
     int d = __ss_dirfd(dir_fd);
     bool f = follow_symlinks;
     str *p = __utime_p(path, d, f);

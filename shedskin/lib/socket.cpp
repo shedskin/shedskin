@@ -2314,7 +2314,7 @@ __ss_int dup(__ss_int fd)
     return (__ss_int)dup_socket_fd((socket_type)fd);
 }
 
-__ss_bool has_ipv6 = True;
+__ss_bool has_ipv6 = __mbool(true); /* (not 'True': that global may not be initialized yet) */
 
 } // module namespace
 
