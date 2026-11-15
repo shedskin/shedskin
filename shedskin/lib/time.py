@@ -112,6 +112,6 @@ def ctime(seconds=None):
 def strftime(format, tuple=None):
     return "str"
 
-def strptime(string, format):
+def strptime(string, format=None):
     return struct_time((1,2,3))
 

@@ -489,6 +489,14 @@ def test_dir_fd_nul():
     os.rmdir('shedskin_test_gnul')
 
 
+def test_root_dir_nul():
+    try:
+        glob.glob('*', root_dir='x\0y')
+        assert False
+    except ValueError as e:
+        assert str(e) == 'scandir: embedded null character in path'
+
+
 def test_all():
     test_glob()
     test_has_magic()
@@ -501,6 +509,7 @@ def test_all():
     if os.name == 'posix':  # dir_fd is not supported on windows (as in cpython)
         test_dir_fd()
     test_dir_fd_nul()
+    test_root_dir_nul()
 
 if __name__ == "__main__":
     test_all()

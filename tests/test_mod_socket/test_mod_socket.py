@@ -1841,6 +1841,10 @@ def test_socket_negative_args_sendfile_fallback():
     os.remove(name)
 
 
+def test_has_ipv6():
+    assert socket.has_ipv6
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1890,6 +1894,7 @@ def test_all():
     test_sendfile_nothing_sent()
     test_sendfile_error_position_negzero_timeout()
     test_socket_negative_args_sendfile_fallback()
+    test_has_ipv6()
 
 if __name__ == '__main__':
     test_all()

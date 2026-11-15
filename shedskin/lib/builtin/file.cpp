@@ -848,7 +848,9 @@ static inline __ss_bool __fd_seekable(FILE *f) {
         return False;
     return ___bool(_lseeki64(fd, 0, SEEK_CUR) != -1);
 #else
-    return ___bool(lseek(fileno(f), 0, SEEK_CUR) != -1);
+    /* (as CPython, only a pipe/socket/terminal (ESPIPE) is not seekable: e.g.
+       with the fd closed underneath, seek() and tell() then fail with EBADF) */
+    return ___bool(lseek(fileno(f), 0, SEEK_CUR) != -1 || errno != ESPIPE);
 #endif
 }
 

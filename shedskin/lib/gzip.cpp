@@ -512,8 +512,12 @@ bytes *GzipFile::read1(__ss_int n) {
     __check_can_read("read1");
     if (n < 0)
         n = __io__::DEFAULT_BUFFER_SIZE;
-    if (n > 0 && outpos == outbuf.size())
+    if (n > 0 && outpos == outbuf.size()) {
+        /* as CPython: up to n bytes (a __fill() gives at most CHUNK_SIZE), but
+           not beyond the end of the member */
         __fill();
+        while (outbuf.size() - outpos < (size_t)n && !member_end && !at_eof && __fill()) ;
+    }
     size_t k = std::min(outbuf.size() - outpos, (size_t)n);
     bytes *b = new bytes(outbuf.data() + outpos, k);
     outpos += k;

@@ -764,6 +764,23 @@ stat_result::stat_result(str *path, __ss_int t) {
     }
 #ifdef WIN32
     bool device = false;
+    if (r == -1 && t == 1) {
+        /* the CRT stat() fails on a directory with a trailing (back)slash
+           ('sub\\'), unlike CPython: retry without, for a directory only */
+        std::wstring w = __to_wide(path, "stat");
+        size_t n = w.size();
+        while (n > 1 && (w[n-1] == L'\\' || w[n-1] == L'/') && w[n-2] != L':')
+            n--;
+        if (n < w.size()) {
+            int saved = errno;
+            struct stat sb2;
+            if (::_wstat64i32(w.substr(0, n).c_str(), (struct _stat64i32 *)&sb2) == 0 && (sb2.st_mode & _S_IFMT) == _S_IFDIR) {
+                sbuf = sb2;
+                r = 0;
+            } else
+                errno = saved;
+        }
+    }
     if (r == -1) {
         /* The CRT stat() fails on device names such as 'nul' or 'con'.
            Like CPython (since 3.8), fall back to opening the path and
@@ -879,6 +896,7 @@ stat_result *stat(bytes *path) {
 stat_result *stat(__ss_bool follow_symlinks, str *path) {
     if(follow_symlinks)
         return stat(path);
+    __ss_check_nul(path, "stat"); /* (not 'lstat') */
     return lstat(path);
 }
 stat_result *stat(__ss_bool follow_symlinks, bytes *path) {

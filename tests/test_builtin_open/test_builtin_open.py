@@ -1870,6 +1870,35 @@ def test_open_directory_fd():
     os.close(fd)  # (still open)
 
 
+def test_seek_tell_closed_fd():
+    if os.name == 'nt':
+        return
+    # with the fd closed underneath, seek()/tell() fail with EBADF (not
+    # 'not seekable'), as CPython
+    name = 'shedskin_test_closed_fd.txt'
+    f = open(name, 'w')
+    f.write('hello\n')
+    f.close()
+    f = open(name)
+    os.close(f.fileno())
+    try:
+        f.seek(0)
+        assert False
+    except OSError as e:
+        assert e.errno == 9  # (EBADF)
+    try:
+        f.tell()
+        assert False
+    except OSError as e2:
+        assert e2.errno == 9
+    assert f.seekable()
+    try:
+        f.close()
+    except OSError:
+        pass
+    os.remove(name)
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1931,6 +1960,7 @@ def test_all():
     test_closefd_read_write_wb_messages()
     test_read0_empty_pipe()
     test_open_directory_fd()
+    test_seek_tell_closed_fd()
 
 if __name__ == '__main__':
     test_all()

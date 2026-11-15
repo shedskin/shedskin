@@ -498,6 +498,7 @@ list<str *> *_listdir(str *dirname, __ss_int dir_fd, __ss_bool dironly) {
     if (__NOT(___bool(dirname))) {
         dirname = __os__::curdir;
     }
+    __ss_check_nul(dirname, "scandir"); /* (as CPython, which uses scandir) */
     try {
         names = __os__::listdir(dirname);
     } catch (OSError *) {

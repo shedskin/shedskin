@@ -958,6 +958,29 @@ def test_iteration():
     _iteration_mutate()
     _iteration_protocol()
 
+def test_fromfile_negative():
+    name = 'shedskin_test_fromfile.bin'
+    f = open(name, 'wb')
+    f.write(b'0123456789AB')
+    f.close()
+    a = array.array('B')
+    f = open(name, 'rb')
+    try:
+        a.fromfile(f, -1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'n cannot be negative'
+    assert len(a) == 0 and f.tell() == 0
+    q = array.array('q')
+    try:
+        q.fromfile(f, 2**61)
+        assert False
+    except MemoryError:
+        pass
+    f.close()
+    os.remove(name)
+
+
 def test_all():
     test_typecodes()
     test_buffer_info()
@@ -1000,7 +1023,7 @@ def test_all():
     test_bytes_buffer()
     test_float_into_int_array()
     test_iteration()
-
+    test_fromfile_negative()
 
 if __name__ == '__main__':
     test_all()
