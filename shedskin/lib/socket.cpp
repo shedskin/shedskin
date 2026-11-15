@@ -909,8 +909,12 @@ __ss_int socket::__sendfile(file_binary *f, __ss_int offset, __ss_int count) {
     if (_timeout == 0)
         throw new ValueError(new str("non-blocking sockets are not supported"));
     /* portable fallback implementation (chunked read/send loop), like
-     * CPython uses on platforms without os.sendfile() */
+     * CPython uses on platforms without os.sendfile() (windows). where it
+     * has os.sendfile(), CPython always starts at offset (default 0), not at
+     * the current file position */
+#ifdef WIN32
     if (offset)
+#endif
         f->seek(offset, 0);
     size_t total = 0;
     for (;;) {
@@ -1607,7 +1611,7 @@ socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_, __ss_int filen
     _timeout = __ss_default_timeout;
     _blocking = true;
 
-    if (fileno < -1) /* (-1 is the 'not given' default) */
+    if (fileno < 0 && fileno != __no_fileno)
         throw new ValueError(new str("negative file descriptor"));
     if (fileno >= 0) {
         /* wrap an existing fd; like CPython, detect what wasn't given */

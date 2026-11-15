@@ -24,6 +24,8 @@ void __ss_exit();
 template<class T> void __ss_exit(T x) {
     if constexpr (std::is_same_v<T, __ss_void_struct>) /* sys.exit() */
         __ss_exit();
+    else if constexpr (std::is_floating_point_v<T>) /* (as CPython: not an int, so printed, exit status 1) */
+        throw new SystemExit(__str(x));
     else
         throw new SystemExit(x);
 }

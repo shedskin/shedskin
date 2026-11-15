@@ -1426,10 +1426,7 @@ def test_timedelta_division():
                 t / False
         except ZeroDivisionError as e:
             error = str(e)
-        if k == 0:
-            assert error == 'division by zero'
-        else:
-            assert error == 'integer division or modulo by zero'
+        assert error == 'division by zero'  # (3.15 wording, for all of them)
 
 
 def test_timedelta_multiplication():
@@ -1545,10 +1542,7 @@ def test_timedelta_modulo():
                 divmod(t, datetime.timedelta(0))
         except ZeroDivisionError as e:
             error = str(e)
-        if k == 0:
-            assert error == 'integer modulo by zero'
-        else:
-            assert error == 'integer division or modulo by zero'
+        assert error == 'division by zero'  # (3.15 wording)
 
 
 def test_timedelta_exact_ints():
@@ -1599,6 +1593,28 @@ def test_staticmethod_via_instance():
     assert dt.combine(d, datetime.time(1, 2)) == datetime.datetime(2024, 2, 29, 1, 2)
     t = datetime.time(1, 2)
     assert t.fromisoformat('03:04:05') == datetime.time(3, 4, 5)
+
+
+def test_strftime_year_padding_iso_24():
+    # (3.15) zero-padded years in date/datetime strftime
+    assert datetime.date(5, 1, 4).strftime('%Y|%G|%C|%F') == '0005|0005|00|0005-01-04'
+    assert format(datetime.datetime(999, 12, 31), '%Y') == '0999'
+    assert datetime.time(1, 2).strftime('%H') == '01'
+    # (3.14+) 24:00 is midnight of the next day
+    assert datetime.datetime.fromisoformat('2020-12-31T24:00') == datetime.datetime(2021, 1, 1)
+    assert datetime.time.fromisoformat('24:00:00') == datetime.time(0, 0)
+    msg = ''
+    try:
+        datetime.datetime.fromisoformat('2020-12-31T24:00:01')
+    except ValueError as e1:
+        msg = str(e1)
+    assert msg == 'minute, second, and microsecond must be 0 when hour is 24'
+    msg = ''
+    try:
+        datetime.datetime.fromisoformat('9999-12-31T24:00')
+    except ValueError as e2:
+        msg = str(e2)
+    assert msg == 'year must be in 1..9999, not 10000'
 
 
 def test_all():
@@ -1674,6 +1690,7 @@ def test_all():
         test_date_dict_key()
         test_tzinfo_shared_offsets()
         test_staticmethod_via_instance()
+        test_strftime_year_padding_iso_24()
 
 if __name__ == "__main__":
     test_all()

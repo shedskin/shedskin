@@ -572,7 +572,15 @@ static void __strftime_append_escaped(__GC_STR &out, str *s) {
     }
 }
 
-static str *__strftime_preprocess(str *format, __ss_int microsecond, str *z, str *Z) {
+static void __strftime_append_num(__GC_STR &out, const char *fmt, __ss_int v) {
+    char buf[32];
+    snprintf(buf, sizeof(buf), fmt, (long long)v);
+    for(char *p=buf; *p; p++)
+        out += (__ss_char)*p;
+}
+
+/* (d: as CPython 3.15, zero-padded %Y/%G/%C/%F, also for years < 1000) */
+static str *__strftime_preprocess(str *format, __ss_int microsecond, str *z, str *Z, date *dt) {
     __GC_STR out;
     const __GC_STR &f = format->unit;
     size_t n = f.size();
@@ -592,6 +600,16 @@ static str *__strftime_preprocess(str *format, __ss_int microsecond, str *z, str
             __strftime_append_escaped(out, z);
         } else if(d == U'Z') {
             __strftime_append_escaped(out, Z);
+        } else if(dt && d == U'Y') {
+            __strftime_append_num(out, "%04lld", dt->year);
+        } else if(dt && d == U'G') {
+            __strftime_append_num(out, "%04lld", dt->isocalendar()->year);
+        } else if(dt && d == U'C') {
+            __strftime_append_num(out, "%02lld", dt->year / 100);
+        } else if(dt && d == U'F') {
+            __strftime_append_num(out, "%04lld", dt->year);
+            __strftime_append_num(out, "-%02lld", dt->month);
+            __strftime_append_num(out, "-%02lld", dt->day);
         } else {
             out += U'%';
             out += d;
@@ -601,7 +619,7 @@ static str *__strftime_preprocess(str *format, __ss_int microsecond, str *z, str
 }
 
 str *date::strftime(str *format) {
-    return __time__::strftime(__strftime_preprocess(format, 0, NULL, NULL), timetuple());
+    return __time__::strftime(__strftime_preprocess(format, 0, NULL, NULL, this), timetuple());
 }
 
 /* like CPython: an empty spec gives str(self), anything else is passed on
@@ -833,6 +851,13 @@ datetime *datetime::fromisoformat(str *date_string) {
         throw iso_invalid(date_string);
     if (loc < s.size() && !iso_parse_time(s.substr(loc + 1), t))
         throw iso_invalid(date_string);
+    if (t[0] == 24) { /* (as 3.14+: 24:00 is midnight of the next day) */
+        if (t[1] || t[2] || t[3])
+            throw new ValueError(new str("minute, second, and microsecond must be 0 when hour is 24"));
+        if (y == MAXYEAR && m == 12 && d == 31)
+            throw __dt_range_error("year", MINYEAR, MAXYEAR, MAXYEAR + 1);
+        return (new datetime(y, m, d))->__add__(new timedelta(1));
+    }
     return new datetime(y, m, d, t[0], t[1], t[2], t[3]);
 }
 
@@ -1165,7 +1190,7 @@ str *datetime::strftime(str *format) {
         z = _tzinfo->minutes_to_str(this);
         Z = _tzinfo->tzname(this);
     }
-    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z), timetuple());
+    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z, this), timetuple());
 }
 
 str *datetime::__format__(str *format_spec) {
@@ -1205,6 +1230,11 @@ time *time::fromisoformat(str *time_string) {
     /* the T of a time-only string is optional */
     if (!iso_parse_time(s.size() > 0 && s[0] == 'T' ? s.substr(1) : s, t))
         throw iso_invalid(time_string);
+    if (t[0] == 24) { /* (as 3.14+: 24:00 is midnight) */
+        if (t[1] || t[2] || t[3])
+            throw new ValueError(new str("minute, second, and microsecond must be 0 when hour is 24"));
+        t[0] = 0;
+    }
     return new time(t[0], t[1], t[2], t[3]);
 }
 
@@ -1249,7 +1279,7 @@ str *time::strftime(str* format) {
         z = _tzinfo->minutes_to_str(NULL);
         Z = _tzinfo->tzname(NULL);
     }
-    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z),
+    return __time__::strftime(__strftime_preprocess(format, microsecond, z, Z, NULL),
         new __time__::struct_time(new tuple2<__ss_int, __ss_int>(9,
             (__ss_int)1900, (__ss_int)1, (__ss_int)1,
             (__ss_int)hour, (__ss_int)minute, (__ss_int)second,
@@ -1621,7 +1651,7 @@ static timedelta *timedelta_from_magnitude(timedelta_mag m, bool neg) {
 /* *q is only computed if q is non-NULL (and raises OverflowError if it does not fit) */
 static timedelta *timedelta_divmod(timedelta *a, timedelta *b, __ss_int *q) {
     if(timedelta_is_zero(b))
-        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+        throw new ZeroDivisionError(new str("division by zero")); /* (3.15 wording) */
     bool aneg, bneg;
     timedelta_mag A = timedelta_magnitude(a, &aneg);
     timedelta_mag B = timedelta_magnitude(b, &bneg);
@@ -1736,7 +1766,7 @@ static timedelta_mag timedelta_mag_div(timedelta_mag D, unsigned long long m, lo
 /* t // n and t / n (rounded half to even), exact (for n that fits 64 bits) */
 static timedelta *timedelta_div_int(timedelta *t, __ss_int n, bool round) {
     if(n == 0)
-        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+        throw new ZeroDivisionError(new str("division by zero")); /* (3.15 wording) */
     bool neg;
     timedelta_mag D = timedelta_magnitude(t, &neg);
     unsigned long long m = n < 0 ? -(unsigned long long)n : (unsigned long long)n;
@@ -1874,7 +1904,7 @@ timedelta *timedelta::__truediv__(__ss_float f) {
        below 2**53). for k < 0, the quotient is halved -k times afterwards. */
     timedelta_check_ratio(f);
     if(f == 0.0)
-        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
+        throw new ZeroDivisionError(new str("division by zero")); /* (3.15 wording) */
     bool neg;
     timedelta_mag D = timedelta_magnitude(this, &neg);
     if(std::signbit(f))
@@ -1910,7 +1940,7 @@ __ss_int timedelta::__floordiv__(timedelta *other) {
 
 timedelta *timedelta::__mod__(timedelta *other) {
     if(timedelta_is_zero(other))
-        throw new ZeroDivisionError(new str("integer modulo by zero"));
+        throw new ZeroDivisionError(new str("division by zero")); /* (3.15 wording) */
     return timedelta_divmod(this, other, NULL);
 }
 

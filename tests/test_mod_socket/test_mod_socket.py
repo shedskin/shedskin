@@ -1714,6 +1714,39 @@ def test_fileno_negative_create_connection_proto():
     srv.close()
 
 
+def test_fileno_minus_one_sendfile_offset():
+    msg = ''
+    try:
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0, -1)
+    except ValueError as e1:
+        msg = str(e1)
+    assert msg == 'negative file descriptor'
+    s = socket.socket(fileno=None)  # (a new socket)
+    s.close()
+    # sendfile() starts at offset (default 0), not at the file position
+    name = 'shedskin_test_sendfile_pos.bin'
+    f = open(name, 'wb')
+    f.write(b'0123456789' * 10)
+    f.close()
+    srv = socket.create_server(('127.0.0.1', 0))
+    c = socket.create_connection(srv.getsockname())
+    a, addr = srv.accept()
+    f = open(name, 'rb')
+    f.read(30)
+    if sys.platform != 'win32':  # (windows CPython: the fallback, from the position)
+        assert c.sendfile(f) == 100
+        assert f.tell() == 100
+        data = b''
+        while len(data) < 100:
+            data += a.recv(1000)
+        assert data[:10] == b'0123456789'
+    f.close()
+    os.remove(name)
+    a.close()
+    c.close()
+    srv.close()
+
+
 def test_all():
     test_socket_loopback()
     test_attrs_repr()
@@ -1759,6 +1792,7 @@ def test_all():
     test_sendfile_order_port_range_select_fd_herror_ctor()
     test_connect_ex_gaierror_select_error()
     test_fileno_negative_create_connection_proto()
+    test_fileno_minus_one_sendfile_offset()
 
 if __name__ == '__main__':
     test_all()

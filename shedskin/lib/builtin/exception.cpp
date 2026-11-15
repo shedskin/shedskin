@@ -17,7 +17,7 @@ OSError::OSError(__ss_int e, str *strerror, str *filename, void *, str *filename
     __ss_errno = e;
     this->strerror = strerror;
     this->filename = filename;
-    this->filename2 = filename2;
+    this->filename2 = filename ? filename2 : 0; /* (as CPython: only with a filename) */
     message = this->__str__();
 }
 void OSError::__init_errno(int e, str *fname, str *fname2) {

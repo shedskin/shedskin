@@ -94,6 +94,21 @@ enum
 #else
   __MAP_32BIT = -1,
 #endif
+#ifdef MS_SYNC
+  MMAP_PUSH(MS_SYNC),
+#else
+  __MS_SYNC = -1,
+#endif
+#ifdef MS_ASYNC
+  MMAP_PUSH(MS_ASYNC),
+#else
+  __MS_ASYNC = -1,
+#endif
+#ifdef MS_INVALIDATE
+  MMAP_PUSH(MS_INVALIDATE),
+#else
+  __MS_INVALIDATE = -1,
+#endif
 
   /* madvise() advice; not every option exists on every system (and none of
      them do on WIN32), so missing ones fall back to -1, which madvise()
@@ -238,6 +253,9 @@ enum
 #undef MAP_STACK
 #undef MAP_NORESERVE
 #undef MAP_32BIT
+#undef MS_SYNC
+#undef MS_ASYNC
+#undef MS_INVALIDATE
 
 #undef MADV_NORMAL
 #undef MADV_RANDOM
@@ -296,6 +314,9 @@ const __ss_int
     MAP_STACK      = __MAP_STACK,
     MAP_NORESERVE  = __MAP_NORESERVE,
     MAP_32BIT      = __MAP_32BIT,
+    MS_SYNC        = __MS_SYNC,
+    MS_ASYNC       = __MS_ASYNC,
+    MS_INVALIDATE  = __MS_INVALIDATE,
 
     MADV_NORMAL = __MADV_NORMAL,
     MADV_RANDOM = __MADV_RANDOM,
@@ -478,13 +499,13 @@ void *mmap::close()
     return NULL;
 }
 
-void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
+void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given, __ss_int flags)
 {
     __raise_if_closed();
     __check_flush_range(offset, size, size_given);
     if (access == ACCESS_READ or access == ACCESS_COPY) /* (nothing to write back; as CPython) */
         return NULL;
-    if (::msync(m_begin + offset, (size_t)size, MS_SYNC) == -1)
+    if (::msync(m_begin + offset, (size_t)size, flags ? (int)__ss_cint(flags) : MS_SYNC) == -1) /* (flags=0: MS_SYNC, as CPython) */
     {
         __throw_oserror();
     }
@@ -767,12 +788,13 @@ void *mmap::close()
     return NULL;
 }
 
-void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given)
+void *mmap::__flush(__ss_int offset, __ss_int size, bool size_given, __ss_int flags)
 {
     __raise_if_closed();
     __check_flush_range(offset, size, size_given);
     if (access == ACCESS_READ or access == ACCESS_COPY) /* (nothing to write back; as CPython) */
         return NULL;
+    (void)flags;
     if (!FlushViewOfFile(m_begin + offset, (size_t)size))
     {
         throw new OSError();
@@ -1051,6 +1073,23 @@ void *mmap::set_name(str *name)
     (void)name;
     throw new NotImplementedError(const_25);
 #endif /* HAVE_ANON_VMA_NAME */
+}
+
+void mmap::__untrack()
+{
+#ifndef WIN32
+    if (fd >= 0)
+    {
+        ::close(fd);
+        fd = -1;
+    }
+#else
+    if (file_handle != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(file_handle);
+        file_handle = INVALID_HANDLE_VALUE;
+    }
+#endif
 }
 
 __ss_int mmap::size()
