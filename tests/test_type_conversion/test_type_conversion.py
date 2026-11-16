@@ -141,12 +141,12 @@
 #   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        13/5/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        12/14/0
+#   14. lib      -            7/2/3        -            3/1/0        -            2/0/0        12/14/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       120/7/13     0/0/1        28/1/0       1/0/9        49/1/0       157/25/10
+#   total        10/0/0       121/6/13     0/0/1        28/1/0       1/0/9        50/1/0       157/25/10
 #
-#   all cells: 365 work, 34 TODO, 33 correctly warn or fail
+#   all cells: 367 work, 33 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -5064,14 +5064,13 @@ def test_lib_int_float_heapq():
 
 
 # int->float, literal: implicit
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'heappush(list<__ss_float>*&,
-#     __ss_int)'
-#
-# def test_lib_int_float_heappush():
-#     h = [1.5, 2.5]
-#     heapq.heappush(h, 1)
-#     assert heapq.heappop(h) == 1
+def test_lib_int_float_heappush():
+    h = [1.5, 2.5]
+    heapq.heappush(h, 1)
+    assert heapq.heappop(h) == 1
+    assert heapq.heappushpop(h, 2) == 1.5
+    assert heapq.heapreplace(h, 3) == 2
+    assert sum(h) == 5.5
 
 
 # none, literal: cast
@@ -5107,6 +5106,33 @@ def test_lib_sub():
     assert [x.name() for x in sorted(la + lb, key=lambda o: o.name())] == ['A', 'B']
     assert max(la + lb, key=lambda o: o.name()).name() == 'B'
     assert [x.name() for x in reversed(lb)] == ['B']
+
+
+# (heap elements must be ordered, so this cell has classes of its own)
+class LibHeapBase:
+    def __init__(self, n):
+        self.n = n
+
+    def __lt__(self, other):
+        return self.n < other.n
+
+    def name(self):
+        return 'base'
+
+
+class LibHeapSub(LibHeapBase):
+    def name(self):
+        return 'sub'
+
+
+# sub->base, new: cast
+def test_lib_sub_heappush():
+    h = [LibHeapBase(2)]
+    heapq.heappush(h, LibHeapSub(1))
+    assert heapq.heappop(h).name() == 'sub'
+    assert heapq.heappushpop(h, LibHeapSub(3)).name() == 'base'
+    assert heapq.heapreplace(h, LibHeapSub(0)).name() == 'sub'
+    assert h[0].name() == 'sub'
 
 
 # empty, literal: infer
@@ -5759,10 +5785,12 @@ def test_all():
     test_lib_int_float_var_reduce()
     test_lib_int_float_itertools()
     test_lib_int_float_heapq()
+    test_lib_int_float_heappush()
     test_lib_none()
     test_lib_none_reduce()
     test_lib_none_filter()
     test_lib_sub()
+    test_lib_sub_heappush()
     test_lib_empty_lit_sum()
     test_lib_empty_lit_mixed()
     test_lib_empty_lit_mixed_sum()
