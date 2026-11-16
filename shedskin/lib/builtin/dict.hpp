@@ -54,12 +54,14 @@ public:
 
     void *__setitem__(K k, V v);
     V __getitem__(K k);
+    template<class U> requires (!std::is_convertible_v<U, K> && !std::is_arithmetic_v<U>) V __getitem__(U k);
     virtual V __missing__(K k);
     virtual void *__delitem__(K k);
     __ss_int __len__() final;
     str *__repr__();
     __ss_bool has_key(K k);
     __ss_bool __contains__(K key) final;
+    template<class U> requires (!std::is_convertible_v<U, K> && !std::is_arithmetic_v<U>) __ss_bool __contains__(U key);
     void *clear();
     virtual dict<K,V> *copy();
     V get(K k);
@@ -89,6 +91,8 @@ public:
     virtual __ss_bool __le__(dict<K,V> *s);
 
     dict<K,V> *__or__(dict<K,V> *s);
+    template <class K2, class V2> requires (!std::is_same_v<dict<K2, V2>, dict<K, V>>)
+        dict<__ss_wider_t<K, K2>, __ss_wider_t<V, V2>> *__or__(dict<K2, V2> *s);
     template <class U> dict<K,V> *__ior__(U *other);
 
     V setdefault(K k, V v=0);
@@ -254,6 +258,20 @@ template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) {
     return True;
 }
 
+/* comparing dicts of different key/value types (e.g. ints and floats): as dicts of the wider ones */
+#define __SS_DICT_CMP(op) \
+template<class K, class V, class K2, class V2> requires (!std::is_same_v<dict<K, V>, dict<K2, V2>>) \
+inline __ss_bool op(dict<K, V> *a, dict<K2, V2> *b) { \
+    static_assert(__ss_compatible_v<K, K2> && __ss_compatible_v<V, V2>, \
+        "dict comparison: key or value types cannot be converted to each other"); \
+    using WK = __ss_wider_t<K, K2>; \
+    using WV = __ss_wider_t<V, V2>; \
+    return op(a ? __ss_as_dict<WK, WV>(a) : NULL, b ? __ss_as_dict<WK, WV>(b) : NULL); \
+}
+__SS_DICT_CMP(__eq)
+__SS_DICT_CMP(__ne)
+#undef __SS_DICT_CMP
+
 /* suppress -Wvirtual-overloaded warnings TODO better to always use pyobj *? */
 template<class K, class V> __ss_bool dict<K,V>::__lt__(pyobj *) { return False; }
 template<class K, class V> __ss_bool dict<K,V>::__gt__(pyobj *) { return False; }
@@ -295,6 +313,11 @@ template <class K, class V> V dict<K,V>::__getitem__(K key) {
         return __missing__(key);
     else
         return (*it).second;
+}
+
+/* a key of another type: see list<T>::__contains__ */
+template <class K, class V> template<class U> requires (!std::is_convertible_v<U, K> && !std::is_arithmetic_v<U>) V dict<K,V>::__getitem__(U key) {
+    return __getitem__(__ss_key<K>(key));
 }
 
 template <class K, class V> V dict<K,V>::__missing__(K key) {
@@ -406,6 +429,10 @@ template <class K, class V> inline __ss_bool dict<K,V>::__contains__(K key) {
 }
 
 
+template <class K, class V> template<class U> requires (!std::is_convertible_v<U, K> && !std::is_arithmetic_v<U>) __ss_bool dict<K,V>::__contains__(U key) {
+    return __contains__(__ss_key<K>(key));
+}
+
 template <class K, class V> __ss_bool dict<K,V>::has_key(K key) {
     return __contains__(key);
 }
@@ -424,6 +451,16 @@ template<class K, class V> dict<K,V> *dict<K,V>::copy() {
 
 template<class K, class V> dict<K,V> *dict<K,V>::__or__(dict<K,V> *other) {
     return __or_dict__(other);
+}
+
+/* other key/value types: the result has the wider ones (e.g. a dict of ints | one of floats) */
+template<class K, class V> template <class K2, class V2> requires (!std::is_same_v<dict<K2, V2>, dict<K, V>>)
+dict<__ss_wider_t<K, K2>, __ss_wider_t<V, V2>> *dict<K,V>::__or__(dict<K2, V2> *other) {
+    static_assert(__ss_compatible_v<K, K2> && __ss_compatible_v<V, V2>,
+        "dict.__or__: key or value types cannot be converted to each other");
+    using WK = __ss_wider_t<K, K2>;
+    using WV = __ss_wider_t<V, V2>;
+    return __ss_as_dict<WK, WV>(this)->__or__(__ss_as_dict<WK, WV>(other));
 }
 
 /* hooks behind |, dispatching on the dynamic types of both operands:

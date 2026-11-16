@@ -25,12 +25,15 @@ public:
     list<T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
     void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b);
     void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *b);
+    template <class U> requires (!std::is_same_v<U, T>) void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<U> *b);
     void *__delete__(__ss_int i);
     void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
     void *__delslice__(__ss_int a, __ss_int b);
     __ss_bool __contains__(T a);
+    template <class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_bool __contains__(U a);
 
     list<T> *__add__(list<T> *b);
+    template <class U> requires (!std::is_same_v<U, T>) auto __add__(list<U> *b); /* list<wider of T, U> */
     list<T> *__mul__(__ss_int b);
 
     template <class U> void *extend(U *iter);
@@ -44,8 +47,10 @@ public:
     __ss_int index(T a);
     __ss_int index(T a, __ss_int s);
     __ss_int index(T a, __ss_int s, __ss_int e);
+    template <class U, class ... Ss> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_int index(U a, Ss ... s);
 
     __ss_int count(T a);
+    template <class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_int count(U a);
     str *__repr__();
     __ss_bool __eq__(pyobj *l);
     __ss_int __cmp__(pyobj *p);
@@ -271,6 +276,21 @@ template<class T> inline __ss_bool __ge(list<T> *a, list<T> *b) { return __list_
 template<class T> inline __ss_bool __lt(list<T> *a, list<T> *b) { return __list_order(a, b, [](auto x, auto y) { return __lt(x, y); }); }
 template<class T> inline __ss_bool __le(list<T> *a, list<T> *b) { return __list_order(a, b, [](auto x, auto y) { return __le(x, y); }); }
 
+/* comparing lists of different element types (e.g. ints and floats): as lists of the wider one */
+#define __SS_LIST_CMP(op) \
+template<class A, class B> requires (!std::is_same_v<A, B>) inline __ss_bool op(list<A> *a, list<B> *b) { \
+    static_assert(__ss_compatible_v<A, B>, "list comparison: element types cannot be converted to each other"); \
+    using W = __ss_wider_t<A, B>; \
+    return op(__ss_as<list<W>>(a), __ss_as<list<W>>(b)); \
+}
+__SS_LIST_CMP(__eq)
+__SS_LIST_CMP(__ne)
+__SS_LIST_CMP(__lt)
+__SS_LIST_CMP(__le)
+__SS_LIST_CMP(__gt)
+__SS_LIST_CMP(__ge)
+#undef __SS_LIST_CMP
+
 template<class T> void *list<T>::append(T a) {
     this->units.push_back(a);
     return NULL;
@@ -367,6 +387,12 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
     return NULL;
 }
 
+/* other element types: converted on the way (e.g. ints into a list of floats) */
+template<class T> template<class U> requires (!std::is_same_v<U, T>) void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<U> *b) {
+    static_assert(__ss_widens_v<U, T>, "list.__setslice__: elements do not fit (e.g. floats into a list of ints)");
+    return this->__setslice__(x, l, u, s, __ss_as<list<T>>(b));
+}
+
 template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *la) {
     if(x&4 && s != 1) { // x&4: extended slice (step 's' is given), check if sizes match
         __ss_int slicesize = __extslice_size(x, l, u, s, this->__len__());
@@ -450,6 +476,12 @@ template<class T> __ss_bool list<T>::__contains__(T a) {
     return False;
 }
 
+/* a key of another type: compared as a converted copy (e.g. (1, 2) among tuples of floats).
+   not for numbers: NULL (None) is an integer in C++, and should become a T */
+template<class T> template<class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_bool list<T>::__contains__(U a) {
+    return __contains__(__ss_key<T>(a));
+}
+
 template<class T> list<T> *list<T>::__add__(list<T> *b) {
     size_t l1 = this->units.size();
     size_t l2 = b->units.size();
@@ -459,6 +491,16 @@ template<class T> list<T> *list<T>::__add__(list<T> *b) {
     c->units.insert(c->units.end(), this->units.begin(), this->units.end());
     c->units.insert(c->units.end(), b->units.begin(), b->units.end());
 
+    return c;
+}
+
+/* other element types: the result has the wider one (e.g. ints + floats) */
+template<class T> template<class U> requires (!std::is_same_v<U, T>) auto list<T>::__add__(list<U> *b) {
+    static_assert(__ss_compatible_v<T, U>, "list.__add__: element types cannot be converted to each other");
+    list<__ss_wider_t<T, U>> *c = new list<__ss_wider_t<T, U>>();
+    c->units.reserve(this->units.size()+b->units.size());
+    c->extend(this);
+    c->extend(b);
     return c;
 }
 
@@ -526,6 +568,14 @@ template<class T> __ss_int list<T>::index(T a, __ss_int s, __ss_int e) {
                 return i;
     }
     throw new ValueError(__add_strs(2, repr(a), new str(" is not in list")));
+}
+
+template<class T> template<class U, class ... Ss> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_int list<T>::index(U a, Ss ... s) {
+    return index(__ss_key<T>(a), s...);
+}
+
+template<class T> template<class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_int list<T>::count(U a) {
+    return count(__ss_key<T>(a));
 }
 
 template<class T> __ss_int list<T>::count(T a) {
