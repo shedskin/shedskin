@@ -394,16 +394,22 @@ def test_assign_int_float_new_list():
     assert sum(a) == 3.5
 
 
-# int->float, new: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<__ss_int>*' to 'list<__ss_float>*' in
-#     assignment
-#
-# def test_assign_int_float_new_list_range():
-#     b = [1.5]
-#     b = list(range(3))
-#     b.append(0.5)
-#     assert sum(b) == 3.5
+# int->float, new: build
+def test_assign_int_float_new_list_range():
+    b = [1.5]
+    b = list(range(3))
+    b.append(0.5)
+    assert sum(b) == 3.5
+    c = [1.5]
+    c = list(range(1, 3))
+    c.append(0.5)
+    assert sum(c) == 3.5
+    d = [1.5]
+    d = list(range(4, 0, -2))
+    d.append(0.5)
+    assert sum(d) == 6.5
+    e = list(range(3))
+    assert e == [0, 1, 2]
 
 
 # int->float, new: build
@@ -5442,6 +5448,7 @@ def test_all():
     test_assign_complex_lit_list()
     test_assign_int_float_lit_global()
     test_assign_int_float_new_list()
+    test_assign_int_float_new_list_range()
     test_assign_int_float_new_set_dict()
     test_assign_int_float_new_comp()
     test_assign_int_float_new_copy()
