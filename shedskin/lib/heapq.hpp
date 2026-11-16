@@ -157,17 +157,27 @@ template<class T> inline void *heapify_max(list<T> *l) {
     return NULL;
 }
 
+/* an item of another type: converted on the way (e.g. an int into a heap of floats,
+   or an instance of a subclass into a heap of base class instances) */
+#define __SS_HEAP_ITEM(E, T, what) \
+    static_assert(__ss_widens_v<E, T>, \
+        "heapq." what ": the item does not fit the elements of the heap (e.g. a list of ints into a heap of lists of floats)")
+
 template<template <class Y, class Z> class Cmp, class Key, class T, class E> inline void heappush(T &heap, E item, Key key) {
     heap.push_back(item);
     _siftdown<Cmp>(heap, 0, heap.size() - 1, key);
 }
 
-template<class T> inline void *heappush(list<T> *l, T item) {
+template<class T, class E> inline void *heappush(list<T> *l, E e) {
+    __SS_HEAP_ITEM(E, T, "heappush");
+    T item = __ss_elem<T>(e);
     heappush<Cmp>(l->units, item, 0);
     return NULL;
 }
 
-template<class T> inline void *heappush_max(list<T> *l, T item) {
+template<class T, class E> inline void *heappush_max(list<T> *l, E e) {
+    __SS_HEAP_ITEM(E, T, "heappush_max");
+    T item = __ss_elem<T>(e);
     heappush<InvCmp>(l->units, item, 0);
     return NULL;
 }
@@ -203,15 +213,21 @@ template<template <class Y, class Z> class Cmp, class Key, class E, class T> E h
     return item2;
 }
 
-template<class T> inline T heappushpop(list<T> *l, T item) {
+template<class T, class E> inline T heappushpop(list<T> *l, E e) {
+    __SS_HEAP_ITEM(E, T, "heappushpop");
+    T item = __ss_elem<T>(e);
     return heappushpop<Cmp>(l->units, item, 0);
 }
 
-template<class T> inline T heappushpop_max(list<T> *l, T item) {
+template<class T, class E> inline T heappushpop_max(list<T> *l, E e) {
+    __SS_HEAP_ITEM(E, T, "heappushpop_max");
+    T item = __ss_elem<T>(e);
     return heappushpop<InvCmp>(l->units, item, 0);
 }
 
-template<class T> inline T heapreplace(list<T> *l, T item) {
+template<class T, class E> inline T heapreplace(list<T> *l, E e) {
+    __SS_HEAP_ITEM(E, T, "heapreplace");
+    T item = __ss_elem<T>(e);
     __GC_VECTOR(T) &heap = l->units;
     if(!heap.size())
         throw new IndexError(new str("index out of range"));
@@ -221,7 +237,9 @@ template<class T> inline T heapreplace(list<T> *l, T item) {
     return item2;
 }
 
-template<class T> inline T heapreplace_max(list<T> *l, T item) {
+template<class T, class E> inline T heapreplace_max(list<T> *l, E e) {
+    __SS_HEAP_ITEM(E, T, "heapreplace_max");
+    T item = __ss_elem<T>(e);
     __GC_VECTOR(T) &heap = l->units;
     if(!heap.size())
         throw new IndexError(new str("index out of range"));

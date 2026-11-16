@@ -8,7 +8,7 @@ def heapify_max(x):
 
 def heappush(heap, item):
     heap[0] = item
-    __cmp(item, item)
+    __cmp(heap[0], heap[0])
 
 def heappush_max(heap, item):
     heappush(heap, item)
@@ -21,7 +21,7 @@ def heappop_max(heap):
 
 def heappushpop(heap, item):
     heap[0] = item
-    __cmp(item, item)
+    __cmp(heap[0], heap[0])
     return heap[0]
 
 def heappushpop_max(heap, item):
@@ -29,7 +29,7 @@ def heappushpop_max(heap, item):
 
 def heapreplace(heap, item):
     heap[0] = item
-    __cmp(item, item)
+    __cmp(heap[0], heap[0])
     return heap[0]
 
 def heapreplace_max(heap, item):
