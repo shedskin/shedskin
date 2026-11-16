@@ -378,8 +378,8 @@ void *chdir(str *dir) {
     }
 #else
     if(::chdir(__ss_cpath(dir, "chdir")) == -1)
-#endif
         __throw_oserror(dir);
+#endif
     return NULL;
 }
 
@@ -626,8 +626,8 @@ void *rmdir(str *a) {
     }
 #else
     if (::rmdir(__ss_cpath(a, "rmdir")) == -1)
-#endif
         __throw_oserror(a);
+#endif
     return NULL;
 }
 
