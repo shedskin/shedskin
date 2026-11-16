@@ -137,16 +137,16 @@
 #    7. display  1/0/0        4/0/1        -            2/0/0        0/0/1        2/0/0        4/0/1
 #    8. binop    1/0/0        21/1/0       -            1/0/0        -            5/0/0        25/0/0
 #    9. compare  -            9/0/0        -            1/0/0        1/0/0        1/0/0        9/0/0
-#   10. lookup   1/0/0        10/0/0       0/0/1        6/0/0        0/0/1        4/0/0        18/0/0
-#   11. ctor     -            7/1/0        -            1/0/0        -            3/1/0        12/6/0
+#   10. lookup   1/0/0        10/0/0       0/0/1        7/0/0        0/0/1        4/0/0        18/0/0
+#   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        13/5/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        8/17/0
+#   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        12/14/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       120/7/13     0/0/1        26/1/0       1/0/9        49/1/0       152/29/10
+#   total        10/0/0       120/7/13     0/0/1        28/1/0       1/0/9        49/1/0       157/25/10
 #
-#   all cells: 358 work, 38 TODO, 33 correctly warn or fail
+#   all cells: 365 work, 34 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -3671,6 +3671,20 @@ def test_lookup_none_number():
 
 
 # none, literal: cast
+def test_lookup_none_only():
+    # elements that can only be None, looked up as None
+    l = [None, None]
+    assert l.count(None) == 2 and l.index(None) == 0
+    l.remove(None)
+    assert len(l) == 1
+    s = {None}
+    s.discard(None)
+    assert len(s) == 0
+    d = {None: None}
+    assert d.get(None) is None and d.pop(None) is None and len(d) == 0
+
+
+# none, literal: cast
 def test_lookup_none_remove():
     l = ['a', None]
     l.remove(None)
@@ -4124,6 +4138,15 @@ def test_ctor_none():
     assert q[1] is None
 
 
+# none, literal: copy
+def test_ctor_none_only():
+    # elements that can only be None
+    assert len(set([None])) == 1 and None in set([None])
+    assert len(frozenset([None, None])) == 1 and len(set((None,))) == 1
+    e = [None]
+    assert len(set(e)) == 1
+
+
 # sub->base, variable: copy
 def test_ctor_sub():
     lb = [B()]
@@ -4179,15 +4202,13 @@ def test_ctor_empty_lit():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: expected primary-expression before ',' token
-#
-# def test_ctor_empty_lit_set():
-#     s = set([])
-#     s.add(1)
-#     assert sum(s) == 1
-#     f = frozenset([])
-#     assert len(f) == 0
+def test_ctor_empty_lit_set():
+    s = set([])
+    s.add(1)
+    assert sum(s) == 1
+    f = frozenset([])
+    assert len(f) == 0
+    assert len(set(())) == 0 and len(frozenset(())) == 0
 
 
 # empty, literal: copy
@@ -5095,12 +5116,13 @@ def test_lib_sub():
 
 
 # empty, literal: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(__sumtype1<void*>::type,
-#     __ss_int)'
-#
-# def test_lib_empty_lit_sum():
-#     assert sum([]) == 0
+def test_lib_empty_lit_sum():
+    assert sum([]) == 0 and sum(()) == 0 and sum(set()) == 0 and sum({}) == 0
+    try:
+        sum([None])
+        assert False
+    except TypeError:
+        pass
 
 
 # empty, literal: infer
@@ -5132,12 +5154,20 @@ def test_lib_empty_lit_mixed():
 
 
 # empty, literal: build
+def test_lib_empty_lit_mixed_sum():
+    assert sum([], 5) == 5 and sum((), 2.5) == 2.5 and sum([], [1]) == [1]
+    try:
+        sum([None], 5)
+        assert False
+    except TypeError:
+        pass
+
+
+# empty, literal: build
 # TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(__sumtype2<void*,
-#     __ss_int>::type, __ss_int)'
+#   C++: '__lambda0__' was not declared in this scope (its 'b' has no type)
 #
-# def test_lib_empty_lit_mixed_sum():
-#     assert sum([], 5) == 5
+# def test_lib_empty_lit_mixed_reduce_start():
 #     assert functools.reduce(lambda a, b: a + b, [], 5) == 5
 
 
@@ -5227,13 +5257,9 @@ def test_lib_empty_var():
 
 
 # empty, variable: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(__sumtype1<void*>::type,
-#     __ss_int)'
-#
-# def test_lib_empty_var_sum():
-#     e = []
-#     assert sum(e) == 0
+def test_lib_empty_var_sum():
+    e = []
+    assert sum(e) == 0
 
 
 # empty, variable: infer
@@ -5307,13 +5333,9 @@ def test_lib_empty_var_mixed_number():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(__sumtype2<void*,
-#     __ss_int>::type, __ss_int)'
-#
-# def test_lib_empty_var_mixed_sum_number():
-#     e = []
-#     assert sum(e, 5) == 5
+def test_lib_empty_var_mixed_sum_number():
+    e = []
+    assert sum(e, 5) == 5 and sum(e, 0.5) == 0.5
 
 
 #=========================================================================
@@ -5640,6 +5662,7 @@ def test_all():
     test_lookup_int_float_lit_tuple_dict_method()
     test_lookup_none()
     test_lookup_none_number()
+    test_lookup_none_only()
     test_lookup_none_remove()
     test_lookup_none_list()
     test_lookup_none_set()
@@ -5673,10 +5696,12 @@ def test_all():
     test_ctor_int_float_var_tuple()
     test_ctor_int_float_var_collections()
     test_ctor_none()
+    test_ctor_none_only()
     test_ctor_sub()
     test_ctor_sub_items()
     test_ctor_sub_dict_pairs()
     test_ctor_empty_lit()
+    test_ctor_empty_lit_set()
     test_ctor_empty_lit_dict()
     test_ctor_empty_lit_tuple()
     test_ctor_empty_lit_deque()
@@ -5731,14 +5756,18 @@ def test_all():
     test_lib_none_reduce()
     test_lib_none_filter()
     test_lib_sub()
+    test_lib_empty_lit_sum()
     test_lib_empty_lit_mixed()
+    test_lib_empty_lit_mixed_sum()
     test_lib_empty_lit_chain()
     test_lib_empty_lit_chain_only()
     test_lib_empty_lit_product()
     test_lib_empty_lit_heappush()
     test_lib_empty_var()
+    test_lib_empty_var_sum()
     test_lib_empty_var_mixed_chain()
     test_lib_empty_var_mixed_number()
+    test_lib_empty_var_mixed_sum_number()
     test_empty_call_contexts()
     test_var_bool_int()
 

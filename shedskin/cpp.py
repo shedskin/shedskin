@@ -5017,9 +5017,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 and not (print_call and formal.name.startswith("__kw_"))
             ):
                 self.visit_none()
-            elif builtin_types and ast_utils.is_none(arg):
-                # e.g. l.remove(None): as the element type, or it would be
-                # looked up as a value of another type (and never found)
+            elif ast_utils.is_none(arg) and (
+                builtin_types
+                or self.cast_to_builtin(
+                    arg, func, formal, target, method_call, objexpr, always=True
+                )
+                is not None
+            ):
+                # e.g. l.remove(None): as the element type (void * if there is
+                # none, as for '[None]'), or it would be looked up as a value of
+                # another type (and never found)
                 self.visit_none(builtin_types)
             elif arg in target.mv.defaults:
                 if (
@@ -5040,20 +5047,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif isinstance(arg, ast.Constant) and arg in self.consts:
                 self.append(self.consts[arg])
             else:
-                if (
-                    constructor
-                    and ident in ["set", "frozenset"]
-                    and typestr.nodetypestr(self.gx, arg, func, mv=self.mv)
-                    in [
-                        "list<void *> *",
-                        "tuple<void *> *",
-                        "pyiter<void *> *",
-                        "pyseq<void *> *",
-                        "pyset<void *>",
-                    ]
-                ):  # XXX
-                    pass
-                elif not builtin_types and target.mv.module.builtin:
+                if not builtin_types and target.mv.module.builtin:
                     self.visit(arg, func)
                 else:
                     self.impl_visit_conv(arg, formal_types, func)
@@ -5079,8 +5073,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         target: "python.Function",
         method_call: bool,
         objexpr: Optional[ast.AST],
+        always: bool = False,
     ) -> Optional[Types]:
-        """Check if a cast to a builtin type is necessary"""
+        """Check if a cast to a builtin type is necessary (or with always, the
+        types of a builtin formal, also when the argument has these already)"""
         # type inference cannot deduce all necessary casts to builtin formals:
         # 'u' and 'v' are an element (key) and a value of the container, 'o'
         # another container of the same kind (as in 'l1 + l2')
@@ -5113,9 +5109,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 subtypes = objtypes
             else:
                 subtypes = self.subtypes(objtypes, vars[formal.name])
-            if typestr.nodetypestr(self.gx, arg, func, mv=self.mv) != typestr.typestr(
-                self.gx, subtypes, mv=self.mv
-            ):
+            if always or typestr.nodetypestr(
+                self.gx, arg, func, mv=self.mv
+            ) != typestr.typestr(self.gx, subtypes, mv=self.mv):
                 return subtypes
         return None
 
