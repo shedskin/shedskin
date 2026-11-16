@@ -141,12 +141,12 @@
 #   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        13/5/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        8/17/0
+#   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        12/14/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       120/7/13     0/0/1        28/1/0       1/0/9        49/1/0       153/28/10
+#   total        10/0/0       120/7/13     0/0/1        28/1/0       1/0/9        49/1/0       157/25/10
 #
-#   all cells: 361 work, 37 TODO, 33 correctly warn or fail
+#   all cells: 365 work, 34 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -5116,12 +5116,13 @@ def test_lib_sub():
 
 
 # empty, literal: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(__sumtype1<void*>::type,
-#     __ss_int)'
-#
-# def test_lib_empty_lit_sum():
-#     assert sum([]) == 0
+def test_lib_empty_lit_sum():
+    assert sum([]) == 0 and sum(()) == 0 and sum(set()) == 0 and sum({}) == 0
+    try:
+        sum([None])
+        assert False
+    except TypeError:
+        pass
 
 
 # empty, literal: infer
@@ -5153,12 +5154,20 @@ def test_lib_empty_lit_mixed():
 
 
 # empty, literal: build
+def test_lib_empty_lit_mixed_sum():
+    assert sum([], 5) == 5 and sum((), 2.5) == 2.5 and sum([], [1]) == [1]
+    try:
+        sum([None], 5)
+        assert False
+    except TypeError:
+        pass
+
+
+# empty, literal: build
 # TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(__sumtype2<void*,
-#     __ss_int>::type, __ss_int)'
+#   C++: '__lambda0__' was not declared in this scope (its 'b' has no type)
 #
-# def test_lib_empty_lit_mixed_sum():
-#     assert sum([], 5) == 5
+# def test_lib_empty_lit_mixed_reduce_start():
 #     assert functools.reduce(lambda a, b: a + b, [], 5) == 5
 
 
@@ -5248,13 +5257,9 @@ def test_lib_empty_var():
 
 
 # empty, variable: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(__sumtype1<void*>::type,
-#     __ss_int)'
-#
-# def test_lib_empty_var_sum():
-#     e = []
-#     assert sum(e) == 0
+def test_lib_empty_var_sum():
+    e = []
+    assert sum(e) == 0
 
 
 # empty, variable: infer
@@ -5328,13 +5333,9 @@ def test_lib_empty_var_mixed_number():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(__sumtype2<void*,
-#     __ss_int>::type, __ss_int)'
-#
-# def test_lib_empty_var_mixed_sum_number():
-#     e = []
-#     assert sum(e, 5) == 5
+def test_lib_empty_var_mixed_sum_number():
+    e = []
+    assert sum(e, 5) == 5 and sum(e, 0.5) == 0.5
 
 
 #=========================================================================
@@ -5755,14 +5756,18 @@ def test_all():
     test_lib_none_reduce()
     test_lib_none_filter()
     test_lib_sub()
+    test_lib_empty_lit_sum()
     test_lib_empty_lit_mixed()
+    test_lib_empty_lit_mixed_sum()
     test_lib_empty_lit_chain()
     test_lib_empty_lit_chain_only()
     test_lib_empty_lit_product()
     test_lib_empty_lit_heappush()
     test_lib_empty_var()
+    test_lib_empty_var_sum()
     test_lib_empty_var_mixed_chain()
     test_lib_empty_var_mixed_number()
+    test_lib_empty_var_mixed_sum_number()
     test_empty_call_contexts()
     test_var_bool_int()
 

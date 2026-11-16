@@ -127,6 +127,23 @@ template<> struct __sumtype2<__ss_bool, __ss_int> { typedef __ss_int type; };
 template<> struct __sumtype2<__ss_bool, __ss_float> { typedef __ss_float type; };
 template<> struct __sumtype2<__ss_int, __ss_float> { typedef __ss_float type; };
 
+/* elements without a type of their own (void *, as in 'sum([])'): they can only
+   be None, which cannot be added, so the result is 0 or the start */
+template<> struct __sumtype1<void *> { typedef __ss_int type; };
+template<class B> struct __sumtype2<void *, B> { typedef B type; };
+
+/* any element is None, which cannot be added */
+template<class U> void __sum_none(U *iter, const char *msg) {
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN(e,iter,1,2,3)
+        (void)e;
+        throw new TypeError(new str(msg));
+    END_FOR
+}
+
 /* no start: CPython starts from 0, so the first str/bytes element fails on 0 + e */
 template<class T> void __sum_check() {
     if constexpr (std::is_same_v<T, str *>)
@@ -150,6 +167,10 @@ template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *i
 //        result = std::reduce(std::execution::unseq, iter->units.begin(), iter->units.end()); // TODO faster with -O3, slower with -O2 :S
         result = std::reduce(iter->units.begin(), iter->units.end());
     }
+    else if constexpr (std::is_same_v<typename U::for_in_unit, void *>) {
+        __sum_none(iter, "unsupported operand type(s) for +: 'int' and 'NoneType'");
+        result = 0;
+    }
     else {
         result = __zero<typename __sumtype1<typename U::for_in_unit>::type>();
         typename U::for_in_unit e;
@@ -171,6 +192,10 @@ template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *i
 
 template <class U, class B> typename __sumtype2<typename U::for_in_unit,B>::type __sum(U *iter, B b) {
     __sum_start_check<B>();
+    if constexpr (std::is_same_v<typename U::for_in_unit, void *>) {
+        __sum_none(iter, "unsupported operand type(s) for +: ... and 'NoneType'");
+        return b;
+    }
     typename __sumtype1<typename U::for_in_unit>::type result1 = __sum(iter);
     return __add((typename __sumtype2<typename U::for_in_unit,B>::type)b, (typename __sumtype2<typename U::for_in_unit,B>::type)result1);
 }
