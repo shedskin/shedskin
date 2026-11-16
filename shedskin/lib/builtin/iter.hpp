@@ -55,6 +55,30 @@ template<class E, class T> inline constexpr bool __ss_widens_v =
     ((std::is_integral_v<E> || std::is_same_v<E, __ss_bool>) && std::is_floating_point_v<T>) ||
     (std::is_same_v<E, __ss_bool> && std::is_integral_v<T>);
 
+/* the wider of two element types, which can hold the elements of both (e.g. floats for ints
+   and floats), and whether there is one */
+template<class A, class B> using __ss_wider_t = std::conditional_t<__ss_widens_v<A, B>, B, A>;
+template<class A, class B> inline constexpr bool __ss_compatible_v = __ss_widens_v<A, B> || __ss_widens_v<B, A>;
+
+/* a container as one with other element types (e.g. a list of ints as a list of floats):
+   a converted copy, so only for reading (comparing, looking up, copying from) */
+template<class W, class C> inline W *__ss_as(C *c) {
+    if constexpr (std::is_same_v<W, C>)
+        return c;
+    else
+        return c ? new W(c) : NULL;
+}
+
+/* a container looked up among containers with other element types (as in '(1, 2) in
+   [(1.0, 2.0)]'): a converted copy. not the other way around, which would truncate */
+template<class T, class U> inline T __ss_key(U a) {
+    using TC = std::remove_pointer_t<T>;
+    using UC = std::remove_pointer_t<U>;
+    static_assert(__ss_widens_v<std::remove_cvref_t<typename UC::for_in_unit>, std::remove_cvref_t<typename TC::for_in_unit>>,
+        "lookup: the elements of the key do not fit (e.g. a tuple of floats among tuples of ints)");
+    return __ss_as<TC>(a);
+}
+
 template<class T, class E> inline T __ss_elem(E e) {
     if constexpr (std::is_same_v<E, void *> && !std::is_same_v<T, void *>) {
         if constexpr (std::is_pointer_v<T>)

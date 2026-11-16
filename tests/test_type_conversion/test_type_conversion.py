@@ -130,23 +130,23 @@
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
 #    1. assign   2/0/0        17/2/2       -            3/0/0        0/0/2        8/0/0        13/2/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
-#    3. setitem  1/0/0        7/1/1        -            1/0/0        0/0/1        3/0/0        4/1/1
+#    3. setitem  1/0/0        8/0/1        -            1/0/0        0/0/1        3/0/0        5/0/1
 #    4. arg      1/0/0        11/0/1       -            1/0/0        0/0/1        2/0/0        7/0/1
 #    5. ret      1/0/0        5/0/1        -            1/0/0        0/0/1        2/0/0        8/0/1
 #    6. method   1/0/0        14/0/1       -            3/0/0        0/0/1        8/0/0        23/0/1
 #    7. display  1/0/0        4/0/1        -            2/0/0        0/0/1        2/0/0        4/0/1
-#    8. binop    1/0/0        15/7/0       -            1/0/0        -            5/0/0        22/3/0
-#    9. compare  -            6/3/0        -            1/0/0        1/0/0        1/0/0        7/2/0
-#   10. lookup   1/0/0        7/3/0        0/0/1        5/0/0        0/0/1        4/0/0        9/5/0
+#    8. binop    1/0/0        21/1/0       -            1/0/0        -            5/0/0        25/0/0
+#    9. compare  -            9/0/0        -            1/0/0        1/0/0        1/0/0        9/0/0
+#   10. lookup   1/0/0        10/0/0       0/0/1        5/0/0        0/0/1        4/0/0        10/4/0
 #   11. ctor     -            7/1/0        -            1/0/0        -            3/1/0        12/6/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
 #   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        8/17/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       107/20/13    0/0/1        25/1/0       1/0/9        49/1/0       137/40/10
+#   total        10/0/0       120/7/13     0/0/1        25/1/0       1/0/9        49/1/0       144/33/10
 #
-#   all cells: 329 work, 62 TODO, 33 correctly warn or fail
+#   all cells: 349 work, 42 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -1112,17 +1112,13 @@ def test_setitem_int_float_lit_slice():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: no matching function for call to
-#     'list<__ss_float>::__setslice__(__ss_int, __ss_int, __ss_int,
-#     __ss_int, list<__ss_int>*&)'
-#
-# def test_setitem_int_float_var_slice():
-#     ints = [1, 2]
-#     l = [1.5, 2.5]
-#     l[0:1] = ints
-#     assert sum(l) == 5.5 and sum(ints) == 3
+def test_setitem_int_float_var_slice():
+    ints = [1, 2]
+    l = [1.5, 2.5]
+    l[0:1] = ints
+    assert sum(l) == 5.5 and sum(ints) == 3
 
 
 # none, literal: cast
@@ -1235,17 +1231,13 @@ def test_setitem_empty_lit_slice():
 
 
 # empty, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: no matching function for call to
-#     'list<__ss_int>::__setslice__(__ss_int, __ss_int, __ss_int,
-#     __ss_int, list<void*>*&)'
-#
-# def test_setitem_empty_var_slice():
-#     e = []
-#     l = [1, 2, 3]
-#     l[0:2] = e
-#     assert sum(l) == 3
+def test_setitem_empty_var_slice():
+    e = []
+    l = [1, 2, 3]
+    l[0:2] = e
+    assert sum(l) == 3
 
 
 #=========================================================================
@@ -2799,26 +2791,22 @@ def test_binop_int_float_lit_list():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'list<__ss_float>*' to 'list<__ss_int>*'
-#
-# def test_binop_int_float_var_list_lit():
-#     ints = [1, 2]
-#     assert sum(ints + [0.5]) == 3.5
-#     assert sum([0.5] + ints) == 3.5
+def test_binop_int_float_var_list_lit():
+    ints = [1, 2]
+    assert sum(ints + [0.5]) == 3.5
+    assert sum([0.5] + ints) == 3.5
 
 
 # int->float, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'list<__ss_float>*' to 'list<__ss_int>*'
-#
-# def test_binop_int_float_var_list():
-#     ints = [1, 2]
-#     floats = [1.5]
-#     assert sum(ints + floats) == 4.5
-#     assert sum(floats + ints) == 4.5
+def test_binop_int_float_var_list():
+    ints = [1, 2]
+    floats = [1.5]
+    assert sum(ints + floats) == 4.5
+    assert sum(floats + ints) == 4.5
 
 
 # int->float, literal: build
@@ -2849,16 +2837,13 @@ def test_binop_int_float_lit_tuple():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
-#     __ss_float>*'
-#
-# def test_binop_int_float_var_tuple():
-#     ints = (1, 2)
-#     floats = (1.5, 2.5)
-#     assert sum(floats + ints) == 7
-#     assert sum(ints + floats) == 7
+def test_binop_int_float_var_tuple():
+    ints = (1, 2)
+    floats = (1.5, 2.5)
+    assert sum(floats + ints) == 7
+    assert sum(ints + floats) == 7
 
 
 # int->float, literal: build
@@ -2892,17 +2877,16 @@ def test_binop_int_float_var_set():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: static assertion failed: set.__or__: elements of the other set do
-#     not fit (the result should be a set of floats, but it is computed as a
-#     set of ints)
-#
-# def test_binop_int_float_var_set_left():
-#     s = {1.0, 2.5}
-#     t = {1, 5}
-#     assert sum(t | s) == 8.5
-#     assert sum(t - s) == 5
+def test_binop_int_float_var_set_left():
+    s = {1.0, 2.5}
+    t = {1, 5}
+    assert sum(t | s) == 8.5
+    assert sum(t - s) == 5
+    assert sum(t & s) == 1 and sum(t ^ s) == 7.5
+    u = {1.5}
+    assert len(t & u) == 0 and sum(t - u) == 6
 
 
 # int->float, variable: copy
@@ -2928,27 +2912,21 @@ def test_binop_int_float_lit_dict_left():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'dict<__ss_int, __ss_int>*' to 'dict<__ss_int,
-#     __ss_float>*'
-#
-# def test_binop_int_float_var_dict():
-#     d = {1: 1.5}
-#     e = {2: 3}
-#     assert sum((d | e).values()) == 4.5
+def test_binop_int_float_var_dict():
+    d = {1: 1.5}
+    e = {2: 3}
+    assert sum((d | e).values()) == 4.5
 
 
 # int->float, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'dict<__ss_int, __ss_float>*' to 'dict<__ss_int,
-#     __ss_int>*'
-#
-# def test_binop_int_float_var_dict_left():
-#     d = {1: 1.5}
-#     e = {2: 3}
-#     assert sum((e | d).values()) == 4.5
+def test_binop_int_float_var_dict_left():
+    d = {1: 1.5}
+    e = {2: 3}
+    assert sum((e | d).values()) == 4.5
 
 
 # int->float, literal: copy
@@ -3123,25 +3101,21 @@ def test_binop_empty_var_list():
 
 
 # empty, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*'
-#
-# def test_binop_empty_var_list_number():
-#     e = []
-#     l = [1, 2]
-#     assert sum(l + e) == 3
+def test_binop_empty_var_list_number():
+    e = []
+    l = [1, 2]
+    assert sum(l + e) == 3
 
 
 # empty, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'list<__ss_int>*' to 'list<void*>*'
-#
-# def test_binop_empty_var_list_number_left():
-#     e = []
-#     l = [1, 2]
-#     assert sum(e + l) == 3
+def test_binop_empty_var_list_number_left():
+    e = []
+    l = [1, 2]
+    assert sum(e + l) == 3
 
 
 # empty, variable: copy
@@ -3172,17 +3146,13 @@ def test_binop_empty_var_set_number():
 
 
 # empty, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: static assertion failed: set.__or__: elements of the other set do
-#     not fit (the result should be a set of ints, but it is computed as a
-#     set without element type)
-#
-# def test_binop_empty_var_set_number_left():
-#     es = set()
-#     s = {1, 2}
-#     assert sum(es | s) == 3
-#     assert len(es - s) == 0
+def test_binop_empty_var_set_number_left():
+    es = set()
+    s = {1, 2}
+    assert sum(es | s) == 3
+    assert len(es - s) == 0
 
 
 # empty, variable: copy
@@ -3367,17 +3337,16 @@ def test_compare_int_float_lit_tuple():
 
 
 # int->float, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: no matching function for call to '__eq(list<__ss_int>*&,
-#     list<__ss_float>*&)'
-#
-# def test_compare_int_float_var_list():
-#     ints = [1, 2]
-#     floats = [1.0, 2.0]
-#     assert ints == floats and not ints != floats
-#     assert floats == ints
-#     assert not ints < floats and ints <= floats
+def test_compare_int_float_var_list():
+    ints = [1, 2]
+    floats = [1.0, 2.0]
+    assert ints == floats and not ints != floats
+    assert floats == ints
+    assert not ints < floats and ints <= floats
+    bigger = [1.5]
+    assert ints < bigger and bigger > ints and ints != bigger
 
 
 # int->float, variable: generic
@@ -3390,27 +3359,25 @@ def test_compare_int_float_var_set():
 
 
 # int->float, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: no matching function for call to '__eq(tuple<__ss_int>*&,
-#     tuple<__ss_float>*&)'
-#
-# def test_compare_int_float_var_tuple():
-#     ti = (1, 2)
-#     tf = (1.0, 2.0)
-#     assert ti == tf and tf == ti
+def test_compare_int_float_var_tuple():
+    ti = (1, 2)
+    tf = (1.0, 2.0)
+    assert ti == tf and tf == ti
+    tg = (1.0, 2.5)
+    assert ti != tg and ti < tg and tg >= ti
 
 
 # int->float, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: no matching function for call to '__eq(dict<__ss_int,
-#     __ss_int>*&, dict<__ss_int, __ss_float>*&)'
-#
-# def test_compare_int_float_var_dict():
-#     di = {1: 2}
-#     df = {1: 2.0}
-#     assert di == df and df == di
+def test_compare_int_float_var_dict():
+    di = {1: 2}
+    df = {1: 2.0}
+    assert di == df and df == di
+    dg = {1: 2.5}
+    assert di != dg and not dg == di
 
 
 # none, literal: cast
@@ -3479,16 +3446,13 @@ def test_compare_empty_var():
 
 
 # empty, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: no matching function for call to '__ne(list<void*>*&,
-#     list<__ss_int>*&)'
-#
-# def test_compare_empty_var_number():
-#     e = []
-#     l = [1]
-#     assert e != l and l != e
-#     assert e < l
+def test_compare_empty_var_number():
+    e = []
+    l = [1]
+    assert e != l and l != e
+    assert e < l
 
 
 # empty, variable: generic
@@ -3517,15 +3481,12 @@ def test_compare_empty_var_dict():
 
 
 # empty, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: no matching function for call to '__ne(dict<void*, void*>*&,
-#     dict<__ss_int, __ss_int>*&)'
-#
-# def test_compare_empty_var_dict_number():
-#     ed = {}
-#     d = {1: 2}
-#     assert ed != d and d != ed
+def test_compare_empty_var_dict_number():
+    ed = {}
+    d = {1: 2}
+    assert ed != d and d != ed
 
 
 # empty, call: generic
@@ -3665,38 +3626,30 @@ def test_lookup_int_float_lit_tuple_dict_method():
 
 
 # int->float, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
-#     __ss_float>*'
-#
-# def test_lookup_int_float_var_tuple_set():
-#     k = (1, 2)
-#     visited = {(1.0, 2.0)}
-#     assert k in visited
+def test_lookup_int_float_var_tuple_set():
+    k = (1, 2)
+    visited = {(1.0, 2.0)}
+    assert k in visited
 
 
 # int->float, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
-#     __ss_float>*'
-#
-# def test_lookup_int_float_var_tuple_dict():
-#     k = (1, 2)
-#     d = {(1.0, 2.0): 'a'}
-#     assert d[k] == 'a' and k in d
+def test_lookup_int_float_var_tuple_dict():
+    k = (1, 2)
+    d = {(1.0, 2.0): 'a'}
+    assert d[k] == 'a' and k in d
+    assert (2, 2) not in d
 
 
 # int->float, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'tuple<__ss_int>*' to 'tuple2<__ss_float,
-#     __ss_float>*'
-#
-# def test_lookup_int_float_var_tuple_list():
-#     k = (1, 2)
-#     l = [(0.0, 0.0), (1.0, 2.0)]
-#     assert k in l and l.index(k) == 1
+def test_lookup_int_float_var_tuple_list():
+    k = (1, 2)
+    l = [(0.0, 0.0), (1.0, 2.0)]
+    assert k in l and l.index(k) == 1
+    assert l.count(k) == 1 and (1, 3) not in l
 
 
 # none, literal: cast
@@ -3931,15 +3884,13 @@ def test_lookup_empty_value_var_sub():
 
 
 # empty, variable: generic
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   incompatible types
-#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*'
-#
-# def test_lookup_empty_value_var_number():
-#     e = []
-#     ll = [[1]]
-#     assert e not in ll
-#     assert ll.count(e) == 0
+def test_lookup_empty_value_var_number():
+    e = []
+    ll = [[1]]
+    assert e not in ll
+    assert ll.count(e) == 0
 
 
 #=========================================================================

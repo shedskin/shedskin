@@ -119,20 +119,24 @@ public:
     str *__repr__();
 
     tuple2<T,T> *__add__(tuple2<T,T> *b);
+    template <class U> requires (!std::is_same_v<U, T>) tuple2<__ss_wider_t<T, U>, __ss_wider_t<T, U>> *__add__(tuple2<U,U> *b);
     tuple2<T,T> *__mul__(__ss_int b);
 
     tuple2<T,T> *__iadd__(tuple2<T,T> *b);
     tuple2<T,T> *__imul__(__ss_int n);
 
     __ss_bool __contains__(T a) final;
+    template <class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_bool __contains__(U a);
     __ss_bool __eq__(pyobj *p) final;
     __ss_int __cmp__(pyobj *p) final;
 
     __ss_int index(T a);
     __ss_int index(T a, __ss_int s);
     __ss_int index(T a, __ss_int s, __ss_int e);
+    template <class U, class ... Ss> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_int index(U a, Ss ... s);
 
     __ss_int count(T a);
+    template <class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_int count(U a);
 
     tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
@@ -253,6 +257,13 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__add__(tuple2<T,T> *b) {
         c->units.at(i + dst_len) = b->units[i];
     return c;
 }
+/* other element types: the result has the wider one (e.g. ints + floats) */
+template<class T> template<class U> requires (!std::is_same_v<U, T>) tuple2<__ss_wider_t<T, U>, __ss_wider_t<T, U>> *tuple2<T, T>::__add__(tuple2<U,U> *b) {
+    static_assert(__ss_compatible_v<T, U>, "tuple.__add__: element types cannot be converted to each other");
+    using W = __ss_wider_t<T, U>;
+    return __ss_as<tuple2<W,W>>(this)->__add__(__ss_as<tuple2<W,W>>(b));
+}
+
 template<class T> tuple2<T,T> *tuple2<T, T>::__iadd__(tuple2<T,T> *b) {
     return __add__(b);
 }
@@ -283,6 +294,11 @@ template<class T> __ss_bool tuple2<T, T>::__contains__(T a) {
         if(__eq_id(this->units[i], a))
             return True;
     return False;
+}
+
+/* a key of another type: see list<T>::__contains__ */
+template<class T> template<class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_bool tuple2<T, T>::__contains__(U a) {
+    return __contains__(__ss_key<T>(a));
 }
 
 template<class T> __ss_bool tuple2<T, T>::__eq__(pyobj *p) {
@@ -323,6 +339,14 @@ template<class T> __ss_int tuple2<T, T>::index(T a, __ss_int s, __ss_int e) {
                 return i;
     }
     throw new ValueError(new str("tuple.index(x): x not in tuple"));
+}
+
+template<class T> template<class U, class ... Ss> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_int tuple2<T, T>::index(U a, Ss ... s) {
+    return index(__ss_key<T>(a), s...);
+}
+
+template<class T> template<class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_int tuple2<T, T>::count(U a) {
+    return count(__ss_key<T>(a));
 }
 
 template<class T> __ss_int tuple2<T, T>::count(T a) {
@@ -442,6 +466,21 @@ template<class A, class B> inline __ss_bool __gt(tuple2<A,B> *a, tuple2<A,B> *b)
 template<class A, class B> inline __ss_bool __ge(tuple2<A,B> *a, tuple2<A,B> *b) { return __mbool(a->__cmp__(b) >= 0); }
 template<class A, class B> inline __ss_bool __lt(tuple2<A,B> *a, tuple2<A,B> *b) { return __mbool(a->__cmp__(b) < 0); }
 template<class A, class B> inline __ss_bool __le(tuple2<A,B> *a, tuple2<A,B> *b) { return __mbool(a->__cmp__(b) <= 0); }
+
+/* comparing (homogeneous) tuples of different element types (e.g. ints and floats): as tuples of the wider one */
+#define __SS_TUPLE_CMP(op) \
+template<class A, class B> requires (!std::is_same_v<A, B>) inline __ss_bool op(tuple2<A,A> *a, tuple2<B,B> *b) { \
+    static_assert(__ss_compatible_v<A, B>, "tuple comparison: element types cannot be converted to each other"); \
+    using W = __ss_wider_t<A, B>; \
+    return op(__ss_as<tuple2<W,W>>(a), __ss_as<tuple2<W,W>>(b)); \
+}
+__SS_TUPLE_CMP(__eq)
+__SS_TUPLE_CMP(__ne)
+__SS_TUPLE_CMP(__lt)
+__SS_TUPLE_CMP(__le)
+__SS_TUPLE_CMP(__gt)
+__SS_TUPLE_CMP(__ge)
+#undef __SS_TUPLE_CMP
 
 template<class A, class B> __ss_int tuple2<A, B>::__hash__() {
     __ss_int seed = 0;

@@ -37,6 +37,7 @@ public:
     str* __repr__();
 
     __ss_bool __contains__(T key) final;
+    template <class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_bool __contains__(U key);
     __ss_int __len__() final;
 
     void *clear();
@@ -85,8 +86,8 @@ public:
     template <class U> void *symmetric_difference_update(U *other);
 
     template <class U> set<T> *__and__(U *s);
-    template <class U> set<T> *__or__(U *s);
-    template <class U> set<T> *__xor__(U *s);
+    template <class U> set<__ss_wider_t<T, std::remove_cvref_t<typename U::for_in_unit>>> *__or__(U *s);
+    template <class U> set<__ss_wider_t<T, std::remove_cvref_t<typename U::for_in_unit>>> *__xor__(U *s);
     template <class U> set<T> *__sub__(U *s);
 
     set<T> *__iand__(set<T> *s);
@@ -370,6 +371,11 @@ template <class T> inline __ss_bool set<T>::__contains__(T key) {
     return __mbool(gcs.find(key) != gcs.end());
 }
 
+/* a key of another type: see list<T>::__contains__ */
+template <class T> template <class U> requires (!std::is_convertible_v<U, T> && !std::is_arithmetic_v<U>) __ss_bool set<T>::__contains__(U key) {
+    return __contains__(__ss_key<T>(key));
+}
+
 template <class T> void *set<T>::clear()
 {
     gcs.clear();
@@ -552,22 +558,47 @@ template <class T> set<T>* set<T>::difference(int, set<T> *other)
     static_assert(__ss_widens_v<std::remove_cvref_t<typename U::for_in_unit>, T>, \
         "set." what ": elements of the other set do not fit (e.g. floats into a set of ints)")
 
+/* a set of a wider element type on the right (e.g. ints & floats): computed in the wider
+   type. the result of & and - holds elements of the left set, so it is converted back
+   (without loss), while that of | and ^ has the wider element type */
+#define __SS_SET_ELEMS_COMPAT(U, T, what) \
+    using E = std::remove_cvref_t<typename U::for_in_unit>; \
+    static_assert(__ss_compatible_v<E, T>, \
+        "set." what ": element types cannot be converted to each other")
+
 template<class T> template<class U> set<T> *set<T>::__and__(U *s) {
-    __SS_SET_ELEMS_WIDEN(U, T, "__and__");
-    return intersection(1, s);
+    __SS_SET_ELEMS_COMPAT(U, T, "__and__");
+    if constexpr (__ss_widens_v<E, T>)
+        return intersection(1, s);
+    else if constexpr (std::is_same_v<T, void *>) /* empty */
+        return new set<T>(this->frozen);
+    else
+        return __ss_set_as<T>(__ss_set_as<E>(this)->intersection(1, s));
 }
-template<class T> template<class U> set<T> *set<T>::__or__(U *s) {
-    __SS_SET_ELEMS_WIDEN(U, T, "__or__");
-    return __ss_union(1, s);
+template<class T> template<class U> set<__ss_wider_t<T, std::remove_cvref_t<typename U::for_in_unit>>> *set<T>::__or__(U *s) {
+    __SS_SET_ELEMS_COMPAT(U, T, "__or__");
+    if constexpr (__ss_widens_v<E, T>)
+        return __ss_union(1, s);
+    else
+        return __ss_set_as<E>(this)->__ss_union(1, s);
 }
-template<class T> template<class U> set<T> *set<T>::__xor__(U *s) {
-    __SS_SET_ELEMS_WIDEN(U, T, "__xor__");
-    return symmetric_difference(s);
+template<class T> template<class U> set<__ss_wider_t<T, std::remove_cvref_t<typename U::for_in_unit>>> *set<T>::__xor__(U *s) {
+    __SS_SET_ELEMS_COMPAT(U, T, "__xor__");
+    if constexpr (__ss_widens_v<E, T>)
+        return symmetric_difference(s);
+    else
+        return __ss_set_as<E>(this)->symmetric_difference(s);
 }
 template<class T> template<class U> set<T> *set<T>::__sub__(U *s) {
-    __SS_SET_ELEMS_WIDEN(U, T, "__sub__");
-    return difference(1, s);
+    __SS_SET_ELEMS_COMPAT(U, T, "__sub__");
+    if constexpr (__ss_widens_v<E, T>)
+        return difference(1, s);
+    else if constexpr (std::is_same_v<T, void *>) /* empty */
+        return new set<T>(this->frozen);
+    else
+        return __ss_set_as<T>(__ss_set_as<E>(this)->difference(1, s));
 }
+#undef __SS_SET_ELEMS_COMPAT
 template<class T> set<T> *set<T>::__iand__(set<T> *s) {
     if(this->frozen) /* frozenset: rebind to a new object */
         return intersection(1, s);
