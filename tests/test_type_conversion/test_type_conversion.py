@@ -5090,11 +5090,20 @@ def test_lib_none_filter():
 
 
 # none, literal: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from '__ss_int' to 'pyseq<str*>::for_in_unit'
-#
-# def test_lib_none_default():
-#     assert max(['a', 'b'], default=None) == 'b'
+def lib_none_key(s):
+    return -ord(s)
+
+def test_lib_none_default():
+    assert max(['a', 'b'], default=None) == 'b'
+    assert min(['a', 'b'], default=None) == 'a'
+    assert max(['a', 'b'], key=lib_none_key, default=None) == 'a'
+    e = ['a']
+    e.pop()
+    assert max(e, default=None) is None
+    assert min(e, key=lib_none_key, default=None) is None
+    o = A()
+    assert max([o], default=None) is o
+    assert min([[1], [2]], default=None) == [1]
 
 
 # sub->base, variable: cast
@@ -5789,6 +5798,7 @@ def test_all():
     test_lib_none()
     test_lib_none_reduce()
     test_lib_none_filter()
+    test_lib_none_default()
     test_lib_sub()
     test_lib_sub_heappush()
     test_lib_empty_lit_sum()
