@@ -848,9 +848,9 @@ static inline __ss_bool __fd_seekable(FILE *f) {
         return False;
     return ___bool(_lseeki64(fd, 0, SEEK_CUR) != -1);
 #else
-    /* (as CPython, only a pipe/socket/terminal (ESPIPE) is not seekable: e.g.
-       with the fd closed underneath, seek() and tell() then fail with EBADF) */
-    return ___bool(lseek(fileno(f), 0, SEEK_CUR) != -1 || errno != ESPIPE);
+    /* (as CPython, which caches seekable() at open: with the fd closed
+       underneath (EBADF), seek() and tell() then fail with EBADF) */
+    return ___bool(lseek(fileno(f), 0, SEEK_CUR) != -1 || errno == EBADF);
 #endif
 }
 
@@ -966,6 +966,7 @@ file_binary::file_binary(str *file_name, str *flags, __ss_int buffering) : close
     if (flags->unit.find('a') != std::string::npos)
         fseek(f, 0, SEEK_END); /* (as cpython: tell() and reads start at the end) */
     __set_buffering(f, buffering, false);
+    __unbuffered = (buffering == 0);
     name = file_name;
     mode = __fileio_mode(flags);
 }
@@ -1005,6 +1006,7 @@ file_binary *open_binary(__ss_int fd, str *flags, __ss_int buffering, str *encod
     file_binary *f = new file_binary(fp, __str(fd), flags);
     f->__closefd = closefd;
     f->__name_is_fd = true;
+    f->__unbuffered = (buffering == 0);
     return f;
 }
 

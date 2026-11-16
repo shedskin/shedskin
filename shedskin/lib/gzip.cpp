@@ -513,10 +513,8 @@ bytes *GzipFile::read1(__ss_int n) {
     if (n < 0)
         n = __io__::DEFAULT_BUFFER_SIZE;
     if (n > 0 && outpos == outbuf.size()) {
-        /* as CPython: up to n bytes (a __fill() gives at most CHUNK_SIZE), but
-           not beyond the end of the member */
         __fill();
-        while (outbuf.size() - outpos < (size_t)n && !member_end && !at_eof && __fill()) ;
+        __fill_upto((size_t)n);
     }
     size_t k = std::min(outbuf.size() - outpos, (size_t)n);
     bytes *b = new bytes(outbuf.data() + outpos, k);
@@ -525,10 +523,28 @@ bytes *GzipFile::read1(__ss_int n) {
     return b;
 }
 
+/* after a __fill(): more, up to n bytes, but not beyond the end of the
+   member (a __fill() gives at most CHUNK_SIZE). as CPython, data already
+   decompressed is returned first, and a truncated stream raises next time */
+void GzipFile::__fill_upto(size_t n) {
+    while (outbuf.size() - outpos < n && !member_end && !at_eof) {
+        try {
+            if (!__fill())
+                break;
+        } catch (...) {
+            if (outbuf.size() > outpos)
+                break;
+            throw;
+        }
+    }
+}
+
 bytes *GzipFile::peek(__ss_int) {
     __check_can_read("peek");
-    if (outpos == outbuf.size())
+    if (outpos == outbuf.size()) { /* (as CPython: up to 128 KiB) */
         __fill();
+        __fill_upto((size_t)__io__::DEFAULT_BUFFER_SIZE);
+    }
     return new bytes(outbuf.data() + outpos, outbuf.size() - outpos);
 }
 

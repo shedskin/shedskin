@@ -236,6 +236,11 @@ def test_precision():
         assert str(e) == '0.0 to a negative or complex power'
 
 
+def test_complex_bool():
+    assert complex(True) == 1+0j
+    assert complex(False) == 0j
+
+
 def test_all():
     test_complex()
     test_precision()
@@ -244,7 +249,7 @@ def test_all():
     test_from_string()
     test_from_class()
     test_from_number()
-
+    test_complex_bool()
 
 if __name__ == "__main__":
     test_all()

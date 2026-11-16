@@ -1899,6 +1899,41 @@ def test_seek_tell_closed_fd():
     os.remove(name)
 
 
+def test_closed_unbuffered_messages():
+    # buffering=0 (CPython's FileIO): one closed-file message
+    name = 'shedskin_test_closed_unbuffered.bin'
+    w = open(name, 'w+b', buffering=0)
+    w.close()
+    try:
+        w.read(1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'I/O operation on closed file'
+    try:
+        w.write(b'x')
+        assert False
+    except ValueError as e2:
+        assert str(e2) == 'I/O operation on closed file'
+    try:
+        w.readline()
+        assert False
+    except ValueError as e3:
+        assert str(e3) == 'I/O operation on closed file'
+    try:
+        w.flush()
+        assert False
+    except ValueError as e4:
+        assert str(e4) == 'I/O operation on closed file.'
+    b = open(name, 'rb')
+    b.close()
+    try:
+        b.read(1)
+        assert False
+    except ValueError as e5:
+        assert str(e5) == 'read of closed file'
+    os.remove(name)
+
+
 def test_all():
     test_readable_writable_seekable()
     test_open_buffering()
@@ -1961,6 +1996,7 @@ def test_all():
     test_read0_empty_pipe()
     test_open_directory_fd()
     test_seek_tell_closed_fd()
+    test_closed_unbuffered_messages()
 
 if __name__ == '__main__':
     test_all()

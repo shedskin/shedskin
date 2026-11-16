@@ -103,6 +103,7 @@ public:
     FILE *f;
     bool __closefd = true; /* open(fd, closefd=False): close() leaves the fd open */
     bool __name_is_fd = false; /* open(fd): CPython's .name is then the int fd (e.g. not a gzip FNAME) */
+    bool __unbuffered = false; /* buffering=0: CPython's FileIO, with its own closed-file messages */
     __ss_bool closed = False; /* (also for the constructors that open by name, without gc zeroing) */
     __file_options options;
     __GC_VECTOR(char) __read_cache;
@@ -145,8 +146,11 @@ public:
             throw new ValueError(new str("I/O operation on closed file"));
     }
     inline void __check_closed(const char *msg) { /* (CPython's message varies a little per method) */
-        if(closed)
+        if(closed) {
+            if(__unbuffered && strncmp(msg, "I/O", 3) != 0) /* (FileIO: one message, IOBase.flush's for flush) */
+                msg = strcmp(msg, "flush of closed file") == 0 ? "I/O operation on closed file." : "I/O operation on closed file";
             throw new ValueError(new str(msg));
+        }
     }
 };
 

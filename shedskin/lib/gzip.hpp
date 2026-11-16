@@ -128,6 +128,7 @@ public:
     /* internals */
     void __check_can_read(const char *method);
     bool __fill();
+    void __fill_upto(size_t n);
     bool __read_input();
     int __read_byte();
     void __read_exact(char *buf, size_t n);
