@@ -3491,6 +3491,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         argtypes = ltypes | rtypes
         ul, ur = typestr.unboxable(self.gx, ltypes), typestr.unboxable(self.gx, rtypes)
         cast = None
+        if middle == "__contains__" and self.number_among_none(left, right):
+            # '1 in []': the elements can only be None, and a number is never None.
+            # both sides are still evaluated, the key first (as in python)
+            self.append("((void)(")
+            self.visit2(right, argtypes, middle, func)
+            self.append("), (void)(")
+            self.visit2(left, argtypes, middle, func)
+            self.append("), " + ("True)" if prefix == "!" else "False)"))
+            return
         if middle == "__contains__":
             cast = self.lookup_other_type(left, right, func)
 
@@ -3656,6 +3665,119 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 for t in ctypes
             )
         )
+
+    def number_among_none(self, container: ast.AST, key: ast.AST) -> bool:
+        """Whether a number is looked up in a builtin container without element
+        (or key) type, such as an empty one ('1 in []', '1 in set()') or one with
+        only None ('1 in [None]'). its elements are void * in C++, so they can only
+        be None, and a number is never None"""
+        ctypes = self.mergeinh[container]
+        containers = (
+            "list", "tuple", "set", "frozenset", "dict", "deque", "defaultdict",
+            "Counter",
+        )  # fmt: skip
+        if not ctypes or not all(
+            isinstance(t[0], python.Class)
+            and t[0].mv.module.builtin
+            and t[0].ident in containers
+            for t in ctypes
+        ):
+            return False
+        etypes = self.subtypes(ctypes, "unit")
+        if not all(
+            isinstance(t[0], python.Class) and t[0].ident == "none" for t in etypes
+        ):
+            return False
+        numbers = {
+            python.def_class(self.gx, cl) for cl in ("int_", "float_", "bool_", "complex")
+        }
+        kclasses = {t[0] for t in self.mergeinh[key]}
+        return bool(kclasses) and kclasses <= numbers
+
+    def number_among_none_call(
+        self, node: ast.Call, func: Optional["python.Function"] = None
+    ) -> bool:
+        """Generate a method lookup of a number among elements that can only be
+        None (see number_among_none), as in '[].count(1)', '{}.get(1, 2)' or
+        '{}[1]': it is never found. the container, the key and any default are
+        still evaluated, in this order"""
+        if not (
+            isinstance(node.func, ast.Attribute)
+            and node.args
+            and not node.keywords
+            and not any(isinstance(arg, ast.Starred) for arg in node.args)
+        ):
+            return False
+        obj, key, rest = node.func.value, node.args[0], node.args[1:]
+        method = node.func.attr
+        if not self.number_among_none(obj, key):
+            return False
+        idents = {t[0].ident for t in self.mergeinh[obj]}
+        if len(idents) != 1:
+            return False
+        (ident,) = idents
+        rtype = "void *"
+        if self.mergeinh.get(node):
+            rtype = typestr.typestr(self.gx, self.mergeinh[node], mv=self.mv).strip()
+
+        # the outcome: a constant, a default, or an error (raised with the key,
+        # or with a fixed message)
+        result: Optional[str] = None
+        default: Optional[ast.AST] = None
+        key_error = value_error = message = None
+        sequence = ident in ("list", "tuple", "deque")
+        mapping = ident in ("dict", "defaultdict", "Counter")
+        if rest:
+            if method in ("get", "pop") and mapping and len(rest) == 1:
+                default = rest[0]
+            else:
+                return False
+        elif method == "count" and sequence:
+            result = "0"
+        elif method == "index" and sequence:
+            if ident == "tuple":
+                message = "tuple.index(x): x not in tuple"
+            else:
+                value_error = ident
+        elif method == "remove" and ident == "list":
+            message = "list.remove(x): x not in list"
+        elif method == "remove" and ident == "deque":
+            value_error = ident
+        elif method == "discard" and ident == "set":
+            result = "NULL"
+        elif method == "get" and mapping and rtype.endswith("*"):
+            result = "NULL"
+        elif method == "__getitem__" and ident == "Counter":
+            result = "0"
+        elif (method == "remove" and ident == "set") or (
+            method in ("pop", "__getitem__", "__delitem__")
+            and mapping
+            and not (method == "__getitem__" and ident == "defaultdict")
+        ):
+            key_error = True
+        else:
+            return False
+
+        self.append("((void)(")
+        self.visit(obj, func)
+        self.append("), ")
+        if key_error or value_error:
+            helper = "__ss_none_key_error" if key_error else "__ss_none_value_error"
+            self.append("%s<%s>(" % (helper, rtype))
+            self.visit(key, func)
+            self.append(', "%s"))' % value_error if value_error else "))")
+            return True
+        self.append("(void)(")
+        self.visit(key, func)
+        self.append("), ")
+        if message:
+            self.append('__ss_none_value_error<%s>("%s"))' % (rtype, message))
+        elif default is not None:
+            self.impl_visit_conv(default, self.mergeinh[node], func)
+            self.append(")")
+        else:
+            self.append("(%s)(%s))" % (rtype, result))
+        return True
 
     def lookup_other_type(
         self,
@@ -3989,6 +4111,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         argtypes: Optional[Types] = None,
     ) -> None:
         """Visit a call node"""
+        if self.number_among_none_call(node, func):
+            return
         cast = self.call_downcast(node)
         if cast:
             self.append("((%s)(" % cast)

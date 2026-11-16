@@ -137,16 +137,16 @@
 #    7. display  1/0/0        4/0/1        -            2/0/0        0/0/1        2/0/0        4/0/1
 #    8. binop    1/0/0        21/1/0       -            1/0/0        -            5/0/0        25/0/0
 #    9. compare  -            9/0/0        -            1/0/0        1/0/0        1/0/0        9/0/0
-#   10. lookup   1/0/0        10/0/0       0/0/1        5/0/0        0/0/1        4/0/0        10/4/0
+#   10. lookup   1/0/0        10/0/0       0/0/1        6/0/0        0/0/1        4/0/0        18/0/0
 #   11. ctor     -            7/1/0        -            1/0/0        -            3/1/0        12/6/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
 #   14. lib      -            6/3/3        -            3/1/0        -            1/0/0        8/17/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       120/7/13     0/0/1        25/1/0       1/0/9        49/1/0       144/33/10
+#   total        10/0/0       120/7/13     0/0/1        26/1/0       1/0/9        49/1/0       152/29/10
 #
-#   all cells: 349 work, 42 TODO, 33 correctly warn or fail
+#   all cells: 358 work, 38 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -3661,6 +3661,15 @@ def test_lookup_none():
     assert l.index(None) == 1
 
 
+# none, literal: generic
+def test_lookup_none_number():
+    # elements that can only be None: a number is never found
+    l = [None]
+    assert 1 not in l and 0 not in l and 0.0 not in (None,)
+    assert 0 not in {None: 1} and False not in {None}
+    assert None in l
+
+
 # none, literal: cast
 def test_lookup_none_remove():
     l = ['a', None]
@@ -3768,14 +3777,52 @@ def test_lookup_empty_container_lit():
 
 
 # empty, literal: generic
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from '__ss_int' to 'void*'
-#
-# def test_lookup_empty_container_lit_number():
-#     assert 1 not in []
-#     assert [].count(1) == 0
-#     assert 1 not in {}
-#     assert 1 not in ()
+def test_lookup_empty_container_lit_number():
+    # the elements can only be None, so a number is never found
+    assert 1 not in []
+    assert not (1 in [])
+    assert 1 not in {}
+    assert 1 not in ()
+    assert 1.5 not in [] and True not in set() and 1j not in frozenset()
+
+
+lookup_order_calls = []
+
+def lookup_order_key():
+    lookup_order_calls.append('key')
+    return 1
+
+def lookup_order_container():
+    lookup_order_calls.append('container')
+    return []
+
+# empty, literal: generic
+def test_lookup_empty_container_lit_number_order():
+    # the key is still evaluated, and before the container
+    found = lookup_order_key() in lookup_order_container()
+    assert not found
+    assert lookup_order_calls == ['key', 'container']
+
+
+# empty, literal: generic
+def test_lookup_empty_container_lit_number_count():
+    assert [].count(1) == 0 and ().count(2.5) == 0
+    assert {}.get(1) is None and {}.get(1, 2) == 2 and {}.pop(1j, 'a') == 'a'
+    try:
+        [].index(1)
+        assert False
+    except ValueError as e:
+        assert str(e) == '1 is not in list'
+    try:
+        ().index(1)
+        assert False
+    except ValueError as e:
+        assert str(e) == 'tuple.index(x): x not in tuple'
+    try:
+        {}[1]
+        assert False
+    except KeyError as e:
+        assert str(e) == '1'
 
 
 # empty, new: generic
@@ -3788,15 +3835,24 @@ def test_lookup_empty_container_new():
 
 
 # empty, new: generic
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from '__ss_int' to 'void*'
-#
-# def test_lookup_empty_container_new_number():
-#     assert 1 not in set()
-#     assert 1 not in dict()
-#     assert 1 not in list()
-#     assert 1 not in deque()
-#     assert Counter()[1] == 0
+def test_lookup_empty_container_new_number():
+    assert 1 not in set()
+    assert 1 not in dict()
+    assert 1 not in list()
+    assert 1 not in deque()
+    assert 1 not in Counter()
+    assert 1 not in defaultdict(int)
+
+
+# empty, new: generic
+def test_lookup_empty_container_new_number_counter():
+    assert Counter()[1] == 0
+    assert deque().count(1) == 0 and list().count(1) == 0
+    try:
+        deque().index(1)
+        assert False
+    except ValueError as e:
+        assert str(e) == '1 is not in deque'
 
 
 # empty, variable: generic
@@ -3812,24 +3868,61 @@ def test_lookup_empty_container_var():
 
 
 # empty, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from '__ss_int' to 'void*'
-#
-# def test_lookup_empty_container_var_number():
-#     e = []
-#     assert 1 not in e
-#     assert e.count(1) == 0
+def test_lookup_empty_container_var_number():
+    e = []
+    assert 1 not in e
+    skip = set()
+    total = 0
+    for i in range(4):
+        if i not in skip:
+            total += i
+    assert total == 6
 
 
 # empty, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from '__ss_int' to 'void*'
-#
-# def test_lookup_empty_container_var_number_set_dict():
-#     es = set()
-#     assert 1 not in es
-#     ed = {}
-#     assert 1 not in ed
+def test_lookup_empty_container_var_number_count():
+    e = []
+    assert e.count(1) == 0
+    try:
+        e.remove(1)
+        assert False
+    except ValueError as x:
+        assert str(x) == 'list.remove(x): x not in list'
+    es = set()
+    es.discard(1)
+    try:
+        es.remove(1)
+        assert False
+    except KeyError as x:
+        assert str(x) == '1'
+    ed = {}
+    assert ed.get(1) is None and ed.get(1, 2.5) == 2.5 and ed.pop(1, 3) == 3
+    try:
+        ed.pop(1)
+        assert False
+    except KeyError as x:
+        assert str(x) == '1'
+    try:
+        del ed[1]
+        assert False
+    except KeyError as x:
+        assert str(x) == '1'
+    q = deque()
+    try:
+        q.remove(1)
+        assert False
+    except ValueError as x:
+        assert str(x) == '1 is not in deque'
+    c = Counter()
+    assert c[1] == 0 and len(c) == 0
+
+
+# empty, variable: generic
+def test_lookup_empty_container_var_number_set_dict():
+    es = set()
+    assert 1 not in es
+    ed = {}
+    assert 1 not in ed
 
 
 # empty, literal: build
@@ -5546,6 +5639,7 @@ def test_all():
     test_lookup_int_float_lit_tuple_dict()
     test_lookup_int_float_lit_tuple_dict_method()
     test_lookup_none()
+    test_lookup_none_number()
     test_lookup_none_remove()
     test_lookup_none_list()
     test_lookup_none_set()
@@ -5555,8 +5649,16 @@ def test_all():
     test_lookup_sub_var_tuple()
     test_lookup_sub_var_nested()
     test_lookup_empty_container_lit()
+    test_lookup_empty_container_lit_number()
+    test_lookup_empty_container_lit_number_order()
+    test_lookup_empty_container_lit_number_count()
     test_lookup_empty_container_new()
+    test_lookup_empty_container_new_number()
+    test_lookup_empty_container_new_number_counter()
     test_lookup_empty_container_var()
+    test_lookup_empty_container_var_number()
+    test_lookup_empty_container_var_number_count()
+    test_lookup_empty_container_var_number_set_dict()
     test_lookup_empty_value_lit()
     test_lookup_empty_value_lit_method()
     test_lookup_empty_value_lit_tuple()

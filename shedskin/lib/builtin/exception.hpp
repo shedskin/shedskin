@@ -863,3 +863,15 @@ public:
     PyObject *__to_py__() { return PyExc_UserWarning; }
 #endif
 };
+
+/* a number looked up among elements that can only be None (void *), as in
+   '[].index(1)' or '{}[1]': it is never found. R is the type of the lookup */
+template<class R, class K> R __ss_none_key_error(K key) {
+    throw __key_error(key);
+}
+template<class R, class K> R __ss_none_value_error(K key, const char *container) {
+    throw new ValueError(__add_strs(3, repr(key), new str(" is not in "), new str(container)));
+}
+template<class R> R __ss_none_value_error(const char *msg) {
+    throw new ValueError(new str(msg));
+}
