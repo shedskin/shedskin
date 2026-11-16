@@ -23,6 +23,7 @@ public:
     inline __ss_int __getfast__(__ss_int i);
 
     template<class U> bytes *join(U *);
+    template<class U> requires std::is_same_v<typename U::for_in_unit, void *> bytes *join(U *) { return new bytes(frozen); } /* empty iterable, e.g. b''.join([]) */
 
     inline __ss_int __len__() final;
     bytes *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);

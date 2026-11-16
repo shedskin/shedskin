@@ -26,6 +26,7 @@ public:
     str *__add__(str *b);
 
     template<class U> str *join(U *);
+    template<class U> requires std::is_same_v<typename U::for_in_unit, void *> str *join(U *) { return new str(); } /* empty iterable, e.g. ''.join([]) */
 
     /* operators */
     //inline void operator+= (const char *c);

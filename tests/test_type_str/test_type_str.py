@@ -328,6 +328,10 @@ def test_join():
     board = [[chr(65+i+j) for i in range(2)] for j in range(2)]
     assert '\n'.join(''.join(row) for row in board) == 'AB\nBC'
 
+    # empty iterable
+    assert ''.join([]) == ''
+    assert '-'.join(()) == ''
+
 
 def test_ljust():
     assert 'bla'.ljust(8) == 'bla     '
