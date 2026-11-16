@@ -5012,6 +5012,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("(__ss_float(")
 
             if (
+                ast_utils.is_none(arg)
+                and formal.name == "__kw_default"
+                and target.ident in ("__min1", "__max1")
+                and target.mv.module.builtin
+            ):
+                # max(l, default=None): None as the element type, which is
+                # returned (a bare NULL is an integer in C++)
+                self.visit_none(self.mergeinh[node])
+            elif (
                 castnull
                 and ast_utils.is_none(arg)
                 and not (print_call and formal.name.startswith("__kw_"))
