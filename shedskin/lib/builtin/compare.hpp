@@ -89,6 +89,7 @@ template<> inline __ss_bool __gt(__ss_int a, __ss_int b) { return __mbool(a > b)
 template<> inline __ss_bool __gt(int a, int b) { return __mbool(a > b); }
 template<> inline __ss_bool __gt(__ss_float a, __ss_float b) { return __mbool(a > b); }
 template<> inline __ss_bool __gt(__ss_bool a, __ss_bool b) { return __mbool(a.value > b.value); }
+template<> inline __ss_bool __gt(void *a, void *b) { return __mbool(a > b); }
 
 /* ge */
 
@@ -99,6 +100,7 @@ template<> inline __ss_bool __ge(__ss_int a, __ss_int b) { return __mbool(a >= b
 template<> inline __ss_bool __ge(int a, int b) { return __mbool(a >= b); }
 template<> inline __ss_bool __ge(__ss_float a, __ss_float b) { return __mbool(a >= b); }
 template<> inline __ss_bool __ge(__ss_bool a, __ss_bool b) { return __mbool(a.value >= b.value); }
+template<> inline __ss_bool __ge(void *a, void *b) { return __mbool(a >= b); }
 
 /* lt */
 template<class T> inline __ss_bool __lt(T a, T b) { return a->__lt__(b); }
@@ -108,6 +110,7 @@ template<> inline __ss_bool __lt(__ss_int a, __ss_int b) { return __mbool(a < b)
 template<> inline __ss_bool __lt(int a, int b) { return __mbool(a < b); }
 template<> inline __ss_bool __lt(__ss_float a, __ss_float b) { return __mbool(a < b); }
 template<> inline __ss_bool __lt(__ss_bool a, __ss_bool b) { return __mbool(a.value < b.value); }
+template<> inline __ss_bool __lt(void *a, void *b) { return __mbool(a < b); }
 
 /* le */
 
@@ -118,6 +121,7 @@ template<> inline __ss_bool __le(__ss_int a, __ss_int b) { return __mbool(a <= b
 template<> inline __ss_bool __le(int a, int b) { return __mbool(a <= b); }
 template<> inline __ss_bool __le(__ss_float a, __ss_float b) { return __mbool(a <= b); }
 template<> inline __ss_bool __le(__ss_bool a, __ss_bool b) { return __mbool(a.value <= b.value); }
+template<> inline __ss_bool __le(void *a, void *b) { return __mbool(a <= b); }
 
 /* comparison */
 

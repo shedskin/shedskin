@@ -4303,15 +4303,12 @@ def test_ctor_empty_var_deque():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: 'void*' is not a pointer-to-object type
-#
-# def test_ctor_empty_var_sorted():
-#     e = []
-#     r = sorted(e)
-#     assert len(r) == 0
-#     t = tuple(e)
-#     assert len(t) == 0
+def test_ctor_empty_var_sorted():
+    e = []
+    r = sorted(e)
+    assert len(r) == 0
+    t = tuple(e)
+    assert len(t) == 0
 
 
 # empty, variable: copy
@@ -5132,13 +5129,10 @@ def test_lib_empty_lit_sum():
 
 
 # empty, literal: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: 'void*' is not a pointer-to-object type
-#
-# def test_lib_empty_lit_sorted():
-#     assert len(sorted([])) == 0
-#     assert len(list(reversed([]))) == 0
-#     assert len(list(enumerate([]))) == 0
+def test_lib_empty_lit_sorted():
+    assert len(sorted([])) == 0
+    assert len(list(reversed([]))) == 0
+    assert len(list(enumerate([]))) == 0
 
 
 # empty, literal: infer
@@ -5269,14 +5263,30 @@ def test_lib_empty_var_sum():
 
 
 # empty, variable: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: 'void*' is not a pointer-to-object type
-#
-# def test_lib_empty_var_sorted():
-#     e = []
-#     assert len(sorted(e)) == 0
-#     assert len(list(reversed(e))) == 0
-#     assert len(list(enumerate(e))) == 0
+def test_lib_empty_var_sorted():
+    e = []
+    assert len(sorted(e)) == 0
+    assert len(list(reversed(e))) == 0
+    assert len(list(enumerate(e))) == 0
+
+
+# empty, variable: infer (element comparisons on an always-empty list)
+def test_lib_empty_var_sort():
+    e = []
+    e.sort()
+    assert len(e) == 0
+    assert len(sorted(e, reverse=True)) == 0
+    f = []
+    f.sort(reverse=True)
+    assert len(f) == 0
+    g = []
+    heapq.heapify(g)
+    assert len(g) == 0
+    assert len(heapq.nsmallest(2, g)) == 0
+    assert len(heapq.nlargest(2, g)) == 0
+    h = []
+    assert not (h < [])
+    assert h <= []
 
 
 # empty, variable: cast
@@ -5716,6 +5726,7 @@ def test_all():
     test_ctor_empty_var_set()
     test_ctor_empty_var_deque()
     test_ctor_empty_var_number()
+    test_ctor_empty_var_sorted()
     test_ctor_empty_var_set_number()
     test_ctor_empty_var_deque_number()
     test_ctor_empty_var_dict()
@@ -5770,11 +5781,14 @@ def test_all():
     test_lib_empty_lit_chain_only()
     test_lib_empty_lit_product()
     test_lib_empty_lit_heappush()
+    test_lib_empty_lit_sorted()
     test_lib_empty_var()
     test_lib_empty_var_sum()
     test_lib_empty_var_mixed_chain()
     test_lib_empty_var_mixed_number()
     test_lib_empty_var_mixed_sum_number()
+    test_lib_empty_var_sorted()
+    test_lib_empty_var_sort()
     test_empty_call_contexts()
     test_var_bool_int()
 
