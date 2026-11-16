@@ -4376,6 +4376,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 and isinstance(node.args[0], ast.Call)
                 and isinstance(node.args[0].func, ast.Name)
                 and node.args[0].func.id == "range"
+                and self.list_typestr(node) == "list<__ss_int> *"
             ):
                 self.append("__ss_list_range(")
                 for arg in node.args[0].args:
