@@ -265,9 +265,9 @@ public:
     __GC_VECTOR(iter_heap) heap; /* GC-visible: holds the only reference to pending items */
 
     mergeiter();
-    mergeiter(pyiter<T> *iterable, Key key, bool reverse);
+    mergeiter(Key key, bool reverse);
 
-    void push_iter(pyiter<T> *iterable);
+    template<class E> void push_iter(pyiter<E> *iterable);
 
     T __next__();
 
@@ -280,18 +280,17 @@ template<class T, class Key> inline mergeiter<T, Key>::mergeiter() {
     this->last = 0;
     this->reverse = false;
 }
-template<class T, class Key> inline mergeiter<T, Key>::mergeiter(pyiter<T> *iterable, Key key, bool reverse) {
+template<class T, class Key> inline mergeiter<T, Key>::mergeiter(Key key, bool reverse) {
     this->exhausted = false;
     this->started = false;
     this->pending = false;
     this->last = 0;
     this->key = key;
     this->reverse = reverse;
-    this->push_iter(iterable);
 }
 
-template<class T, class Key> void mergeiter<T, Key>::push_iter(pyiter<T> *iterable) {
-    this->iters.push_back(iterable->__iter__());
+template<class T, class Key> template<class E> void mergeiter<T, Key>::push_iter(pyiter<E> *iterable) {
+    this->iters.push_back(__ss_iter_as<T>(iterable));
 }
 
 template<class T, class Key> T mergeiter<T, Key>::__next__() {
@@ -344,12 +343,10 @@ template<class T, class Key> T mergeiter<T, Key>::__next__() {
 inline mergeiter<void *, long int> *merge(__ss_int /* iterable_count */, __ss_int, __ss_bool) {
     return new mergeiter<void *, long int>();
 }
-template<class T, class Key, class ... Args> mergeiter<T, Key> *merge(__ss_int, Key key, __ss_bool reverse, pyiter<T> *iterable, Args ... args) {
-    mergeiter<T, Key> *iter = new mergeiter<T, Key>(iterable, key, reverse.value);
-    /* the casts below cannot convert elements, so refuse e.g. merge([1], [0.5]) */
-    static_assert(((!std::is_arithmetic_v<T> || std::is_same_v<T, typename std::remove_pointer_t<Args>::for_in_unit>) && ...),
-        "heapq.merge: mixing iterables of different numeric types (such as int and float) is not supported");
-    (iter->push_iter((pyiter<T> *)args), ...);
+/* the iterables may have different (compatible) element types, as in merge([1], [0.5]) */
+template<class Key, class ... Args> mergeiter<__ss_widest_t<std::remove_cvref_t<typename std::remove_pointer_t<Args>::for_in_unit>...>, Key> *merge(__ss_int, Key key, __ss_bool reverse, Args ... args) {
+    auto *iter = new mergeiter<__ss_widest_t<std::remove_cvref_t<typename std::remove_pointer_t<Args>::for_in_unit>...>, Key>(key, reverse.value);
+    (iter->push_iter(args), ...);
     return iter;
 }
 

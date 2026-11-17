@@ -81,6 +81,35 @@ def test_chain():
     assert list(itertools.chain([1, 2], [3, 4], [5, 6])) == [1, 2, 3, 4, 5, 6]
 
 
+class ChainBase:
+    def __init__(self, n):
+        self.n = n
+
+class ChainSub(ChainBase):
+    pass
+
+def chain_gen():
+    yield 2
+    yield 3
+
+def test_chain_mixed():
+    # iterables with different (compatible) element types, or empty ones
+    assert list(itertools.chain([], [1, 2])) == [1, 2]
+    assert list(itertools.chain([], [1.5], [])) == [1.5]
+    assert list(itertools.chain([1, 2], [0.5])) == [1.0, 2.0, 0.5]
+    assert list(itertools.chain([0.5], [1, 2])) == [0.5, 1.0, 2.0]
+    assert list(itertools.chain((1,), chain_gen(), [0.5])) == [1.0, 2.0, 3.0, 0.5]
+    assert list(itertools.chain([True], [2])) == [1, 2]
+    assert list(itertools.chain('ab', '', 'c')) == ['a', 'b', 'c']
+    total = 0.0
+    for x in itertools.chain([1, 2], [0.25]):
+        total += x
+    assert total == 3.25
+    assert [b.n for b in itertools.chain([ChainSub(5)], [], [ChainBase(6)])] == [5, 6]
+    l = list(itertools.chain([None], [ChainBase(1)], [ChainSub(2)]))
+    assert l[0] is None and [b.n for b in l[1:]] == [1, 2]
+
+
 pred = lambda x: x < 5
 
 def test_dropwhile():
@@ -640,6 +669,7 @@ def test_all():
     test_repeat()
     test_repeat_large_count()
     test_chain()
+    test_chain_mixed()
     test_dropwhile()
     test_takewhile()
     test_groupby()
