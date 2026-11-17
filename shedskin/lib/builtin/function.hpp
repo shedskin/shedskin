@@ -200,9 +200,17 @@ template <class U, class B> typename __sumtype2<typename U::for_in_unit,B>::type
     return __add((typename __sumtype2<typename U::for_in_unit,B>::type)b, (typename __sumtype2<typename U::for_in_unit,B>::type)result1);
 }
 
+/* max, min */
+
+/* the result type of max/min(iterable, default=..): the default can be of a wider
+   type than the elements (e.g. 'max(ints, default=0.5)'), or the elements can have
+   no type at all ('max([], default=0)') */
+template<class U, class D> using __ss_minmax_t = std::conditional_t<
+    std::is_same_v<D, __ss_void_struct>, U, __ss_wider_t<U, D>>;
+
 /* max */
 
-template<class A, class B, class D> typename A::for_in_unit ___max(int, D default_, B (*key)(typename A::for_in_unit), A *iter) {
+template<class A, class B, class D> __ss_minmax_t<typename A::for_in_unit, D> ___max(int, D default_, B (*key)(typename A::for_in_unit), A *iter) {
     typename A::for_in_unit max;
     B maxkey, maxkey2;
     max = __zero<typename A::for_in_unit>(); 
@@ -231,10 +239,10 @@ template<class A, class B, class D> typename A::for_in_unit ___max(int, D defaul
         else
             return default_;
     }
-    return max;
+    return __ss_elem<__ss_minmax_t<typename A::for_in_unit, D>>(max);
 }
 
-template<class A, class D> typename A::for_in_unit ___max(int nn, D default_, int, A *iter) { return ___max(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
+template<class A, class D> __ss_minmax_t<typename A::for_in_unit, D> ___max(int nn, D default_, int, A *iter) { return ___max(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
 template<class T, class B, class D> inline T ___max(int, D default_, B (*key)(T), T a, T b) { B ka = key(a); return __gt(key(b), ka)?b:a; }
 template<class T, class D> inline  T ___max(int, D, int, T a, T b) { return __gt(b, a)?b:a; }
@@ -267,7 +275,7 @@ template<class T, class D, class ... Args> T ___max(int, D default_, int key, T 
 
 /* min */
 
-template<class A, class B, class D> typename A::for_in_unit ___min(int, D default_, B (*key)(typename A::for_in_unit), A *iter) {
+template<class A, class B, class D> __ss_minmax_t<typename A::for_in_unit, D> ___min(int, D default_, B (*key)(typename A::for_in_unit), A *iter) {
     typename A::for_in_unit min;
     B minkey, minkey2;
     min = __zero<typename A::for_in_unit>();
@@ -296,10 +304,10 @@ template<class A, class B, class D> typename A::for_in_unit ___min(int, D defaul
         else
             return default_;
     }
-    return min;
+    return __ss_elem<__ss_minmax_t<typename A::for_in_unit, D>>(min);
 }
 //template<class A, class D> typename A::for_in_unit ___min(int nn, D default_, A *iter) { return ___min(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
-template<class A, class D> typename A::for_in_unit ___min(int nn, D default_, int, A *iter) { return ___min(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
+template<class A, class D> __ss_minmax_t<typename A::for_in_unit, D> ___min(int nn, D default_, int, A *iter) { return ___min(nn, default_, (int (*)(typename A::for_in_unit))0, iter); }
 
 template<class T, class B, class D> inline T ___min(int, D default_, B (*key)(T), T a, T b) { B ka = key(a); return __lt(key(b), ka)?b:a; }
 template<class T, class D> inline  T ___min(int, D, int, T a, T b) { return __lt(b, a)?b:a; }

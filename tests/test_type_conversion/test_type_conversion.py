@@ -141,12 +141,12 @@
 #   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        17/1/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        12/2/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            10/2/0       -            4/0/0        -            2/0/0        22/5/0
+#   14. lib      -            11/2/0       -            4/0/0        -            2/0/0        23/4/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       125/5/10     0/0/1        29/0/0       1/0/9        50/1/0       173/10/10
+#   total        10/0/0       126/5/10     0/0/1        29/0/0       1/0/9        50/1/0       174/9/10
 #
-#   all cells: 388 work, 16 TODO, 30 correctly warn or fail
+#   all cells: 390 work, 15 TODO, 30 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -4980,6 +4980,15 @@ def test_lib_int_float_var_reduce():
     assert functools.reduce(lib_add2, ints, 0.5) == 3.5
 
 
+# int->float, variable: implicit
+def test_lib_int_float_var_default():
+    # the default can be of a wider type than the elements
+    ints = [1]
+    ints.pop()
+    assert max(ints, default=0.5) == 0.5
+    assert min(ints, default=2.5) == 2.5
+
+
 # int->float, variable: generic
 # TODO doesn't work today: C++ compile error, without a warning
 #   C++: no matching function for call to '___max(int, __ss_void_struct&,
@@ -5142,13 +5151,9 @@ def test_lib_empty_lit_sorted():
 
 
 # empty, literal: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(pyseq<void*>::for_in_unit,
-#     __ss_int)'
-#
-# def test_lib_empty_lit_default():
-#     assert max([], default=0) == 0
-#     assert min([], default=5) == 5
+def test_lib_empty_lit_default():
+    assert max([], default=0) == 0
+    assert min([], default=5) == 5
 
 
 # empty, literal: build
@@ -5759,6 +5764,7 @@ def test_all():
     test_lib_int_float_lit_iter()
     test_lib_int_float_var_iter()
     test_lib_int_float_var_reduce()
+    test_lib_int_float_var_default()
     test_lib_int_float_chain()
     test_lib_int_float_merge()
     test_lib_int_float_chain_var()
@@ -5783,6 +5789,7 @@ def test_all():
     test_lib_empty_lit_accumulate()
     test_lib_empty_lit_heappush()
     test_lib_empty_lit_sorted()
+    test_lib_empty_lit_default()
     test_lib_empty_var()
     test_lib_empty_var_sum()
     test_lib_empty_var_mixed()
