@@ -25,6 +25,13 @@ template<class R, class A, class E, class B> A reduce(R (*func)(A, E), B *iter, 
     return result;
 }
 
+/* the iterable has no elements (e.g. 'reduce(lambda a, b: a + b, [], 5)'), so func is
+   never called, and has no types (it is a null pointer) */
+template<class R, class B, class I> requires (std::is_same_v<typename B::for_in_unit, void *> && !std::is_same_v<I, void *>)
+I reduce(R (*)(void *, void *), B *, I initial) {
+    return initial;
+}
+
 template<class R, class A, class E, class B> A reduce(R (*func)(A, E), B *iter) {
     A result;
     typename B::for_in_loop __7 = iter->for_in_init();

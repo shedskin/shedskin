@@ -653,6 +653,25 @@ namespace __dict__ {
 
 }
 
+/* the result of fromkeys, as the dict type it is inferred to have (e.g. 'd =
+   dict.fromkeys([B()], 0)', 'd[A()] = 1'): it is a new dict, so it can be copied */
+
+template<class D> struct __ss_dict_kv;
+template<class K, class V> struct __ss_dict_kv<dict<K, V>> { using key = K; using value = V; };
+template<class K, class V> struct __ss_dict_kv<frozendict<K, V>> { using key = K; using value = V; };
+
+template<class D, class C> D *__ss_fromkeys_as(C *c) {
+    if constexpr (std::is_same_v<D, C>)
+        return c;
+    else {
+        D *d = new D();
+        for (auto &kv : c->gcd)
+            d->__setitem__(__ss_elem<typename __ss_dict_kv<D>::key>(kv.first),
+                           __ss_elem<typename __ss_dict_kv<D>::value>(kv.second));
+        return d;
+    }
+}
+
 namespace __frozendict__ {
     template<class A, class B> frozendict<A, B> *fromkeys(void *, pyiter<A> *f, B b) {
         frozendict<A, B> *d = new frozendict<A, B>();

@@ -1302,7 +1302,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Lambda(self, node: ast.Lambda, parent: Optional[Parent] = None) -> None:
         """Visit a lambda node"""
-        self.append(self.mv.lambdaname[node])
+        self.append(self.lambda_ref(self.mv.lambdaname[node]))
+
+    def lambda_ref(self, name: str) -> str:
+        """Refer to a lambda (or a wrapper for a builtin function, as in
+        'key=len'). a lambda that is never called is not generated (e.g. a key
+        for an empty list), so it becomes a null pointer of its type"""
+        func = self.mv.lambdas.get(name)
+        if func is not None and func.lambdanr is not None and not self.inhcpa(func):
+            return "((lambda%d)NULL)" % func.lambdanr
+        return name
 
     def subtypes(self, types: Types, varname: Optional[str]) -> Types:
         """Get the subtypes of a type"""
@@ -1961,6 +1970,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return
         var = python.lookup_var(node.target.id, func, self.mv)
         itertypes = self.mergeinh[node.iter]
+        # the container has no elements, so there is nothing to convert: in
+        # C++ the loop variable gets a default value from __ss_elem, but the
+        # loop body never runs (e.g. 'e = []', 'x = 1', 'for x in e')
+        if not self.subtypes(itertypes, "unit"):
+            return
         if (
             var in self.mergeinh
             and self.only_classes(
@@ -2075,9 +2089,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         )
         assert isinstance(node.iter, (ast.Tuple, ast.List, ast.Set))
         target_types = self.mergeinh[node.target]
-        if not target_types and isinstance(node.target, ast.Name):
-            # the elements have no type (e.g. 'for x in []'), but the loop
-            # variable may have one from elsewhere
+        if not target_types and isinstance(node.target, ast.Name) and node.iter.elts:
+            # the elements have no type (e.g. 'for x in [e[0]]'), but the loop
+            # variable may have one from elsewhere. without elements (e.g.
+            # 'for x in []') the loop body never runs
             var = python.lookup_var(node.target.id, func, self.mv)
             if var in self.mergeinh:
                 self.check_no_type(node.iter, target_types, self.mergeinh[var])
@@ -2090,7 +2105,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.indent()
         self.start()
         # cast to the loop variable where safe, and warn otherwise
-        if isinstance(node.target, ast.Name):
+        if isinstance(node.target, ast.Name) and not target_types:
+            # no elements to convert (see forin_check)
+            tempvar = "__ss_elem<std::remove_cvref_t<decltype(%s)>>(%s)" % (
+                self.cpp_name(node.target.id), tempvar)
+        elif isinstance(node.target, ast.Name):
             var = python.lookup_var(node.target.id, func, self.mv)
             if var in self.mergeinh:
                 cast = self.conv_cast(node.target, target_types, self.mergeinh[var])
@@ -2176,7 +2195,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         assert isinstance(node, ast.For)
         if not skip:
             self.indent()
-            if ast_utils.is_assign_list_or_tuple(node.target):
+            if ast_utils.is_assign_list_or_tuple(
+                node.target
+            ) and not self.untyped_elements(node.target):
                 assert isinstance(node.target, (ast.List, ast.Tuple))
                 self.tuple_assign(node.target, self.mv.tempcount[node.target], func)
         self.gx.loopstack.append(node)
@@ -2192,6 +2213,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.visit(child, func)
             self.deindent()
             self.output("}")
+
+    def untyped_elements(self, target: ast.expr) -> bool:
+        """Whether the elements that a for loop unpacks into 'target' have no
+        type (e.g. 'for a, b in []'). there are no such elements then, so the
+        loop body never runs, and there is nothing to unpack"""
+        if not isinstance(target, (ast.List, ast.Tuple)) or not target.elts:
+            return False
+        unpacked = self.gx.item_rvalue.get(target.elts[0])
+        return (
+            unpacked is not None
+            and unpacked in self.mergeinh
+            and not self.mergeinh[unpacked]
+        )
 
     def func_pointers(self) -> None:
         """Generate function pointers for lambdas"""
@@ -4150,9 +4184,51 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         cast = self.call_downcast(node)
         if cast:
             self.append("((%s)(" % cast)
+        fromkeys = self.fromkeys_result(node)
+        if fromkeys:
+            self.append("__ss_fromkeys_as<%s>(" % fromkeys)
         self.impl_visit_call(node, func, argtypes)
+        if fromkeys:
+            self.append(")")
         if cast:
             self.append("))")
+
+    def fromkeys_result(self, node: ast.Call) -> Optional[str]:
+        """Return the C++ dict type that a call to 'dict.fromkeys' is inferred
+        to return. this can differ from the types of its arguments (e.g. 'd =
+        dict.fromkeys([B()], 0)', 'd[A()] = 1'), but the result is a new dict,
+        so it can be built as that type"""
+        if not (
+            isinstance(node.func, ast.Attribute)
+            and node.func.attr == "fromkeys"
+            and node in self.mergeinh
+        ):
+            return None
+        funcs = infer.callfunc_targets(self.gx, node, self.gx.merged_inh)
+        if not funcs or not all(
+            f.mv.module.builtin
+            and isinstance(f.parent, python.Class)
+            and f.parent.ident in ("dict", "frozendict")
+            for f in funcs
+        ):
+            return None
+        return self.new_container_type(node, ("dict", "frozendict"))
+
+    def new_container_type(
+        self, node: ast.AST, classnames: tuple[str, ...]
+    ) -> Optional[str]:
+        """Return the C++ type (without '*') that an expression creating a new
+        container is inferred to have, if it is a single one of 'classnames'"""
+        types = self.mergeinh.get(node)
+        if not types:
+            return None
+        classes = typestr.types_classes(types)
+        if len(classes) != 1 or next(iter(classes)).ident not in classnames:
+            return None
+        ts = typestr.typestr(self.gx, types, mv=self.mv).strip()
+        if not ts.endswith("*"):
+            return None
+        return ts[:-1].strip()
 
     def call_downcast(self, node: ast.Call) -> Optional[str]:
         """Return the cast needed when a user function is declared to return a
@@ -4547,6 +4623,17 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("__" + ident + "(")
             elif ident in ["min", "max", "iter", "round"]:
                 self.append("___" + ident + "(")
+            elif (
+                ident == "sorted"
+                and direct_call.mv.module.builtin
+                and self.new_container_type(node, ("list",))
+            ):
+                # the result is a new list, so it can be built with the
+                # element type it gets elsewhere (e.g. 'r = sorted(ints)',
+                # 'r.append(0.5)')
+                self.append(
+                    "__ss_sorted<%s>(" % self.new_container_type(node, ("list",))
+                )
             elif ident == "bool":
                 if node.args and infer.nrargs(self.gx, node):
                     self.bool_test(node.args[0], func, always_wrap=True)
@@ -5033,6 +5120,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             builtin_types = self.cast_to_builtin(
                 arg, func, formal, target, method_call, objexpr
             )
+            if not builtin_types:
+                builtin_types = self.result_arg_types(node, arg, func, formal, target)
             formal_types = builtin_types or self.mergeinh[formal]
 
             if (
@@ -5108,6 +5197,45 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("1")
             else:
                 self.append("0")
+
+    def result_arg_types(
+        self,
+        node: ast.Call,
+        arg: ast.AST,
+        func: Optional["python.Function"],
+        formal: "python.Variable",
+        target: "python.Function",
+    ) -> Optional[Types]:
+        """Return the types to convert an argument of 'max(a, b, ..)' or
+        'min(a, b, ..)', or the initial value of 'functools.reduce', to, if
+        it is a container of another C++ type than the result (e.g. 'max([1],
+        [])', 'min(names, e)', 'reduce(f, [[1]], [])'): in C++, these and the
+        result have one type"""
+        if not (
+            (
+                target.mv.module.builtin
+                and target.ident in ("min", "max")
+                and formal.name == "arg"
+            )
+            or (
+                target.mv.module.ident == "functools"
+                and target.ident == "reduce"
+                and formal.name == "initial"
+            )
+        ) or not (node in self.mergeinh and arg in self.mergeinh):
+            return None
+        restypes = self.mergeinh[node]
+        if not restypes or not all(
+            isinstance(t[0], python.Class)
+            and t[0].ident in ("list", "tuple", "tuple2", "set", "frozenset", "dict")
+            for t in restypes
+        ):
+            return None
+        if typestr.nodetypestr(self.gx, arg, func, mv=self.mv) == typestr.typestr(
+            self.gx, restypes, mv=self.mv
+        ):
+            return None
+        return restypes
 
     def cast_to_builtin(
         self,
@@ -6023,7 +6151,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.start("__after_yield_0:")
             elif node in self.gx.setcomp_to_lc.values():
                 self.start("__ss_result->add(")
-                self.visit(node.elt, lcfunc)
+                self.visit_comp_elt(node.elt, lcfunc)
                 self.append(")")
             elif node in self.gx.dictcomp_to_lc.values():
                 assert isinstance(node.elt, ast.Tuple)
@@ -6055,12 +6183,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 else:
                     tv = self.mv.tempcount[node.generators[0].iter]
                 self.start("__ss_result->units[" + tv + "] = ")
-                self.visit(node.elt, lcfunc)
+                self.visit_comp_elt(node.elt, lcfunc)
             else:
                 if reserve:
                     self.output("__append_reserve(__ss_result, %s, 1);" % reserve)
                 self.start("__ss_result->append(")
-                self.visit(node.elt, lcfunc)
+                self.visit_comp_elt(node.elt, lcfunc)
                 self.append(")")
             self.eol()
             return
@@ -6156,6 +6284,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
             self.listcompfor_body(node, quals, iter, lcfunc, False, genexpr, fuse_reduce)
+
+    def visit_comp_elt(self, elt: ast.expr, lcfunc: "python.Function") -> None:
+        """Visit the element of a list or set comprehension. if it has no
+        type (e.g. '[x for x in []]'), it is 'void *' in C++, while the
+        result may get an element type elsewhere ('c = [1]', 'c = [..]')"""
+        if elt in self.mergeinh and not self.mergeinh[elt]:
+            self.append(
+                "__ss_elem<std::remove_pointer_t<decltype(__ss_result)>"
+                "::for_in_unit>("
+            )
+            self.visit(elt, lcfunc)
+            self.append(")")
+        else:
+            self.visit(elt, lcfunc)
 
     def listcompfor_body(
         self,
@@ -6637,7 +6779,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif type(node.ctx) in (ast.Load,):
             map = {"True": "True", "False": "False"}
             if node in self.mv.lwrapper:
-                self.append(self.mv.lwrapper[node])
+                self.append(self.lambda_ref(self.mv.lwrapper[node]))
             elif node.id == "None":  # py2
                 self.append("NULL")
             elif node.id == "self":

@@ -128,7 +128,7 @@
 # OVERVIEW (number of cells that work / TODO / correctly warn or fail)
 #
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
-#    1. assign   2/0/0        18/1/2       -            3/0/0        0/0/2        8/0/0        13/2/2
+#    1. assign   2/0/0        18/1/2       -            3/0/0        0/0/2        8/0/0        16/0/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
 #    3. setitem  1/0/0        8/0/1        -            1/0/0        0/0/1        3/0/0        5/0/1
 #    4. arg      1/0/0        11/0/1       -            1/0/0        0/0/1        2/0/0        7/0/1
@@ -138,15 +138,15 @@
 #    8. binop    1/0/0        21/1/0       -            1/0/0        -            5/0/0        25/0/0
 #    9. compare  -            9/0/0        -            1/0/0        1/0/0        1/0/0        9/0/0
 #   10. lookup   1/0/0        10/0/0       0/0/1        7/0/0        0/0/1        4/0/0        18/0/0
-#   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        17/1/0
-#   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        12/2/1
+#   11. ctor     -            10/0/0       -            2/0/0        -            4/0/0        18/0/0
+#   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        16/0/0
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            10/2/0       -            4/0/0        -            2/0/0        22/5/0
+#   14. lib      -            12/1/0       -            4/0/0        -            2/0/0        29/0/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       125/5/10     0/0/1        29/0/0       1/0/9        50/1/0       173/10/10
+#   total        10/0/0       130/3/10     0/0/1        29/0/0       1/0/9        51/0/0       188/0/9
 #
-#   all cells: 388 work, 16 TODO, 30 correctly warn or fail
+#   all cells: 409 work, 3 TODO, 29 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -709,26 +709,31 @@ def test_assign_empty_new_from_empty():
 
 
 # empty, new: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*' in assignment
-#
-# def test_assign_empty_new_sorted():
-#     b = [1]
-#     b = sorted([])
-#     b.append(2)
-#     assert sum(b) == 2
+def test_assign_empty_new_sorted():
+    b = [1]
+    b = sorted([])
+    b.append(2)
+    assert sum(b) == 2
 
 
 # empty, new: build
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'x' has no type
-#   C++: invalid conversion from 'void*' to '__ss_int'
-#
-# def test_assign_empty_new_comp():
-#     c = [1]
-#     c = [x for x in []]
-#     c.append(2)
-#     assert sum(c) == 2
+def test_assign_empty_new_comp():
+    c = [1]
+    c = [x for x in []]
+    c.append(2)
+    assert sum(c) == 2
+
+
+# empty, new: build
+# TODO works, but gives a warning
+#   variable 'y' has no type
+def test_assign_empty_new_setcomp():
+    s = {1.5}
+    s = {y for y in []}
+    s.add(2.5)
+    assert sum(s) == 2.5
 
 
 # empty, ifexp: build
@@ -1619,9 +1624,13 @@ def test_ret_bool_float():
 
 
 # none->scalar, literal: warn
-# -> warning, then wrong result (see tests/errs/103.py)
+# -> warning, then wrong result or C++ compile error, depending on the order
+#    in which shedskin sees the types (see tests/errs/103.py)
 #   expression has dynamic (sub)type: {None, int}
-#   at run-time: AssertionError
+#   at run-time: AssertionError, or
+#   C++: no matching function for call to '__eq(void*, __ss_int)'
+#
+#
 #
 # def ret_none_scalar(c):
 #     if c:
@@ -4078,15 +4087,27 @@ def test_ctor_int_float_var_set():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<__ss_int>*' to 'list<__ss_float>*' in
-#     assignment
-#
-# def test_ctor_int_float_var_sorted():
-#     ints = [1, 2]
-#     r = sorted(ints)
-#     r.append(0.5)
-#     assert sum(r) == 3.5
+def test_ctor_int_float_var_sorted():
+    ints = [1, 2]
+    r = sorted(ints)
+    r.append(0.5)
+    assert sum(r) == 3.5
+
+
+# int->float, variable: copy
+def test_ctor_int_float_var_sorted_key():
+    # the elements are sorted before they are converted, so the key gets ints
+    ints = [3, 1, 2]
+    r = sorted(ints, key=lambda x: -x)
+    r.append(0.5)
+    assert r[0] == 3 and r[2] == 1 and r[3] == 0.5
+
+
+# int->float, literal: build
+def test_ctor_int_float_fromkeys():
+    d = dict.fromkeys([1, 2], 0)
+    d[1.5] = 2.5
+    assert sum(d) == 4.5 and sum(d.values()) == 2.5
 
 
 # int->float, variable: copy
@@ -4187,14 +4208,10 @@ def test_ctor_sub_dict_pairs():
 
 
 # sub->base, new: copy
-# TODO doesn't work today: C++ compile error, without a warning (1113-C1)
-#   C++: cannot convert 'dict<B*, __ss_int>*' to 'dict<A*, __ss_int>*' in
-#        assignment
-#
-# def test_ctor_sub_fromkeys():
-#     d = dict.fromkeys([B()], 0)
-#     d[A()] = 1
-#     assert sorted(x.name() for x in d) == ['A', 'B']
+def test_ctor_sub_fromkeys():
+    d = dict.fromkeys([B()], 0)
+    d[A()] = 1
+    assert sorted(x.name() for x in d) == ['A', 'B']
 
 
 # empty, literal: copy
@@ -4225,13 +4242,10 @@ def test_ctor_empty_lit_dict():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*' in assignment
-#
-# def test_ctor_empty_lit_sorted():
-#     r = sorted([])
-#     r.append(1)
-#     assert sum(r) == 1
+def test_ctor_empty_lit_sorted():
+    r = sorted([])
+    r.append(1)
+    assert sum(r) == 1
 
 
 # empty, literal: copy
@@ -4550,8 +4564,6 @@ def test_iter_empty_lit():
 
 
 # empty, literal: build
-# TODO works, but gives a warning
-#   expression has no type
 def test_iter_empty_lit_typed():
     # the loop variable has a type already
     s = 'a'
@@ -4565,26 +4577,19 @@ def test_iter_empty_lit_typed():
 
 
 # empty, literal: build
-# TODO doesn't work today: warning, then C++ compile error
-#   incompatible types
-#   C++: invalid conversion from 'void*' to '__ss_int'
-#
-# def test_iter_empty_lit_typed_number():
-#     x = 1
-#     for x in []:
-#         pass
-#     assert x == 1
+def test_iter_empty_lit_typed_number():
+    x = 1
+    for x in []:
+        pass
+    assert x == 1
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: 'void*' is not a pointer-to-object type
-#
-# def test_iter_empty_lit_typed_unpack():
-#     a, b = 1, 'x'
-#     for a, b in []:
-#         pass
-#     assert a == 1 and b == 'x'
+def test_iter_empty_lit_typed_unpack():
+    a, b = 1, 'x'
+    for a, b in []:
+        pass
+    assert a == 1 and b == 'x'
 
 
 # empty, literal: build
@@ -4651,17 +4656,27 @@ def test_iter_empty_var_typed_list():
     assert len(l) == 0
 
 
-# empty, variable: warn
-# -> warning, then C++ compile error (see tests/errs/103.py)
-#   incompatible types
-#   C++: invalid conversion from 'void*' to '__ss_int'
-#
-# def test_iter_empty_var_typed_number():
-#     e = []
-#     x = 1
-#     for x in e:
-#         pass
-#     assert x == 1
+# empty, variable: infer
+def test_iter_empty_var_typed_number():
+    e = []
+    x = 1
+    for x in e:
+        pass
+    assert x == 1
+
+
+# empty, variable: infer
+def test_iter_empty_var_typed_unpack():
+    e = []
+    a, b = 1.5, 'x'
+    for a, b in e:
+        pass
+    assert a == 1.5 and b == 'x'
+    d = {}
+    k = 3
+    for k in d:
+        pass
+    assert k == 3
 
 
 # empty, literal: infer
@@ -4980,10 +4995,21 @@ def test_lib_int_float_var_reduce():
     assert functools.reduce(lib_add2, ints, 0.5) == 3.5
 
 
+# int->float, variable: implicit
+def test_lib_int_float_var_default():
+    # the default can be of a wider type than the elements
+    ints = [1]
+    ints.pop()
+    assert max(ints, default=0.5) == 0.5
+    assert min(ints, default=2.5) == 2.5
+
+
 # int->float, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: no matching function for call to '___max(int, __ss_void_struct&,
 #     __ss_int, list<__ss_int>*&, list<__ss_float>*&)'
+#
 #
 # def test_lib_int_float_var_minmax():
 #     ints = [1, 2]
@@ -4993,14 +5019,10 @@ def test_lib_int_float_var_reduce():
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '___max(int, __ss_void_struct&,
-#     __ss_int, list<__ss_float>*, list<__ss_int>*)'
-#
-# def test_lib_int_float_lit_sorted():
-#     floats = [0.5, 1.5]
-#     assert sorted([floats, [1]])[1] == [1]
-#     assert max([0.5], [1]) == [1]
+def test_lib_int_float_lit_sorted():
+    floats = [0.5, 1.5]
+    assert sorted([floats, [1]])[1] == [1]
+    assert max([0.5], [1]) == [1]
 
 
 # int->float, literal: copy
@@ -5142,13 +5164,9 @@ def test_lib_empty_lit_sorted():
 
 
 # empty, literal: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '__eq(pyseq<void*>::for_in_unit,
-#     __ss_int)'
-#
-# def test_lib_empty_lit_default():
-#     assert max([], default=0) == 0
-#     assert min([], default=5) == 5
+def test_lib_empty_lit_default():
+    assert max([], default=0) == 0
+    assert min([], default=5) == 5
 
 
 # empty, literal: build
@@ -5170,32 +5188,20 @@ def test_lib_empty_lit_mixed_sum():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: '__lambda0__' was not declared in this scope (its 'b' has no type)
-#
-# def test_lib_empty_lit_mixed_reduce_start():
-#     assert functools.reduce(lambda a, b: a + b, [], 5) == 5
+def test_lib_empty_lit_mixed_reduce_start():
+    assert functools.reduce(lambda a, b: a + b, [], 5) == 5
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '___max(int, __ss_void_struct&,
-#     __ss_int, list<__ss_int>*, list<void*>*)'
-#
-# def test_lib_empty_lit_mixed_max():
-#     assert max([1], []) == [1]
-#     assert min([1], []) == []
-#     assert sorted([[1], []]) == [[], [1]]
+def test_lib_empty_lit_mixed_max():
+    assert max([1], []) == [1]
+    assert min([1], []) == []
+    assert sorted([[1], []]) == [[], [1]]
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'reduce(list<__ss_int>*
-#     (&)(list<__ss_int>*, list<__ss_int>*), list<list<__ss_int>*>*,
-#     list<void*>*)'
-#
-# def test_lib_empty_lit_mixed_reduce():
-#     assert functools.reduce(lambda a, b: a + b, [[1], []], []) == [1]
+def test_lib_empty_lit_mixed_reduce():
+    assert functools.reduce(lambda a, b: a + b, [[1], []], []) == [1]
 
 
 # empty, literal: build
@@ -5302,14 +5308,27 @@ def test_lib_empty_var_mixed_chain():
 
 
 # empty, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '___max(int, __ss_void_struct&,
-#     __ss_int, list<str*>*&, list<void*>*&)'
-#
-# def test_lib_empty_var_mixed_max():
-#     e = []
-#     names = ['a']
-#     assert max(names, e) == ['a']
+def test_lib_empty_var_mixed_max():
+    e = []
+    names = ['a']
+    assert max(names, e) == ['a']
+
+
+# empty, variable: infer
+def test_lib_empty_var_key():
+    # the key function is never called
+    e = []
+    assert len(sorted(e, key=lambda x: -x)) == 0
+    assert len(sorted(e, key=lambda y: -y, reverse=True)) == 0
+
+
+# empty, variable: cast
+def lib_empty_add_names(a, b):
+    return a + b
+
+def test_lib_empty_var_mixed_reduce():
+    e = []
+    assert functools.reduce(lib_empty_add_names, [['a']], e) == ['a']
 
 
 # empty, variable: copy
@@ -5463,6 +5482,9 @@ def test_all():
     test_assign_empty_new()
     test_assign_empty_new_collections()
     test_assign_empty_new_from_empty()
+    test_assign_empty_new_sorted()
+    test_assign_empty_new_comp()
+    test_assign_empty_new_setcomp()
     test_assign_empty_ifexp()
     test_assign_empty_var_filled()
     test_assign_empty_var()
@@ -5485,6 +5507,7 @@ def test_all():
     test_setitem_int_float_lit_dict_value()
     test_setitem_int_float_lit_tuple()
     test_setitem_int_float_lit_slice()
+    test_setitem_int_float_var_slice()
     test_setitem_none_lit()
     test_setitem_sub_new()
     test_setitem_sub_var()
@@ -5493,6 +5516,7 @@ def test_all():
     test_setitem_empty_new()
     test_setitem_empty_var()
     test_setitem_empty_lit_slice()
+    test_setitem_empty_var_slice()
     test_arg_int_float_lit_scalar()
     test_arg_bool_int()
     test_arg_int_float_lit_list()
@@ -5600,14 +5624,20 @@ def test_all():
     test_binop_complex_scalar()
     test_binop_complex_lit_list()
     test_binop_int_float_lit_list()
+    test_binop_int_float_var_list_lit()
+    test_binop_int_float_var_list()
     test_binop_int_float_lit_mul()
     test_binop_int_float_lit_tuple()
+    test_binop_int_float_var_tuple()
     test_binop_int_float_lit_set()
     test_binop_int_float_lit_set_left()
     test_binop_int_float_var_set()
+    test_binop_int_float_var_set_left()
     test_binop_int_float_var_set_method()
     test_binop_int_float_lit_dict()
     test_binop_int_float_lit_dict_left()
+    test_binop_int_float_var_dict()
+    test_binop_int_float_var_dict_left()
     test_binop_int_float_lit_augassign_list()
     test_binop_int_float_lit_augassign_set()
     test_binop_int_float_lit_augassign_tuple()
@@ -5629,9 +5659,12 @@ def test_all():
     test_binop_empty_new_counter()
     test_binop_empty_lit_mul()
     test_binop_empty_var_list()
+    test_binop_empty_var_list_number()
+    test_binop_empty_var_list_number_left()
     test_binop_empty_var_set()
     test_binop_empty_var_set_left()
     test_binop_empty_var_set_number()
+    test_binop_empty_var_set_number_left()
     test_binop_empty_var_dict()
     test_binop_empty_var_dict_left()
     test_binop_empty_accumulate_list()
@@ -5645,15 +5678,20 @@ def test_all():
     test_compare_int_float_lit_set()
     test_compare_int_float_lit_dict()
     test_compare_int_float_lit_tuple()
+    test_compare_int_float_var_list()
     test_compare_int_float_var_set()
+    test_compare_int_float_var_tuple()
+    test_compare_int_float_var_dict()
     test_compare_none()
     test_compare_sub()
     test_compare_empty_lit_list()
     test_compare_empty_new()
     test_compare_empty_var()
+    test_compare_empty_var_number()
     test_compare_empty_var_set()
     test_compare_empty_var_set_number()
     test_compare_empty_var_dict()
+    test_compare_empty_var_dict_number()
     test_compare_empty_call()
     test_lookup_bool_int()
     test_lookup_int_float_scalar()
@@ -5663,6 +5701,9 @@ def test_all():
     test_lookup_int_float_lit_list_list()
     test_lookup_int_float_lit_tuple_dict()
     test_lookup_int_float_lit_tuple_dict_method()
+    test_lookup_int_float_var_tuple_set()
+    test_lookup_int_float_var_tuple_dict()
+    test_lookup_int_float_var_tuple_list()
     test_lookup_none()
     test_lookup_none_number()
     test_lookup_none_only()
@@ -5691,10 +5732,14 @@ def test_all():
     test_lookup_empty_value_lit_tuple_number()
     test_lookup_empty_value_var()
     test_lookup_empty_value_var_sub()
+    test_lookup_empty_value_var_number()
     test_ctor_int_float_lit()
     test_ctor_int_float_lit_collections()
     test_ctor_int_float_var_list()
     test_ctor_int_float_var_set()
+    test_ctor_int_float_var_sorted()
+    test_ctor_int_float_var_sorted_key()
+    test_ctor_int_float_fromkeys()
     test_ctor_int_float_var_dict()
     test_ctor_int_float_var_tuple()
     test_ctor_int_float_var_collections()
@@ -5703,9 +5748,11 @@ def test_all():
     test_ctor_sub()
     test_ctor_sub_items()
     test_ctor_sub_dict_pairs()
+    test_ctor_sub_fromkeys()
     test_ctor_empty_lit()
     test_ctor_empty_lit_set()
     test_ctor_empty_lit_dict()
+    test_ctor_empty_lit_sorted()
     test_ctor_empty_lit_tuple()
     test_ctor_empty_lit_deque()
     test_ctor_empty_lit_counter()
@@ -5735,11 +5782,15 @@ def test_all():
     test_iter_sub_var_list()
     test_iter_empty_lit()
     test_iter_empty_lit_typed()
+    test_iter_empty_lit_typed_number()
+    test_iter_empty_lit_typed_unpack()
     test_iter_empty_lit_list()
     test_iter_empty_new()
     test_iter_empty_var()
     test_iter_empty_var_typed()
     test_iter_empty_var_typed_list()
+    test_iter_empty_var_typed_number()
+    test_iter_empty_var_typed_unpack()
     test_unpack_empty_lit()
     test_unpack_empty_lit_typed()
     test_unpack_empty_lit_typed_number()
@@ -5759,6 +5810,8 @@ def test_all():
     test_lib_int_float_lit_iter()
     test_lib_int_float_var_iter()
     test_lib_int_float_var_reduce()
+    test_lib_int_float_var_default()
+    test_lib_int_float_lit_sorted()
     test_lib_int_float_chain()
     test_lib_int_float_merge()
     test_lib_int_float_chain_var()
@@ -5775,6 +5828,9 @@ def test_all():
     test_lib_empty_lit_sum()
     test_lib_empty_lit_mixed()
     test_lib_empty_lit_mixed_sum()
+    test_lib_empty_lit_mixed_reduce_start()
+    test_lib_empty_lit_mixed_max()
+    test_lib_empty_lit_mixed_reduce()
     test_lib_empty_lit_chain()
     test_lib_empty_lit_chain_number()
     test_lib_empty_lit_chain_only()
@@ -5783,10 +5839,14 @@ def test_all():
     test_lib_empty_lit_accumulate()
     test_lib_empty_lit_heappush()
     test_lib_empty_lit_sorted()
+    test_lib_empty_lit_default()
     test_lib_empty_var()
     test_lib_empty_var_sum()
     test_lib_empty_var_mixed()
     test_lib_empty_var_mixed_chain()
+    test_lib_empty_var_mixed_max()
+    test_lib_empty_var_key()
+    test_lib_empty_var_mixed_reduce()
     test_lib_empty_var_mixed_number()
     test_lib_empty_var_mixed_chain_number()
     test_lib_empty_var_mixed_merge_number()
