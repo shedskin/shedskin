@@ -141,12 +141,12 @@
 #   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        17/1/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            7/2/3        -            4/0/0        -            2/0/0        17/10/0
+#   14. lib      -            7/2/3        -            4/0/0        -            2/0/0        18/9/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       122/5/13     0/0/1        29/0/0       1/0/9        50/1/0       166/17/10
+#   total        10/0/0       122/5/13     0/0/1        29/0/0       1/0/9        50/1/0       167/16/10
 #
-#   all cells: 378 work, 23 TODO, 33 correctly warn or fail
+#   all cells: 379 work, 22 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -5249,12 +5249,8 @@ def test_lib_empty_lit_product():
 
 
 # empty, literal: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: call of overloaded 'accumulate(list<void*>*, void*, void*)' is
-#     ambiguous
-#
-# def test_lib_empty_lit_accumulate():
-#     assert len(list(itertools.accumulate([]))) == 0
+def test_lib_empty_lit_accumulate():
+    assert len(list(itertools.accumulate([]))) == 0
 
 
 # empty, literal: infer
@@ -5805,6 +5801,7 @@ def test_all():
     test_lib_empty_lit_chain()
     test_lib_empty_lit_chain_only()
     test_lib_empty_lit_product()
+    test_lib_empty_lit_accumulate()
     test_lib_empty_lit_heappush()
     test_lib_empty_lit_sorted()
     test_lib_empty_var()

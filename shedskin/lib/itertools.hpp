@@ -97,7 +97,7 @@ template<class T> T accumulateiter<T>::__next__() {
 
     if(has_func)
         prev = func(prev, t);
-    else
+    else if constexpr (!std::is_same_v<T, void *>)  /* accumulate([]): no elements */
         prev = __add(prev, t);
 
     return prev;
@@ -113,7 +113,8 @@ template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, T(*f
     acciter->has_initial = true;
     return acciter;
 }
-template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, void *, T initial) {
+template<class T> requires (!std::is_same_v<T, void *>) /* accumulate([]): the next overload */
+inline accumulateiter<T> *accumulate(pyiter<T> *iterable, void *, T initial) {
     auto acciter = new accumulateiter<T>(iterable);
     acciter->initial = initial;
     acciter->has_initial = true;
