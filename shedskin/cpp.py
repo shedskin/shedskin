@@ -5024,6 +5024,27 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     double = True
 
+        # 'max(a, b)': the C++ template takes a single type for all of its
+        # arguments, so convert each of them to the merged type (this warns
+        # if that is not possible, as for a list of ints and of floats).
+        # only for arguments of the same class, or instances of user classes
+        # (which meet in their base class): python cannot compare a list and
+        # a set, say, and a cast to an abstract type (pyiter) would hide that
+        minmax_types: Optional[Types] = None
+        if (
+            ident in ("min", "max")
+            and target.ident in ("min", "max")
+            and target.mv.module.builtin
+            and len(node.args) > 1
+            and not any(isinstance(a, ast.Starred) for a in node.args)
+        ):
+            minmax_types = set()
+            for arg2 in node.args:
+                minmax_types.update(self.mergeinh[arg2])
+            classes = typestr.types_classes(minmax_types)
+            if len(classes) > 1 and any(cl.mv.module.builtin for cl in classes):
+                minmax_types = None
+
         self.add_args_arg(node, funcs)
 
         if isinstance(func, python.Function) and func.largs is not None:
@@ -5116,7 +5137,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif isinstance(arg, ast.Constant) and arg in self.consts:
                 self.append(self.consts[arg])
             else:
-                if not builtin_types and target.mv.module.builtin:
+                if (
+                    minmax_types
+                    and not cast
+                    and target.node.args.vararg
+                    and formal.name == target.node.args.vararg.arg
+                ):
+                    self.impl_visit_conv(arg, minmax_types, func)
+                elif not builtin_types and target.mv.module.builtin:
                     self.visit(arg, func)
                 else:
                     self.impl_visit_conv(arg, formal_types, func)
