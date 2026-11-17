@@ -138,15 +138,15 @@
 #    8. binop    1/0/0        21/1/0       -            1/0/0        -            5/0/0        25/0/0
 #    9. compare  -            9/0/0        -            1/0/0        1/0/0        1/0/0        9/0/0
 #   10. lookup   1/0/0        10/0/0       0/0/1        7/0/0        0/0/1        4/0/0        18/0/0
-#   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        14/4/0
+#   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        17/1/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
 #   14. lib      -            7/2/3        -            4/0/0        -            2/0/0        17/10/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       122/5/13     0/0/1        29/0/0       1/0/9        50/1/0       163/20/10
+#   total        10/0/0       122/5/13     0/0/1        29/0/0       1/0/9        50/1/0       166/17/10
 #
-#   all cells: 375 work, 26 TODO, 33 correctly warn or fail
+#   all cells: 378 work, 23 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -4254,28 +4254,20 @@ def test_ctor_empty_lit_deque():
 
 
 # empty, literal: copy
-# TODO doesn't work today: warning, then C++ compile error
-#   expression has no type
-#   C++: invalid conversion from '__ss_int' to 'void*'
-#
-# def test_ctor_empty_lit_counter():
-#     c = Counter([])
-#     c[1] += 1
-#     assert c[1] == 1
-#     c2 = Counter({})
-#     c2['a'] += 1
-#     assert c2['a'] == 1
+def test_ctor_empty_lit_counter():
+    c = Counter([])
+    c[1] += 1
+    assert c[1] == 1
+    c2 = Counter({})
+    c2['a'] += 1
+    assert c2['a'] == 1
 
 
 # empty, literal: copy
-# TODO doesn't work today: warning, then C++ compile error
-#   expression has no type
-#   C++: invalid conversion from '__ss_int' to 'void*'
-#
-# def test_ctor_empty_lit_defaultdict():
-#     dd = defaultdict(int, {})
-#     dd[1] += 2
-#     assert dd[1] == 2
+def test_ctor_empty_lit_defaultdict():
+    dd = defaultdict(int, {})
+    dd[1] += 2
+    assert dd[1] == 2
 
 
 # empty, variable: copy
@@ -4336,15 +4328,11 @@ def test_ctor_empty_var_deque_number():
 
 
 # empty, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
-#   expression has no type
-#   C++: invalid conversion from '__ss_int' to 'void*'
-#
-# def test_ctor_empty_var_counter_number():
-#     e = []
-#     c = Counter(e)
-#     c[1] += 1
-#     assert c[1] == 1
+def test_ctor_empty_var_counter_number():
+    e = []
+    c = Counter(e)
+    c[1] += 1
+    assert c[1] == 1
 
 
 # empty, variable: copy
@@ -4562,8 +4550,7 @@ def test_iter_empty_lit():
 
 
 # empty, literal: build
-# TODO doesn't work today: warning, then C++ compile error
-#   expression has no type
+# TODO doesn't work today: C++ compile error, without a warning
 #   C++: invalid conversion from 'void*' to 'str*'
 #
 # def test_iter_empty_lit_typed():
@@ -4579,8 +4566,7 @@ def test_iter_empty_lit():
 
 
 # empty, literal: build
-# TODO doesn't work today: warning, then C++ compile error
-#   expression has no type
+# TODO doesn't work today: C++ compile error, without a warning
 #   C++: invalid conversion from 'void*' to '__ss_int'
 #
 # def test_iter_empty_lit_typed_number():
@@ -4591,8 +4577,7 @@ def test_iter_empty_lit():
 
 
 # empty, literal: build
-# TODO doesn't work today: warning, then C++ compile error
-#   expression has no type
+# TODO doesn't work today: C++ compile error, without a warning
 #   C++: 'void*' is not a pointer-to-object type
 #
 # def test_iter_empty_lit_typed_unpack():
@@ -5755,6 +5740,8 @@ def test_all():
     test_ctor_empty_lit_dict()
     test_ctor_empty_lit_tuple()
     test_ctor_empty_lit_deque()
+    test_ctor_empty_lit_counter()
+    test_ctor_empty_lit_defaultdict()
     test_ctor_empty_var()
     test_ctor_empty_var_set()
     test_ctor_empty_var_deque()
@@ -5762,6 +5749,7 @@ def test_all():
     test_ctor_empty_var_sorted()
     test_ctor_empty_var_set_number()
     test_ctor_empty_var_deque_number()
+    test_ctor_empty_var_counter_number()
     test_ctor_empty_var_dict()
     test_ctor_empty_var_dict_number()
     test_iter_int_float_lit_scalar()

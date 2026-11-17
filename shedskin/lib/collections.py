@@ -100,12 +100,18 @@ class defaultdict(dict):
     def __init__(self, func=None, x=None): # XXX
         self.value = func()
 
+    # like __init__, these set the value type from the factory directly: if
+    # the mapping or iterable is empty, its elements have no type, so
+    # __setunit__ below sets nothing
+
     def __initdict__(self, func, d):
+        self.value = func()
         value = func()
         value = d.value
         self.__setunit__(d.unit, value)
 
     def __inititer__(self, func, i):
+        self.value = func()
         value = func()
         item = iter(i).__next__()
         value = item[1]
@@ -144,10 +150,16 @@ class Counter(dict):
         # the way defaultdict(int) pins it via the factory call)
         self.value = 1
 
+    # like __init__, these pin the counts to int separately: if the iterable
+    # or mapping is empty, its elements have no type, so __setunit__ below
+    # sets nothing, and counter[k] += 1 would then have nothing to add to
+
     def __initdict__(self, d): # Counter(mapping): counts copied as-is
+        self.value = 1
         self.__setunit__(d.unit, d.value)
 
     def __inititer__(self, i): # Counter(iterable): count occurrences
+        self.value = 1
         item = iter(i).__next__()
         self.__setunit__(item, 1)
 
