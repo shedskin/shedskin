@@ -2075,6 +2075,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         )
         assert isinstance(node.iter, (ast.Tuple, ast.List, ast.Set))
         target_types = self.mergeinh[node.target]
+        if not target_types and isinstance(node.target, ast.Name):
+            # the elements have no type (e.g. 'for x in []'), but the loop
+            # variable may have one from elsewhere
+            var = python.lookup_var(node.target.id, func, self.mv)
+            if var in self.mergeinh:
+                self.check_no_type(node.iter, target_types, self.mergeinh[var])
         for elem in node.iter.elts:
             self.impl_visit_conv(elem, target_types, func)
             if elem is not node.iter.elts[-1]:
@@ -2648,6 +2654,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             cast = None
             if actualtypes:
                 cast = self.conv_cast(node, actualtypes, argtypes)
+            else:
+                self.check_no_type(node, actualtypes, argtypes)
             if cast == "complex":
                 self.append("(mcomplex(" + self.mv.tempcount[node] + "))")
             elif cast:
@@ -2682,6 +2690,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             cast = None
             if actualtypes:
                 cast = self.conv_cast(node, actualtypes, argtypes)
+            else:
+                self.check_no_type(node, actualtypes, argtypes)
             if cast == "complex":
                 self.append("(mcomplex(")
             elif cast:
@@ -2713,6 +2723,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ("pyiter", "pyseq")
             )
         )
+
+    def check_no_type(
+        self, node: ast.AST, actualtypes: Types, argtypes: Types
+    ) -> None:
+        """Warn if a value without a type (e.g. an element of an empty list)
+        is used as a target that has one: it becomes 'void *' in C++, which
+        cannot be used as anything else without a cast"""
+        if actualtypes or not argtypes:
+            return
+        # a name without a type is already reported when it is visited. a
+        # call can have a C++ type anyway: a user function has the type it
+        # is declared with, and a builtin may be a template (e.g. 'sum([])')
+        if isinstance(node, ast.Call):
+            return
+        if isinstance(node, ast.Name) and not self.mergeinh.get(node):
+            return
+        error.error("expression has no type", self.gx, node, warning=True, mv=self.mv)
 
     def conv_cast(
         self, node: ast.AST, actualtypes: Types, argtypes: Types
@@ -5232,6 +5259,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if ast_utils.has_starred(lvalue):
             self.check_starred_rvalue(lvalue, nodes, rvalue)
+
+        # the value to unpack has no type (e.g. 'for a, b in []'), so it
+        # becomes 'void *' in C++, which cannot be unpacked
+        if nodes and not isinstance(lvalue, tuple):
+            unpacked = self.gx.item_rvalue.get(nodes[0])
+            if (
+                unpacked is not None
+                and unpacked in self.mergeinh
+                and not self.mergeinh[unpacked]
+            ):
+                error.error(
+                    "expression has no type", self.gx, lvalue, warning=True, mv=self.mv
+                )
 
         temp_loop = None
         temp_star = None
