@@ -141,12 +141,12 @@
 #   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        17/1/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            7/2/3        -            4/0/0        -            2/0/0        18/9/0
+#   14. lib      -            10/2/0       -            4/0/0        -            2/0/0        22/5/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       122/5/13     0/0/1        29/0/0       1/0/9        50/1/0       167/16/10
+#   total        10/0/0       125/5/10     0/0/1        29/0/0       1/0/9        50/1/0       171/12/10
 #
-#   all cells: 379 work, 22 TODO, 33 correctly warn or fail
+#   all cells: 386 work, 18 TODO, 30 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -5006,34 +5006,22 @@ def test_lib_int_float_var_reduce():
 #     assert max([0.5], [1]) == [1]
 
 
-# int->float, literal: error
-# -> C++ compile error, without a warning
-#   C++: static assertion failed: itertools.chain: mixing iterables of
-#     different numeric types (such as int and float) is not supported
-#
-# def test_lib_int_float_chain():
-#     assert sum(itertools.chain([1, 2], [0.5])) == 3.5
+# int->float, literal: copy
+def test_lib_int_float_chain():
+    assert sum(itertools.chain([1, 2], [0.5])) == 3.5
 
 
-# int->float, literal: error
-# -> C++ compile error, without a warning
-#   C++: static assertion failed: heapq.merge: mixing iterables of
-#     different numeric types (such as int and float) is not supported
-#
-# def test_lib_int_float_merge():
-#     assert list(heapq.merge([1, 3], [0.5])) == [0.5, 1, 3]
+# int->float, literal: copy
+def test_lib_int_float_merge():
+    assert list(heapq.merge([1, 3], [0.5])) == [0.5, 1, 3]
 
 
-# int->float, variable: error
-# -> C++ compile error, without a warning
-#   C++: static assertion failed: itertools.chain: mixing iterables of
-#     different numeric types (such as int and float) is not supported
-#
-# def test_lib_int_float_chain_var():
-#     ints = [1, 2]
-#     floats = [0.5]
-#     assert sum(itertools.chain(ints, floats)) == 3.5
-#     assert list(heapq.merge(ints, floats)) == [0.5, 1, 2]
+# int->float, variable: copy
+def test_lib_int_float_chain_var():
+    ints = [1, 2]
+    floats = [0.5]
+    assert sum(itertools.chain(ints, floats)) == 3.5
+    assert list(heapq.merge(ints, floats)) == [0.5, 1, 2]
 
 
 # int->float, literal: implicit
@@ -5220,12 +5208,9 @@ def test_lib_empty_lit_chain():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_lib_empty_lit_chain_number():
-#     assert list(itertools.chain([], [1])) == [1]
-#     assert list(itertools.chain([1], [])) == [1]
+def test_lib_empty_lit_chain_number():
+    assert list(itertools.chain([], [1])) == [1]
+    assert list(itertools.chain([1], [])) == [1]
 
 
 # empty, literal: infer
@@ -5234,12 +5219,9 @@ def test_lib_empty_lit_chain_only():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_lib_empty_lit_merge():
-#     assert list(heapq.merge([], [1])) == [1]
-#     assert list(heapq.merge([1], [])) == [1]
+def test_lib_empty_lit_merge():
+    assert list(heapq.merge([], [1])) == [1]
+    assert list(heapq.merge([1], [])) == [1]
 
 
 # empty, literal: build
@@ -5341,25 +5323,18 @@ def test_lib_empty_var_mixed_number():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_lib_empty_var_mixed_chain_number():
-#     e = []
-#     l = [1]
-#     assert list(itertools.chain(e, l)) == [1]
-#     assert list(itertools.chain(l, e)) == [1]
+def test_lib_empty_var_mixed_chain_number():
+    e = []
+    l = [1]
+    assert list(itertools.chain(e, l)) == [1]
+    assert list(itertools.chain(l, e)) == [1]
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: static assertion failed: heapq.merge: mixing iterables of
-#     different numeric types (such as int and float) is not supported
-#
-# def test_lib_empty_var_mixed_merge_number():
-#     e = []
-#     l = [1]
-#     assert list(heapq.merge(l, e)) == [1]
+def test_lib_empty_var_mixed_merge_number():
+    e = []
+    l = [1]
+    assert list(heapq.merge(l, e)) == [1]
 
 
 # empty, variable: copy
@@ -5785,6 +5760,9 @@ def test_all():
     test_lib_int_float_lit_iter()
     test_lib_int_float_var_iter()
     test_lib_int_float_var_reduce()
+    test_lib_int_float_chain()
+    test_lib_int_float_merge()
+    test_lib_int_float_chain_var()
     test_lib_int_float_itertools()
     test_lib_int_float_heapq()
     test_lib_int_float_heappush()
@@ -5799,7 +5777,9 @@ def test_all():
     test_lib_empty_lit_mixed()
     test_lib_empty_lit_mixed_sum()
     test_lib_empty_lit_chain()
+    test_lib_empty_lit_chain_number()
     test_lib_empty_lit_chain_only()
+    test_lib_empty_lit_merge()
     test_lib_empty_lit_product()
     test_lib_empty_lit_accumulate()
     test_lib_empty_lit_heappush()
@@ -5809,6 +5789,8 @@ def test_all():
     test_lib_empty_var_mixed()
     test_lib_empty_var_mixed_chain()
     test_lib_empty_var_mixed_number()
+    test_lib_empty_var_mixed_chain_number()
+    test_lib_empty_var_mixed_merge_number()
     test_lib_empty_var_mixed_sum_number()
     test_lib_empty_var_sorted()
     test_lib_empty_var_sort()

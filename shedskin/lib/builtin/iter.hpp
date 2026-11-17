@@ -60,6 +60,13 @@ template<class E, class T> inline constexpr bool __ss_widens_v =
 template<class A, class B> using __ss_wider_t = std::conditional_t<__ss_widens_v<A, B>, B, A>;
 template<class A, class B> inline constexpr bool __ss_compatible_v = __ss_widens_v<A, B> || __ss_widens_v<B, A>;
 
+/* the widest of any number of element types (e.g. for chain([1], [0.5])) */
+template<class T, class ... Ts> struct __ss_widest { using type = T; };
+template<class T, class U, class ... Ts> struct __ss_widest<T, U, Ts...> {
+    using type = typename __ss_widest<__ss_wider_t<T, U>, Ts...>::type;
+};
+template<class ... Ts> using __ss_widest_t = typename __ss_widest<Ts...>::type;
+
 /* a container as one with other element types (e.g. a list of ints as a list of floats):
    a converted copy, so only for reading (comparing, looking up, copying from) */
 template<class W, class C> inline W *__ss_as(C *c) {

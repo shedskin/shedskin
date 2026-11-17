@@ -298,47 +298,34 @@ template<class T, class D> inline repeatiter<T> *repeat(T object, D times_) {
 
 template<class T> class chainiter : public __iter<T> {
 public:
-    unsigned int iterable;
+    size_t iterable = 0;
     __GC_VECTOR(__iter<T> *) iters;
 
-    chainiter();
-    chainiter(pyiter<T> *iterable_);
+    chainiter() {}
 
-    void push_iter(pyiter<T> *iterable_);
+    template<class E> void push_iter(pyiter<E> *iterable_);
 
     T __next__();
 };
 
-template<class T> inline chainiter<T>::chainiter() {}
-template<class T> inline chainiter<T>::chainiter(pyiter<T> *iterable_) {
-    iterable = 0;
-    push_iter(iterable_);
-}
-template<class T> void chainiter<T>::push_iter(pyiter<T> *iterable_) {
-    iters.push_back(iterable_->__iter__());
+template<class T> template<class E> void chainiter<T>::push_iter(pyiter<E> *iterable_) {
+    iters.push_back(__ss_iter_as<T>(iterable_));
 }
 
 template<class T> T chainiter<T>::__next__() {
-    for (; ; ) {
+    for (; this->iterable < this->iters.size(); ++this->iterable) {
         try  {
-            return this->iters[iterable]->__next__();
+            return this->iters[this->iterable]->__next__();
         } catch (StopIteration *) {
-            if (this->iterable == this->iters.size() - 1)
-                throw new StopIteration();
-            ++this->iterable;
         }
     }
+    throw new StopIteration();
 }
 
-template<class T, class ... Args> inline chainiter<T> *chain(int iterable_count, pyiter<T> *iterable, Args ... args) {
-    chainiter<T> *iter = new chainiter<T>(iterable);
-
-    /* the casts below cannot convert elements, so refuse e.g. chain([1], [0.5]) */
-    static_assert(((!std::is_arithmetic_v<T> || std::is_same_v<T, typename std::remove_pointer_t<Args>::for_in_unit>) && ...),
-        "itertools.chain: mixing iterables of different numeric types (such as int and float) is not supported");
-
-    (iter->push_iter(reinterpret_cast<pyiter<T> *>(args)), ...);
-
+/* the iterables may have different (compatible) element types, as in chain([1], [0.5]) */
+template<class ... Args> inline chainiter<__ss_widest_t<std::remove_cvref_t<typename std::remove_pointer_t<Args>::for_in_unit>...>> *chain(int, Args ... args) {
+    auto *iter = new chainiter<__ss_widest_t<std::remove_cvref_t<typename std::remove_pointer_t<Args>::for_in_unit>...>>();
+    (iter->push_iter(args), ...);
     return iter;
 }
 

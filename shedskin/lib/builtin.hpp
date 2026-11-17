@@ -581,6 +581,24 @@ public:
     str *__repr__();
 };
 
+/* an iterator over the elements of an iterable of another (narrower) element
+   type, as one with element type T (e.g. ints as floats, subclass instances
+   as base class instances, or nothing at all for an empty container) */
+template <class T, class E> class __ss_conviter final : public __iter<T> {
+public:
+    __iter<E> *it;
+    __ss_conviter(__iter<E> *it) : it(it) {}
+    T __next__() { return __ss_elem<T>(it->__next__()); }
+};
+
+template<class T, class E> inline __iter<T> *__ss_iter_as(pyiter<E> *iterable) {
+    static_assert(__ss_widens_v<E, T>, "iterating over elements of a different type (e.g. floats as ints) is not supported");
+    if constexpr (std::is_same_v<E, T> || __ss_upcastable_v<E, T> || (std::is_same_v<E, void *> && std::is_pointer_v<T>))
+        return (__iter<T> *)(iterable->__iter__()); /* same representation */
+    else
+        return new __ss_conviter<T, E>(iterable->__iter__());
+}
+
 template <class T> class __seqiter final : public __iter<T> {
 public:
     __ss_int counter, size;

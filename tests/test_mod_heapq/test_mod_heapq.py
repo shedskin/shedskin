@@ -164,6 +164,36 @@ def logging_gen(log, tag, values):
         yield v
 
 
+class MergeBase:
+    def __init__(self, n):
+        self.n = n
+    def __lt__(self, other):
+        return self.n < other.n
+
+class MergeSub(MergeBase):
+    pass
+
+def merge_gen():
+    yield 2
+    yield 4
+
+def test_merge_mixed():
+    # iterables with different (compatible) element types, or empty ones
+    assert list(heapq.merge([], [1, 2])) == [1, 2]
+    assert list(heapq.merge([1, 2], [], [])) == [1, 2]
+    assert list(heapq.merge([1, 3], [0.5])) == [0.5, 1.0, 3.0]
+    assert list(heapq.merge([0.5], [1, 3])) == [0.5, 1.0, 3.0]
+    assert list(heapq.merge((1,), merge_gen(), [2.5])) == [1.0, 2.0, 2.5, 4.0]
+    assert list(heapq.merge([3, 1], [2.5], reverse=True)) == [3.0, 2.5, 1.0]
+    assert list(heapq.merge([3, 1], [2.5], key=lambda x: -x)) == [3.0, 2.5, 1.0]
+    total = 0.0
+    for x in heapq.merge([1, 2], [0.25]):
+        total += x
+    assert total == 3.25
+    l = [b.n for b in heapq.merge([MergeSub(1), MergeSub(3)], [], [MergeBase(2)])]
+    assert l == [1, 2, 3]
+
+
 def test_merge_lazy():
     # regression test: merge must only advance the iterable that produced
     # the previous item once it is resumed (like CPython), not eagerly
@@ -371,6 +401,7 @@ def test_all():
     test_heapreplace_max()
 
     test_merge()
+    test_merge_mixed()
     test_merge_stable_ties()
     test_merge_lazy()
 
