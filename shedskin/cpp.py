@@ -4265,6 +4265,27 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return target.ftypes[0]
         return self.mergeinh[target.retnode.thing] or None
 
+    def sorted_type(self, node: ast.Call) -> Optional[str]:
+        """Return the C++ list type (without '*') to build the result of
+        'sorted' as, if its elements have another type than those of the
+        argument: the result is a new list, so it can get its elements from
+        elsewhere (e.g. 'r = sorted(ints)', 'r.append(0.5)')"""
+        if not node.args or node not in self.mergeinh:
+            return None
+        restypes = self.mergeinh[node]
+        argtypes = self.mergeinh.get(node.args[0])
+        if not argtypes or typestr.types_classes(restypes) != {
+            python.def_class(self.gx, "list")
+        } or len(typestr.types_classes(argtypes)) != 1:
+            return None
+        if self.hetero_tuple(argtypes):
+            return None
+        reselems = typestr.typestr(self.gx, self.subtypes(restypes, "unit"), mv=self.mv)
+        argelems = typestr.typestr(self.gx, self.subtypes(argtypes, "unit"), mv=self.mv)
+        if reselems == argelems:
+            return None
+        return typestr.typestr(self.gx, restypes, mv=self.mv).strip()[:-1].strip()
+
     def impl_visit_call(
         self,
         node: ast.Call,
@@ -4547,6 +4568,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("__" + ident + "(")
             elif ident in ["min", "max", "iter", "round"]:
                 self.append("___" + ident + "(")
+            elif ident == "sorted" and direct_call.mv.module.builtin and (
+                sorted_type := self.sorted_type(node)
+            ):
+                self.append("__ss_sorted<" + sorted_type + ">(")
             elif ident == "bool":
                 if node.args and infer.nrargs(self.gx, node):
                     self.bool_test(node.args[0], func, always_wrap=True)

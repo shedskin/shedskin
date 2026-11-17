@@ -128,7 +128,7 @@
 # OVERVIEW (number of cells that work / TODO / correctly warn or fail)
 #
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
-#    1. assign   2/0/0        18/1/2       -            3/0/0        0/0/2        8/0/0        13/2/2
+#    1. assign   2/0/0        18/1/2       -            3/0/0        0/0/2        8/0/0        14/1/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
 #    3. setitem  1/0/0        8/0/1        -            1/0/0        0/0/1        3/0/0        5/0/1
 #    4. arg      1/0/0        11/0/1       -            1/0/0        0/0/1        2/0/0        7/0/1
@@ -138,15 +138,15 @@
 #    8. binop    1/0/0        21/1/0       -            1/0/0        -            5/0/0        25/0/0
 #    9. compare  -            9/0/0        -            1/0/0        1/0/0        1/0/0        9/0/0
 #   10. lookup   1/0/0        10/0/0       0/0/1        7/0/0        0/0/1        4/0/0        18/0/0
-#   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        17/1/0
+#   11. ctor     -            8/0/1        -            2/0/0        -            4/1/0        18/0/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        12/2/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
 #   14. lib      -            11/2/0       -            4/0/0        -            2/0/0        23/4/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       126/5/10     0/0/1        29/0/0       1/0/9        50/1/0       174/9/10
+#   total        10/0/0       127/4/11     0/0/1        29/0/0       1/0/9        51/1/0       176/7/10
 #
-#   all cells: 390 work, 15 TODO, 30 correctly warn or fail
+#   all cells: 394 work, 12 TODO, 31 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -709,14 +709,11 @@ def test_assign_empty_new_from_empty():
 
 
 # empty, new: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*' in assignment
-#
-# def test_assign_empty_new_sorted():
-#     b = [1]
-#     b = sorted([])
-#     b.append(2)
-#     assert sum(b) == 2
+def test_assign_empty_new_sorted():
+    b = [1]
+    b = sorted([])
+    b.append(2)
+    assert sum(b) == 2
 
 
 # empty, new: build
@@ -4078,15 +4075,25 @@ def test_ctor_int_float_var_set():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<__ss_int>*' to 'list<__ss_float>*' in
-#     assignment
+def test_ctor_int_float_var_sorted():
+    ints = [1, 2]
+    r = sorted(ints)
+    r.append(0.5)
+    assert sum(r) == 3.5
+
+
+# int->float, variable: error
+# -> C++ compile error
+#   C++: static assertion failed: sorted: a key function cannot be used for
+#     widened elements (e.g. ints sorted into a list of floats)
 #
-# def test_ctor_int_float_var_sorted():
-#     ints = [1, 2]
-#     r = sorted(ints)
+# def test_ctor_int_float_var_sorted_key():
+#     # the key is compiled for ints, so the widened list cannot be sorted with
+#     # it (sorting the ints first would need an extra copy)
+#     ints = [3, 1, 2]
+#     r = sorted(ints, key=lambda x: -x)
 #     r.append(0.5)
-#     assert sum(r) == 3.5
+#     assert r[0] == 3 and r[3] == 0.5
 
 
 # int->float, variable: copy
@@ -4186,6 +4193,16 @@ def test_ctor_sub_dict_pairs():
     assert sorted(x.name() for x in d) == ['A', 'B']
 
 
+# sub->base, variable: cast
+def test_ctor_sub_sorted():
+    # sorted as instances of B, then cast, so the key gets what it expects
+    lb = [B()]
+    r = sorted(lb, key=lambda b: b.name())
+    r.append(A())
+    assert r[0].name() == 'B' and r[1].name() == 'A'
+    assert len(lb) == 1
+
+
 # sub->base, new: copy
 # TODO doesn't work today: C++ compile error, without a warning (1113-C1)
 #   C++: cannot convert 'dict<B*, __ss_int>*' to 'dict<A*, __ss_int>*' in
@@ -4225,13 +4242,10 @@ def test_ctor_empty_lit_dict():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*' in assignment
-#
-# def test_ctor_empty_lit_sorted():
-#     r = sorted([])
-#     r.append(1)
-#     assert sum(r) == 1
+def test_ctor_empty_lit_sorted():
+    r = sorted([])
+    r.append(1)
+    assert sum(r) == 1
 
 
 # empty, literal: copy
@@ -5468,6 +5482,7 @@ def test_all():
     test_assign_empty_new()
     test_assign_empty_new_collections()
     test_assign_empty_new_from_empty()
+    test_assign_empty_new_sorted()
     test_assign_empty_ifexp()
     test_assign_empty_var_filled()
     test_assign_empty_var()
@@ -5700,6 +5715,7 @@ def test_all():
     test_ctor_int_float_lit_collections()
     test_ctor_int_float_var_list()
     test_ctor_int_float_var_set()
+    test_ctor_int_float_var_sorted()
     test_ctor_int_float_var_dict()
     test_ctor_int_float_var_tuple()
     test_ctor_int_float_var_collections()
@@ -5708,9 +5724,11 @@ def test_all():
     test_ctor_sub()
     test_ctor_sub_items()
     test_ctor_sub_dict_pairs()
+    test_ctor_sub_sorted()
     test_ctor_empty_lit()
     test_ctor_empty_lit_set()
     test_ctor_empty_lit_dict()
+    test_ctor_empty_lit_sorted()
     test_ctor_empty_lit_tuple()
     test_ctor_empty_lit_deque()
     test_ctor_empty_lit_counter()

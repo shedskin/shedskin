@@ -371,6 +371,29 @@ template <class V, class W> list<str *> *sorted(str *x, V cmp, W key, __ss_int r
     return l;
 }
 
+/* sorted, as the list type it is inferred to have (e.g. 'r = sorted(ints)',
+   'r.append(0.5)'). elements of the same representation (none at all, as for
+   an empty list, or instances of a subclass) are sorted as they are and then cast;
+   numbers are widened while the new list is built, without an extra copy. a key
+   function is compiled for the original elements, so it cannot be used to sort
+   widened ones (that would need an extra copy) */
+
+template <class L, class U, class V, class W> L *__ss_sorted(U *iter, V cmp, W key, __ss_int reverse) {
+    using T = typename L::for_in_unit;
+    using E = std::remove_cvref_t<typename U::for_in_unit>;
+    static_assert(__ss_widens_v<E, T>, "sorted: the elements do not fit (e.g. floats into a list of ints)");
+    if constexpr (std::is_same_v<E, T>)
+        return sorted(iter, cmp, key, reverse);
+    else if constexpr (std::is_same_v<E, void *> || __ss_upcastable_v<E, T>)
+        return reinterpret_cast<L *>(sorted(iter, cmp, key, reverse));
+    else {
+        static_assert(std::is_same_v<W, __ss_int>, "sorted: a key function cannot be used for widened elements (e.g. ints sorted into a list of floats)");
+        L *l = new L(iter);
+        l->sort(cmp, key, reverse);
+        return l;
+    }
+}
+
 /* range */
 
 class __xrange final : public pyseq<__ss_int> {
