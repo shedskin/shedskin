@@ -139,14 +139,14 @@
 #    9. compare  -            9/0/0        -            1/0/0        1/0/0        1/0/0        9/0/0
 #   10. lookup   1/0/0        10/0/0       0/0/1        7/0/0        0/0/1        4/0/0        18/0/0
 #   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        17/1/0
-#   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
+#   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        12/2/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
 #   14. lib      -            10/2/0       -            4/0/0        -            2/0/0        22/5/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       125/5/10     0/0/1        29/0/0       1/0/9        50/1/0       171/12/10
+#   total        10/0/0       125/5/10     0/0/1        29/0/0       1/0/9        50/1/0       173/10/10
 #
-#   all cells: 386 work, 18 TODO, 30 correctly warn or fail
+#   all cells: 388 work, 16 TODO, 30 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -4550,23 +4550,23 @@ def test_iter_empty_lit():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: invalid conversion from 'void*' to 'str*'
-#
-# def test_iter_empty_lit_typed():
-#     # the loop variable has a type already
-#     s = 'a'
-#     for s in []:
-#         pass
-#     assert s == 'a'
-#     l = ['a']
-#     for l in []:
-#         pass
-#     assert len(l) == 1
+# TODO works, but gives a warning
+#   expression has no type
+def test_iter_empty_lit_typed():
+    # the loop variable has a type already
+    s = 'a'
+    for s in []:
+        pass
+    assert s == 'a'
+    l = ['a']
+    for l in []:
+        pass
+    assert len(l) == 1
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   incompatible types
 #   C++: invalid conversion from 'void*' to '__ss_int'
 #
 # def test_iter_empty_lit_typed_number():
@@ -4643,15 +4643,12 @@ def test_iter_empty_var_typed():
 
 
 # empty, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<str*>*' in assignment
-#
-# def test_iter_empty_var_typed_list():
-#     e = []
-#     l = ['a']
-#     for l in [e]:
-#         pass
-#     assert len(l) == 0
+def test_iter_empty_var_typed_list():
+    e = []
+    l = ['a']
+    for l in [e]:
+        pass
+    assert len(l) == 0
 
 
 # empty, variable: warn
@@ -5737,10 +5734,12 @@ def test_all():
     test_unpack_sub_var_tuple()
     test_iter_sub_var_list()
     test_iter_empty_lit()
+    test_iter_empty_lit_typed()
     test_iter_empty_lit_list()
     test_iter_empty_new()
     test_iter_empty_var()
     test_iter_empty_var_typed()
+    test_iter_empty_var_typed_list()
     test_unpack_empty_lit()
     test_unpack_empty_lit_typed()
     test_unpack_empty_lit_typed_number()

@@ -2089,6 +2089,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print(self.line)
         self.indent()
         self.start()
+        # cast to the loop variable where safe, and warn otherwise
+        if isinstance(node.target, ast.Name):
+            var = python.lookup_var(node.target.id, func, self.mv)
+            if var in self.mergeinh:
+                cast = self.conv_cast(node.target, target_types, self.mergeinh[var])
+                if cast:
+                    tempvar = "((" + cast + ")(" + tempvar + "))"
         self.visitm(node.target, " = ", tempvar, func)
         self.eol()
 
