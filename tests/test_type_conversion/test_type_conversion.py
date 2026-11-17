@@ -128,7 +128,7 @@
 # OVERVIEW (number of cells that work / TODO / correctly warn or fail)
 #
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
-#    1. assign   2/0/0        18/1/2       -            3/0/0        0/0/2        8/0/0        13/2/2
+#    1. assign   2/0/0        18/1/2       -            3/0/0        0/0/2        8/0/0        14/1/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
 #    3. setitem  1/0/0        8/0/1        -            1/0/0        0/0/1        3/0/0        5/0/1
 #    4. arg      1/0/0        11/0/1       -            1/0/0        0/0/1        2/0/0        7/0/1
@@ -144,9 +144,9 @@
 #   14. lib      -            11/2/0       -            4/0/0        -            2/0/0        23/4/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       126/5/10     0/0/1        29/0/0       1/0/9        50/1/0       174/9/10
+#   total        10/0/0       126/5/10     0/0/1        29/0/0       1/0/9        50/1/0       176/8/10
 #
-#   all cells: 390 work, 15 TODO, 30 correctly warn or fail
+#   all cells: 392 work, 14 TODO, 30 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -720,15 +720,27 @@ def test_assign_empty_new_from_empty():
 
 
 # empty, new: build
-# TODO doesn't work today: warning, then C++ compile error
+# TODO works, but gives a warning
 #   variable 'x' has no type
-#   C++: invalid conversion from 'void*' to '__ss_int'
-#
-# def test_assign_empty_new_comp():
-#     c = [1]
-#     c = [x for x in []]
-#     c.append(2)
-#     assert sum(c) == 2
+def test_assign_empty_new_comp():
+    c = [1]
+    c = [x for x in []]
+    c.append(2)
+    assert sum(c) == 2
+    c2 = [1]
+    c2 = [x for x in [] if x]
+    c2.append(3)
+    assert sum(c2) == 3
+
+
+# empty, new: build
+# TODO works, but gives a warning
+#   variable 'y' has no type
+def test_assign_empty_new_setcomp():
+    s = {1.5}
+    s = {y for y in []}
+    s.add(2.5)
+    assert sum(s) == 2.5
 
 
 # empty, ifexp: build
@@ -5468,6 +5480,8 @@ def test_all():
     test_assign_empty_new()
     test_assign_empty_new_collections()
     test_assign_empty_new_from_empty()
+    test_assign_empty_new_comp()
+    test_assign_empty_new_setcomp()
     test_assign_empty_ifexp()
     test_assign_empty_var_filled()
     test_assign_empty_var()

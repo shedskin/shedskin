@@ -6023,7 +6023,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.start("__after_yield_0:")
             elif node in self.gx.setcomp_to_lc.values():
                 self.start("__ss_result->add(")
-                self.visit(node.elt, lcfunc)
+                self.visit_comp_elt(node.elt, lcfunc)
                 self.append(")")
             elif node in self.gx.dictcomp_to_lc.values():
                 assert isinstance(node.elt, ast.Tuple)
@@ -6055,12 +6055,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 else:
                     tv = self.mv.tempcount[node.generators[0].iter]
                 self.start("__ss_result->units[" + tv + "] = ")
-                self.visit(node.elt, lcfunc)
+                self.visit_comp_elt(node.elt, lcfunc)
             else:
                 if reserve:
                     self.output("__append_reserve(__ss_result, %s, 1);" % reserve)
                 self.start("__ss_result->append(")
-                self.visit(node.elt, lcfunc)
+                self.visit_comp_elt(node.elt, lcfunc)
                 self.append(")")
             self.eol()
             return
@@ -6156,6 +6156,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.start("FOR_IN" + pref + "(" + iter + "," + itervar + "," + tail)
             self.print(self.line + ")")
             self.listcompfor_body(node, quals, iter, lcfunc, False, genexpr, fuse_reduce)
+
+    def visit_comp_elt(self, elt: ast.expr, lcfunc: "python.Function") -> None:
+        """Visit the element of a list or set comprehension. if it has no
+        type (e.g. '[x for x in []]'), it is 'void *' in C++, while the
+        result may get an element type elsewhere ('c = [1]', 'c = [..]')"""
+        if elt in self.mergeinh and not self.mergeinh[elt]:
+            self.append(
+                "__ss_elem<std::remove_pointer_t<decltype(__ss_result)>"
+                "::for_in_unit>("
+            )
+            self.visit(elt, lcfunc)
+            self.append(")")
+        else:
+            self.visit(elt, lcfunc)
 
     def listcompfor_body(
         self,
