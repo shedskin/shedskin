@@ -1610,6 +1610,11 @@ def __zip2(arg1, arg2, __kw_strict=False):
     elem1 = iter(arg1).__next__()
     elem2 = iter(arg2).__next__()
     yield (elem1, elem2)
+def __zip3(arg1, arg2, arg3, __kw_strict=False):
+    elem1 = iter(arg1).__next__()
+    elem2 = iter(arg2).__next__()
+    elem3 = iter(arg3).__next__()
+    yield (elem1, elem2, elem3)
 
 def map(func, __kw_strict=False, *iter1):
     yield func(*iter(iter1).__next__())
