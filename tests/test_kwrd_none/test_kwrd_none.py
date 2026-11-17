@@ -101,10 +101,22 @@ def test_in_const_tuple_none():
     assert x not in ('a', 'b')
 
 
+def test_none_only_container():
+    # containers that can only hold None (#1821)
+    assert len(set([None])) == 1
+    assert None in set([None])
+    l = [None]
+    l.remove(None)
+    assert len(l) == 0
+    assert str(l) == '[]'
+    [None].remove(None)
+
+
 def test_all():
     test_none()
     test_str_repr_none()
     test_in_const_tuple_none()
+    test_none_only_container()
 
 if __name__ == '__main__':
     test_all() 
