@@ -4254,7 +4254,8 @@ def test_ctor_empty_lit_deque():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   expression has no type
 #   C++: invalid conversion from '__ss_int' to 'void*'
 #
 # def test_ctor_empty_lit_counter():
@@ -4267,10 +4268,9 @@ def test_ctor_empty_lit_deque():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to
-#     '__collections__::defaultdict<__ss_int, void*>::defaultdict(__ss_int
-#     (&)(), dict<void*, void*>*)'
+# TODO doesn't work today: warning, then C++ compile error
+#   expression has no type
+#   C++: invalid conversion from '__ss_int' to 'void*'
 #
 # def test_ctor_empty_lit_defaultdict():
 #     dd = defaultdict(int, {})
@@ -4336,7 +4336,8 @@ def test_ctor_empty_var_deque_number():
 
 
 # empty, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   expression has no type
 #   C++: invalid conversion from '__ss_int' to 'void*'
 #
 # def test_ctor_empty_var_counter_number():
@@ -4561,7 +4562,8 @@ def test_iter_empty_lit():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   expression has no type
 #   C++: invalid conversion from 'void*' to 'str*'
 #
 # def test_iter_empty_lit_typed():
@@ -4577,7 +4579,8 @@ def test_iter_empty_lit():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   expression has no type
 #   C++: invalid conversion from 'void*' to '__ss_int'
 #
 # def test_iter_empty_lit_typed_number():
@@ -4588,7 +4591,8 @@ def test_iter_empty_lit():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
+# TODO doesn't work today: warning, then C++ compile error
+#   expression has no type
 #   C++: 'void*' is not a pointer-to-object type
 #
 # def test_iter_empty_lit_typed_unpack():
