@@ -128,7 +128,7 @@
 # OVERVIEW (number of cells that work / TODO / correctly warn or fail)
 #
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
-#    1. assign   2/0/0        17/2/2       -            3/0/0        0/0/2        8/0/0        13/2/2
+#    1. assign   2/0/0        18/1/2       -            3/0/0        0/0/2        8/0/0        13/2/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
 #    3. setitem  1/0/0        8/0/1        -            1/0/0        0/0/1        3/0/0        5/0/1
 #    4. arg      1/0/0        11/0/1       -            1/0/0        0/0/1        2/0/0        7/0/1
@@ -138,15 +138,15 @@
 #    8. binop    1/0/0        21/1/0       -            1/0/0        -            5/0/0        25/0/0
 #    9. compare  -            9/0/0        -            1/0/0        1/0/0        1/0/0        9/0/0
 #   10. lookup   1/0/0        10/0/0       0/0/1        7/0/0        0/0/1        4/0/0        18/0/0
-#   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        13/5/0
+#   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        14/4/0
 #   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        10/4/1
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            7/2/3        -            3/1/0        -            2/0/0        12/14/0
+#   14. lib      -            7/2/3        -            4/0/0        -            2/0/0        17/10/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       121/6/13     0/0/1        28/1/0       1/0/9        50/1/0       157/25/10
+#   total        10/0/0       122/5/13     0/0/1        29/0/0       1/0/9        50/1/0       163/20/10
 #
-#   all cells: 367 work, 33 TODO, 33 correctly warn or fail
+#   all cells: 375 work, 26 TODO, 33 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -5142,15 +5142,12 @@ def test_lib_sub_heappush():
 
 
 # empty, literal: infer
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_lib_empty_lit():
-#     assert len([]) == 0 and len({}) == 0 and len(()) == 0
-#     assert not any([]) and all([])
-#     assert ''.join([]) == ''
-#     assert str([]) == '[]' and str({}) == '{}' and str(()) == '()'
-#     assert repr(set()) == 'set()'
+def test_lib_empty_lit():
+    assert len([]) == 0 and len({}) == 0 and len(()) == 0
+    assert not any([]) and all([])
+    assert ''.join([]) == ''
+    assert str([]) == '[]' and str({}) == '{}' and str(()) == '()'
+    assert repr(set()) == 'set()'
 
 
 # empty, literal: infer
@@ -5325,14 +5322,11 @@ def test_lib_empty_var_sort():
 
 
 # empty, variable: cast
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to 'push_back(void*&)'
-#
-# def test_lib_empty_var_mixed():
-#     e = []
-#     names = ['a']
-#     assert len(list(zip(e, names))) == 0
-#     assert ''.join(e) == ''
+def test_lib_empty_var_mixed():
+    e = []
+    names = ['a']
+    assert len(list(zip(e, names))) == 0
+    assert ''.join(e) == ''
 
 
 # empty, variable: cast
@@ -5812,6 +5806,7 @@ def test_all():
     test_lib_none_default()
     test_lib_sub()
     test_lib_sub_heappush()
+    test_lib_empty_lit()
     test_lib_empty_lit_sum()
     test_lib_empty_lit_mixed()
     test_lib_empty_lit_mixed_sum()
@@ -5822,6 +5817,7 @@ def test_all():
     test_lib_empty_lit_sorted()
     test_lib_empty_var()
     test_lib_empty_var_sum()
+    test_lib_empty_var_mixed()
     test_lib_empty_var_mixed_chain()
     test_lib_empty_var_mixed_number()
     test_lib_empty_var_mixed_sum_number()

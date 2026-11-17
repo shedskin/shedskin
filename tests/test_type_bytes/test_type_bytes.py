@@ -203,6 +203,11 @@ def test_join():
     assert repr(z) == "b'a'"
     assert repr(b'-'.join([b'x'])) == "b'x'"
 
+    # empty iterable
+    assert b''.join([]) == b''
+    assert repr(b'-'.join(())) == "b''"
+    assert repr(bytearray(b'-').join([])) == "bytearray(b'')"
+
 def test_ljust():
     assert b'bla'.ljust(8) == b'bla     '
     assert b'bla'.ljust(6, b'+') == b'bla+++'
