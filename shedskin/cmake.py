@@ -898,17 +898,20 @@ class CMakeBuilder:
             return False, "\n".join(out)
 
         # the module ends up in build/, or in build/<config>/ with multi-config
-        # generators (visual studio): put that folder on the path
-        env = dict(os.environ)
-        for path in sorted((dest / "build").rglob(f"{name}.*")):
+        # generators (visual studio). name_main.py only looks in build/, and
+        # PYTHONPATH won't do, as it comes after the script folder (with
+        # name.py): so copy the module (and any dlls next to it) to build/
+        build = dest / "build"
+        for path in sorted(build.rglob(f"{name}.*")):
             if path.suffix in (".so", ".pyd"):
-                env["PYTHONPATH"] = os.pathsep.join(
-                    [str(path.parent)] + [p for p in [env.get("PYTHONPATH")] if p]
-                )
+                if path.parent != build:
+                    for f in path.parent.iterdir():
+                        if f.suffix in (".so", ".pyd", ".dll"):
+                            shutil.copy2(f, build)
                 break
 
         proc = subprocess.run(
-            [sys.executable, f"{name}_main.py"], cwd=dest, env=env,
+            [sys.executable, f"{name}_main.py"], cwd=dest,
             capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
         out += [proc.stdout.rstrip(), proc.stderr.rstrip()]
