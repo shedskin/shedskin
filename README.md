@@ -83,6 +83,12 @@ Some screenshots of the [example programs](https://github.com/shedskin/shedskin/
 
 <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm6.png" width="400">
 
+(another world)
+
+<img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/aw.png" width="400">
+
+[Source](https://github.com/trozen/tpy-another-world) (uses tty/termios so UNIX-only)
+
 (doom)
 
 <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm5.png" width="400">
