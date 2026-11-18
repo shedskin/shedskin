@@ -519,13 +519,21 @@ static inline void __switch_op(FILE *f, __file_options &options, char op,
    pipe, socket or terminal. on a closed file only the capabilities the mode
    has raise ValueError (as cpython's buffered reader/writer: a closed 'r'
    file is still just not writable) */
+/* (these run for every read and write, so the mode is scanned in place,
+   without building a string of the characters to look for) */
+static inline bool __mode_has(str *mode, const char *chars) {
+    for (__ss_char c : mode->unit)
+        for (const char *p = chars; *p; p++)
+            if (c == (__ss_char)(unsigned char)*p)
+                return true;
+    return false;
+}
 static inline __ss_bool __mode_readable(str *mode) {
     /* (a socket's makefile('') is read-only, as is anything without w, a or x) */
-    return ___bool(mode && (mode->unit.find_first_of(__gcs("r+")) != std::string::npos ||
-                            mode->unit.find_first_of(__gcs("wax")) == std::string::npos));
+    return ___bool(mode && (__mode_has(mode, "r+") || !__mode_has(mode, "wax")));
 }
 static inline __ss_bool __mode_writable(str *mode) {
-    return ___bool(mode && mode->unit.find_first_of(__gcs("wax+")) != std::string::npos);
+    return ___bool(mode && __mode_has(mode, "wax+"));
 }
 /* reading a file not opened for reading (or writing one not opened for
    writing) raises io.UnsupportedOperation, as cpython, instead of the EBADF

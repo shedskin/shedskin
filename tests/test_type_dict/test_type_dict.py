@@ -416,7 +416,48 @@ def test_dict_convert():
     assert f[1] == 2
 
 
+def test_dict_copy_into_empty():
+    # a mapping copied into an empty dict (dict(d), {}.update(d), {} |= d) is
+    # copied at once: the copy must stay independent of the original
+    d = {1: 2, 3: 4}
+    e = dict(d)
+    e[5] = 6
+    del e[1]
+    assert sorted(d.items()) == [(1, 2), (3, 4)]
+    assert sorted(e.items()) == [(3, 4), (5, 6)]
+
+    f = {}
+    f.update(d)
+    f[7] = 8
+    assert sorted(d.items()) == [(1, 2), (3, 4)]
+    assert sorted(f.items()) == [(1, 2), (3, 4), (7, 8)]
+    f.update(e)
+    assert sorted(f.items()) == [(1, 2), (3, 4), (5, 6), (7, 8)]
+
+    g = {}
+    g |= d
+    g[3] = 0
+    assert sorted(d.items()) == [(1, 2), (3, 4)]
+    assert sorted(g.items()) == [(1, 2), (3, 0)]
+
+    h = {}
+    h.update(h)
+    assert len(h) == 0
+    d.update(d)
+    assert sorted(d.items()) == [(1, 2), (3, 4)]
+
+    big = {}
+    for i in range(1000):
+        big[i] = i * i
+    big2 = dict(big)
+    for i in range(0, 1000, 2):
+        del big2[i]
+    assert len(big) == 1000 and len(big2) == 500
+    assert big[10] == 100 and 10 not in big2 and big2[11] == 121
+
+
 def test_all():
+    test_dict_copy_into_empty()
     test_dict_convert()
     test_dict_churn()
     test_dict()

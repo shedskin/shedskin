@@ -487,8 +487,11 @@ template <class K, class V> template<class U> dict<K,V> *dict<K,V>::__ior__(U *o
 }
 
 template <class K, class V> void *dict<K,V>::__update_dict__(dict<K,V> *other) {
-    for (const auto& [key, value] : other->gcd)
-        gcd[key] = value;
+    if (gcd.empty()) /* e.g. 'dict(d)' or 'defaultdict(int, d)': copy at once, instead of growing key by key */
+        gcd = other->gcd;
+    else
+        for (const auto& [key, value] : other->gcd)
+            gcd[key] = value;
     return NULL;
 }
 
