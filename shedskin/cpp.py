@@ -1779,18 +1779,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and self.only_classes(node.iter.args[0], ("tuple", "list", "str_", "bytes_"))
         )
 
-    def fastzip2(
+    def fastzip(
         self,
         node: Union[ast.For, ast.comprehension],
         func: Optional["python.Function"] = None,
     ) -> bool:
-        """Check if a node is a fast zip2 loop"""
+        """Check if a node is a fast zip loop (two or three list/tuple
+        arguments, unpacked into as many targets)"""
         names = ("tuple", "list")
         return (
             isinstance(node.iter, ast.Call)
-            and ast_utils.is_zip2(node, func, self.mv)
-            and self.only_classes(node.iter.args[0], names)
-            and self.only_classes(node.iter.args[1], names)
+            and ast_utils.zip_arity(node, func, self.mv) != 0
+            and all(self.only_classes(arg, names) for arg in node.iter.args)
         )
 
     def fastdictiter(self, node: Union[ast.For, ast.comprehension]) -> bool:
@@ -1926,8 +1926,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 node, "%s, %s" % (self.mv.tempcount[(node, 2)], self.mv.tempcount[node.iter])
             )
             self.forbody(node, None, assname, func, True, False, False)
-        elif self.fastzip2(node, func):
-            self.do_fastzip2(node, func, False)
+        elif self.fastzip(node, func):
+            self.do_fastzip(node, func, False)
             self.forbody(node, None, assname, func, True, False, False)
         elif self.fastdictiter(node):
             self.do_fastdictiter(node, func, False)
@@ -1972,41 +1972,41 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 node.iter, self.subtypes(itertypes, "unit"), self.mergeinh[var]
             )
 
-    def do_fastzip2(
+    def do_fastzip(
         self,
         node: Union[ast.For, ast.comprehension],
         func: Optional["python.Function"],
         genexpr: bool,
     ) -> None:
-        """Generate a fast zip2 loop"""
+        """Generate a fast zip loop"""
         assert isinstance(node.iter, ast.Call)
         assert isinstance(node.target, (ast.Tuple, ast.List))
 
-        self.start("FOR_IN_ZIP(")
-        left, right = node.target.elts
-        self.do_fastzip2_one(left, func)
-        self.do_fastzip2_one(right, func)
-        self.visitm(node.iter.args[0], ",", node.iter.args[1], ",", func)
-        tail1 = (
-            self.mv.tempcount[(node, 2)][2:]
-            + ","
-            + self.mv.tempcount[(node, 3)][2:]
-            + ","
-        )
+        targets = node.target.elts
+        args = node.iter.args
+        temps = [(node, 2), (node, 3)]
+        if len(args) == 3:
+            self.start("FOR_IN_ZIP3(")
+            temps.append((node, 8))
+        else:
+            self.start("FOR_IN_ZIP(")
+        for target in targets:
+            self.do_fastzip_one(target, func)
+        for arg in args:
+            self.visitm(arg, ",", func)
+        tail1 = "".join(self.mv.tempcount[temp][2:] + "," for temp in temps)
         tail2 = (
             self.mv.tempcount[(node.iter)][2:] + "," + self.mv.tempcount[(node, 4)][2:]
         )
         self.print(self.line + tail1 + tail2 + ")")
         self.indent()
-        if ast_utils.is_assign_list_or_tuple(left):
-            assert isinstance(left, (ast.Tuple, ast.List))
-            self.tuple_assign(left, self.mv.tempcount[left], func)
-        if ast_utils.is_assign_list_or_tuple(right):
-            assert isinstance(right, (ast.Tuple, ast.List))
-            self.tuple_assign(right, self.mv.tempcount[right], func)
+        for target in targets:
+            if ast_utils.is_assign_list_or_tuple(target):
+                assert isinstance(target, (ast.Tuple, ast.List))
+                self.tuple_assign(target, self.mv.tempcount[target], func)
 
-    def do_fastzip2_one(self, node: ast.AST, func: Optional["python.Function"]) -> None:
-        """Generate a fast zip2 loop one"""
+    def do_fastzip_one(self, node: ast.AST, func: Optional["python.Function"]) -> None:
+        """Generate a fast zip loop target"""
         if ast_utils.is_assign_list_or_tuple(node):
             self.append(self.mv.tempcount[node])
         else:
@@ -2027,7 +2027,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.start("FOR_IN_ENUMERATE_STR(")
         left, right = node.target.elts
-        self.do_fastzip2_one(right, func)
+        self.do_fastzip_one(right, func)
         self.visit(node.iter.args[0], func)
         tail = self.mv.tempcount[(node, 2)][2:] + "," + self.mv.tempcount[node.iter][2:]
         self.print(self.line + "," + tail + ")")
@@ -6010,7 +6010,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return not (
             ast_utils.is_fastfor(qual, lcfunc, self.mv)
             or self.fastenumerate(qual, lcfunc)
-            or self.fastzip2(qual, lcfunc)
+            or self.fastzip(qual, lcfunc)
             or self.fastdictiter(qual)
         )
 
@@ -6088,7 +6088,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif (
                 len(node.generators) == 1
                 and not self.fastenumerate(node.generators[0], lcfunc)
-                and not self.fastzip2(node.generators[0], lcfunc)
+                and not self.fastzip(node.generators[0], lcfunc)
                 and not node.generators[0].ifs
                 and (
                     (
@@ -6172,8 +6172,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif self.fastenumerate(qual, lcfunc):  # TODO result->resize for all cases
             self.do_fastenumerate(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
-        elif self.fastzip2(qual, lcfunc):
-            self.do_fastzip2(qual, lcfunc, genexpr)
+        elif self.fastzip(qual, lcfunc):
+            self.do_fastzip(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr, fuse_reduce)
         elif self.fastdictiter(qual):
             self.do_fastdictiter(qual, lcfunc, genexpr)

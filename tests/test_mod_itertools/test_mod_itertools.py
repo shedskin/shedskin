@@ -498,6 +498,75 @@ def test_zip_longest():
     assert list(itertools.zip_longest([5, 6], [1, 3, 4], fillvalue=99)) == [(5, 1), (6, 3), (99, 4)]
 
 
+def test_zip_longest3_hetero():
+    # three arguments with different element types give a 3-tuple
+    l = list(itertools.zip_longest('abc', [[1], [2, 3]], ['x']))
+    assert l == [('a', [1], 'x'), ('b', [2, 3], None), ('c', None, None)]
+    assert l[1][1][1] == 3
+    assert l[0][2] + 'y' == 'xy'
+    assert len(l[2]) == 3
+    assert list(itertools.zip_longest([1, 2, 3], [1.5], [10, 20], fillvalue=-1)) == [(1, 1.5, 10), (2, -1.0, 20), (3, -1.0, -1)]
+    total = 0.0
+    s = ''
+    for x, y, z in itertools.zip_longest([1, 2], ['a', 'b', 'c'], [0.5], fillvalue=0):
+        total += x + z
+        if y is not None:
+            s += y
+    assert total == 3.5
+    assert s == 'abc'
+    assert list(itertools.zip_longest(['a'], '', [[1.5]])) == [('a', None, [1.5])]
+    assert list(itertools.zip_longest(range(0), 'ab', [1.5], fillvalue=0)) == [(0, 'a', 1.5), (0, 'b', 0.0)]
+    # (the None fill for an int becomes 0: only check the other elements)
+    l2 = list(itertools.zip_longest(range(0), '', [1.5, 2.5]))
+    assert len(l2) == 2
+    assert l2[1][1] is None
+    assert l2[1][2] == 2.5
+
+    # exhaustion: arguments are advanced in order, also after one runs out
+    it = iter([1.0, 2.0, 3.0])
+    zl = itertools.zip_longest(['a'], [7, 8], it)
+    assert next(zl) == ('a', 7, 1.0)
+    assert next(zl) == (None, 8, 2.0)
+    assert list(it) == [3.0]
+    assert list(zl) == []
+    stops = 0
+    for i in range(2):
+        try:
+            next(zl)
+        except StopIteration:
+            stops += 1
+    assert stops == 2
+
+
+def test_product3_hetero():
+    # three arguments with different element types give a 3-tuple
+    l = list(itertools.product([1, 2], 'ab', [1.5]))
+    assert l == [(1, 'a', 1.5), (1, 'b', 1.5), (2, 'a', 1.5), (2, 'b', 1.5)]
+    assert l[3][1] + 'c' == 'bc'
+    assert l[2][0] * l[2][2] == 3.0
+    assert len(l[0]) == 3
+    s = ''
+    total = 0.0
+    for x, y, z in itertools.product((1, 2), ['p', 'q', 'r'], iter([0.5, 0.25])):
+        s += y * x
+        total += z
+    assert s == 'ppqqrrppppqqqqrrrr'
+    assert total == 4.5
+    assert list(itertools.product([1, 2], [3], 'a')) == [(1, 3, 'a'), (2, 3, 'a')]
+    assert list(itertools.product('a', [1.5], [3, 4], repeat=1)) == [('a', 1.5, 3), ('a', 1.5, 4)]
+    assert list(itertools.product(range(0), 'ab', [1.5])) == []
+    assert list(itertools.product([1], '', [1.5])) == []
+    assert [x * z for x, y, z in itertools.product([1, 2], 'a', [0.5, 1.5])] == [0.5, 1.5, 1.0, 3.0]
+
+    # all arguments are consumed, even if one is empty
+    it = iter([1.0, 2.0])
+    assert list(itertools.product(range(0), 'ab', it)) == []
+    assert list(it) == []
+    it2 = iter(['x', 'y'])
+    assert list(itertools.product(range(0), it2)) == []
+    assert list(it2) == []
+
+
 def test_compress():
     assert list(itertools.compress([42, 32, 21, 55, 303], [True, False, True, False, True])) == [42, 21, 303]
 
@@ -692,6 +761,8 @@ def test_all():
     test_tee_gc()
     test_filterfalse()
     test_zip_longest()
+    test_zip_longest3_hetero()
+    test_product3_hetero()
     test_pairwise()
     test_accumulate()
     test_batched()

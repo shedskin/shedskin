@@ -245,21 +245,46 @@ def is_enumerate(
     )
 
 
+def zip_arity(
+    node: Union[ast.For, ast.comprehension],
+    parent: Optional["python.AllParent"] = None,
+    mv: Optional["graph.ModuleVisitor"] = None,
+) -> int:
+    """The number of arguments of a zip loop with two or three arguments,
+    unpacked into as many targets (e.g. 'for a, b in zip(x, y)'), or 0"""
+    if (
+        isinstance(node.iter, ast.Call)
+        and isinstance(node.iter.func, ast.Name)
+        and node.iter.func.id == "zip"
+        and not _is_shadowed("zip", parent, mv)
+        and len(node.iter.args) in (2, 3)
+        and not node.iter.keywords
+        and not any(isinstance(arg, ast.Starred) for arg in node.iter.args)
+        and is_assign_list_or_tuple(node.target)
+        and not has_starred(node.target)
+    ):
+        assert isinstance(node.target, (ast.Tuple, ast.List))
+        if len(node.target.elts) == len(node.iter.args):
+            return len(node.iter.args)
+    return 0
+
+
 def is_zip2(
     node: Union[ast.For, ast.comprehension],
     parent: Optional["python.AllParent"] = None,
     mv: Optional["graph.ModuleVisitor"] = None,
 ) -> bool:
     """Check if a node is a zip loop with two arguments"""
-    return (
-        isinstance(node.iter, ast.Call)
-        and isinstance(node.iter.func, ast.Name)
-        and node.iter.func.id == "zip"
-        and not _is_shadowed("zip", parent, mv)
-        and len(node.iter.args) == 2
-        and is_assign_list_or_tuple(node.target)
-        and not has_starred(node.target)
-    )
+    return zip_arity(node, parent, mv) == 2
+
+
+def is_zip3(
+    node: Union[ast.For, ast.comprehension],
+    parent: Optional["python.AllParent"] = None,
+    mv: Optional["graph.ModuleVisitor"] = None,
+) -> bool:
+    """Check if a node is a zip loop with three arguments"""
+    return zip_arity(node, parent, mv) == 3
 
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions

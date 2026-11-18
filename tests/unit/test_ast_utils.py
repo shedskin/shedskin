@@ -94,6 +94,44 @@ class TestIsZip2:
         assert ast_utils.is_zip2(node, scope, mv=FakeMv()) is False
 
 
+class TestZipArity:
+    def test_two_and_three_args(self):
+        scope = FakeScope()
+        node = _for_node("zip", n_args=2)
+        assert ast_utils.zip_arity(node, scope, mv=FakeMv()) == 2
+        node = _for_node("zip", target=("a", "b", "c"), n_args=3)
+        assert ast_utils.zip_arity(node, scope, mv=FakeMv()) == 3
+        assert ast_utils.is_zip3(node, scope, mv=FakeMv()) is True
+        assert ast_utils.is_zip2(node, scope, mv=FakeMv()) is False
+
+    def test_other_arg_counts(self):
+        scope = FakeScope()
+        node = _for_node("zip", target=("a",), n_args=1)
+        assert ast_utils.zip_arity(node, scope, mv=FakeMv()) == 0
+        node = _for_node("zip", target=("a", "b", "c", "d"), n_args=4)
+        assert ast_utils.zip_arity(node, scope, mv=FakeMv()) == 0
+
+    def test_target_count_mismatch(self):
+        # 'for a, b, c in zip(x, y)' takes the general path (unpack check)
+        scope = FakeScope()
+        node = _for_node("zip", target=("a", "b", "c"), n_args=2)
+        assert ast_utils.zip_arity(node, scope, mv=FakeMv()) == 0
+        node = _for_node("zip", target=("a", "b"), n_args=3)
+        assert ast_utils.zip_arity(node, scope, mv=FakeMv()) == 0
+
+    def test_keywords(self):
+        # zip(x, y, strict=True) takes the general path (length check)
+        scope = FakeScope()
+        node = _for_node("zip", n_args=2)
+        node.iter.keywords = [ast.keyword(arg="strict", value=ast.Constant(True))]
+        assert ast_utils.zip_arity(node, scope, mv=FakeMv()) == 0
+
+    def test_shadowed(self):
+        node = _for_node("zip", target=("a", "b", "c"), n_args=3)
+        scope = FakeScope(vars={"zip": FakeVar()})
+        assert ast_utils.zip_arity(node, scope, mv=FakeMv()) == 0
+
+
 class TestIsFastfor:
     def test_true_for_genuine_range(self):
         node = _for_node("range", target=("i",))
