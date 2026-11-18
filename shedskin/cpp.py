@@ -4265,6 +4265,27 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             return target.ftypes[0]
         return self.mergeinh[target.retnode.thing] or None
 
+    def sorted_type(self, node: ast.Call) -> Optional[str]:
+        """Return the C++ list type (without '*') to build the result of
+        'sorted' as, if its elements have another type than those of the
+        argument: the result is a new list, so it can get its elements from
+        elsewhere (e.g. 'r = sorted(ints)', 'r.append(0.5)')"""
+        if not node.args or node not in self.mergeinh:
+            return None
+        restypes = self.mergeinh[node]
+        argtypes = self.mergeinh.get(node.args[0])
+        if not argtypes or typestr.types_classes(restypes) != {
+            python.def_class(self.gx, "list")
+        } or len(typestr.types_classes(argtypes)) != 1:
+            return None
+        if self.hetero_tuple(argtypes):
+            return None
+        reselems = typestr.typestr(self.gx, self.subtypes(restypes, "unit"), mv=self.mv)
+        argelems = typestr.typestr(self.gx, self.subtypes(argtypes, "unit"), mv=self.mv)
+        if reselems == argelems:
+            return None
+        return typestr.typestr(self.gx, restypes, mv=self.mv).strip()[:-1].strip()
+
     def impl_visit_call(
         self,
         node: ast.Call,
@@ -4547,6 +4568,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("__" + ident + "(")
             elif ident in ["min", "max", "iter", "round"]:
                 self.append("___" + ident + "(")
+            elif ident == "sorted" and direct_call.mv.module.builtin and (
+                sorted_type := self.sorted_type(node)
+            ):
+                self.append("__ss_sorted<" + sorted_type + ">(")
             elif ident == "bool":
                 if node.args and infer.nrargs(self.gx, node):
                     self.bool_test(node.args[0], func, always_wrap=True)
@@ -4999,6 +5024,27 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ):
                     double = True
 
+        # 'max(a, b)': the C++ template takes a single type for all of its
+        # arguments, so convert each of them to the merged type (this warns
+        # if that is not possible, as for a list of ints and of floats).
+        # only for arguments of the same class, or instances of user classes
+        # (which meet in their base class): python cannot compare a list and
+        # a set, say, and a cast to an abstract type (pyiter) would hide that
+        minmax_types: Optional[Types] = None
+        if (
+            ident in ("min", "max")
+            and target.ident in ("min", "max")
+            and target.mv.module.builtin
+            and len(node.args) > 1
+            and not any(isinstance(a, ast.Starred) for a in node.args)
+        ):
+            minmax_types = set()
+            for arg2 in node.args:
+                minmax_types.update(self.mergeinh[arg2])
+            classes = typestr.types_classes(minmax_types)
+            if len(classes) > 1 and any(cl.mv.module.builtin for cl in classes):
+                minmax_types = None
+
         self.add_args_arg(node, funcs)
 
         if isinstance(func, python.Function) and func.largs is not None:
@@ -5091,7 +5137,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif isinstance(arg, ast.Constant) and arg in self.consts:
                 self.append(self.consts[arg])
             else:
-                if not builtin_types and target.mv.module.builtin:
+                if (
+                    minmax_types
+                    and not cast
+                    and target.node.args.vararg
+                    and formal.name == target.node.args.vararg.arg
+                ):
+                    self.impl_visit_conv(arg, minmax_types, func)
+                elif not builtin_types and target.mv.module.builtin:
                     self.visit(arg, func)
                 else:
                     self.impl_visit_conv(arg, formal_types, func)

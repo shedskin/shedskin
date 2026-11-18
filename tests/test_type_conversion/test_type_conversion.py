@@ -128,25 +128,25 @@
 # OVERVIEW (number of cells that work / TODO / correctly warn or fail)
 #
 #                bool->int    int->float   float->int   none         none->scalar sub->base    empty
-#    1. assign   2/0/0        18/1/2       -            3/0/0        0/0/2        8/0/0        14/1/2
+#    1. assign   2/0/0        18/0/3       -            3/0/0        0/0/2        8/0/0        16/0/2
 #    2. attr     -            1/0/1        -            1/0/0        -            2/0/0        4/0/1
 #    3. setitem  1/0/0        8/0/1        -            1/0/0        0/0/1        3/0/0        5/0/1
 #    4. arg      1/0/0        11/0/1       -            1/0/0        0/0/1        2/0/0        7/0/1
 #    5. ret      1/0/0        5/0/1        -            1/0/0        0/0/1        2/0/0        8/0/1
 #    6. method   1/0/0        14/0/1       -            3/0/0        0/0/1        8/0/0        23/0/1
 #    7. display  1/0/0        4/0/1        -            2/0/0        0/0/1        2/0/0        4/0/1
-#    8. binop    1/0/0        21/1/0       -            1/0/0        -            5/0/0        25/0/0
+#    8. binop    1/0/0        21/0/1       -            1/0/0        -            5/0/0        25/0/0
 #    9. compare  -            9/0/0        -            1/0/0        1/0/0        1/0/0        9/0/0
 #   10. lookup   1/0/0        10/0/0       0/0/1        7/0/0        0/0/1        4/0/0        18/0/0
-#   11. ctor     -            7/1/0        -            2/0/0        -            3/1/0        17/1/0
-#   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        12/2/1
+#   11. ctor     -            8/0/1        -            2/0/0        -            4/1/0        18/0/0
+#   12. iter     1/0/0        5/0/1        -            1/0/0        -            6/0/0        12/0/3
 #   13. choice   -            2/0/1        -            1/0/0        0/0/1        2/0/0        5/0/1
-#   14. lib      -            11/2/0       -            4/0/0        -            2/0/0        23/4/0
+#   14. lib      -            12/0/1       -            4/0/0        -            3/0/0        25/2/0
 #   15. mixed    -            -            -            -            -            -            1/0/0
 #
-#   total        10/0/0       126/5/10     0/0/1        29/0/0       1/0/9        50/1/0       176/8/10
+#   total        10/0/0       128/0/14     0/0/1        29/0/0       1/0/9        52/1/0       180/2/12
 #
-#   all cells: 392 work, 14 TODO, 30 correctly warn or fail
+#   all cells: 400 work, 3 TODO, 36 correctly warn or fail
 #
 # TODO not in the matrix yet: class attributes, exceptions, string formatting,
 # the array module, bytes/bytearray, user classes with __contains__/__eq__.
@@ -494,11 +494,12 @@ def test_assign_int_float_ifexp_list():
 #     assert sum(a) == 3
 
 
-# int->float, variable: copy
-# TODO doesn't work today: warning, then C++ compile error
+# int->float, variable: warn
+# -> warning, then C++ compile error (see tests/errs/103.py)
 #   incompatible types
 #   C++: cannot convert 'tuple<__ss_int>*' to 'tuple<__ss_float>*' in
 #     assignment
+#   (a converted copy would be possible, see the comment below)
 #
 # def test_assign_int_float_var_tuple():
 #     # a tuple cannot be changed, so it could be replaced by a converted copy
@@ -709,14 +710,11 @@ def test_assign_empty_new_from_empty():
 
 
 # empty, new: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*' in assignment
-#
-# def test_assign_empty_new_sorted():
-#     b = [1]
-#     b = sorted([])
-#     b.append(2)
-#     assert sum(b) == 2
+def test_assign_empty_new_sorted():
+    b = [1]
+    b = sorted([])
+    b.append(2)
+    assert sum(b) == 2
 
 
 # empty, new: build
@@ -2834,11 +2832,12 @@ def test_binop_int_float_lit_mul():
     assert sum(floats) == 0.5
 
 
-# int->float, new: build
-# TODO doesn't work today: warning, then C++ compile error
+# int->float, new: warn
+# -> warning, then C++ compile error (see tests/errs/103.py)
 #   incompatible types
 #   C++: cannot convert 'tuple2<__ss_int, __ss_int>*' to
 #     'tuple<__ss_float>*' in assignment
+#   (the new tuple could be built as a tuple of floats)
 #
 # def test_binop_int_float_new_mul_tuple():
 #     t = (0, 1) * 2
@@ -4090,15 +4089,25 @@ def test_ctor_int_float_var_set():
 
 
 # int->float, variable: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<__ss_int>*' to 'list<__ss_float>*' in
-#     assignment
+def test_ctor_int_float_var_sorted():
+    ints = [1, 2]
+    r = sorted(ints)
+    r.append(0.5)
+    assert sum(r) == 3.5
+
+
+# int->float, variable: error
+# -> C++ compile error
+#   C++: static assertion failed: sorted: a key function cannot be used for
+#     widened elements (e.g. ints sorted into a list of floats)
 #
-# def test_ctor_int_float_var_sorted():
-#     ints = [1, 2]
-#     r = sorted(ints)
+# def test_ctor_int_float_var_sorted_key():
+#     # the key is compiled for ints, so the widened list cannot be sorted with
+#     # it (sorting the ints first would need an extra copy)
+#     ints = [3, 1, 2]
+#     r = sorted(ints, key=lambda x: -x)
 #     r.append(0.5)
-#     assert sum(r) == 3.5
+#     assert r[0] == 3 and r[3] == 0.5
 
 
 # int->float, variable: copy
@@ -4198,6 +4207,16 @@ def test_ctor_sub_dict_pairs():
     assert sorted(x.name() for x in d) == ['A', 'B']
 
 
+# sub->base, variable: cast
+def test_ctor_sub_sorted():
+    # sorted as instances of B, then cast, so the key gets what it expects
+    lb = [B()]
+    r = sorted(lb, key=lambda b: b.name())
+    r.append(A())
+    assert r[0].name() == 'B' and r[1].name() == 'A'
+    assert len(lb) == 1
+
+
 # sub->base, new: copy
 # TODO doesn't work today: C++ compile error, without a warning (1113-C1)
 #   C++: cannot convert 'dict<B*, __ss_int>*' to 'dict<A*, __ss_int>*' in
@@ -4237,13 +4256,10 @@ def test_ctor_empty_lit_dict():
 
 
 # empty, literal: copy
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: cannot convert 'list<void*>*' to 'list<__ss_int>*' in assignment
-#
-# def test_ctor_empty_lit_sorted():
-#     r = sorted([])
-#     r.append(1)
-#     assert sum(r) == 1
+def test_ctor_empty_lit_sorted():
+    r = sorted([])
+    r.append(1)
+    assert sum(r) == 1
 
 
 # empty, literal: copy
@@ -4576,9 +4592,9 @@ def test_iter_empty_lit_typed():
     assert len(l) == 1
 
 
-# empty, literal: build
-# TODO doesn't work today: warning, then C++ compile error
-#   incompatible types
+# empty, literal: warn
+# -> warning, then C++ compile error (see tests/errs/103.py)
+#   expression has no type, incompatible types
 #   C++: invalid conversion from 'void*' to '__ss_int'
 #
 # def test_iter_empty_lit_typed_number():
@@ -4588,8 +4604,9 @@ def test_iter_empty_lit_typed():
 #     assert x == 1
 
 
-# empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
+# empty, literal: warn
+# -> warning, then C++ compile error (see tests/errs/103.py)
+#   expression has no type
 #   C++: 'void*' is not a pointer-to-object type
 #
 # def test_iter_empty_lit_typed_unpack():
@@ -5001,8 +5018,9 @@ def test_lib_int_float_var_default():
     assert min(ints, default=2.5) == 2.5
 
 
-# int->float, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
+# int->float, variable: warn
+# -> warning, then C++ compile error (see tests/errs/103.py)
+#   incompatible types
 #   C++: no matching function for call to '___max(int, __ss_void_struct&,
 #     __ss_int, list<__ss_int>*&, list<__ss_float>*&)'
 #
@@ -5014,14 +5032,11 @@ def test_lib_int_float_var_default():
 
 
 # int->float, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '___max(int, __ss_void_struct&,
-#     __ss_int, list<__ss_float>*, list<__ss_int>*)'
-#
-# def test_lib_int_float_lit_sorted():
-#     floats = [0.5, 1.5]
-#     assert sorted([floats, [1]])[1] == [1]
-#     assert max([0.5], [1]) == [1]
+def test_lib_int_float_lit_sorted():
+    floats = [0.5, 1.5]
+    assert sorted([floats, [1]])[1] == [1]
+    assert max([0.5], [1]) == [1]
+    assert min([1], [0.5]) == [0.5]
 
 
 # int->float, literal: copy
@@ -5136,6 +5151,37 @@ def test_lib_sub_heappush():
     assert h[0].name() == 'sub'
 
 
+# (the elements must be ordered, so this cell has classes of its own)
+class LibMinmaxBase:
+    def __init__(self, n):
+        self.n = n
+
+    def __lt__(self, other):
+        return self.n < other.n
+
+    def __gt__(self, other):
+        return self.n > other.n
+
+
+class LibMinmaxSub(LibMinmaxBase):
+    pass
+
+
+class LibMinmaxSub2(LibMinmaxBase):
+    pass
+
+
+# sub->base, new: cast
+def test_lib_sub_minmax():
+    # two sibling classes, that meet in their base
+    a = LibMinmaxSub(1)
+    b = LibMinmaxSub2(2)
+    assert max(a, b) is b
+    assert min(a, b) is a
+    assert max(a, b, key=lambda o: -o.n) is a
+    assert max(LibMinmaxSub(3), LibMinmaxSub2(4)).n == 4
+
+
 # empty, literal: infer
 def test_lib_empty_lit():
     assert len([]) == 0 and len({}) == 0 and len(()) == 0
@@ -5195,14 +5241,10 @@ def test_lib_empty_lit_mixed_sum():
 
 
 # empty, literal: build
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '___max(int, __ss_void_struct&,
-#     __ss_int, list<__ss_int>*, list<void*>*)'
-#
-# def test_lib_empty_lit_mixed_max():
-#     assert max([1], []) == [1]
-#     assert min([1], []) == []
-#     assert sorted([[1], []]) == [[], [1]]
+def test_lib_empty_lit_mixed_max():
+    assert max([1], []) == [1]
+    assert min([1], []) == []
+    assert sorted([[1], []]) == [[], [1]]
 
 
 # empty, literal: build
@@ -5318,15 +5360,12 @@ def test_lib_empty_var_mixed_chain():
     assert list(itertools.chain(names, e)) == ['a']
 
 
-# empty, variable: generic
-# TODO doesn't work today: C++ compile error, without a warning
-#   C++: no matching function for call to '___max(int, __ss_void_struct&,
-#     __ss_int, list<str*>*&, list<void*>*&)'
-#
-# def test_lib_empty_var_mixed_max():
-#     e = []
-#     names = ['a']
-#     assert max(names, e) == ['a']
+# empty, variable: cast
+def test_lib_empty_var_mixed_max():
+    e = []
+    names = ['a']
+    assert max(names, e) == ['a']
+    assert min(e, names) == []
 
 
 # empty, variable: copy
@@ -5480,6 +5519,7 @@ def test_all():
     test_assign_empty_new()
     test_assign_empty_new_collections()
     test_assign_empty_new_from_empty()
+    test_assign_empty_new_sorted()
     test_assign_empty_new_comp()
     test_assign_empty_new_setcomp()
     test_assign_empty_ifexp()
@@ -5714,6 +5754,7 @@ def test_all():
     test_ctor_int_float_lit_collections()
     test_ctor_int_float_var_list()
     test_ctor_int_float_var_set()
+    test_ctor_int_float_var_sorted()
     test_ctor_int_float_var_dict()
     test_ctor_int_float_var_tuple()
     test_ctor_int_float_var_collections()
@@ -5722,9 +5763,11 @@ def test_all():
     test_ctor_sub()
     test_ctor_sub_items()
     test_ctor_sub_dict_pairs()
+    test_ctor_sub_sorted()
     test_ctor_empty_lit()
     test_ctor_empty_lit_set()
     test_ctor_empty_lit_dict()
+    test_ctor_empty_lit_sorted()
     test_ctor_empty_lit_tuple()
     test_ctor_empty_lit_deque()
     test_ctor_empty_lit_counter()
@@ -5779,6 +5822,7 @@ def test_all():
     test_lib_int_float_var_iter()
     test_lib_int_float_var_reduce()
     test_lib_int_float_var_default()
+    test_lib_int_float_lit_sorted()
     test_lib_int_float_chain()
     test_lib_int_float_merge()
     test_lib_int_float_chain_var()
@@ -5791,10 +5835,12 @@ def test_all():
     test_lib_none_default()
     test_lib_sub()
     test_lib_sub_heappush()
+    test_lib_sub_minmax()
     test_lib_empty_lit()
     test_lib_empty_lit_sum()
     test_lib_empty_lit_mixed()
     test_lib_empty_lit_mixed_sum()
+    test_lib_empty_lit_mixed_max()
     test_lib_empty_lit_chain()
     test_lib_empty_lit_chain_number()
     test_lib_empty_lit_chain_only()
@@ -5808,6 +5854,7 @@ def test_all():
     test_lib_empty_var_sum()
     test_lib_empty_var_mixed()
     test_lib_empty_var_mixed_chain()
+    test_lib_empty_var_mixed_max()
     test_lib_empty_var_mixed_number()
     test_lib_empty_var_mixed_chain_number()
     test_lib_empty_var_mixed_merge_number()
