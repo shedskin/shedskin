@@ -83,11 +83,11 @@ Some screenshots of the [example programs](https://github.com/shedskin/shedskin/
 
 <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm6.png" width="400">
 
-(another world)
+(another_world)
 
 <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/aw.png" width="400">
 
-(Taken from [Here](https://github.com/trozen/tpy-another-world), uses tty/termios so UNIX-only)
+(taken from [Here](https://github.com/trozen/tpy-another-world), uses tty/termios so UNIX-only)
 
 (doom)
 
