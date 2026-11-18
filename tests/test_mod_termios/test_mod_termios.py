@@ -196,7 +196,10 @@ def test_flush_drain_flow():
     termios.tcdrain(slave)
     termios.tcflow(slave, termios.TCOOFF)
     termios.tcflow(slave, termios.TCOON)
-    termios.tcsendbreak(slave, 0)
+    try:
+        termios.tcsendbreak(slave, 0)
+    except termios.error:  # not supported for ptys on FreeBSD (ENOTTY)
+        pass
     os.close(slave)
     os.close(master)
 
