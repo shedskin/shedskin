@@ -71,7 +71,8 @@ def test_fstring_self_documenting():
 def test_fstring_ascii_conversion():
     name = 'caf\u00e9'
     assert f'{name!a}' == "'caf\\xe9'"
-    assert f'{"\u20ac"!a}' == "'\\u20ac'"
+    euro = '\u20ac'  # no backslash inside the expression part: syntax error before python 3.12
+    assert f'{euro!a}' == "'\\u20ac'"
     assert f'{[name]!a}' == "['caf\\xe9']"
     assert f'{12!a}' == '12'
     assert f'<{None!a}>' == '<None>'
