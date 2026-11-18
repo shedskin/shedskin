@@ -98,6 +98,38 @@ class B0:  # termios constant
     pass
 
 
+# macros from <sys/param.h> (FreeBSD: PAGE_SIZE broke the another_world
+# example; MIN/MAX are also there on linux)
+PAGE_SIZE = 4096
+PAGE_SHIFT = 12
+NBBY = 8
+
+
+def roundup(x, y):
+    return ((x + y - 1) // y) * y
+
+
+def MIN(a, b):
+    return a if a < b else b
+
+
+def use_bsd_param_macros():
+    MAX = MIN(3, 5)
+    isset = 1
+    setbit = 2
+    howmany = 3
+    MAXPATHLEN = 4
+    BSD = 5
+    return MAX + isset + setbit + howmany + MAXPATHLEN + BSD
+
+
+def test_bsd_param_macros():
+    assert PAGE_SIZE == 1 << PAGE_SHIFT
+    assert NBBY == 8
+    assert roundup(PAGE_SIZE + 1, PAGE_SIZE) == 2 * PAGE_SIZE
+    assert use_bsd_param_macros() == 18
+
+
 def test_nullptr_as_identifier():
     assert use_nullptr(5) == 6
 
@@ -162,6 +194,7 @@ def test_all():
     test_other_reserved_identifiers()
     test_windows_macros_as_identifiers()
     test_c_macros_as_identifiers()
+    test_bsd_param_macros()
     test_reserved_function_names_as_values()
     test_reserved_class_names()
 
