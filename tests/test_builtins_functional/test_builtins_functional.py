@@ -158,6 +158,66 @@ def test_zip_strict_messages():
     assert list(c) == [4, 5]
 
 
+def zip3_strict_error(z):
+    try:
+        for t in z:
+            pass
+    except ValueError as e:
+        return str(e)
+    return ''
+
+
+def test_zip3_hetero():
+    # three arguments with different element types give a 3-tuple
+    a = [1, 2, 3]
+    b = ['x', 'y', 'z']
+    c = [1.5, 2.5]
+    assert list(zip(a, b, c)) == [(1, 'x', 1.5), (2, 'y', 2.5)]
+    l = list(zip(a, b, c))
+    assert l[1][0] == 2
+    assert l[1][1] == 'y'
+    assert l[1][2] == 2.5
+    t = l[0]
+    assert t[1] + 'w' == 'xw'
+    assert len(t) == 3
+    total = 0.0
+    s = ''
+    for x, y, z in zip(a, b, c):
+        total += x * z
+        s += y
+    assert total == 6.5
+    assert s == 'xy'
+    assert list(zip('ab', (1, 2), iter([3.0, 4.0]))) == [('a', 1, 3.0), ('b', 2, 4.0)]
+    assert list(zip((x * 2 for x in range(3)), 'abc', [True, False])) == [(0, 'a', True), (2, 'b', False)]
+    assert [y * x for x, y, z in zip(a, b, c)] == ['x', 'yy']
+    assert dict((y, (x, z)) for x, y, z in zip(a, b, c)) == {'x': (1, 1.5), 'y': (2, 2.5)}
+    assert list(zip([], b, c)) == []
+
+    # next() on an exhausted zip object keeps raising StopIteration
+    zi = zip([1], ['a'], [2.0])
+    assert next(zi) == (1, 'a', 2.0)
+    stops = 0
+    for i in range(2):
+        try:
+            next(zi)
+        except StopIteration:
+            stops += 1
+    assert stops == 2
+
+    # arguments after the first exhausted one are not advanced
+    it = iter([1.0, 2.0, 3.0])
+    assert list(zip([1, 2], 'a', it)) == [(1, 'a', 1.0)]
+    assert list(it) == [2.0, 3.0]
+
+    # strict=True
+    assert list(zip(a, b, [1.0, 2.0, 3.0], strict=True)) == [(1, 'x', 1.0), (2, 'y', 2.0), (3, 'z', 3.0)]
+    assert zip3_strict_error(zip([1, 2], 'a', [1.0, 2.0], strict=True)) == 'zip() argument 2 is shorter than argument 1'
+    assert zip3_strict_error(zip([1, 2], 'ab', [1.0], strict=True)) == 'zip() argument 3 is shorter than arguments 1-2'
+    assert zip3_strict_error(zip([1], 'ab', [1.0], strict=True)) == 'zip() argument 2 is longer than argument 1'
+    assert zip3_strict_error(zip([1], 'a', [1.0, 2.0], strict=True)) == 'zip() argument 3 is longer than arguments 1-2'
+    assert zip3_strict_error(zip([1], 'a', [1.0], strict=True)) == ''
+
+
 def test_zip_sequences():
     # list arguments are indexed directly: like a list iterator, zip sees
     # items appended to or removed from a list during iteration
@@ -309,6 +369,7 @@ def test_all():
     test_zip_exhaustion()
     test_zip_alloc_pattern()
     test_zip_strict_messages()
+    test_zip3_hetero()
     test_zip_sequences()
     test_map()
     test_map_strict_messages()

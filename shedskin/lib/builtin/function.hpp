@@ -701,6 +701,81 @@ public:
 template<class A, class B> inline izipiter2<A, B> *__zip(int, __ss_bool strict_, A *iterable1, B *iterable2) {
     return new izipiter2<A, B>(strict_, iterable1, iterable2);
 }
+/* zip with three arguments of known type: as izipiter2. the result is a
+   tuple3, or a plain tuple if all element types are the same (as in typestr) */
+
+template<class TA, class TB, class TC> using __zip3_tuple = std::conditional_t<
+    std::is_same_v<TA, TB> && std::is_same_v<TA, TC>, tuple2<TA, TA>, tuple3<TA, TB, TC> >;
+
+template<class A, class B, class C> class izipiter3 final : public __iter<__zip3_tuple<typename A::for_in_unit, typename B::for_in_unit, typename C::for_in_unit> *> {
+public:
+    typedef typename A::for_in_unit TA;
+    typedef typename B::for_in_unit TB;
+    typedef typename C::for_in_unit TC;
+    typedef __zip3_tuple<TA, TB, TC> TR;
+
+    A *first;
+    B *second;
+    C *third;
+    typename A::for_in_loop loop1;
+    typename B::for_in_loop loop2;
+    typename C::for_in_loop loop3;
+    bool exhausted;
+    __ss_bool strict;
+
+    izipiter3(__ss_bool strict_, A *iterable1, B *iterable2, C *iterable3) {
+        this->__stop_iteration = false;
+        exhausted = false;
+        strict = strict_;
+        first = iterable1;
+        second = iterable2;
+        third = iterable3;
+        loop1 = first->for_in_init();
+        loop2 = second->for_in_init();
+        loop3 = third->for_in_init();
+    }
+
+    TR *__get_next() {
+        if (!this->exhausted) {
+            if (!first->for_in_has_next(loop1)) {
+                this->exhausted = true;
+                if (this->strict) {
+                    if (second->for_in_has_next(loop2))
+                        throw __strict_length_error("zip", 1, false);
+                    if (third->for_in_has_next(loop3))
+                        throw __strict_length_error("zip", 2, false);
+                }
+            } else {
+                /* fetch each element before advancing the next argument: they
+                   may share one iterator, e.g. zip(it, it, it) */
+                TA a = first->for_in_next(loop1);
+                if (!second->for_in_has_next(loop2)) {
+                    this->exhausted = true;
+                    if (this->strict)
+                        throw __strict_length_error("zip", 1, true);
+                } else {
+                    TB b = second->for_in_next(loop2);
+                    if (!third->for_in_has_next(loop3)) {
+                        this->exhausted = true;
+                        if (this->strict)
+                            throw __strict_length_error("zip", 2, true);
+                    } else {
+                        TC c = third->for_in_next(loop3);
+                        return new TR(3, a, b, c);
+                    }
+                }
+            }
+        }
+        this->__stop_iteration = true;
+        return NULL;
+    }
+
+    inline str *__str__() { return new str("<zip object>"); }
+};
+
+template<class A, class B, class C> inline izipiter3<A, B, C> *__zip(int, __ss_bool strict_, A *iterable1, B *iterable2, C *iterable3) {
+    return new izipiter3<A, B, C>(strict_, iterable1, iterable2, iterable3);
+}
 template<class T, class ... Args> inline izipiter<T, T> *__zip(int, __ss_bool strict_, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args) {
     izipiter<T, T> *iter = new izipiter<T, T>(strict_, iterable);
 
