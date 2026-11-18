@@ -1285,7 +1285,32 @@ def test_class_method_call():  # 818: 'dict.get(d, k)' as 'd.get(k)'
     assert Counter.most_common(c, 1) == [('a', 3)]
 
 
+def test_defaultdict_from_defaultdict():
+    # a defaultdict built from another one (copied at once) stays independent
+    board = defaultdict(int)
+    for i in range(100):
+        board[i, i + 1] = i
+    new = defaultdict(int, board)
+    new[0, 1] = 7
+    new[200, 200] += 1
+    assert len(board) == 100 and len(new) == 101
+    assert board[0, 1] == 0 and new[0, 1] == 7
+    assert new[5, 5] == 0  # missing: inserted via the factory
+    assert len(new) == 102 and len(board) == 100
+
+    frozen = defaultdict(None, board)
+    assert frozen == board
+    board[1, 2] = 50
+    assert frozen[1, 2] == 1
+    assert frozen != board
+
+    plain = dict(board)
+    plain[1, 2] = 3
+    assert board[1, 2] == 50
+
+
 def test_all():
+    test_defaultdict_from_defaultdict()
     test_class_method_call()
     test_counter_delitem()
     test_defaultdict1()
