@@ -222,3 +222,23 @@ add_shedskin_product(
     NAME threads
     MAIN_MODULE threads.py
 )
+
+# -----------------------------------------------------------------------
+# run each name_main.py against the compiled name extension module (see
+# README.md). the scripts look for the module in build/ next to them, which
+# is where 'shedskin runtests' (and 'shedskin build') put it.
+
+if(BUILD_TEST AND NOT DISABLE_EXTENSIONS)
+    file(GLOB main_scripts "${PROJECT_SOURCE_DIR}/*_main.py")
+    foreach(main_script ${main_scripts})
+        get_filename_component(script_name ${main_script} NAME_WE)
+        string(REGEX REPLACE "_main$" "" name ${script_name})
+        if(NOT TARGET ${name}-ext)
+            message(FATAL_ERROR "${script_name}.py has no extension module: add an add_shedskin_product() for ${name}.py")
+        endif()
+        add_test(NAME ${name}-ext
+            COMMAND ${Python_EXECUTABLE} ${main_script}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+    endforeach()
+endif()
