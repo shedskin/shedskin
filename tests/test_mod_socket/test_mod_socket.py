@@ -673,11 +673,14 @@ def test_connect_nonblocking():
     addr = server.getsockname()
     client = socket.socket()
     client.setblocking(False)
+    # (on FreeBSD, a loopback connect may also complete at once)
+    code = 0
     try:
         client.connect(addr)
-        assert False
     except OSError as e:
-        assert e.errno != 0
+        code = e.errno
+    if not sys.platform.startswith('freebsd'):
+        assert code != 0
     select.select([client], [client], [client], 5)
     assert client.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR) == 0
     conn, peer = server.accept()
@@ -689,7 +692,9 @@ def test_connect_nonblocking():
 
     client = socket.socket()
     client.settimeout(0.0)
-    assert client.connect_ex(addr) != 0
+    code = client.connect_ex(addr)
+    if not sys.platform.startswith('freebsd'):
+        assert code != 0
     select.select([client], [client], [client], 5)
     assert client.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR) == 0
     conn, peer = server.accept()

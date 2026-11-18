@@ -56,6 +56,9 @@ def test_conversions():
 
 def test_tzname():
     assert len(time.tzname) == 2
+    # the names are those that localtime() gives (not the libc tzname[],
+    # which differs on FreeBSD)
+    assert time.localtime().tm_zone in time.tzname
 
 def test_perf_counter():
     t1 = time.perf_counter()

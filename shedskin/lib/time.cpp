@@ -1445,27 +1445,33 @@ void __init() {
     daylight = _daylight;
     altzone = timezone - 3600;
 #else
-    /* as CPython (glibc, and where tm_gmtoff exists): the utc offsets of
-       january and july of this year, which also handles half-hour zones,
-       DST in effect at startup and the southern hemisphere */
+    /* as CPython (where struct tm has tm_gmtoff/tm_zone): the utc offsets
+       and zone names of january and july of this year, which also handles
+       half-hour zones, DST in effect at startup and the southern hemisphere.
+       the names are not taken from the libc tzname[]: that need not agree
+       with the tm_zone that localtime() gives (and strftime('%Z') prints),
+       e.g. on FreeBSD */
     tzset();
     const time_t YEAR = (365 * 24 + 6) * 3600;
     time_t t = (::time(NULL) / YEAR) * YEAR;
     struct tm tm_;
     ::localtime_r(&t, &tm_);
     __ss_int janzone = -(__ss_int)tm_.tm_gmtoff;
+    str *janname = new str(tm_.tm_zone ? tm_.tm_zone : "");
     t += YEAR / 2;
     ::localtime_r(&t, &tm_);
     __ss_int julyzone = -(__ss_int)tm_.tm_gmtoff;
+    str *julyname = new str(tm_.tm_zone ? tm_.tm_zone : "");
     if (janzone < julyzone) { /* DST is reversed in the southern hemisphere */
         timezone = julyzone;
         altzone = janzone;
+        tzname = new tuple2<str *, str *>(2, julyname, janname);
     } else {
         timezone = janzone;
         altzone = julyzone;
+        tzname = new tuple2<str *, str *>(2, janname, julyname);
     }
     daylight = janzone != julyzone;
-    tzname = new tuple2<str *, str *>(2, new str(::tzname[0]), new str(::tzname[1]));
 #endif
 }
 
