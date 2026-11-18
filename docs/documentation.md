@@ -771,6 +771,8 @@ options:
 * Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section [Command-line options](#command-line-options) for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.
 * Attribute access is faster in the generated code than indexing. For example, `v.x * v.y * v.z` is faster than `v[0] * v[1] * v[2]`.
 * Shed Skin takes the flags it sends to the C++ compiler from the `FLAGS*` files in the Shed Skin installation directory. These flags can be modified, or overruled by creating a local file named `FLAGS`.
+* When not distributing binaries, it can also help to use `-march=native` (optimize for the current hardware).
+* Depending on the program, `-O2` can be faster than `-O3`.
 * When doing float-heavy calculations, it is not always necessary to follow exact IEEE floating-point specifications. Avoiding this by adding -ffast-math can sometimes greatly improve performance.
 * Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with `-fprofile-generate`, then with `-fprofile-use`.
 * For best results, configure a recent version of the Boehm GC using `CPPFLAGS="-O3 -march=native" ./configure --enable-cplusplus --enable-threads=pthreads --enable-thread-local-alloc --enable-large-config --enable-parallel-mark`. The last option allows the GC to take advantage of having multiple cores.
