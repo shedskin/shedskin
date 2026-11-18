@@ -156,6 +156,30 @@ def test_reserved_class_names():
     assert new().__class__ is new
 
 
+class Größe:
+    def __init__(self, wärde):
+        self.wärde = wärde
+
+    def größer(self, änderung=1):
+        return self.wärde + änderung
+
+
+def fläche(länge, breite=2):
+    return länge * breite
+
+
+def test_unicode_identifiers():
+    # non-ascii identifiers (generated code is utf-8; msvc needs /utf-8)
+    größe = Größe(5)
+    assert größe.wärde == 5
+    assert größe.größer() == 6
+    assert größe.größer(änderung=3) == 8
+    assert fläche(3) == 6
+    assert fläche(länge=3, breite=4) == 12
+    π = 3
+    assert π + 1 == 4
+
+
 def test_all():
     test_nullptr_as_identifier()
     test_decltype_and_thread_local_as_identifiers()
@@ -164,6 +188,7 @@ def test_all():
     test_c_macros_as_identifiers()
     test_reserved_function_names_as_values()
     test_reserved_class_names()
+    test_unicode_identifiers()
 
 
 if __name__ == '__main__':

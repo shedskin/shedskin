@@ -43,6 +43,7 @@ options:
   --run TEST            run single test
   --stoponfail          stop when first failure happens in ctest
   --run-errs            run error/warning message tests
+  --run-extmod          run extension module tests (in extmod/)
   --progress            enable short progress output from ctest
   --debug               set cmake debug on
   --generator G         specify a cmake build system generator
@@ -151,6 +152,16 @@ To build and run tests for error/warning messages:
 ```bash
 shedskin runtests --run-errs
 ```
+
+Each test in `errs` lists the expected messages in `#*` comment lines. A test that uses syntax from a newer python version can say so with a `# requires python X.Y` line (put it at the end, so line numbers in messages do not shift), and is skipped on older versions.
+
+To build and run the extension module tests in `extmod` (see `extmod/README.md`):
+
+```bash
+shedskin runtests --run-extmod -j 4
+```
+
+Each test is built in a copy of `extmod` under `build/extmod`, and `--include PATTERN` or `--run TEST` select tests by name.
 
 ### Optimizing Building and Running Tests with Cmake
 

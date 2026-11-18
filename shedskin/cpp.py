@@ -248,7 +248,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             outputdir = Path(self.gx.outputdir)
             output_file = outputdir / output_file.relative_to(module_path.parent)
             output_file.parent.mkdir(exist_ok=True)
-        return open(output_file, mode)
+        return open(output_file, mode, encoding="utf-8")
 
     def insert_consts(self, declare: bool) -> None:  # TODO literal tuples?
         """Insert constant declarations"""

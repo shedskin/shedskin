@@ -73,6 +73,18 @@ jobs:
         cd examples
         uv run shedskin runtests --build-type Release --jobs 4 --ccache ${{ runner.os == 'Windows' && '--nowarnings' || '' }}
 
+    - name: Test shedskin extension modules
+      if: ${{ !cancelled() }}
+      run: |
+        cd tests
+        uv run shedskin runtests --run-extmod --build-type Release --jobs 4 --ccache ${{ runner.os == 'Windows' && '--nowarnings' || '' }}
+
+    - name: Test shedskin error messages
+      if: ${{ !cancelled() }}
+      run: |
+        cd tests
+        uv run shedskin runtests --run-errs
+
     - name: Show ccache statistics
       if: always()
       run: ccache --show-stats -v
