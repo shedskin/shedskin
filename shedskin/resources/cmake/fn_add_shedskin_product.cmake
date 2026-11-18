@@ -448,6 +448,7 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
             $<$<CXX_COMPILER_ID:MSVC>:/bigobj> # many template instantiations (C1128)
+            $<$<CXX_COMPILER_ID:MSVC>:/utf-8> # generated code is utf-8 (non-ascii identifiers, C3872)
             $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
         )
 
@@ -623,6 +624,7 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
             $<$<CXX_COMPILER_ID:MSVC>:/bigobj> # many template instantiations (C1128)
+            $<$<CXX_COMPILER_ID:MSVC>:/utf-8> # generated code is utf-8 (non-ascii identifiers, C3872)
             $<$<BOOL:${WIN32}>:${WIN32_FLAGS}>
             # $<$<BOOL:${WIN32}>:/LD>
         )

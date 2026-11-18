@@ -67,6 +67,13 @@ inline void __ss_raise_py(BaseException *e) {
     Py_DECREF(args);
     if(!value)
         return;
+#ifdef _WIN32
+    /* OSError.__py_args__ passes None for winerror, to get at filename2.
+       on windows, CPython then stores it, and str() gives '[WinError None]'
+       instead of '[Errno ..]': clear it again */
+    if(PyObject_IsInstance(value, PyExc_OSError) == 1 && PyObject_DelAttrString(value, "winerror") < 0)
+        PyErr_Clear();
+#endif
     /* notes from add_note() */
     if(e->__notes__) {
         PyObject *notes = e->__notes__->__to_py__();
