@@ -40,17 +40,17 @@ typedef off_t __ss_loff;
 #endif
 
 #ifndef HAVE_STDIO_UNLOCKED
-#define GETC   getc
-#define FWRITE fwrite
-#define FFLUSH fflush
-#define FERROR ferror
-#define FEOF   feof
+#define __SS_GETC getc
+#define __SS_FWRITE fwrite
+#define __SS_FFLUSH fflush
+#define __SS_FERROR ferror
+#define __SS_FEOF feof
 #else // HAVE_STDIO_UNLOCKED
-#define GETC   getc_unlocked
-#define FWRITE fwrite_unlocked
-#define FFLUSH fflush_unlocked
-#define FERROR ferror_unlocked
-#define FEOF   feof_unlocked
+#define __SS_GETC getc_unlocked
+#define __SS_FWRITE fwrite_unlocked
+#define __SS_FFLUSH fflush_unlocked
+#define __SS_FERROR ferror_unlocked
+#define __SS_FEOF feof_unlocked
 #endif // HAVE_STDIO_UNLOCKED
 
 /* the msvc crt calls its invalid parameter handler, which by default
@@ -72,10 +72,10 @@ static size_t __ss_fwrite(const void *buf, size_t size, size_t n, FILE *f) {
     __ss_file_suppress_iph guard;
     return fwrite(buf, size, n, f);
 }
-#undef FFLUSH
-#define FFLUSH __ss_fflush
-#undef FWRITE
-#define FWRITE __ss_fwrite
+#undef __SS_FFLUSH
+#define __SS_FFLUSH __ss_fflush
+#undef __SS_FWRITE
+#define __SS_FWRITE __ss_fwrite
 #else
 struct __ss_file_suppress_iph { __ss_file_suppress_iph() {} };
 #endif
@@ -93,7 +93,7 @@ static int __ss_fclose(FILE *f, bool closefd=true, bool reading=false) {
     __ss_file_suppress_iph guard;
     /* (fflush() of a reading stream seeks the fd back to the stream position) */
     __ss_loff offset_before = closefd ? -1 : __SS_LSEEK(fileno(f), 0, SEEK_CUR);
-    int err = FFLUSH(f) ? errno : 0;
+    int err = __SS_FFLUSH(f) ? errno : 0;
     /* closefd=False: there is no portable way to free a FILE * but not its
        fd, so let fclose() close a copy, and move that back in place */
     int fd = -1, saved = -1;
@@ -439,7 +439,7 @@ static bool __take_lf(FILE *f, __ss_encoding enc, __ss_errors err) {
         for(;;) {
             if(!eof && (!m || (m < sizeof(la) && !__ignored_prefix(la, m, enc, false) &&
                                __ignored_prefix(la, m, enc, true) == m))) { /* undecided: need more */
-                int d = GETC(f);
+                int d = __SS_GETC(f);
                 if(d != EOF) {
                     la[m++] = (char)d;
                     continue;
@@ -453,7 +453,7 @@ static bool __take_lf(FILE *f, __ss_encoding enc, __ss_errors err) {
             m -= k;
         }
     } else {
-        int d = GETC(f);
+        int d = __SS_GETC(f);
         if(d != EOF)
             la[m++] = (char)d;
     }
@@ -591,14 +591,14 @@ __ss_int file::write(str *s) {
             b = __to_utf8_se(s); /* fast path (standard streams) */
         else
             __encode_into(b, s, __encoding, __errors, errors);
-        if(FWRITE(b.data(), 1, b.size(), f) != b.size() and __error())
+        if(__SS_FWRITE(b.data(), 1, b.size(), f) != b.size() and __error())
             __throw_oserror();
         if (size < 0)
             size = (__ss_int)s->unit.size(); /* characters written, as CPython */
         /* as CPython: line buffering flushes everything after a '\n' or a
            '\r' (stdio's _IOLBF keeps what follows the last '\n') */
         if (line_buffering && s->unit.find_first_of(U"\n\r") != std::string::npos)
-            if (FFLUSH(f))
+            if (__SS_FFLUSH(f))
                 __throw_oserror();
     }
     return size;
@@ -688,7 +688,7 @@ str *file::readline(__ss_int n) {
     if (options.universal_mode) {
         size_t cr_at = 0; /* __read_cache size after the latest '\r' */
         for(;;) {
-            int c = GETC(f);
+            int c = __SS_GETC(f);
             if(c == EOF)
                 break;
             if(options.cr && __skip_lf(c, cr_at, cc, size_t(n)))
@@ -708,7 +708,7 @@ str *file::readline(__ss_int n) {
         }
     } else {  /* If not universal mode, use the normal loop */
         for(;;) {
-            const int c = GETC(f);
+            const int c = __SS_GETC(f);
             if(c == EOF)
                 break;
             if(cc.full(c, size_t(n))) {
@@ -746,14 +746,14 @@ str *file::read(__ss_int n) {
     if(n != 0) /* (as cpython: tell() is 0 after a bom only until a read) */
         __bom_skipped = false;
     __switch_op(f, options, 'r', __encoding, __errors);
-    if(n == 0) /* (as CPython, without a GETC, which may block on a pipe) */
+    if(n == 0) /* (as CPython, without a getc, which may block on a pipe) */
         return new str();
     __char_counter cc(__encoding, __errors);
     if (options.universal_mode) {
         __read_cache.clear();
         size_t cr_at = 0; /* __read_cache size after the latest '\r' */
         for(;;) {
-            int c = GETC(f);
+            int c = __SS_GETC(f);
             if(c == EOF)
                 break;
             if(options.cr && __skip_lf(c, cr_at, cc, size_t(n)))
@@ -775,8 +775,8 @@ str *file::read(__ss_int n) {
         return __decode_cache();
     }
     if(n == 1) {
-        const int c = GETC(f);
-        if(FERROR(f) != 0) /* avoid virtual call */
+        const int c = __SS_GETC(f);
+        if(__SS_FERROR(f) != 0) /* avoid virtual call */
             __throw_io_error();
         if(c == EOF)
             return new str();
@@ -786,7 +786,7 @@ str *file::read(__ss_int n) {
     } // other cases (n != 1):
     __read_cache.clear();
     for(;;) {
-        const int c = GETC(f);
+        const int c = __SS_GETC(f);
         if(c == EOF)
             break;
         if(cc.full(c, size_t(n))) {
@@ -831,7 +831,7 @@ void *file::close() {
 void *file::flush() {
     __check_closed(__SS_CLOSED_MSG);
     if(f)
-        if(FFLUSH(f))
+        if(__SS_FFLUSH(f))
             __throw_oserror();
     return NULL;
 }
@@ -932,12 +932,12 @@ void *file::__exit__() {
 }
 
 bool file::__error() {
-    return (FERROR(f) != 0);
+    return (__SS_FERROR(f) != 0);
 }
 
 bool file::__eof() {
     __check_closed(__SS_CLOSED_MSG); /* (before touching f, which may be fclosed) */
-    return (FEOF(f) != 0);
+    return (__SS_FEOF(f) != 0);
 }
 
 __iter<str *> *file::__iter__() {
@@ -1017,7 +1017,7 @@ __ss_int file_binary::write(bytes *s) {
     __switch_op(f, options, 'w');
     if(f) {
         size_t s_size = s->unit.size();
-        if(FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
+        if(__SS_FWRITE(s->unit.data(), 1, s_size, f) != s_size and __error())
             __throw_oserror();
         size = (__ss_int)s_size;
     }
@@ -1051,7 +1051,7 @@ __ss_int file_binary::seek(__ss_int i, __ss_int w) {
     __check_seekable(f, "File or stream is not seekable.");
     if(f) {
         if(w > 2) { /* SEEK_DATA/SEEK_HOLE: stdio does not know them, so ask the fd (an absolute offset) */
-            if(FFLUSH(f))
+            if(__SS_FFLUSH(f))
                 __throw_oserror();
             off_t pos = ::lseek(fileno(f), (off_t)i, (int)w);
             if(pos == -1)
@@ -1083,7 +1083,7 @@ bytes *file_binary::readline(__ss_int n) {
     __switch_op(f, options, 'r');
     __read_cache.clear();
     for(size_t i = 0; i < size_t(n); ++i) {
-        const int c = GETC(f);
+        const int c = __SS_GETC(f);
         if(c == EOF)
             break;
         __read_cache.push_back((char)c);
@@ -1105,8 +1105,8 @@ bytes *file_binary::read(__ss_int n) {
     __check_closed("read of closed file");
     __switch_op(f, options, 'r');
     if(n == 1) {
-        const int c = GETC(f);
-        if(FERROR(f) != 0) /* avoid virtual call */
+        const int c = __SS_GETC(f);
+        if(__SS_FERROR(f) != 0) /* avoid virtual call */
             __throw_io_error();
         if(c != EOF)
             return new bytes(__GC_BYTES(1, (char)c));
@@ -1115,7 +1115,7 @@ bytes *file_binary::read(__ss_int n) {
     } // other cases (n != 1):
     __read_cache.clear();
     for(size_t i = 0; i < size_t(n); ++i) {
-        const int c = GETC(f);
+        const int c = __SS_GETC(f);
         if(c == EOF)
             break;
         __read_cache.push_back((char)c);
@@ -1162,14 +1162,14 @@ bytes *file_binary::read1(__ss_int n) {
     __switch_op(f, options, 'r');
     __read_cache.clear();
     if(n != 0) {
-        const int c = GETC(f); /* (blocks only until something is there) */
+        const int c = __SS_GETC(f); /* (blocks only until something is there) */
         if(c != EOF) {
             __read_cache.push_back((char)c);
             size_t avail = __ss_freadahead(f);
             if(n > 0)
                 avail = std::min(avail, (size_t)(n - 1));
             for(size_t i = 0; i < avail; ++i) {
-                const int d = GETC(f);
+                const int d = __SS_GETC(f);
                 if(d == EOF)
                     break;
                 __read_cache.push_back((char)d);
@@ -1228,7 +1228,7 @@ void *file_binary::close() {
 void *file_binary::flush() {
     __check_closed(__mode_writable(mode) ? "flush of closed file" : __SS_CLOSED_MSG);
     if(f)
-        if(FFLUSH(f))
+        if(__SS_FFLUSH(f))
             __throw_oserror();
     return NULL;
 }
@@ -1304,12 +1304,12 @@ void *file_binary::__exit__() {
 }
 
 bool file_binary::__error() {
-    return (FERROR(f) != 0);
+    return (__SS_FERROR(f) != 0);
 }
 
 bool file_binary::__eof() {
     __check_closed(__SS_CLOSED_MSG);
-    return (FEOF(f) != 0);
+    return (__SS_FEOF(f) != 0);
 }
 
 __iter<bytes *> *file_binary::__iter__() {

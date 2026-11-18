@@ -927,7 +927,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # --- bootstrap built-in classes
         if self.module.ident == "builtin":
             for dummy in self.gx.builtins:
-                self.visit(ast.ClassDef(dummy, [], [], [ast.Pass()]))
+                self.visit(ast.ClassDef(dummy, [], [], [ast.Pass()], []))
 
         if self.module.ident != "builtin":
             n = ast.ImportFrom("builtin", [ast.alias("*", None)], 0)  # Python2.5+
