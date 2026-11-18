@@ -65,18 +65,22 @@ def tee(iterable, n = 2):
     return iter(iterable), iter(iterable)
 
 def zip_longest(__kw_fillvalue=None, *iterables):
-    'Known limitations: iterables must all be of the same type, cannot distinguish between 0 and None for the return value'
+    'Known limitations: iterables must all be of the same type if they are more than three, cannot distinguish between 0 and None for the return value'
     yield iter(iterables).__next__(),
 def __zip_longest2(iterable1, iterable2, __kw_fillvalue=None):
     yield iter(iterable1).__next__(), iter(iterable2).__next__()
+def __zip_longest3(iterable1, iterable2, iterable3, __kw_fillvalue=None):
+    yield iter(iterable1).__next__(), iter(iterable2).__next__(), iter(iterable3).__next__()
 
 # Combinatoric generators
 
 def product(__kw_repeat=1, *iterables):
-    'Known limitations: iterables must all be of the same type if they are more than two'
+    'Known limitations: iterables must all be of the same type if they are more than three, or if repeat is not 1'
     yield iter(iterables).__next__(),
 def __product2(iterable1, iterable2, __kw_repeat=1):
     yield iter(iterable1).__next__(), iter(iterable2).__next__()
+def __product3(iterable1, iterable2, iterable3, __kw_repeat=1):
+    yield iter(iterable1).__next__(), iter(iterable2).__next__(), iter(iterable3).__next__()
 
 def permutations(iterable, r = None):
     yield iter(iterable).__next__(),

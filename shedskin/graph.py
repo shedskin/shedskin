@@ -2330,16 +2330,19 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var2((node, 1), infer.inode(self.gx, get_iter), func)
             self.temp_var_int(node.iter, func)
 
-            if ast_utils.is_enumerate(node, func, self) or ast_utils.is_zip2(
-                node, func, self
-            ):
+            zip_arity = ast_utils.zip_arity(node, func, self)
+            if ast_utils.is_enumerate(node, func, self) or zip_arity:
                 assert isinstance(node.iter, ast.Call)
                 self.temp_var2((node, 2), infer.inode(self.gx, node.iter.args[0]), func)
-                if ast_utils.is_zip2(node, func, self):
+                if zip_arity:
                     self.temp_var2(
                         (node, 3), infer.inode(self.gx, node.iter.args[1]), func
                     )
                     self.temp_var_int((node, 4), func)
+                if zip_arity == 3:
+                    self.temp_var2(
+                        (node, 8), infer.inode(self.gx, node.iter.args[2]), func
+                    )
 
             self.temp_var((node, 5), func, looper=node.iter)
             if isinstance(node.iter, ast.Call) and isinstance(

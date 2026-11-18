@@ -954,7 +954,78 @@ template<class T, class U, class F> inline zip_longestiter<T, U> *zip_longest(in
   return new zip_longestiter<T, U>(fv, iterable1, iterable2);
 }
 
-template<class T, class F, class ... Args> inline zip_longestiter<T, T> *zip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args) {
+/* zip_longest with three arguments: a tuple3, or a plain tuple if all element
+   types are the same (as in typestr) */
+
+template<class T, class F> inline T __zip_longest_fill(F fillvalue) {
+    if constexpr (std::is_same_v<F, void *>)
+        return (T)0;
+    else if constexpr (std::is_convertible_v<F, T>)
+        return (T)fillvalue;
+    else
+        return T();
+}
+
+template<class A, class B, class C> class zip_longestiter3 final : public __iter<tuple3<A, B, C> *> {
+public:
+    __iter<A> *first;
+    __iter<B> *second;
+    __iter<C> *third;
+    bool exhausted1, exhausted2, exhausted3;
+    int active;
+    A fill1;
+    B fill2;
+    C fill3;
+
+    template<class F> zip_longestiter3(F fillvalue, pyiter<A> *iterable1, pyiter<B> *iterable2, pyiter<C> *iterable3) {
+        first = iterable1->__iter__();
+        second = iterable2->__iter__();
+        third = iterable3->__iter__();
+        exhausted1 = exhausted2 = exhausted3 = false;
+        active = 3;
+        fill1 = __zip_longest_fill<A>(fillvalue);
+        fill2 = __zip_longest_fill<B>(fillvalue);
+        fill3 = __zip_longest_fill<C>(fillvalue);
+    }
+
+    /* advance one argument, as CPython: the last one to be exhausted stops
+       the iteration, without looking at the remaining (exhausted) ones */
+    template<class T> inline T advance(__iter<T> *it, bool &exhausted, T fill) {
+        if (!exhausted) {
+            try {
+                return it->__next__();
+            } catch (StopIteration *) {
+                exhausted = true;
+                if (--active == 0)
+                    throw;
+            }
+        }
+        return fill;
+    }
+
+    tuple3<A, B, C> *__next__() {
+        if (active == 0)
+            throw new StopIteration();
+        A a = advance(first, exhausted1, fill1);
+        B b = advance(second, exhausted2, fill2);
+        C c = advance(third, exhausted3, fill3);
+        return new tuple3<A, B, C>(3, a, b, c);
+    }
+
+    inline str *__str__() { return new str("<itertools.zip_longest object>"); }
+};
+
+template<class A, class B, class C, class F> inline auto zip_longest(int /* iterable_count */, F fillvalue, pyiter<A> *iterable1, pyiter<B> *iterable2, pyiter<C> *iterable3) {
+    if constexpr (std::is_same_v<A, B> && std::is_same_v<A, C>) {
+        zip_longestiter<A, A> *iter = new zip_longestiter<A, A>(__zip_longest_fill<A>(fillvalue), iterable1);
+        iter->push_iter(iterable2);
+        iter->push_iter(iterable3);
+        return iter;
+    } else
+        return new zip_longestiter3<A, B, C>(fillvalue, iterable1, iterable2, iterable3);
+}
+
+template<class T, class F, class ... Args> inline zip_longestiter<T, T> *zip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, pyiter<T> *iterable4, Args ... args) {
     T fv;
     if constexpr (std::is_same_v<F, void *>)
         fv = (T)0;
@@ -964,6 +1035,7 @@ template<class T, class F, class ... Args> inline zip_longestiter<T, T> *zip_lon
 
     iter->push_iter(reinterpret_cast<pyiter<T> *>(iterable2));
     iter->push_iter(reinterpret_cast<pyiter<T> *>(iterable3));
+    iter->push_iter(reinterpret_cast<pyiter<T> *>(iterable4));
     (iter->push_iter(reinterpret_cast<pyiter<T> *>(args)), ...);
 
     return iter;
@@ -1010,16 +1082,16 @@ template<class T, class U> inline productiter<T, U>::productiter(pyiter<T> *iter
             } catch (StopIteration *) {                       \
                 break;                                        \
             }                                                 \
-        }                                                     \
-        if (this->values##ID.empty()) {                       \
-            this->exhausted = true;                           \
-            return;                                           \
         }
 
+    /* as CPython, consume all arguments, even if one is empty */
     CACHE_VALUES(T, 1)
     CACHE_VALUES(U, 2)
 
     #undef CACHE_VALUES
+
+    if (this->values1.empty() || this->values2.empty())
+        this->exhausted = true;
 
     this->__tuple_cache = new tuple2<T,U>[__SS_ALLOC_TUPLES];
     this->__tuple_count = 0; 
@@ -1186,18 +1258,94 @@ template<class T> inline productiter<T, T> *product(int /* iterable_count */, __
 
     return iter;
 }
-template<class T, class U> inline productiter<T, U> *product(int /* iterable_count */, __ss_int repeat, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+/* the result of a product of iterables with different element types is a
+   fixed-length tuple2/tuple3, so the iterables cannot be repeated */
+inline void __product_check_hetero_repeat(__ss_int repeat) {
     __product_check_repeat(repeat);
+    if (repeat != 1)
+        throw new NotImplementedError(new str("product() of iterables with different types does not support repeat != 1"));
+}
+
+template<class T, class U> inline productiter<T, U> *product(int /* iterable_count */, __ss_int repeat, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+    __product_check_hetero_repeat(repeat);
     return new productiter<T, U>(iterable1, iterable2);
 }
+
+/* product with three arguments: a tuple3, or a plain tuple if all element
+   types are the same (as in typestr) */
+
+template<class A, class B, class C> class productiter3 final : public __iter<tuple3<A, B, C> *> {
+public:
+    bool exhausted;
+    __GC_VECTOR(A) values1;
+    __GC_VECTOR(B) values2;
+    __GC_VECTOR(C) values3;
+    size_t indice1, indice2, indice3;
+
+    template<class T> static void cache_values(pyiter<T> *iterable, __GC_VECTOR(T) &values) {
+        __iter<T> *it = iterable->__iter__();
+        for (;;) {
+            try {
+                values.push_back(it->__next__());
+            } catch (StopIteration *) {
+                break;
+            }
+        }
+    }
+
+    productiter3(pyiter<A> *iterable1, pyiter<B> *iterable2, pyiter<C> *iterable3) {
+        /* as CPython, consume all arguments, even if one is empty */
+        cache_values(iterable1, values1);
+        cache_values(iterable2, values2);
+        cache_values(iterable3, values3);
+        exhausted = values1.empty() || values2.empty() || values3.empty();
+        indice1 = indice2 = indice3 = 0;
+    }
+
+    tuple3<A, B, C> *__next__() {
+        if (exhausted)
+            throw new StopIteration();
+
+        tuple3<A, B, C> *tuple = new tuple3<A, B, C>(3, values1[indice1], values2[indice2], values3[indice3]);
+
+        if (++indice3 == values3.size()) {
+            indice3 = 0;
+            if (++indice2 == values2.size()) {
+                indice2 = 0;
+                if (++indice1 == values1.size())
+                    exhausted = true;
+            }
+        }
+
+        return tuple;
+    }
+
+    inline str *__str__() { return new str("<itertools.product object>"); }
+};
+
+template<class A, class B, class C> inline auto product(int /* iterable_count */, __ss_int repeat, pyiter<A> *iterable1, pyiter<B> *iterable2, pyiter<C> *iterable3) {
+    if constexpr (std::is_same_v<A, B> && std::is_same_v<A, C>) {
+        productiter<A, A> *iter = new productiter<A, A>();
+        iter->push_iter(iterable1);
+        iter->push_iter(iterable2);
+        iter->push_iter(iterable3);
+        iter->repeat(repeat);
+        return iter;
+    } else {
+        __product_check_hetero_repeat(repeat);
+        return new productiter3<A, B, C>(iterable1, iterable2, iterable3);
+    }
+}
+
 template<class T, class ... Args> inline productiter<T, T> *product(
-    int iterable_count, __ss_int repeat, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args
+    int iterable_count, __ss_int repeat, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, pyiter<T> *iterable4, Args ... args
 ) {
     productiter<T, T> *iter = new productiter<T, T>();
 
     iter->push_iter(iterable);
     iter->push_iter(iterable2);
     iter->push_iter(iterable3);
+    iter->push_iter(iterable4);
     (iter->push_iter(reinterpret_cast<pyiter<T> *>(args)), ...);
 
     iter->repeat(repeat);

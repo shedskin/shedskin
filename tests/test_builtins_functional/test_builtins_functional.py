@@ -218,6 +218,77 @@ def test_zip3_hetero():
     assert zip3_strict_error(zip([1], 'a', [1.0], strict=True)) == ''
 
 
+def test_zip3_fast():
+    # for-loops/comprehensions over zip() of three lists/tuples index directly
+    # (distinct loop variable names: each keeps its own type)
+    a = [1, 2, 3]
+    b = ('x', 'y', 'z', 'w')
+    c = [1.5, 2.5]
+    total = 0.0
+    s = ''
+    for i1, s1, f1 in zip(a, b, c):
+        total += i1 * f1
+        s += s1
+    assert total == 6.5
+    assert s == 'xy'
+    assert [s2 * i2 for i2, s2, j2 in zip(a, b, a)] == ['x', 'yy', 'zzz']
+    assert [i3 for i3, s3, j3 in zip(a, b, a) if j3 > 1] == [2, 3]
+    assert sum(i4 * f4 for i4, s4, f4 in zip(a, b, c)) == 6.5
+    assert {s5: (i5, f5) for i5, s5, f5 in zip(a, b, c)} == {'x': (1, 1.5), 'y': (2, 2.5)}
+    assert list((i6, j6, k6) for i6, j6, k6 in zip(a, a, a)) == [(1, 1, 1), (2, 2, 2), (3, 3, 3)]
+    n = 0
+    for i7, j7, f7 in zip(a, a[:0], c):
+        n += 1
+    assert n == 0
+
+    # nested targets
+    pairs = [(1, 'u'), (2, 'v')]
+    l = []
+    for i8, (p8, q8), s8 in zip(a, pairs, b):
+        l.append(q8 * p8 + s8 * i8)
+    assert l == ['ux', 'vvyy']
+
+    # break and else
+    found = ''
+    for i9, s9, j9 in zip(a, b, a):
+        if j9 == 2:
+            found = s9
+            break
+    else:
+        found = 'none'
+    assert found == 'y'
+    for i10, s10, j10 in zip(a, b, a):
+        pass
+    else:
+        found = 'done'
+    assert found == 'done'
+
+    # strict=True is checked, also with two arguments
+    error = ''
+    try:
+        for i11, j11 in zip([1, 2], [3], strict=True):
+            pass
+    except ValueError as e:
+        error = str(e)
+    assert error == 'zip() argument 2 is shorter than argument 1'
+    error = ''
+    try:
+        for i12, s12, f12 in zip(a, b, c, strict=True):
+            pass
+    except ValueError as e:
+        error = str(e)
+    assert error == 'zip() argument 3 is shorter than arguments 1-2'
+
+    # more targets than arguments
+    error = ''
+    try:
+        for i13, j13, k13 in zip(a, a):
+            pass
+    except ValueError:
+        error = 'unpack'
+    assert error == 'unpack'
+
+
 def test_zip_sequences():
     # list arguments are indexed directly: like a list iterator, zip sees
     # items appended to or removed from a list during iteration
@@ -370,6 +441,7 @@ def test_all():
     test_zip_alloc_pattern()
     test_zip_strict_messages()
     test_zip3_hetero()
+    test_zip3_fast()
     test_zip_sequences()
     test_map()
     test_map_strict_messages()

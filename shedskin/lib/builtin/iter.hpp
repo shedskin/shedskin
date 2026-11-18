@@ -114,6 +114,16 @@ template<class T, class E> inline T __ss_elem(E e) {
         a = (__ ## t)->units[__ ## n]; \
         b = (__ ## u)->units[__ ## n];
 
+#define FOR_IN_ZIP3(a, b, c, k, l, o, t, u, v, n, m) \
+    __ ## t = k; \
+    __ ## u = l; \
+    __ ## v = o; \
+    __ ## m = __SS_MIN(__SS_MIN((__ ## t)->units.size(), (__ ## u)->units.size()), (__ ## v)->units.size()); \
+    for(__ ## n = 0; __ ## n < __ ## m; __ ## n ++) { \
+        a = (__ ## t)->units[__ ## n]; \
+        b = (__ ## u)->units[__ ## n]; \
+        c = (__ ## v)->units[__ ## n];
+
 #define FOR_IN_ENUMERATE(i, m, temp, n) \
     __ ## temp = m; \
     for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
