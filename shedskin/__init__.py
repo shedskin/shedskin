@@ -278,6 +278,9 @@ class Shedskin:
         if self.gx.options.run_errs:
             testrunner = cmake.TestRunner(self.gx)
             testrunner.run_error_tests()
+        elif self.gx.options.run_extmod:
+            testrunner = cmake.TestRunner(self.gx)
+            testrunner.run_extmod_tests()
         else:
             testrunner = cmake.TestRunner(self.gx)
             testrunner.run_tests()
@@ -551,6 +554,11 @@ class Shedskin:
             action="store_true",
         )
         opt("--run-errs", help="Run error/warning message tests", action="store_true")
+        opt(
+            "--run-extmod",
+            help="Run extension module tests (in extmod/)",
+            action="store_true",
+        )
         opt(
             "--progress",
             help="Enable short progress output from ctest",

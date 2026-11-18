@@ -1,7 +1,15 @@
 # Extension module tests
 
 Each `name.py` here is compiled as an extension module, and tested by
-running the accompanying `name_main.py` from CPython:
+running the accompanying `name_main.py` from CPython. To build and run all
+of them (from `tests`, as in CI; `intrange` is also run with `--int32`):
+
+```
+cd tests
+shedskin runtests --run-extmod -j 4
+```
+
+To build and run one by hand:
 
 ```
 cd tests/extmod

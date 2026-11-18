@@ -23,14 +23,17 @@ Key functions:
 The module also includes utilities for path handling, caching, and system-specific operations.
 """
 
+import concurrent.futures
 import glob
 import logging
 import os
 import pathlib
 import platform
+import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import zipfile
 from typing import Callable, Optional, Union
@@ -806,23 +809,44 @@ class CMakeBuilder:
         return most_recent_test
 
     def error_tests(self) -> list[str]:
-        """Test error messages from tests in the errs directory"""
+        """Test error messages from tests in the errs directory
+
+        A test can state the python version it needs (e.g. for new syntax)
+        with a '# requires python X.Y' line, and is skipped on older versions.
+        """
         failures = []
         os.chdir("errs")
-        tests = sorted(os.path.basename(t) for t in glob.glob("[0-9]*.py"))
+        tests = sorted(
+            (os.path.basename(t) for t in glob.glob("[0-9]*.py")),
+            key=lambda t: int(t[:-3]) if t[:-3].isdigit() else 0,
+        )
         for test in tests:
             print("*** test:", test)
             try:
                 checks = []
+                required = None
                 with open(test, encoding="utf8") as fopen:
                     for line in fopen:
                         if line.startswith("#*"):
                             checks.append(line[1:].strip())
-                cmd = f"{sys.executable} -m shedskin {test}".split()
-                output = subprocess.run(
-                    cmd, encoding="utf-8", capture_output=True, text=True
-                ).stdout
-                assert not [line for line in output if "Traceback" in line]
+                        m = re.match(r"#\s*requires python\s+(\d+)\.(\d+)", line)
+                        if m:
+                            required = (int(m.group(1)), int(m.group(2)))
+                if required and sys.version_info[:2] < required:
+                    print(
+                        f"*** {CYAN}SKIPPED{RESET}:",
+                        test,
+                        "(requires python %d.%d)" % required,
+                    )
+                    continue
+                # translate into a temporary folder, to keep errs/ clean
+                with tempfile.TemporaryDirectory() as outdir:
+                    cmd = [sys.executable, "-m", "shedskin", "-o", outdir, test]
+                    proc = subprocess.run(
+                        cmd, encoding="utf-8", capture_output=True, text=True
+                    )
+                output = proc.stdout
+                assert "Traceback" not in output + proc.stderr
                 for check in checks:
                     print(check)
                     assert [
@@ -833,6 +857,92 @@ class CMakeBuilder:
                 print(f"*** {RED}FAILURE{RESET}:", test)
                 failures.append(test)
         os.chdir("..")
+        return failures
+
+    def extmod_test(self, name: str, variant: list[str]) -> tuple[bool, str]:
+        """Build extmod/name.py as an extension module (in a copy of extmod/
+        under build/, so the checkout is left alone) and run name_main.py
+        against it. Returns (success, output)."""
+        label = " ".join([name] + variant)
+        dest = (self.build_dir / "extmod" / "-".join([name] + [
+            v.lstrip("-") for v in variant
+        ])).resolve()
+        if dest.exists():
+            shutil.rmtree(dest)
+        shutil.copytree(
+            pathlib.Path("extmod"),
+            dest,
+            ignore=shutil.ignore_patterns("build", "CMakeLists.txt", "__pycache__"),
+        )
+
+        opts = ["--build-type", self.options.build_type or "Release"]
+        if self.options.ccache:
+            opts.append("--ccache")
+        if self.options.nowarnings:
+            opts.append("--nowarnings")
+        if self.options.generator:
+            opts.append(f"--generator={self.options.generator}")
+        if self.options.spm:
+            opts.append("--spm")
+        elif self.options.fetchcontent:
+            opts.append("--fetchcontent")
+
+        out = [f"*** test: {label}"]
+        cmd = [sys.executable, "-m", "shedskin", "build", "-e"] + variant + opts
+        proc = subprocess.run(
+            cmd + [name], cwd=dest, capture_output=True, text=True,
+            encoding="utf-8", errors="replace",
+        )
+        if proc.returncode != 0:
+            out += [proc.stdout, proc.stderr, f"*** {RED}FAILURE{RESET} (build): {label}"]
+            return False, "\n".join(out)
+
+        # the module ends up in build/, or in build/<config>/ with multi-config
+        # generators (visual studio): put that folder on the path
+        env = dict(os.environ)
+        for path in sorted((dest / "build").rglob(f"{name}.*")):
+            if path.suffix in (".so", ".pyd"):
+                env["PYTHONPATH"] = os.pathsep.join(
+                    [str(path.parent)] + [p for p in [env.get("PYTHONPATH")] if p]
+                )
+                break
+
+        proc = subprocess.run(
+            [sys.executable, f"{name}_main.py"], cwd=dest, env=env,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+        )
+        out += [proc.stdout.rstrip(), proc.stderr.rstrip()]
+        if proc.returncode != 0:
+            out.append(f"*** {RED}FAILURE{RESET}: {label}")
+            return False, "\n".join(o for o in out if o)
+        out.append(f"*** {GREEN}SUCCESS{RESET}: {label}")
+        return True, "\n".join(o for o in out if o)
+
+    def extmod_tests(self) -> list[str]:
+        """Test extension modules from tests in the extmod directory"""
+        tests = sorted(
+            os.path.basename(t)[: -len("_main.py")]
+            for t in glob.glob(os.path.join("extmod", "*_main.py"))
+        )
+        if self.options.include:
+            tests = [t for t in tests if re.search(self.options.include, t)]
+        if self.options.run:
+            tests = [t for t in tests if t == self.options.run]
+        runs = [(t, v) for t in tests for v in EXTMOD_VARIANTS.get(t, [[]])]
+
+        # build the dependencies once, before building in parallel
+        if not (self.options.spm or self.options.fetchcontent):
+            LocalDependencyManager().install_all()
+
+        failures = []
+        jobs = max(1, self.options.jobs or 1)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+            futures = [executor.submit(self.extmod_test, t, v) for t, v in runs]
+            for (test, variant), future in zip(runs, futures):
+                success, output = future.result()
+                print(output, flush=True)
+                if not success:
+                    failures.append(" ".join([test] + variant))
         return failures
 
     def rm_build(self) -> None:
@@ -1093,21 +1203,37 @@ class CMakeBuilder:
 
     def run_error_tests(self) -> None:
         """Run error tests"""
-        start_time = time.time()
-
-        if self.options.run_errs:
-            failures = self.error_tests()
-            if not failures:
-                print(f"==> {GREEN}NO FAILURES, yay!{RESET}")
-            else:
-                print(f"==> {RED}TESTS FAILED:{RESET}", len(failures))
-                print(failures)
-        else:
+        if not self.options.run_errs:
             raise ValueError("option.run_errs not set")
+        self.report(self.error_tests)
 
+    def run_extmod_tests(self) -> None:
+        """Run extension module tests"""
+        if not self.options.run_extmod:
+            raise ValueError("option.run_extmod not set")
+        self.report(self.extmod_tests)
+
+    def report(self, run: Callable[[], list[str]]) -> None:
+        """Run tests, print a summary and exit with an error on failure"""
+        start_time = time.time()
+        failures = run()
         end_time = time.time()
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))
+        if not failures:
+            print(f"==> {GREEN}NO FAILURES, yay!{RESET}")
+        else:
+            print(f"==> {RED}TESTS FAILED:{RESET}", len(failures))
+            print(failures)
         print(f"Total time: {elapsed_time}\n")
+        if failures:
+            sys.exit(1)
+
+
+# extmod tests that are built and run several times, with these options
+# (intrange depends on the integer width, see extmod/README.md)
+EXTMOD_VARIANTS: dict[str, list[list[str]]] = {
+    "intrange": [[], ["--int32"]],
+}
 
 
 class TestRunner(CMakeBuilder):
