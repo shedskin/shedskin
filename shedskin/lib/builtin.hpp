@@ -484,6 +484,7 @@ void __throw_range_step_zero();
 void __throw_stop_iteration();
 void __throw_zero_division(const char *msg);
 void __throw_pow_overflow();
+[[noreturn]] void __throw_assertion(str *msg);
 
 #ifdef __GNUC__
 #define unlikely(x)       __builtin_expect((x), 0)
@@ -668,7 +669,9 @@ inline int __ss_cint_i(__ss_int v) {
 /* assert */
 
 #ifndef __SS_NOASSERT
-#define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
+/* raise out-of-line, so that an assert adds little to the size of a function,
+ * and small methods containing asserts still get inlined */
+#define ASSERT(x, y) if(!(x)) [[unlikely]] __throw_assertion(y);
 #else
 #define ASSERT(x, y)
 #endif

@@ -46,6 +46,28 @@ def test_assert_error():
     assert error
 
 
+assert_msg_calls = []
+
+
+def assert_msg(n):
+    assert_msg_calls.append(n)
+    return 'msg %d' % n
+
+
+def test_assert_msg_lazy():
+    # the message is only evaluated when the assertion fails
+    x = len(assert_msg_calls)
+    assert x == 0, assert_msg(1)
+    assert assert_msg_calls == []
+    msg = ''
+    try:
+        assert x == 1, assert_msg(2)
+    except AssertionError as e:
+        msg = str(e)
+    assert msg == 'msg 2'
+    assert assert_msg_calls == [2]
+
+
 class Truthy:
     def __init__(self, value):
         self.value = value
@@ -1142,6 +1164,7 @@ def test_all():
     test_oserror_str_repr_filename()
     test_key_error()
     test_assert_error()
+    test_assert_msg_lazy()
     test_assert_truthiness()
     test_index_error()
     test_value_error()
