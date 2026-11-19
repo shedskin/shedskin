@@ -252,6 +252,9 @@ void __throw_dict_changed() {
 void __throw_slice_step_zero() {
     throw new ValueError(new str("slice step cannot be zero"));
 }
+void __throw_assertion(str *msg) {
+    throw new AssertionError(msg);
+}
 void __throw_stop_iteration() {
     throw new StopIteration();
 }
