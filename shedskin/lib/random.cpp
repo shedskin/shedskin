@@ -86,12 +86,26 @@ void Random::_seed_state(uint64_t initial_seed) {
 uint64_t Random::_randbelow(uint64_t n) {
     if (n <= 1)
         return 0;
+#ifdef __SIZEOF_INT128__
+    /* Lemire's method: the high half of word*n, rejecting the few words (less than
+       n out of 2**64) that would cause bias. unlike rejection sampling on the top
+       bits (below), this practically always needs a single word, and has no
+       hard-to-predict branch (up to half of the words are rejected there) */
+    unsigned __int128 m = (unsigned __int128)this->_next_word() * n;
+    if (__builtin_expect((uint64_t)m < n, 0)) {
+        uint64_t t = (0 - n) % n; /* 2**64 % n */
+        while ((uint64_t)m < t)
+            m = (unsigned __int128)this->_next_word() * n;
+    }
+    return (uint64_t)(m >> 64);
+#else
     /* rejection sampling on the top bit_length(n-1) bits of a word */
     int shift = 64 - (int)std::bit_width(n - 1);
     uint64_t r = this->_next_word() >> shift;
     while (r >= n)
         r = this->_next_word() >> shift;
     return r;
+#endif
 }
 
 std::vector<__ss_int> Random::_sample_indices(__ss_int n, __ss_int k) {

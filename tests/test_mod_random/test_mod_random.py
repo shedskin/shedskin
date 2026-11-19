@@ -316,6 +316,50 @@ def test_sample_errors():
     assert ok
 
 
+def test_randbelow_uniform():
+    # randrange()/randint()/choice() draw from the same bounded generator:
+    # all values in range, each about equally often
+    random.seed(11)
+    counts = [0] * 200
+    for i in range(200000):
+        counts[random.randrange(-100, 100) + 100] += 1
+    assert min(counts) > 700
+    assert max(counts) < 1300
+
+    counts = [0] * 6
+    for i in range(60000):
+        counts[random.randint(1, 6) - 1] += 1
+    assert min(counts) > 9000
+    assert max(counts) < 11000
+
+    # ranges just above and below a power of two
+    for n in (3, 255, 256, 257, 1025):
+        seen_low = False
+        seen_high = False
+        for i in range(20000):
+            r = random.randrange(n)
+            assert 0 <= r < n
+            if r == 0:
+                seen_low = True
+            if r == n - 1:
+                seen_high = True
+        assert seen_low
+        assert seen_high
+
+    # a range of more than half of all 64-bit values
+    big = (1 << 62) + (1 << 61)
+    halves = [0, 0]
+    for i in range(10000):
+        r = random.randrange(-big, big)
+        assert -big <= r < big
+        halves[1 if r >= 0 else 0] += 1
+    assert min(halves) > 4500
+
+    sr = random.SystemRandom()
+    for i in range(1000):
+        assert -100 <= sr.randrange(-100, 100) < 100
+
+
 def test_wide_ranges():
     # regression test: randrange()/randint() used random()*width, which only
     # carries 53 bits, so for widths > 2**53 the low bits were always zero
@@ -812,6 +856,7 @@ def test_all():
     test_getrandbits()
     test_systemrandom()
     test_wide_ranges()
+    test_randbelow_uniform()
     test_range_errors()
     test_triangular_degenerate()
     test_variates_zero_division()
