@@ -6,9 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [1.0]
 
+- Many performance improvements. Generated code is on average about twice as fast as with 0.9.12!
+
+- Ported CPython's re-engine, instead of depending on libpcre.
+
+- Support for try..finally syntax, basich match statements, f-string format-specs
+
+- Support for gzip module (via vendored miniz library)
+
+- Support for tty/termios modules (UNIX-only), signal polling in signal module
+
+- 500+ bugs fixed by using Claude, for much improved stability
+
+- Much improved mixed-type conversion, for example ints & floats.
+
+- Much improved error/warning messages for unsupported constructs.
+
+- Three new examples, most notable another_world (python version by Tomek Rozen)
+
 - Much faster CI runs (Johan Kristensen, Shakeeb Alireza)
 
-- Much improved mixed-type conversion
+- Dropped the recenly added `--retry` option again
+
 
 ## [0.9.14]
 
