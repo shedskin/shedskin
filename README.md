@@ -61,7 +61,7 @@ The following shows a comparison of speedups versus CPython for Shed Skin and Py
 
 <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/perf_comp_1_0.png" width="800">
 
-The average speedup versus CPython 3.14.4 for these examples is 34.2x (median 19.5x). The average speedup versus PyPy 7.320 is 5.0x (median 2.7x). As can be seen, we allowed PyPy to stabilize before measuring.
+The average speedup versus CPython 3.14.4 for these examples is 34.2x (median 19.5x). The average speedup versus PyPy 7.3.20 is 5.0x (median 2.7x). As can be seen, we allowed PyPy to stabilize before measuring.
 
 ## Screenshots
 
