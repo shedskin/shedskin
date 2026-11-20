@@ -53,13 +53,12 @@ g = {'a': 1, 'b': 2, 'c': 3} # good
 h = {'a': 1, 'b': 'hello', 'c': [1, 2, 3]} # bad
 ```
 
-In the current version of Shed Skin, mixed types are also permitted in tuples of length two:
+In the current version of Shed Skin, mixed types are also permitted in tuples of length up to three:
 
 ```python
-a = (1, [1]) # good
+a = (1, [1], 'a') # good
+b = (1, [1], 'a', 1.0) # bad
 ```
-
-In the future, mixed tuples up to a certain length may be allowed.
 
 `None` may only be mixed with non-scalar types (i.e., not with int, float, bool or complex):
 
@@ -79,7 +78,7 @@ As `None` becomes a NULL-pointer on the C++ side, this means you may run into se
 untested code (but only where the original code would crash too.)
 
 Integers and floats can usually be mixed (the integers become floats). Shed Skin should complain
-in cases where they can't.
+in cases where they can't. It is best to try and avoid such mixing though.
 
 ## Python Subset Restrictions
 
@@ -114,6 +113,8 @@ var = SomeClass # bad
 [var] # bad, contained
 ```
 
+* Shed Skin does not support multi-threading
+
 ## Differences with CPython
 
 Even when a program compiles fine, its behaviour may differ from CPython in some details, so it is better not to depend on these:
@@ -133,7 +134,7 @@ f(g(), h()) # h may be called before g
 
 ## Library Limitations
 
-At the moment, the following 33 modules are (partially) supported:
+At the moment, the following 36 modules are (partially) supported:
 
 * `array`
 * `base64`
@@ -150,6 +151,7 @@ At the moment, the following 33 modules are (partially) supported:
 * `gc`
 * `getopt`
 * `glob`
+* `gzip`
 * `heapq`
 * `io` (BytesIO, StringIO)
 * `itertools` (no starmap)
@@ -161,15 +163,17 @@ At the moment, the following 33 modules are (partially) supported:
 * `random`
 * `re`
 * `select`
-* `signal` (constants only)
+* `signal` (constants, polling)
 * `socket`
 * `stat`
 * `string` (no Format, Template)
 * `struct` (no Struct, iter_unpack)
 * `sys`
+* `termios`
 * `time` (no timezones, do not combine with --float32)
+* `tty`
 
-Platform-dependent functionality is currently not supported.
+Platform-dependent functionality is currently mostly not supported.
 
 Note that any other module, such as `pygame`, `pyqt` or `pickle`, may be used in combination with a Shed Skin generated extension module. For examples of this, see the [Shed Skin examples](https://github.com/shedskin/shedskin/tree/master/examples).
 
