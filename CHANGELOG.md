@@ -16,17 +16,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Support for tty/termios modules (UNIX-only), signal polling in signal module
 
-- 500+ bugs fixed by using Claude, for much improved stability
+- ~500 bugs fixed by using Claude, for much improved stability
 
-- Much improved mixed-type conversion, for example ints & floats.
+- Much improved mixed-type conversion, for example ints & floats
 
-- Much improved error/warning messages for unsupported constructs.
+- Much improved error/warning messages for unsupported constructs
 
 - Three new examples, most notable another_world (python version by Tomek Rozen)
 
 - Much faster CI runs (Johan Kristensen, Shakeeb Alireza)
 
 - Dropped the recenly added `--retry` option again
+
+- The `--boost` option was also dropped (now using boost, -O3 and -flto by default, and -march=native was dropped for portability)
+
+- Added FreeBSD support
 
 
 ## [0.9.14]
