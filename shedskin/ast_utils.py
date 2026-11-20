@@ -53,6 +53,19 @@ def has_starred(node: ast.AST) -> bool:
     )
 
 
+def has_fast_targets(node: ast.AST) -> bool:
+    """Check if all items of a list or tuple that is assigned to can be
+    assigned by the fast enumerate/zip/dict.items loops. These assign the
+    items directly ('x = ..'), which only works for plain names (and nested
+    lists or tuples, which are unpacked from a temporary). Subscripts and
+    attributes (e.g. 'for i, d[k] in enumerate(..)') need a __setitem__ or
+    setter call, so these loops fall back to the generic for-loop"""
+    return is_assign_list_or_tuple(node) and all(
+        isinstance(elt, ast.Name) or is_assign_list_or_tuple(elt)
+        for elt in node.elts  # type: ignore[attr-defined]
+    )
+
+
 def is_assign_tuple(node: ast.AST) -> bool:
     """Check if a node is an assignment to a tuple"""
     return isinstance(node, ast.Tuple) and isinstance(node.ctx, ast.Store)
@@ -240,7 +253,7 @@ def is_enumerate(
         and not _is_shadowed("enumerate", parent, mv)
         and len(node.iter.args) == 1
         and not node.iter.keywords  # TODO start arg not supported
-        and is_assign_list_or_tuple(node.target)
+        and has_fast_targets(node.target)
         and not has_starred(node.target)
     )
 
@@ -260,7 +273,7 @@ def zip_arity(
         and len(node.iter.args) in (2, 3)
         and not node.iter.keywords
         and not any(isinstance(arg, ast.Starred) for arg in node.iter.args)
-        and is_assign_list_or_tuple(node.target)
+        and has_fast_targets(node.target)
         and not has_starred(node.target)
     ):
         assert isinstance(node.target, (ast.Tuple, ast.List))

@@ -340,6 +340,140 @@ def test_for_range_args_evaluated_once():
     assert range_calls == ['lo', 'hi', 'step']
 
 
+class Holder:
+    def __init__(self):
+        self.idx = 0
+        self.name = ''
+        self._val = 0
+        self.sets = 0
+
+    @property
+    def val(self):
+        return self._val
+
+    @val.setter
+    def val(self, v):
+        self.sets += 1
+        self._val = v
+
+
+def test_for_subscript_targets():
+    # subscript targets cannot be assigned directly by the fast
+    # enumerate/zip/dict.items loops (these fall back to the generic loop)
+    d = {}
+    l = [0, 0]
+    seen1 = []
+
+    for i, d["k"] in enumerate(["x", "y"]):
+        seen1.append((i, d["k"]))
+    assert seen1 == [(0, "x"), (1, "y")]
+
+    seen2 = []
+    for l[0], s in enumerate(["x", "y"]):
+        seen2.append((l[0], s))
+    assert seen2 == [(0, "x"), (1, "y")]
+    assert l == [1, 0]
+
+    seen3 = []
+    for i, d["k"] in enumerate("ab"):
+        seen3.append((i, d["k"]))
+    assert seen3 == [(0, "a"), (1, "b")]
+
+    seen4 = []
+    for i, d["k"] in zip([1, 2], ["x", "y"]):
+        seen4.append((i, d["k"]))
+    assert seen4 == [(1, "x"), (2, "y")]
+
+    seen5 = []
+    for l[0], l[1] in zip([1, 2], [3, 4]):
+        seen5.append(l[:])
+    assert seen5 == [[1, 3], [2, 4]]
+
+    seen6 = []
+    for i, s, l[0] in zip([1, 2], ["x", "y"], [5, 6]):
+        seen6.append((i, s, l[0]))
+    assert seen6 == [(1, "x", 5), (2, "y", 6)]
+
+    seen7 = []
+    for i, l[1], s in zip([1, 2], [7, 8], ["x", "y"]):
+        seen7.append((i, l[1], s))
+    assert seen7 == [(1, 7, "x"), (2, 8, "y")]
+
+    seen8 = []
+    for l[0], s in {3: "a"}.items():
+        seen8.append((l[0], s))
+    for i, d["k"] in {4: "b"}.items():
+        seen8.append((i, d["k"]))
+    assert seen8 == [(3, "a"), (4, "b")]
+
+    # nested
+    seen9 = []
+    for (i, l[0]), j in zip([(1, 2), (3, 4)], [5, 6]):
+        seen9.append((i, l[0], j))
+    assert seen9 == [(1, 2, 5), (3, 4, 6)]
+
+    seen10 = []
+    for n, (i, l[0]) in enumerate([(1, 2), (3, 4)]):
+        seen10.append((n, i, l[0]))
+    assert seen10 == [(0, 1, 2), (1, 3, 4)]
+
+    # comprehensions
+    assert [(i, d["k"]) for i, d["k"] in enumerate(["x", "y"])] == [(0, "x"), (1, "y")]
+    assert [(i, d["k"]) for i, d["k"] in zip([1, 2], ["x", "y"])] == [(1, "x"), (2, "y")]
+    assert [(l[0], s) for l[0], s in {3: "a"}.items()] == [(3, "a")]
+    assert sum(l[1] for i, l[1] in enumerate([10, 20])) == 30
+    assert d["k"] == "y"
+
+
+def test_for_attribute_targets():
+    h = Holder()
+    seen11 = []
+
+    for h.idx, h.name in enumerate(["x", "y"]):
+        seen11.append((h.idx, h.name))
+    assert seen11 == [(0, "x"), (1, "y")]
+
+    seen12 = []
+    for h.idx, h.name in zip([1, 2], ["x", "y"]):
+        seen12.append((h.idx, h.name))
+    assert seen12 == [(1, "x"), (2, "y")]
+
+    seen13 = []
+    for h.idx, h.name in {3: "a"}.items():
+        seen13.append((h.idx, h.name))
+    assert seen13 == [(3, "a")]
+
+    assert [(h.idx, h.name) for h.idx, h.name in enumerate(["u"])] == [(0, "u")]
+
+    # properties: the setter has to be called
+    seen14 = []
+    for h.val, h.name in enumerate(["x", "y"]):
+        seen14.append((h.val, h.name))
+    assert seen14 == [(0, "x"), (1, "y")]
+    assert h.sets == 2
+
+    seen15 = []
+    for h.name, h.val in zip(["x", "y"], [7, 8]):
+        seen15.append((h.val, h.name))
+    assert seen15 == [(7, "x"), (8, "y")]
+    assert h.sets == 4
+
+    seen16 = []
+    for h.val, h.name in {5: "a"}.items():
+        seen16.append((h.val, h.name))
+    assert seen16 == [(5, "a")]
+    assert h.sets == 5
+
+    seen17 = []
+    for h.val, h.name in [(6, "q")]:
+        seen17.append((h.val, h.name))
+    assert seen17 == [(6, "q")]
+    assert h.sets == 6
+
+    assert [(h.val, h.name) for h.name, h.val in zip(["x", "y"], [8, 9])] == [(8, "x"), (9, "y")]
+    assert h.sets == 8
+
+
 def test_all():
     test_for_range()
     test_for_range_near_int_limits()
@@ -359,6 +493,8 @@ def test_all():
     test_for_choice_mixed_subclass()
     test_for_choice_none()
     test_for_hetero_tuple()
+    test_for_subscript_targets()
+    test_for_attribute_targets()
 
 if __name__ == '__main__':
     test_all() 

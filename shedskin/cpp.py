@@ -1797,7 +1797,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         """Check if a node is a fast dict iterator loop"""
         return (
             isinstance(node.iter, ast.Call)
-            and ast_utils.is_assign_list_or_tuple(node.target)
+            and ast_utils.has_fast_targets(node.target)
             and not ast_utils.has_starred(node.target)
             and isinstance(node.iter.func, ast.Attribute)
             and node.iter.func.attr == "items"
@@ -5390,8 +5390,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif isinstance(item, ast.Subscript):
                 self.assign_pair(item, selector, func)
             elif ast_utils.is_assign_attribute(item):
-                self.assign_pair(item, selector, func)
-                self.eol(" = " + selector)
+                assert isinstance(item, ast.Attribute)
+                setter = self.property_setter(item)
+                if setter:  # a, b.prop = ..
+                    self.start()
+                    self.visitm(item.value, "->", setter, "(", selector, ")", func)
+                    self.eol()
+                else:
+                    self.assign_pair(item, selector, func)
+                    self.eol(" = " + selector)
 
         if temp_loop:
             if not temp_star:
@@ -5632,20 +5639,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     lcp = typestr.lowest_common_parents(
                         typestr.polymorphic_t(self.gx, self.mergeinh[lvalue.value])
                     )
-                    # property
-                    if (
-                        len(lcp) == 1
-                        and isinstance(lcp[0], python.Class)
-                        and lvalue.attr in lcp[0].properties
-                    ):
+                    setter = self.property_setter(lvalue)
+                    if setter:
                         self.visitm(
-                            lvalue.value,
-                            "->"
-                            + self.cpp_name(lcp[0].properties[lvalue.attr][1])
-                            + "(",
-                            rvalue,
-                            ")",
-                            func,
+                            lvalue.value, "->" + setter + "(", rvalue, ")", func
                         )
                     elif lcp and isinstance(lcp[0], python.Class):
                         var = python.lookup_var(lvalue.attr, lcp[0], self.mv)
@@ -5755,6 +5752,20 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                     self.append(")")
                     self.eol()
+
+    def property_setter(self, lvalue: ast.Attribute) -> Optional[str]:
+        """The name of the setter method to call, when assigning to an
+        attribute that is a property"""
+        lcp = typestr.lowest_common_parents(
+            typestr.polymorphic_t(self.gx, self.mergeinh[lvalue.value])
+        )
+        if (
+            len(lcp) == 1
+            and isinstance(lcp[0], python.Class)
+            and lvalue.attr in lcp[0].properties
+        ):
+            return self.cpp_name(lcp[0].properties[lvalue.attr][1])
+        return None
 
     def assign_pair(
         self,
