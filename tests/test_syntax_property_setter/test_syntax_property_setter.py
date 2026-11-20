@@ -69,9 +69,26 @@ def test_property_and_plain_setter_method_coexist():
     assert g.applied == 1
 
 
+def test_property_setter_in_unpacking():
+    g = Gadget()
+    pair = (5, 6)
+    g.power, g.applied = pair
+    assert g.power == 5
+    assert g.applied == 6
+    n, (m, g.power) = 1, (2, 3)
+    assert (n, m, g.power) == (1, 2, 3)
+
+    t = Temperature()
+    g.power, t.celsius = pair[0], 100.0
+    assert g.power == 5
+    assert t.celsius == 100.0
+    assert t.fahrenheit == 212.0
+
+
 def test_all():
     test_multiple_properties()
     test_property_and_plain_setter_method_coexist()
+    test_property_setter_in_unpacking()
 
 
 if __name__ == '__main__':

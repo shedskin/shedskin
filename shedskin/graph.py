@@ -2465,8 +2465,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     (infer.inode(self.gx, qual.target), infer.inode(self.gx, lvar)),
                     lcfunc,
                 )
-            else:  # AssTuple, AssList
+            elif ast_utils.is_assign_list_or_tuple(qual.target):
                 self.tuple_flow(qual.target, qual.target, lcfunc)
+            else:
+                error.error(
+                    "unsupported type of assignment", self.gx, qual.target, mv=getmv()
+                )
 
             self.do_for(qual, assnode, get_iter, lcfunc)
 
